@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+
+{% block css %}
+{% if enable_chat %}
+  <link rel="stylesheet" type="text/css" media="screen" href="http://{{chat_host}}/build/chat.bundle.css">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+{% endblock %}
+
+{% block scripts %}
+  {% include 'query_app_vendor_scripts.html' %}
+
+  {% if enable_chat %}
+    <script>
+      window.chatUserId = "{{user.username}}";
+      window.chatHost = 'http://{{chat_host}}';
+    </script>
+    <div id="chat-app"></div>
+    <script src="http://{{chat_host}}/socket.io/socket.io.js"></script>
+    <script src="http://{{chat_host}}/chat.js"></script>
+  {% endif %}
+
+  <script src="{{ bundle_resource_url('query.bundle.js') }}"></script>
+  <!-- {{js_version}}-->
+{% endblock %}
+
+{% block tracking_event %}
+<script>analytics.track('Main query view', {nonInteraction: 1});</script>
+{% endblock %}

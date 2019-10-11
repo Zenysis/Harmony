@@ -1,0 +1,33 @@
+.alerts-app {
+  margin: auto;
+  max-width: 1000px;
+  padding-top: 30px;
+
+  &__tab {
+    background: $white;
+    border-radius: 5px;
+    box-shadow: 0 5px 20px 0 rgba(35, 36, 37, 0.15);
+    padding: 30px;
+  }
+
+  &__new-alert-btn-container {
+    float: left;
+    margin-bottom: 15px;
+  }
+}
+
+.alert-creation-pane {
+  .row {
+    &:not(:first-child) {
+      margin-top: 20px;
+    }
+  }
+}
+
+.threshold-error-text {
+  color: #DC143C;
+}
+
+.create-alert-error-text {
+  color: #DC143C;
+}

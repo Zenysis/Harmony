@@ -1,0 +1,307 @@
+* {
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// This is carried over from smartadmin
+// Makes our site hard to use for keyboard/screen reader users
+*:focus {
+  outline: none;
+}
+
+[role="button"] {
+  cursor: pointer;
+}
+
+select {
+  cursor: pointer;
+}
+
+.zen-style {
+  overflow-x: hidden;
+
+  // HACK(stephen): HORRIBLE HORRIBLE HACK. There are way too many dependencies
+  // between navbar, main, and various other heights used in the app. This is
+  // a pain to work with because when the navbar has responsive styles, those
+  // heights need to be *replicated* everywhere the navbar height needs to be
+  // known. This makes adding a condensed navbar (that never changes height)
+  // really difficult to do without this awful code. Using a CSS variable at
+  // the root level so that responsive styles can be understood without needing
+  // to be hardcoded. BUT the condensed navbar is controlled with a prop, so
+  // we have to move outside the react system and into our template renderer to
+  // apply a style that has no business being at that level.
+  // TODO(stephen, pablo, anyone): Stop using position absolute and fixed
+  // for navbar and #main and use flexbox so things are derived.
+  @media (min-width: $navbar-transition-width) {
+    --navbar-height: #{$navbar-height};
+  }
+  @media (max-width: $navbar-transition-width) {
+    --navbar-height: #{$navbar-height};
+  }
+
+  &.condensed-navbar {
+    --navbar-height: #{$navbar-height};
+  }
+}
+
+/* Query App. */
+.query-app {
+  background: $site-background;
+  padding-top: 15px;
+
+  // Stretch query form to fill width of page
+  .widget-container {
+    margin-left: -$content-vertical-padding;
+    margin-right: -$content-vertical-padding;
+    margin-top: -$content-horizontal-padding;
+  }
+
+  .zen-page-title {
+    padding-left: 18px;
+  }
+}
+
+/* Bootstrap plugins. */
+
+/* Multiselect */
+.multiselect-container {
+  max-height: 40em;
+  overflow-y: scroll;
+}
+
+.first-selected {
+  background: gold;
+}
+
+.dropdown-menu.inner {
+  max-width: 600px;
+  text-overflow: ellipsis;
+}
+
+.dropdown-menu.inner > li:hover {
+  background-color: #d6dde7;
+}
+
+.dropdown-menu.inner > li.divider {
+  padding: 0;
+  margin: 0;
+}
+
+.dropdown-header {
+  padding: 1em;
+  margin: 0;
+
+  color: #404040;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Page-specific stuff. */
+
+.loader {
+  margin-left: 6px;
+}
+
+@media (max-width: 960px) {
+  .clear-selection {
+    display: none;
+  }
+}
+
+.form-filters .btn-show-more {
+  margin-bottom: 20px;
+}
+
+// Todo(kyle) make this less dumb
+.form-filters {
+  .col-md-3 {
+    padding-left: 0px;
+  }
+  .form-group {
+    padding-right: 0px;
+  }
+}
+
+.controls-group-container label {
+  font-weight: normal;
+  color: #4e4e4e;
+}
+
+.calendar-input {
+  cursor: pointer;
+}
+
+.view-toggle-buttons {
+  margin-left: 1em;
+}
+
+.glyphicon-graph-remove {
+  &:before {
+    content: "\e014";
+    margin: 0px 0px 0px 0px;
+  }
+  padding-top: 2px;
+}
+
+/* Login page */
+.login-form-container {
+  padding-top: 50px;
+}
+
+/* Upload page */
+.upload-button {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.btn-file {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-file input[type=file] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 100%;
+  min-height: 100%;
+  font-size: 100px;
+  text-align: right;
+  filter: alpha(opacity=0);
+  opacity: 0;
+  outline: none;
+  background: white;
+  cursor: inherit;
+  display: block;
+}
+
+.auth-button-container {
+  position: absolute;
+  right: 0px;
+}
+.remember-me-container {
+  float: left;
+}
+
+.auth-help {
+  margin-top: 70px;
+}
+
+.alert .auth-alert {
+  margin-bottom: 0;
+}
+
+.relative {
+  position: relative;
+}
+
+// Style for button in upper right corner of layout
+.auth-button {
+    padding-left: 0;
+    margin-top: 14px;
+    margin-left: 10px;
+}
+
+.auth-button span a {
+  color: white;
+  vertical-align: middle;
+}
+
+.auth-alert {
+  margin-bottom: 0px;
+}
+
+/* Intercom */
+#intercom-container .intercom-launcher {
+  bottom: 60px !important;
+}
+
+// Apply font styles that we know we'll need so that the browser downloads
+// them on page load instead of deferring it and causing a stutter in the
+// critical rendering path.
+body:after {
+  font-weight: 300;
+  content: ' ';
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: $site-background;
+  color: $slate;
+  font-family: $base-font-family;
+  font-size: 14px;
+  font-weight: 400;
+  position: relative;
+}
+
+.panel-header {
+  display: inline-block;
+  margin: 0;
+}
+
+.data-status-body {
+  padding: 25px;
+}
+
+.min-full-page-height {
+  min-height: var(--main-height);
+}
+
+.full-page-height {
+  height: var(--main-height);
+}
+
+#main {
+  --main-height: calc(100vh - var(--navbar-height));
+  min-height: var(--main-height);
+  top: var(--navbar-height);
+}
+
+.screenshot-page {
+  .hide-in-screenshot {
+    display: none;
+  }
+
+  #main {
+    top: 0;
+  }
+}
+
+.datepicker.datepicker-dropdown {
+  margin-top: 10px;
+}
+
+#toast-container {
+  left: 12px;
+}
+
+.page-container {
+  background-color: $site-background;
+  max-width: calc(100vw - 64px);
+  margin-left: $spacing-l;
+  margin-right: $spacing-l;
+  top: $spacing-l;
+  position: relative;
+  &__inner {
+    background: white;
+    box-shadow: 0 0 8px rgba(0,0,0,.25);
+    max-width: 1000px;
+    margin: auto;
+    width: 100%;
+    @media (min-width: $navbar-transition-width) {
+      min-height: calc(100vh - #{$navbar-height} - 64px);
+    }
+    @media (max-width: $navbar-transition-width) {
+      min-height: calc(100vh - #{$small-page-navbar-height} - 64px);
+    }
+  }
+}
+
+// HACK(stephen): Customize the Crisp icon to be much smaller. NEED A BETTER
+// WAY TO DO THIS.
+#crisp-chatbox a[data-maximized="false"] {
+  transform: translate3d(25px, 25px, 0) scale(0.6) !important;
+}

@@ -1,0 +1,19 @@
+.ui-draggable-item-list {
+  // Spacing between the top/bottom of an item in the list (combines to be
+  // 2x the spacing val).
+  $item-spacing: $spacing-xs / 2;
+
+  // Cancel out the first and last element's padding.
+  margin-top: -$item-spacing;
+  margin-bottom: -$item-spacing;
+  position: relative;
+
+  // NOTE(stephen): The draggable item list will only have draggable direct
+  // children. We need to make sure the padding is for all children to ensure
+  // the item swapping treatment does not bug out and continuously swap items
+  // at certain threshold points.
+  & > * {
+    padding-top: $item-spacing;
+    padding-bottom: $item-spacing;
+  }
+}

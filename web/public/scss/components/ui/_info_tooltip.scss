@@ -1,0 +1,30 @@
+.zen-info-tooltip {
+  color: $gray;
+  font-size: 12px;
+  letter-spacing: normal;
+  line-height: 13px;
+  margin-left: 8px;
+  position: relative;
+  text-transform: none;
+
+  &:hover {
+    color: $gray-hover;
+
+    &:before {
+      @include tooltip-arrow();
+    }
+
+    &:after {
+      @include tooltip-body();
+
+      // TODO(stephen): Add a tooltip-left and tooltip-right option.
+      left: 0;
+      min-width: 200px;
+      padding: 5px;
+      right: initial;
+      text-align: center;
+      z-index: 1;
+      font-weight: 500;
+    }
+  }
+}

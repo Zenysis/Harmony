@@ -1,0 +1,65 @@
+.u-heading-large,
+.u-heading-medium,
+.u-heading-small {
+  color: $slate;
+  font-family: $base-font-family;
+  font-weight: 700;
+  margin-bottom: 0.6em;
+  margin-top: 0;
+  text-transform: uppercase;
+
+  &--dark {
+    color: $white;
+  }
+}
+
+.u-heading-large {
+  font-size: 22px;
+  letter-spacing: 0.52px;
+}
+
+.u-heading-medium {
+  font-size: 18px;
+  letter-spacing: 0.6px;
+}
+
+.u-heading-small {
+  font-size: 15px;
+  letter-spacing: 0.6px;
+}
+
+p,
+.u-paragraph-text {
+  color: $slate;
+  font-family: $base-font-family;
+  font-size: 16px;
+  font-weight: 400;
+  margin-bottom: 0.5em;
+  margin-top: 0;
+
+  &--dark {
+    color: $white;
+  }
+}
+
+.u-highlighted-text {
+  color: $blue-primary;
+}
+
+.u-info-text {
+  color: $slate;
+  font-family: $base-font-family;
+  font-size: 14px;
+  font-weight: 400;
+
+  &--dark {
+    color: $white;
+  }
+}
+
+.u-label-text, .u-placeholder-text {
+  color: $gray;
+  font-family: $base-font-family;
+  font-size: 14px;
+  font-weight: 400;
+}

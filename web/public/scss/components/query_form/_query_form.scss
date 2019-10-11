@@ -1,0 +1,241 @@
+.query-form {
+  &__main-row {
+    overflow: visible;
+  }
+
+  &__edit-main-row {
+    overflow: visible;
+    margin-bottom: 150px;
+  }
+
+  &__form-panel {
+    padding-left: $spacing-m;
+    padding-top: $spacing-m;
+    @media (max-width: 991px) {
+      padding-right: $spacing-m;
+    }
+  }
+
+  &__selections-panel-section {
+    padding-right: $spacing-m;
+    // We have to offset the padding built into grid-framework.
+    // Each panel has 16px padding, and we want the gap down to 16;
+    @media (min-width: 991px) {
+      margin-left: -$spacing-m;
+      padding-top: $spacing-m;
+    }
+    @media (max-width: 991px) {
+      padding-left: $spacing-m;
+      padding-top: $spacing-m;
+    }
+  }
+
+  &__analyze-btn {
+    min-width: 160px;
+  }
+
+  &__reset-btn {
+    color: #2F5973;
+    padding: 0;
+    text-align: end;
+    float: right;
+    &:hover {
+      color: #19435C;
+    }
+    @media (max-width: 991px) {
+      padding-right: 16px;
+    }
+  }
+}
+
+.query-form-section {
+  background-color: $white;
+  transition: all 0.5s;
+
+  &:not(:last-child) {
+    margin-bottom: $spacing-m;
+  }
+
+  &__title {
+    background-color: $light-zenysis-purple-3;
+    color: white;
+    font-size: 14px;
+    line-height: 38px;
+    padding: 0 $spacing-m;
+  }
+
+  &__options {
+    .form-group:last-child {
+      margin-bottom: $spacing-xs;
+    }
+  }
+
+  .control-label {
+    font-size: 13px;
+    font-weight: normal;
+  }
+}
+
+.query-form-selections-panel {
+  margin-bottom: $spacing-m;
+}
+
+.query-health-indicator {
+  background-color: $light-blue-1;
+  border: none;
+  border-radius: $border-radius-base;
+  color: $dark-gray-5;
+  clear: both;
+  cursor: pointer;
+  line-height: 24px;
+  margin-bottom: $spacing-s;
+  min-height: 39px;
+  position: relative;
+  width: 100%;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &__title {
+    padding: 8px;
+    padding-left: $spacing-m;
+    padding-right: 50px;
+  }
+
+  $info-text-color: #888;
+  &__info {
+    color: $info-text-color;
+    font-weight: 300;
+    margin-left: 0.8em;
+
+    a {
+      // Override anchor tag default
+      color: $info-text-color;
+
+      &:hover {
+        text-decoration: underline;
+        cursor: pointer;
+      }
+    }
+  }
+
+  &__tooltip {
+    color: #000;
+    margin-left: $spacing-xs;
+    vertical-align: bottom;
+  }
+
+  &__tooltip_text {
+    background-color: #fff;
+    color: #000;
+    font-size: 13px;
+    margin-top: 2em;
+    padding: 1em;
+    border-radius: 2px;
+  }
+
+  &__formula {
+    line-height: 2.3;
+
+    span {
+      background-color: #c8e4ca;
+      border: 1px solid #bbb;
+      padding: 2px;
+    }
+  }
+
+  &__close {
+    background-color: $light-blue-2;
+    border: none;
+    border-radius: 0px $border-radius-base $border-radius-base 0px;
+    bottom: 0;
+    color: white;
+    height: 100%;
+    font-size: 17px;
+    line-height: 25px;
+    position: absolute;
+    right: 0;
+    transition: all 0.3s;
+    width: 40px;
+
+    &:hover {
+      background: $zenysis-purple-4;
+      background-color: $light-blue-3;
+    }
+  }
+}
+
+.btn-geo-group {
+  width: 100%;
+}
+
+.btn-geo {
+  border-radius: 0;
+  margin-right: -1px;
+  max-width: 100px;
+  width: calc(20% + 1px);
+
+
+  &:focus {
+    position: relative;
+    z-index: 100;
+  }
+
+  &:first-child {
+    border-radius: $border-radius-base 0px 0px $border-radius-base;
+  }
+
+  &:last-child {
+    border-radius: 0px $border-radius-base $border-radius-base 0px;
+  }
+}
+
+.ethiopian-date-selector {
+  padding: 3px;
+  padding-bottom: 6px;
+}
+
+/* Extra Small Devices, Phones */
+@media only screen and (max-width : 480px) {
+  .btn-geo {
+    border-radius: 0;
+    margin-bottom: -1px;
+    max-width: 50%;
+    width: 50%;
+
+    &:first-child {
+      border-radius: $border-radius-base 0px 0px 0px;
+    }
+
+    &:nth-child(2) {
+      border-radius: 0px $border-radius-base 0px 0px;
+    }
+
+    &:nth-last-child(2) {
+      border-radius: 0px 0px $border-radius-base 0px;
+    }
+
+    &:last-child {
+      border-radius: 0px 0px 0px $border-radius-base;
+    }
+  }
+}
+
+.btn-granularity {
+  background: $zenysis-purple-5;
+  color: white;
+  &:hover {
+    background-color: $light-zenysis-purple-2;
+    color: white;
+  }
+  &:focus {
+    background: $zenysis-purple-3;
+    color: white;
+    outline: none;
+  }
+}

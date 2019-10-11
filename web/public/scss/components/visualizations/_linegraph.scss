@@ -1,0 +1,14 @@
+.notifier-note {
+  background-color: #cde6f6 !important;
+  border: 1px solid #9acced !important;
+  border-radius: 2px;
+
+  p {
+    color: #3498db !important;
+    font-size: 14px !important;
+  }
+
+  .notifier-close {
+    color: $slate !important;
+  }
+}

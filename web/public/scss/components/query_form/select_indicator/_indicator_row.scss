@@ -1,0 +1,25 @@
+// HACK(stephen, kyle): Trying to make group row and indicator row the same
+// height to work around limitations in react-virtualized-tree. Add 2px
+// to include the border and an off-by-one error in react-virtualized-tree.
+$row-height: 32px;
+
+.select-indicator-indicator-row {
+  line-height: $row-height;
+  padding-left: 20px;
+  padding-right: 40px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: #337ab7;
+    color: white;
+  }
+
+  &__checkmark {
+    line-height: $row-height;
+    position: absolute;
+    right: 20px;
+  }
+}

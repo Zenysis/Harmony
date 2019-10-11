@@ -1,0 +1,30 @@
+.zen-card {
+  @include zen-elevation-1;
+  background-color: $white;
+  transition: all 0.5s;
+
+  &__heading,
+  &__body {
+    padding: 12px;
+  }
+
+  &__heading {
+    font-weight: bold;
+    border-bottom: 1px solid #dcdcdc;
+
+    &--offwhite {
+      background-color: $offwhite-card-header;
+      color: $dark-gray-3;
+    }
+
+    &--white {
+      background-color: $white;
+      color: $dark-gray-3;
+    }
+
+    &--purple {
+      background-color: $light-zenysis-purple-3;
+      color: $white;
+    }
+  }
+}

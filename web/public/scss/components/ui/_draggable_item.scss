@@ -1,0 +1,61 @@
+.ui-draggable-item {
+  &.react-draggable {
+    z-index: 1;
+
+    &.react-draggable-dragging {
+      cursor: grabbing;
+      z-index: 2;
+
+      > * {
+        @include zen-elevation-4;
+        transform: scale(1.01);
+      }
+    }
+  }
+
+  &--fully-draggable {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+}
+
+.ui-drag-handle {
+  cursor: grab;
+  display: inline-block;
+  margin-right: 3px;
+
+  &__icon {
+    // Since we are using 2 glyphicons to draw the full icon, we need to reduce
+    // the space between each character. Unfortunately, this is baked into the
+    // font itself, so we approximate it for the sizes we support.
+    &--small {
+      font-size: 11px;
+      margin-left: -3px;
+      margin-right: -3px;
+    }
+
+    &--medium {
+      font-size: 14px;
+      margin-left: -4px;
+      margin-right: -4px;
+    }
+
+    &--large {
+      font-size: 17px;
+      margin-left: -5px;
+      margin-right: -5px;
+    }
+  }
+}
+
+// The react-draggable library adds a class to the top of the document that we
+// can use to ensure the grabbing cursor is displayed even if the user's mouse
+// moves outside the element being dragged. An example is if the user reaches
+// the top of a bounding container and cannot drag the element any farther. The
+// mouse will continue to but the element will not.
+// NOTE(stephen): Need to use the wildcard `*` to ensure this style is applied
+// at the highest priority.
+body.react-draggable-transparent-selection * {
+  cursor: grabbing !important;
+}

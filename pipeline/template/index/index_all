@@ -1,0 +1,25 @@
+#!/bin/bash -eu
+set -o pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
+ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
+
+EMAIL_ID='pipeline-SAMPLE@zenysis.com'
+MAIL_DOMAIN='corp.zenysis.com'
+
+source "${ZEN_SRC_ROOT}/scripts/slack_announce.sh"
+slack_announce 'SAMPLE: Starting data indexing pipeline'
+
+pushd "${SCRIPT_DIR}" &> /dev/null
+
+# Run the full data indexing pipeline.
+./zeus_index \
+  run \
+    --success_mail="${EMAIL_ID}" \
+    --failure_mail="${EMAIL_ID}" \
+    --mail_domain="${MAIL_DOMAIN}" \
+    run/...
+
+popd &> /dev/null
+
+slack_announce 'SAMPLE: Finished data indexing pipeline'

@@ -1,0 +1,25 @@
+.zen-color-block {
+  display: inline-block;
+  position: relative;
+  margin-bottom: -1px;
+
+  &__clickable {
+    cursor: pointer;
+  }
+
+  &__icon {
+    border: none;
+    border-radius: 1px;
+  }
+
+  &__color-picker {
+    position: absolute;
+    top: -112px;
+    z-index: 100;
+  }
+
+  // The React-Color component expects the default box sizing
+  .github-picker {
+    box-sizing: initial;
+  }
+}

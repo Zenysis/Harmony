@@ -1,0 +1,33 @@
+.zen-label-wrapper {
+  font-size: 15px;
+
+  &__label {
+    font-weight: normal;
+
+    &--newline-before {
+      margin-bottom: $spacing-s;
+    }
+
+    &--newline-after {
+      margin-top: $spacing-s;
+    }
+
+    &--inline-before {
+      margin-right: $spacing-s;
+    }
+
+    &--inline-after {
+      margin-left: $spacing-s;
+    }
+
+    &--bold {
+      font-weight: $bold;
+    }
+  }
+
+
+  &__label--inline,
+  &__wrapped-content--inline {
+    display: inline-block;
+  }
+}

@@ -1,0 +1,344 @@
+// Shorthand method for making the different column types needed for the card
+@mixin make-columns($columns, $gutter: $grid-gutter-width) {
+  @include clearfix;
+  @include make-xs-column($columns, $gutter);
+  @include make-sm-column($columns, $gutter);
+  @include make-md-column($columns, $gutter);
+}
+
+$item-description-height: 45px;
+$item-index-width: 25px;
+.ranked-list-item {
+  height: $item-description-height;
+}
+
+.item-description {
+  width: 100%;
+  height: 100%;
+  float: left;
+  overflow: hidden;
+}
+
+.item-index, .item-name, .percent-change, .raw-value {
+  @include translate(0, -50%);
+  position: relative;
+  top: 50%;
+}
+
+.item-name {
+  width: calc(100% - #{$item-index-width});
+  float: left;
+
+  // Limit name to two lines, include padding
+  max-height: 40px;
+  overflow: hidden;
+}
+
+.item-index {
+  width: $item-index-width;
+  font-weight: bold;
+  float: left;
+}
+
+.percent-change {
+  @include clearfix;
+
+  .arrow {
+    margin-left: 5px;
+  }
+}
+
+
+.raw-value {
+  color: $blueStandard;
+  white-space: nowrap;
+}
+
+// List Row
+$percent-change-width: 100px;
+$raw-value-width: 85px;
+.ranked-list-item {
+  @include clearfix;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 10px;
+
+  a {
+    display: block;
+    height: 100%;
+  }
+
+  .item-description {
+    $assigned-width: $percent-change-width + $raw-value-width;
+    width: calc(100% - #{$assigned-width});
+  }
+
+  .percent-change {
+    position: relative;
+    width: $percent-change-width;
+    padding: 0 5px;
+    text-align: right;
+  }
+
+  .raw-value {
+    width: $raw-value-width;
+    text-align: center;
+    padding-left: 10px;
+
+    &:before {
+      content: "[";
+      float: left;
+    }
+
+    &:after {
+      content: "]";
+      float: right;
+    }
+  }
+
+  .percent-change, .raw-value {
+    float: left;
+  }
+
+  a {
+    color: #333;
+  }
+
+  a:hover {
+    color: $blueStandard;
+    text-decoration: underline;
+  }
+}
+
+// When the screen is too small, the item description becomes unreadable.
+// Fix this by expanding the item description width and stacking the
+// percent change and raw values.
+@media (max-width: 600px) {
+  .ranked-list-item {
+    height: auto;
+    .item-description {
+      width: calc(100% - #{$percent-change-width});
+    }
+
+    // Clear center vertical alignment since we are stacking the two items
+    .percent-change, .raw-value {
+      transform: initial;
+      top: 50%;
+      float: right;
+    }
+
+    .percent-change {
+      padding-right: 0px;
+      text-align: right;
+    }
+  }
+
+  .item-name {
+    max-height: 200px;
+    height: auto;
+    font-size: 12px;
+    transform: translate(0, 0);
+  }
+
+  .item-index {
+    transform: translate(0, 0);
+  }
+}
+
+
+// Cards
+$card-border: 1px solid rgba(0, 0, 0, .25);
+$card-inner-vertical-padding: 5px;
+$card-body-height: 110px;
+$card-footer-height: 30px;
+.ranked-card-item {
+  @include box-shadow(0 -1px 0 #e0e0e0,0 0 2px rgba(0,0,0,.12),0 2px 4px rgba(0,0,0,.24));
+  cursor: pointer;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+
+  .card-header {
+    @include make-row($gutter: 0);
+    height: $item-description-height;
+    padding: $card-inner-vertical-padding;
+    border-bottom: $card-border;
+    line-height: 16px;
+  }
+
+  .item-description {
+    height: 100%;
+
+    .item-name {
+      // Limit name to two lines
+      max-height: 36px;
+      text-align: center;
+
+      // TODO(stephen): Fix centering issues
+      margin-left: -5px;
+    }
+  }
+
+  .card-body {
+    @include clearfix;
+    position: relative;
+    height: $card-body-height;
+    border-bottom: $card-border;
+  }
+
+  // Big percentage value. On the left side of the card
+  $num-columns-left: 6;
+  .percent-change-panel {
+    @include make-columns($num-columns-left, $gutter: 0);
+    border-right: $card-border;
+    font-size: 28px;
+
+    // Need absolute positioning for filling full height of parent
+    position: absolute;
+    height: 100%;
+
+    .percent-change {
+      // Force the large percentage to take up the full line
+      @include make-columns($grid-columns, $gutter: 4px);
+      height: 100%;
+      text-align: center;
+
+      .value {
+        display: block;
+        font-size: 36px;
+        line-height: 30px;
+
+        // TODO(stephen): figure out how to properly center
+        // the value and subtitle
+        margin-top: 40px;
+      }
+
+      // Force the arrow to take up the full panel width and height
+      $arrow-padding: 10px;
+      .arrow {
+        position: absolute;
+        top: $arrow-padding;
+        bottom: $arrow-padding;
+        left: $arrow-padding;
+        right: $arrow-padding;
+        height: initial;
+        width: initial;
+        margin-left: 0px;
+        opacity: 0.25;
+      }
+
+      // TODO(stephen): This is a hack since we're still using the glyphicon
+      // for neutral changes.
+      .glyphicon {
+        opacity: 1;
+      }
+
+      .raw-value {
+        font-size: 12px;
+        display: block;
+      }
+    }
+
+    .triangle {
+
+    }
+
+    .subtitle {
+      @include make-columns($grid-columns);
+      font-size: 12px;
+      font-style: italic;
+      text-align: center;
+    }
+  }
+
+  .metadata {
+    @include make-columns($grid-columns - $num-columns-left);
+    float: right !important;
+    min-width: 155px;
+  }
+
+  .card-footer {
+    @include clearfix;
+    padding: $card-inner-vertical-padding 0px;
+    height: $card-footer-height;
+
+    .geo-rank {
+      @include make-md-column($grid-columns);
+      text-align: center;
+    }
+  }
+
+  a {
+    color: #333;
+  }
+
+  &:hover {
+    border: 1px solid #6495ed;
+  }
+}
+
+.metadata-line {
+  float: left;
+  width: 100%;
+
+  .metadata-name {
+    font-weight: bold;
+    float: left;
+  }
+
+  .metadata-value {
+    float: right;
+  }
+}
+
+// Build responsive card containers here using a mix of bootstrap grid and our
+// own responsiveness detection. Since we want a min width for the cards, we
+// can't rely purely on bootstrap to make the rows nicely for us.
+// TODO(stephen): Move variables out into their own file
+$card-gutter: 15px;
+$card-min-width: 325px + $card-gutter;
+$max-cards-per-row: 6;
+.ranked-card-container {
+  @include clearfix;
+  // Use xs column since we are handling responsiveness on our own
+  @include make-xs-column($grid-columns, $gutter: $card-gutter);
+  min-width: $card-min-width;
+  margin-bottom: $card-row-spacing; // Defined in ranked_display.
+}
+
+@function compute-screen-width($card-min-width, $num-cards, $sidebar-size) {
+  // Outer smartadmin content container padding + dashboard section padding
+  $container-padding: 2 * ($content-vertical-padding + $section-vertical-padding);
+
+  // Since we can't detect whether a scrollbar is in view in css,
+  // assume that it is.
+  $scrollbar-offset-hack: 20px;
+
+  @return $card-min-width * $num-cards + $sidebar-size + $container-padding +
+          $scrollbar-offset-hack;
+}
+
+@each $sidebar-width, $body-class in ($asideMinifiedWidth, 'body.minified'),
+                                     ($asideWidth, 'body:not(.minified)') {
+  @for $num-cards from 2 through $max-cards-per-row {
+    // For minified sidebar
+    $min-screen-width:
+      compute-screen-width($card-min-width, $num-cards, $sidebar-width);
+    $max-screen-width:
+      compute-screen-width($card-min-width, $num-cards + 1, $sidebar-width);
+
+    $media-query: '(min-width: #{$min-screen-width})';
+    @if $num-cards != $max-cards-per-row {
+      $media-query: '#{$media-query} and
+                     (max-width: #{$max-screen-width})';
+    }
+
+    @media #{$media-query} {
+      #{$body-class} .ranked-card-container {
+        // This is just the core media query inside make-md-column. Gutter size
+        // is handled in the base .ranked-card-container class definition.
+        width: percentage(1 / $num-cards);
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+# Dev ops tools
+Fabric3==1.14.post1 ; platform_python_implementation != 'PyPy'
+
+# Paramiko deps (used by Fabric)
+cryptography==2.7
+pyasn1==0.2.3
+PyNaCl==1.1.2
+
+paramiko==2.5.0
+
+# Testing
+pytest>=5.2.0
+pytest_selenium>=1.17.0
+selenium==3.14.0
+pytest_bdd>=3.2.1
+pytest-flask>=0.15.0
+pytest-xdist>=1.29.0
+pytest-metadata>=1.8.0
+
+# Other dev deps
+pip-licenses==1.7.1
+termcolor==1.1.0
+
+# Set pylint and asteroid (the code parser used by pylint) to these versions
+# because later versions have significant performance issues when working with
+# code that imports pandas.
+# https://github.com/PyCQA/pylint/issues/2198
+pylint>=2.3.1
+black==19.3b0 ; python_version == "3.7"
+
+# Pyinstaller is what we use to build binaries
+PyInstaller>=3.4
+
+# py3 conversion deps
+future==0.17.1

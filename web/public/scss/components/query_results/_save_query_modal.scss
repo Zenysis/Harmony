@@ -1,0 +1,37 @@
+.save-query-modal {
+  &__action-row {
+    display: flex;
+    margin-bottom: 1.5em;
+
+    // last element of the row should have no margin
+    > *:last-child {
+      margin: 0;
+    }
+  }
+
+  &__global-search {
+    flex: 1;
+    margin-right: 1em;
+  }
+
+  &__dashboard-section-header {
+    padding-bottom: 0.7em;
+  }
+
+  &__dashboard-caret {
+    margin-right: 0;
+    width: 20px;
+  }
+
+  &__dashboard-table {
+    padding-left: 20px;
+
+    // NOTE(pablo): to keep the height animation smooth, we have to remove the
+    // margin-bottom and use the padding-bottom instead (margins are not
+    // included in height computations, which is why the animation would snap)
+    .zen-table-container {
+      margin-bottom: 0;
+      padding-bottom: 15px;
+    }
+  }
+}

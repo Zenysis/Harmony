@@ -1,0 +1,32 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# The data generation pipeline is used for providing data sets to the 'process'
+# and 'validate' pipelines in a stateless manner. Tasks in the data generation
+# pipeline generally have specific requirements around network access (like
+# running within a specific intranet), task duration (like long running machine
+# learning jobs), or complex source data transformations (like a convoluted
+# excel workbook that is rarely updated and only needs to be cleaned once) that
+# make them unsuitable for running in the other pipelines.
+
+export ZEN_ENV='SITECODE'
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" ; pwd -P)
+ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
+
+ZEUS_ID='SAMPLE/generate'
+ZEUS_OUT_DIRS='feed,out,tmp'
+ZEUS_ROOT_DIR="${SCRIPT_DIR}/run"
+ZEUS_BIN_DIR="${SCRIPT_DIR}/../bin"
+ZEUS_UTILS_DIR="${ZEN_SRC_ROOT}/util/pipeline"
+
+ZEUS_CMD="\
+zeus \
+  --id=${ZEUS_ID} \
+  --root=${ZEUS_ROOT_DIR} \
+  --bin_root=${ZEUS_BIN_DIR} \
+  --utils_root=${ZEUS_UTILS_DIR} \
+  --out_dirs=${ZEUS_OUT_DIRS} \
+"
+
+${ZEUS_CMD} $@

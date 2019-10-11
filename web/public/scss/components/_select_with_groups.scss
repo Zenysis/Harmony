@@ -1,0 +1,13 @@
+// Select variables are from ~react-select/scss/select.scss
+
+.select-with-groups-group-label {
+  cursor: default;
+  color: $select-text-color;
+  margin: (-$select-padding-vertical) (-$select-padding-horizontal);
+  padding: $select-padding-vertical $select-padding-horizontal;
+  font-weight: $bold;
+}
+
+.select-with-groups-child-option {
+  padding-left: 1em;
+}

@@ -1,0 +1,19 @@
+.box-plot {
+  &-tooltip {
+    color: $white !important;
+    background-color: $zenysis-logo-base !important;
+    padding: 5px;
+
+    &__header {
+      margin-bottom: 10px;
+    }
+
+    &__body {
+      font-weight: normal;
+    }
+  }
+
+  &__container {
+    position: relative;
+  }
+}

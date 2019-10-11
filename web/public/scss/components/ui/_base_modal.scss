@@ -1,0 +1,75 @@
+// react-modal overrides
+// NOTE(pablo): The styles for the ReactModal itself, and ReactModal overlay
+// are hardcoded in JS and passed as props to the react-modal component
+body.ReactModal__Body--open {
+  overflow: hidden;
+}
+
+// Zenysis styles
+.zen-modal {
+  &__body {
+    left: 0;
+    padding: 30px;
+    overflow: auto;
+    position: absolute;
+    right: 0;
+  }
+
+  &__close-x-btn {
+    color: $slate;
+    cursor: pointer;
+    font-size: 38px;
+    font-weight: 400;
+    opacity: 0.5;
+    position: absolute;
+    right: 25px;
+    top: 4px;
+
+    &:hover {
+      opacity: 0.4;
+    }
+  }
+}
+
+.zen-modal-header {
+  $header-height: 70px;
+  background-color: $gray-light;
+  height: $header-height;
+  padding-left: 30px;
+
+  &__title {
+    display: inline-block;
+    line-height: $header-height;
+    margin: 0;
+  }
+
+  &__secondary-content {
+    display: inline-block;
+    margin-left: 10px;
+  }
+}
+
+.zen-modal-footer {
+  $footer-height: 60px;
+  border-top: 1px solid #f3f4f6;
+  box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.3);
+  bottom: 0;
+  display: flex;
+  height: $footer-height;
+  justify-content: center;
+  left: 0;
+  padding: 10px 0;
+  position: absolute;
+  right: 0;
+
+  &__button-row {
+    button {
+      margin-right: 20px;
+    }
+  }
+
+  &__content-after-action-btns,
+  &__content-before-action-btns {
+    display: inline-block;
+  }
+}

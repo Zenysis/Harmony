@@ -1,0 +1,53 @@
+.indicator-customization-module {
+  &__add-filter-btn {
+    width: 100%;
+    border-radius: 5px;
+
+    .glyphicon-plus {
+      color: $dark-gray-3;
+      margin-left: $spacing-xs;
+    }
+  }
+
+  &__data-quality-block {
+    margin-top: $spacing-m;
+  }
+
+  &__data-quality-score {
+    &:hover {
+      // TODO (david): Change this to use one of our styleguide colors when surrounding elements get changed
+      background-color: darken( white, 10% );
+    }
+  }
+
+  &__data-quality-error-message {
+    text-align: center;
+  }
+
+  &__filter-block {
+    margin-top: $spacing-m;
+
+    .selection-block {
+      padding: 0;
+    }
+  }
+
+  &__remove-filter-btn-container {
+    display: flex;
+  }
+
+  &__remove-filter-btn {
+    // aligns the btn to the right
+    margin-left: auto;
+
+    .glyphicon-minus {
+      color: $dark-gray-3;
+    }
+  }
+
+  &__seperator-line {
+    padding-top: $spacing-m;;
+    border-top: 1px solid $gray;
+    margin: 0 $spacing-m;
+  }
+}

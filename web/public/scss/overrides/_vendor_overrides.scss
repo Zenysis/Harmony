@@ -1,0 +1,13 @@
+// Overrides modals.scss
+.ReactModal__Overlay {
+  .ReactModal__Content {
+    .modal-body {
+      padding: $spacing-m !important;
+		}
+	}
+}
+
+// Overrides toastr
+#toast-container .toast {
+	border-radius: 2px;
+}

@@ -1,0 +1,16 @@
+.bump-chart-tooltip {
+  // NOTE(stephen): Need to mark these as important since @vx/tooltip applies
+  // inline styles.
+  background-color: #5c77eb !important;
+  color: white !important;
+
+  &__key {
+    border-bottom: 1px solid white;
+    padding-bottom: 5px;
+    text-align: center;
+  }
+
+  &__rank {
+    margin: 5px 0px;
+  }
+}

@@ -1,0 +1,40 @@
+{% extends 'web/server/templates/emails/base_email.html' %}
+
+{% block email_body %}
+<tr>
+	<td class="content-message" style="font-family:'Open Sans Light',Calibri, Arial, sans-serif; color: #595959;">
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px; line-height:26px;">
+	   {{email_header}}
+	  </p>
+  
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px; line-height:26px;">
+		{{intro}}
+	  </p>
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:18px; line-height:10px;">
+		&nbsp;
+	  </p>
+	  <table width="300" border="0" cellspacing="0" cellpadding="0">
+		<tbody><tr>
+		  <td width="250" style="border-radius: 5px;" height="50" bgcolor="#5b92e5" style="text-align:center;">
+			<a href="{{invite_link}}" align="center" 
+			style="font-family:'Open Sans',Calibri, Arial, sans-serif;; font-size:15px; color:#ffffff; text-align: center; line-height:50px; display:block; text-decoration:none;border-radius:100%; ">{{btn_text}}</a>
+		  </td>
+		  <td>&nbsp;</td>
+		  <td>&nbsp;</td>
+		</tr>
+	  </tbody></table>
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px; line-height:26px;">
+		{{description_text}}
+	  </p>
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px; line-height:0px;">
+		{{signoff_text}}
+	  </p>
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px; line-height:16px;">
+		{{signoff_team}}
+	  </p>
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:18px; line-height:10px;">
+		&nbsp;
+	  </p>
+	</td>
+  </tr>
+{% endblock email_body %}

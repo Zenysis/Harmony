@@ -1,0 +1,37 @@
+.geo-app {
+  background-color: $site-background;
+  padding-bottom: 50px;
+}
+
+.geo-result {
+  padding-left: 10%;
+  padding-right: 10%;
+  height: 100%;
+
+  .query-result {
+    height: 70vh;
+  }
+
+  .visualization-container {
+    box-shadow: 0 3px 8px 0 rgba(0, 0, 0, .2);
+  }
+  .result-controls-right {
+    padding-right: 10%;    
+  }
+
+  .result-controls-left {
+    padding-top: 1%;
+    padding-left: 10%;
+  }
+
+  .result-container {
+    border: none;
+  }
+  .glyphicon {
+    padding-left: 5px;
+  }
+
+  .query-result-filter-button {
+    margin-left: -17vw;
+  }
+}

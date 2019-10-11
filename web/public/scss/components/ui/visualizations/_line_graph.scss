@@ -1,0 +1,28 @@
+.line-graph {
+  &__visualization-container {
+    position: relative;
+  }
+
+  &__tooltip-divider {
+    margin-bottom: 5px;
+    margin-top: 5px;
+  }
+
+  &__data-point {
+    &-overlay {
+      cursor: pointer;
+    }
+
+    &-highlight {
+      pointer-events: none;
+    }
+  }
+
+  &__tooltip-container {
+    // Note(Dennis): Used !important since we are overriding styles set by
+    // the style attribute
+    background: $blue-primary-gradient !important;
+    color: $white !important;
+    padding: 10px !important;
+  }
+}

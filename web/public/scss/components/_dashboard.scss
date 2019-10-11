@@ -1,0 +1,92 @@
+.dashboard-message {
+  border: 3px dashed #aaa;
+  text-align: center;
+  padding: 40px;
+  font-size: 25px;
+  color: #aaa;
+}
+
+.dashboard-message-text {
+  margin-top: 1em;
+  font-size: 14px;
+  color: #404040;
+}
+
+.personal-dashboard-title-block {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  margin-bottom: 35px;
+  border-bottom: 1px solid #9eb1c8;
+
+
+  .personal-dashboard-title {
+    color: #333;
+    line-height: 36px;
+    font-weight: 300;
+    font-size: 30px;
+    padding-left: 15px;
+  }
+}
+
+.dashboard-title-block {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #9eb1c8;
+
+  .dashboard-title, .dashboard-subtitle {
+    color: #fff;
+    line-height: 36px;
+    font-weight: 300;
+  }
+
+  .dashboard-title {
+    font-size: 30px;
+  }
+
+  .dashboard-subtitle {
+    font-size: 20px;
+  }
+}
+
+.dashboard-page-links {
+  width: 200px;
+
+  // The dashboard links section isn't very important, so make the title smaller
+  .section-title-block {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+
+    .section-title {
+      font-size: 18px;
+    }
+  }
+
+  .page-link {
+    text-decoration: underline;
+  }
+
+}
+
+.convert-dashboard-button {
+  background-color: #fff;
+}
+
+.dashbord-settings-tab {
+  &__card {
+    margin-bottom: $spacing-m;
+  }
+}
+
+.filter-panel-config-item {
+  padding: 6px;
+
+  .zen-dropdown__menu {
+    margin-left: 16px;
+  }
+}
+
+.filter-visibility {
+  background: #fff;
+  margin-bottom: 5px;
+}

@@ -1,0 +1,51 @@
+.zen-tabs {
+  &__title {
+    display: inline-block;
+    margin-right: 30px;
+  }
+
+  &__contents-container {
+    padding-bottom: 30px;
+    padding-top: 30px;
+  }
+}
+
+.zen-tab-header {
+  &__outer-container {
+    display: inline-block;
+  }
+
+  &__heading {
+    display: inline-block;
+    margin: 0;
+    padding: 5px 0;
+
+    &:hover {
+      border-bottom: 3px solid $blue-primary-hover;
+      color: $slate-hover;
+    }
+
+    &--active {
+      border-bottom: 3px solid $blue-primary;
+      &:hover {
+        border-bottom: 3px solid $blue-primary-active;
+        color: $slate;
+      }
+    }
+
+    &--use-light-weight-heading {
+      font-weight: 400;
+      text-transform: none;
+    }
+  }
+}
+
+.zen-tab-content-wrapper {
+  &--active {
+    display: block;
+  }
+
+  &--hidden {
+    display: none;
+  }
+}

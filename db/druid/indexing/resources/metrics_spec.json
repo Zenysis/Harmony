@@ -1,0 +1,21 @@
+[
+  {
+    "name": "count",
+    "type": "count"
+  },
+  {
+    "name": "sum",
+    "type": "doubleSum",
+    "fieldName": "val"
+  },
+  {
+    "name": "min",
+    "type": "doubleMin",
+    "fieldName": "val"
+  },
+  {
+    "name": "max",
+    "type": "doubleMax",
+    "fieldName": "val"
+  }
+]

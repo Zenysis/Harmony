@@ -1,0 +1,11 @@
+.dashboards-dropdown {
+  &__new-dashboard-option-wrapper--border-btm {
+    $border-color: rgba(0, 0, 0, 0.15);
+    border-bottom: 1px $border-color solid;
+    border-top: 1px $border-color solid;
+  }
+
+  &__new-dashboard-option-label {
+    margin-left: 5px;
+  }
+}

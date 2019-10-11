@@ -1,0 +1,81 @@
+.slice-container .control-label {
+  padding-top: 0;
+}
+
+.slice-container .checkbox {
+  margin-bottom: 10px;
+}
+
+/* Filter slice header */
+.filter-body > .zen-modal__body {
+	overflow: visible;
+}
+
+.filter-slice-modal {
+	height: 100%;
+}
+
+.filter-slice-modal .zen-color-block > .zen-color-block__color-picker {
+  right: -90px;
+  position: absolute;
+  top: -150px;
+  z-index: 100;
+}
+
+.filter-slice-modal-header > h3,
+.filter-slice-modal-header > h4 {
+	padding: 5px 0px 10px 0px;
+	font-weight: lighter;
+	margin: 0;
+}
+
+.filter-slice-modal-header > h3 {
+	font-size: 35px;
+}
+.filter-slice-modal-header > h4 {
+	margin-top: -15px;
+	font-size: 16px;
+}
+
+.filter-slice-modal-header > .btn-close-modal {
+	top: -1px;
+	color: #384B59;
+}
+
+.modal-form-field-label {
+	font-size: 16px;
+}
+
+.modal-input-header {
+	font-weight: lighter;
+	font-size: 15px;
+}
+
+.filter-arrow {
+	color: #c3c3c3;
+	float: left;
+	padding-left: 10px;
+	@include transform(rotate(135deg));
+}
+
+.filter-color-ranges {
+	margin-top: 12px;
+}
+
+.filter-glyphicons {
+	line-height: 2;
+	padding: 4px;
+}
+
+.filter-glyphicons > button > i {
+	color: #8a8686;
+}
+
+.filter-glyphicons > button {
+	padding: 0px;
+}
+
+.modal-contents > .well {
+	padding: 7px;
+	background-color: rgb(235, 235, 235);
+}

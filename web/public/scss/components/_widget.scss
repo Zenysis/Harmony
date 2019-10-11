@@ -1,0 +1,40 @@
+.expand-button {
+  cursor: pointer;
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none;   /* Chrome/Safari/Opera */
+  -khtml-user-select: none;    /* Konqueror */
+  -moz-user-select: none;      /* Firefox */
+  -ms-user-select: none;       /* IE/Edge */
+  user-select: none;           /* non-prefixed version, currently not supported by any browser */
+
+  h4 {
+    position: absolute;
+    right: 1em;
+    top: .35em;
+    font-size: 2em;
+    font-weight: bold;
+    text-align: right;
+    z-index: 10;
+  }
+}
+
+.widget-icon {
+  padding-right: 5px;
+}
+
+.jarviswidget > header {
+  height: 35px;
+}
+
+.widget-wrapper {
+  width: 100%;
+  border-bottom: 1px solid #888;
+  height: 43px;
+  background: #E1EAF1;
+}
+
+@media screen and (max-width: 900px) {
+  .widget-wrapper {
+    height: 133px;
+  }
+}

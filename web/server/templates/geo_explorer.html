@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+
+{% set body_class="dashboard" %}
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+{% endblock %}
+
+{% block scripts %}
+  {% include 'query_app_vendor_scripts.html' %}
+
+  <script src="{{ bundle_resource_url('geoExplorer.bundle.js') }}"></script>
+{% endblock %}

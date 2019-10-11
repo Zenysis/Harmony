@@ -1,0 +1,20 @@
+textarea[name=share-message-panel] {
+  resize: none;
+}
+
+.email-attachment-dropdown{
+  .zen-dropdown__menu--open{
+    bottom: 40px;
+  }
+}
+
+.share-message-label {
+  // NOTE(solo): Quentin wants more spacing here that is greater
+  // than value of  $spacing-m
+  margin-top: 20px;
+}
+
+
+.external-recipients {
+  padding: $spacing-m;
+}

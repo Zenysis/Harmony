@@ -1,0 +1,26 @@
+{% extends 'layout.html' %}
+
+{% block css %}
+<style>
+#content {
+  /* TODO(ian): Do this dynamically. */
+  height: 650px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<iframe
+  class="min-full-page-height"
+  frameBorder="0"
+  style="width:100%; height:100%; border:none; margin:0; padding:0; z-index:999999;"
+  src="/facilities-map/index.html"></iframe>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ bundle_resource_url('navbar.bundle.js') }}"></script>
+{% endblock %}
+
+{% block tracking_event %}
+<script>analytics.track('Facilities map view', {nonInteraction: 1});</script>
+{% endblock %}

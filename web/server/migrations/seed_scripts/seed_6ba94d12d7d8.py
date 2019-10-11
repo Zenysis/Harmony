@@ -1,0 +1,380 @@
+from builtins import str
+from past.builtins import basestring
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session
+
+import sqlalchemy as sa
+
+from log import LOG
+
+Base = declarative_base()
+
+
+class Role(Base):
+    __tablename__ = 'role'
+
+    id = sa.Column(sa.Integer(), primary_key=True)
+    name = sa.Column(sa.String(50), nullable=False, server_default=u'', unique=True)
+    label = sa.Column(sa.Unicode(255), server_default=u'')  # for display purposes
+    resource_type_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey(
+            'resource_type.id', ondelete='CASCADE', name='valid_resource_type'
+        ),
+    )
+
+
+# NOTE(vedant): This class has now been renamed to `Permission`.
+# The word `Definition` seemed unnecessarily verbose and was only included
+# because we had a `Permission` class that has since been renamed.
+class PermissionDefinition(Base):
+    '''
+    Defines a permission for a given resource type
+    '''
+
+    __tablename__ = 'permission_definition'
+
+    id = sa.Column(sa.Integer(), primary_key=True)
+
+    resource_type_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey('resource_type.id', name='valid_resource_type'),
+        nullable=False,
+    )
+    permission = sa.Column(sa.String(100), nullable=False)
+
+
+class Resource(Base):
+    '''
+    Represents a resource on the site
+    (e.g. a Dashboard, Database, User or even the website itself)
+    '''
+
+    __tablename__ = 'resource'
+
+    id = sa.Column(sa.Integer(), primary_key=True)
+
+    resource_type_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey('resource_type.id', name='valid_resource_type'),
+        nullable=False,
+    )
+
+    name = sa.Column(sa.String(1000), nullable=False)
+    label = sa.Column(sa.String(1000), nullable=False)
+
+
+# NOTE(vedant): This class has now been renamed to `RolePermissions`
+# The rationale for this change was to ensure that we have consistent naming
+# and to follow the pattern defined in `User`, `Role` and `UserRoles`.
+# `RolePerimssions` reprsents a mapping between `Role` and `Permission`
+class Permission(Base):
+    '''
+    Represents a mapping between a role and an actual permission.
+    '''
+
+    __tablename__ = 'permission'
+
+    id = sa.Column(sa.Integer(), primary_key=True)
+    role_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey('role.id', ondelete='CASCADE', name='valid_role'),
+        nullable=False,
+    )
+    definition_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey(
+            'permission_definition.id',
+            ondelete='CASCADE',
+            name='valid_permission_definition',
+        ),
+        nullable=False,
+    )
+
+
+class ResourceType(Base):
+    '''
+    A classification for discrete resources on the site
+    '''
+
+    __tablename__ = 'resource_type'
+
+    id = sa.Column(sa.Integer(), primary_key=True)
+    name = sa.Column(sa.String(100), nullable=False)
+
+
+SITE_ADMIN_ROLE_ID = 1
+DASHBOARD_VIEWER_ROLE_ID = 2
+DASHBOARD_EDITOR_ROLE_ID = 3
+DASHBOARD_ADMIN_ROLE_ID = 4
+DIRECTORY_READER_ROLE_ID = 5
+
+SITE_TYPE_ID = 1
+DASHBOARD_TYPE_ID = 2
+
+SITE_RESOURCE_ID = 1
+
+VIEW_USERS_SITE_PERM_ID = 1
+INVITE_USERS_SITE_PERM_ID = 2
+EDIT_USERS_SITE_PERM_ID = 3
+DELETE_USERS_SITE_PERM_ID = 4
+RESET_PASSWORD_PERM_ID = 5
+LIST_USERS_SITE_PERM_ID = 6
+LIST_ROLES_SITE_PERM_ID = 7
+LIST_RESOURCES_SITE_PERM_ID = 8
+VIEW_ADMIN_PAGE_SITE_PERM_ID = 9
+
+
+VIEW_RESOURCE_PERM_ID = 10
+EDIT_RESOURCE_PERM_ID = 11
+UPDATE_USERS_PERM_ID = 12
+DELETE_RESOURCE_PERM_ID = 13
+CREATE_RESOURCE_PERM_ID = 14
+
+DEFAULT_ROLES = [
+    {
+        'id': SITE_ADMIN_ROLE_ID,
+        'label': 'Site Administrator',
+        'name': 'admin',
+        'resource_type_id': SITE_TYPE_ID,
+    },
+    {
+        'id': DASHBOARD_VIEWER_ROLE_ID,
+        'label': 'Dashboard Viewer',
+        'name': 'dashboard_viewer',
+        'resource_type_id': DASHBOARD_TYPE_ID,
+    },
+    {
+        'id': DASHBOARD_EDITOR_ROLE_ID,
+        'label': 'Dashboard Editor',
+        'name': 'dashboard_editor',
+        'resource_type_id': DASHBOARD_TYPE_ID,
+    },
+    {
+        'id': DASHBOARD_ADMIN_ROLE_ID,
+        'label': 'Dashboard Administrator',
+        'name': 'dashboard_admin',
+        'resource_type_id': DASHBOARD_TYPE_ID,
+    },
+    {
+        'id': DIRECTORY_READER_ROLE_ID,
+        'label': 'Directory Reader',
+        'name': 'directory_reader',
+        'resource_type_id': SITE_TYPE_ID,
+    },
+]
+
+DEFAULT_RESOURCE_TYPES = [
+    {'id': SITE_TYPE_ID, 'name': 'site'},
+    {'id': DASHBOARD_TYPE_ID, 'name': 'dashboard'},
+]
+
+DEFAULT_RESOURCES = [
+    {
+        'id': SITE_RESOURCE_ID,
+        'resource_type_id': SITE_TYPE_ID,
+        'name': '/',
+        'label': 'Website',
+    }
+]
+
+DEFAULT_PERMISSIONS = [
+    # Site Permissions
+    # pylint:disable=C0301
+    {
+        'id': VIEW_USERS_SITE_PERM_ID,
+        'resource_type_id': SITE_TYPE_ID,
+        'permission': 'view_user',
+    },
+    {
+        'id': EDIT_USERS_SITE_PERM_ID,
+        'resource_type_id': SITE_TYPE_ID,
+        'permission': 'edit_user',
+    },
+    {
+        'id': INVITE_USERS_SITE_PERM_ID,
+        'resource_type_id': SITE_TYPE_ID,
+        'permission': 'invite_user',
+    },
+    {
+        'id': DELETE_USERS_SITE_PERM_ID,
+        'resource_type_id': SITE_TYPE_ID,
+        'permission': 'delete_user',
+    },
+    {
+        'id': LIST_USERS_SITE_PERM_ID,
+        'resource_type_id': SITE_TYPE_ID,
+        'permission': 'list_users',
+    },
+    {
+        'id': LIST_ROLES_SITE_PERM_ID,
+        'resource_type_id': SITE_TYPE_ID,
+        'permission': 'list_roles',
+    },
+    {
+        'id': LIST_RESOURCES_SITE_PERM_ID,
+        'resource_type_id': SITE_TYPE_ID,
+        'permission': 'list_resources',
+    },
+    {
+        'id': VIEW_ADMIN_PAGE_SITE_PERM_ID,
+        'resource_type_id': SITE_TYPE_ID,
+        'permission': 'view_admin_page',
+    },
+    {
+        'id': RESET_PASSWORD_PERM_ID,
+        'resource_type_id': SITE_TYPE_ID,
+        'permission': 'reset_password',
+    },
+    # Dashboard Permissions
+    {
+        'id': VIEW_RESOURCE_PERM_ID,
+        'resource_type_id': DASHBOARD_TYPE_ID,
+        'permission': 'view_resource',
+    },
+    {
+        'id': EDIT_RESOURCE_PERM_ID,
+        'resource_type_id': DASHBOARD_TYPE_ID,
+        'permission': 'edit_resource',
+    },
+    {
+        'id': UPDATE_USERS_PERM_ID,
+        'resource_type_id': DASHBOARD_TYPE_ID,
+        'permission': 'update_users',
+    },
+    {
+        'id': DELETE_RESOURCE_PERM_ID,
+        'resource_type_id': DASHBOARD_TYPE_ID,
+        'permission': 'delete_resource',
+    },
+    {
+        'id': CREATE_RESOURCE_PERM_ID,
+        'resource_type_id': DASHBOARD_TYPE_ID,
+        'permission': 'create_resource',
+    },
+]
+
+DEFAULT_ROLE_PERMISSIONS = [
+    # Dashboard Administrator
+    {
+        'id': 1,
+        'role_id': DASHBOARD_ADMIN_ROLE_ID,
+        'definition_id': VIEW_RESOURCE_PERM_ID,
+    },
+    {
+        'id': 2,
+        'role_id': DASHBOARD_ADMIN_ROLE_ID,
+        'definition_id': EDIT_RESOURCE_PERM_ID,
+    },
+    {
+        'id': 3,
+        'role_id': DASHBOARD_ADMIN_ROLE_ID,
+        'definition_id': UPDATE_USERS_PERM_ID,
+    },
+    {
+        'id': 4,
+        'role_id': DASHBOARD_ADMIN_ROLE_ID,
+        'definition_id': DELETE_RESOURCE_PERM_ID,
+    },
+    {
+        'id': 5,
+        'role_id': DASHBOARD_ADMIN_ROLE_ID,
+        'definition_id': CREATE_RESOURCE_PERM_ID,
+    },
+    # Dashboard Editor
+    {
+        'id': 6,
+        'role_id': DASHBOARD_EDITOR_ROLE_ID,
+        'definition_id': VIEW_RESOURCE_PERM_ID,
+    },
+    {
+        'id': 7,
+        'role_id': DASHBOARD_EDITOR_ROLE_ID,
+        'definition_id': EDIT_RESOURCE_PERM_ID,
+    },
+    # Dashboard Viewer
+    {
+        'id': 8,
+        'role_id': DASHBOARD_VIEWER_ROLE_ID,
+        'definition_id': VIEW_RESOURCE_PERM_ID,
+    },
+    # Directory Reader
+    {
+        'id': 9,
+        'role_id': DIRECTORY_READER_ROLE_ID,
+        'definition_id': LIST_USERS_SITE_PERM_ID,
+    },
+    {
+        'id': 10,
+        'role_id': DIRECTORY_READER_ROLE_ID,
+        'definition_id': LIST_RESOURCES_SITE_PERM_ID,
+    },
+    {
+        'id': 11,
+        'role_id': DIRECTORY_READER_ROLE_ID,
+        'definition_id': LIST_ROLES_SITE_PERM_ID,
+    },
+]
+
+
+def add_or_update(session, model_class, entities):
+
+    for entity in entities:
+        unicode_entity = convert_strings_to_unicode(entity)
+        entity = session.query(model_class).filter_by(id=unicode_entity['id']).first()
+        if entity:
+            for key, value in list(unicode_entity.items()):
+                if hasattr(entity, key):
+                    setattr(entity, key, value)
+        else:
+            entity = model_class(**unicode_entity)
+        session.add(entity)
+
+
+def convert_strings_to_unicode(entity):
+    new_entity = dict(entity)
+    for key in list(new_entity.keys()):
+        if isinstance(new_entity[key], basestring):
+            new_entity[key] = str(new_entity[key])
+    return new_entity
+
+
+def add_default_roles(session):
+    LOG.debug('Prepopulating default roles')
+    add_or_update(session, Role, DEFAULT_ROLES)
+
+
+def add_default_resource_types(session):
+    LOG.debug('Prepopulating default resource types')
+    add_or_update(session, ResourceType, DEFAULT_RESOURCE_TYPES)
+
+
+def add_default_permission_definitions(session):
+    LOG.debug('Prepopulating default permission definitions')
+    add_or_update(session, PermissionDefinition, DEFAULT_PERMISSIONS)
+
+
+def add_default_permissions(session):
+    LOG.debug('Prepopulating default role permissions')
+    add_or_update(session, Permission, DEFAULT_ROLE_PERMISSIONS)
+
+
+def add_default_resources(session):
+    LOG.debug('Prepopulating default resources')
+    add_or_update(session, Resource, DEFAULT_RESOURCES)
+
+
+def prepopulate_data(alembic_operation):
+
+    bind = alembic_operation.get_bind()
+    session = Session(bind=bind)
+
+    LOG.info('Prepopulating database with default information')
+    add_default_resource_types(session)
+    add_default_permission_definitions(session)
+    add_default_roles(session)
+    add_default_permissions(session)
+    add_default_resources(session)
+    session.commit()
+    LOG.info('Successfully prepopulated data.')

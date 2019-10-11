@@ -1,0 +1,5 @@
+{%- macro bundle_resource_url(resource) -%}
+{%- set prefix = '/build/min' if config.IS_PRODUCTION else '/build' -%}
+{%- set suffix = '?v=%s' % js_version if js_version else '' -%}
+{{prefix}}/{{resource}}{{suffix}}
+{%- endmacro -%}

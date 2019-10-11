@@ -1,0 +1,90 @@
+.visualization-container {
+  background-color: white;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  @media (max-width: 940px) { padding-top: 60px; }
+
+  .controls {
+    margin-bottom: 20px;
+    padding: 55px 50px 0px 50px;
+
+    .form-control {
+      border: none;
+    }
+
+    .control-checkbox {
+      position: relative;
+      bottom: 1px;
+      margin-left: 5px;
+      display: inline-block;
+    }
+
+    .bootstrap-select > .dropdown-toggle {
+      border: none;
+      font-size: 15px;
+      font-weight: $bold;
+      position: relative;
+      left: 3px
+    }
+
+    label {
+      display: block;
+      line-height: 7px;
+    }
+
+    label, select {
+      margin-right: .5em;
+    }
+
+    .form-group {
+      margin-right: 3em;
+      line-height: 2;
+    }
+  }
+
+  .title {
+    .settings-modal-button {
+      color: $gray-light;
+      cursor: pointer;
+      font-size: 21px;
+      float: right;
+      position: relative;
+      top: -50px;
+      @media (min-width: 800px) { right: 50px; }
+      @media (max-width: 800px) { right: 10px; }
+      &:hover {
+        color: $gray;
+        &:before {
+          @include tooltip-arrow();
+        }
+        &:after {
+          @include tooltip-body();
+        }
+      }
+    }
+  }
+
+  .visualization-block {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .visualization {
+      // Force the visualization to fill the remaining space in the container
+      flex: 1;
+
+      // Plotly visualizations need to have height/width set on the nested
+      // divs inside the visualization block
+      .js-plotly-plot, .plot-container, .heattile-visualization {
+        height: 100%;
+        width: 100%;
+      }
+
+      // Need a minimum height to be set so that the element reflows correctly
+      // when an adjacent elements size changes
+      min-height: 10px;
+    }
+  }
+}

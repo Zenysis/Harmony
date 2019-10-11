@@ -1,0 +1,102 @@
+// TODO(pablo): this file contains legacy variables from before our
+// design refresh from July/August 2019. We should move the variables from
+// here that we intend to keep into _zen_variables.scss, and then delete
+// this file.
+
+// This file includes variables used only by us, not other libraries.
+// As opposed to _bootstrap_variables_overrides.scss, or _smartadmin_overrides.scss
+// this file is not intended to override existing bootstrap or other third-party
+// variables.
+
+// Colors
+$zenysis-logo-base: #3f73b4;
+$zenysis-purple-base: #463388;
+
+// Different shades of zenysis-purple, from dark to light
+// TODO(firstDesignerWeHire): pick a better color palette please :'(
+$dark-zenysis-purple-1: darken($zenysis-purple-base, 20%); // #20173e
+$dark-zenysis-purple-2: darken($zenysis-purple-base, 17.5%); // #251b47
+$dark-zenysis-purple-3: darken($zenysis-purple-base, 15%); // #291e50
+$dark-zenysis-purple-4: darken($zenysis-purple-base, 12.5%); // #2e225a
+
+$zenysis-purple-1: darken($zenysis-purple-base, 10%); // #332563
+$zenysis-purple-2: darken($zenysis-purple-base, 5%); // #3c2c75
+$zenysis-purple-3: $zenysis-purple-base; // #463388
+$zenysis-purple-4: lighten($zenysis-purple-base, 5%); // #503a9b
+$zenysis-purple-5: lighten($zenysis-purple-base, 7.5%); // #543da4
+
+$light-zenysis-purple-1: lighten($zenysis-purple-base, 10%); // #5941ad
+$light-zenysis-purple-2: lighten($zenysis-purple-base, 20%); // #755ec3
+$light-zenysis-purple-3: lighten($zenysis-purple-base, 25%); // #8571ca
+$light-zenysis-purple-4: lighten($zenysis-purple-base, 30%); // #9583d1
+$light-zenysis-purple-5: lighten($zenysis-purple-base, 40%); // #b5a8df
+$light-zenysis-purple-6: lighten($zenysis-purple-base, 50%); // #d4ceec
+$light-zenysis-purple-7: lighten($zenysis-purple-base, 55%); // #e4e0f3
+$light-zenysis-purple-8: lighten($zenysis-purple-base, 60%); // #f4f3fa
+
+$white: rgb(255, 255, 255);
+
+// Grays from http://blueprintjs.com/docs/#core/colors
+$dark-gray-1: #182026;
+$dark-gray-2: #202b33;
+$dark-gray-3: #293742;
+$dark-gray-4: #30404d;
+$dark-gray-5: #394b59;
+$gray-1: #5c7080;
+$gray-2: #738694;
+$gray-3: #8a9ba8;
+$gray-4: #a7b6c2;
+$gray-5: #bfccd6;
+$light-gray-1: #ced9e0;
+$light-gray-2: #d8e1e8;
+$light-gray-3: #e1e8ed;
+$light-gray-4: #ebf1f5;
+$light-gray-5: #f5f8fa;
+$light-gray-6: #f6fafc;
+
+$offwhite-card-header: #f1f1f1;
+
+$light-blue-1: darken($light-gray-5, 4%);
+$light-blue-2: darken($light-gray-5, 27%);
+$light-blue-3: darken($light-gray-5, 37%);
+
+$dashboard-background: #455971;
+
+// Navbar variables
+$navbar-color: $dark-gray-2;
+$navbar-item-height: 50px;
+$navbar-height: 50px;
+$small-page-navbar-height: 130px;
+// matches TRANSITION_WIDTH in Navbar/index.jsx
+$navbar-transition-width: 1250px;
+
+// Query Result variables
+$query-result-height: 750px;
+$query-result-height-large: 900px;
+
+// Animation variables
+$ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+
+// spacing
+$spacing-xs: 4px;
+$spacing-s: 8px;
+$spacing-m: 16px;
+$spacing-l: 32px;
+$spacing-xl: 64px;
+
+// Fonts have build in top/bottom padding we want to account for
+// This is an educated guess for 13px text that might need adjustment
+$extra-text-spacing-m: 4px;
+$extra-text-spacing-xxxl: 8px;
+
+// fonts
+$font-s: 11px;
+$font-m: 13px;
+$font-l: 15px;
+$font-xl: 17px;
+$font-xxl: 19px;
+$font-xxxl: 21px;
+
+$bold: 700;
+
+$border-radius: 2px;

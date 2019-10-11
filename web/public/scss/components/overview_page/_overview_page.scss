@@ -1,0 +1,110 @@
+.overview-page {
+  $inter-section-spacing: 50px;
+  background-color: $site-background;
+  padding: 50px 150px;
+
+  &__action-btn {
+    display: inline-block;
+    width: 200px;
+  }
+
+  &__main-content {
+    margin-top: 40px;
+  }
+
+  &__dashboard-action-container {
+    float: right;
+  }
+
+  &__dashboard-search {
+    width: 230px;
+    margin-right: 10px;
+  }
+
+  &__section-header-spacing {
+    margin-bottom: 30px;
+  }
+
+  &__section-contents-spacing {
+    margin-bottom: $inter-section-spacing;
+  }
+
+  &__section-header {
+    align-items: center;
+    display: flex;
+
+    .u-heading-small {
+      margin: 0;
+    }
+  }
+
+  &__section-contents {
+    background: $white;
+    border-radius: 5px;
+    box-shadow: 0 5px 20px 0 rgba(35, 36, 37, 0.15);
+    padding: 30px;
+  }
+
+  &__recent-queries-heading {
+    flex: 1;
+  }
+
+  .zen-tabs__contents-container {
+    padding: 0;
+  }
+
+  &__official-dashboards-container {
+    $spacing-left: 15px;
+    margin-left: -$spacing-left;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: $inter-section-spacing;
+    padding-top: 30px;
+    padding-left: $spacing-left;
+    white-space: nowrap;
+  }
+
+  &__dashboard-card {
+    border-radius: 3px;
+    box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.3), 0 5px 10px 0 rgba(35, 36, 37, 0.15);
+    display: inline-block;
+    margin-right: 3%;
+    transition: all 200ms ease-in-out;
+    width: 22%;
+    text-align: center;
+
+    &:hover {
+      box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.3), 0 5px 15px 0 rgba(35, 36, 37, 0.3);
+    }
+  }
+
+  &__dashboard-card-header {
+    background-color: $white;
+    border-bottom: 2px solid $blue-primary;
+    font-size: 15px;
+    overflow: hidden;
+    padding: 10px;
+    text-overflow: ellipsis;
+  }
+
+  &__dashboard-image {
+    width: 100%;
+  }
+
+  &__dashboard-loading-image {
+    display: inline-block;
+    width: 10%;
+    padding-top: 22.5%;
+    padding-bottom: 22.5%;
+  }
+}
+
+.overview-page-dashboard-table {
+  &__favorite-dashboard-cell {
+    font-size: 20px;
+    text-align: center;
+    > * {
+      margin: 0;
+    }
+  }
+}

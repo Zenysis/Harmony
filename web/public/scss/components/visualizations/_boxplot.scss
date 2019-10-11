@@ -1,0 +1,59 @@
+.box-plot-chart {
+  height: 100%;
+
+  .axis {
+    font: 10px;
+  }
+
+  .axis path,
+  .axis line {
+    fill: none;
+    shape-rendering: crispEdges;
+    stroke: #000;
+  }
+
+  line.explodingBoxplot.line,
+  rect.explodingBoxplot.box {
+    stroke: #888;
+    stroke-width: 2px;
+  }
+
+  line.explodingBoxplot.vline {
+    stroke-dasharray: 5,5;
+  }
+
+  g.tick text,
+  g.axis text {
+    user-select: none;
+    cursor: default;
+  }
+}
+
+.box-plot-tooltip {
+  background: #333;
+  border-radius: 2px;
+  color: #ddd;
+  font-weight: bold;
+  margin-top: -10px;
+  max-width: 400px;
+  pointer-events: none;
+  transform: translate3d(-50%, -100%, 0);
+
+  &__content {
+    padding: 12px;
+  }
+
+  &__row {
+    color: #ff7f00;
+  }
+
+  &__value {
+    margin-left: 5px;
+  }
+
+  &__value-row {
+    .box-plot-tooltip__value {
+      color: #ddd;
+    }
+  }
+}

@@ -1,0 +1,16 @@
+.upload-app {
+  padding: 3em;
+
+  &__main-instructions {
+    font-size: 20px;
+  }
+}
+
+.data-upload-dropdown-container {
+  font-size: 14px;
+  margin-top: $spacing-m;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}

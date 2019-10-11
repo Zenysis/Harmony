@@ -1,0 +1,34 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# Wrapper script for running specific data generation pipeline steps with
+# email and slack logging. This is similar to the {index,process,validate}_all
+# wrapper scripts, however the tasks to run *must* be specified. Since the data
+# generation pipeline can have requirements on which machines run specifc steps,
+# they cannot be provided automatically.
+
+SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
+ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
+
+EMAIL_ID='pipeline-SAMPLE@zenysis.com'
+MAIL_DOMAIN='corp.zenysis.com'
+
+# Grab the steps to run
+TASKS="${@:1}"
+
+source "${ZEN_SRC_ROOT}/scripts/slack_announce.sh"
+slack_announce "SAMPLE: Starting data generation pipeline for tasks: ${TASKS}"
+
+pushd "${SCRIPT_DIR}" &> /dev/null
+
+# Run the data generation pipeline over the specified steps.
+./zeus_generate \
+  run \
+    --success_mail="${EMAIL_ID}" \
+    --failure_mail="${EMAIL_ID}" \
+    --mail_domain="${MAIL_DOMAIN}" \
+    "${TASKS}"
+
+popd &> /dev/null
+
+slack_announce "SAMPLE: Finished data generation pipeline for tasks: ${TASKS}"

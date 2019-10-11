@@ -1,0 +1,19 @@
+.select-field-label {
+  display: block;
+  position: relative;
+  font-size: 16px;
+  font-weight: normal;
+  margin: 0px 0px 5px;
+
+  & small {
+    // Copied from bootstrap/_forms.scss .help-text
+    color: lighten($text-color, 25%);
+  }
+}
+
+.select-field-clear-selection {
+  cursor: pointer;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}

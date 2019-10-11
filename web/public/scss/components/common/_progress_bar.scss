@@ -1,0 +1,12 @@
+.progress {
+  $bar-width: 66%;
+
+  position: relative;
+  top: 50%;
+  width: $bar-width;
+  margin-left: (100% - $bar-width) / 2;
+
+  .progress-bar {
+    @include animation-duration(0.7);
+  }
+}

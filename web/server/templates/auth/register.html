@@ -1,0 +1,54 @@
+{% extends 'auth/layout.html' %}
+
+{% set sidebar_active='ACCOUNT' %}
+
+{% block auth_content %}
+{% from "flask_user/_macros.html" import render_field, render_submit_field %}
+
+<div class="text-center">
+  <h2> Register</h2>
+</div>
+
+<form action="" method="POST" novalidate formnovalidate class="form" role="form">
+    {{ form.hidden_tag() }}
+
+    {# Username or Email #}
+    {% set field = form.username if user_manager.enable_username else form.email %}
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+        {# Label on left, "Already registered? Sign in." on right #}
+        <div class="row">
+            <div class="col-xs-6">
+                <label for="{{ field.id }}" class="control-label">Email Address</label>
+            </div>
+        </div>
+        {{ field(class_='form-control', readonly=True, tabindex=210, value=form.username.data) }}
+        {% if field.errors %}
+            {% for e in field.errors %}
+                <p class="help-block">{{ e }}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    {% if user_manager.enable_email and user_manager.enable_username %}
+        {{ render_field(form.email, tabindex=220) }}
+    {% endif %}
+
+    {{ render_field(form.password, tabindex=230) }}
+
+    {{ render_field(form.first_name, tabindex=230)}}
+
+    {{ render_field(form.last_name, tabindex=230)}}
+
+    {% if user_manager.enable_retype_password %}
+        {{ render_field(form.retype_password, tabindex=240) }}
+    {% endif %}
+
+    {{ render_submit_field(form.submit, tabindex=280) }}
+</form>
+<script src="{{config.VENDOR_SCRIPT_PATH}}/jquery-1.9.1.js"></script>
+<script src="/js/login.js"></script>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ bundle_resource_url('navbar.bundle.js') }}"></script>
+{% endblock %}

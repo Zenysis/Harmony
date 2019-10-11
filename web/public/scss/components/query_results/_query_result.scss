@@ -1,0 +1,321 @@
+// Bootstrap form override for select dropdown.
+.query-result, .query-result-grid {
+  .form-control {
+    font-size: 15px;
+    font-weight: $bold;
+    height: auto;
+    left: -8px;
+    line-height: 1;
+    position: relative;
+  }
+}
+
+// Bootstrap form override for select dropdown.
+.query-result, .query-result-grid {
+  .form-inline .form-group {
+    vertical-align: baseline;
+  }
+}
+
+#query-error {
+  color: red;
+  font-size: 15px;
+  font-weight: $bold;
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.query-result {
+  height: $query-result-height;
+  margin-top: $spacing-l;
+  z-index: 0;
+  @media (min-height: 1024px) { height: $query-result-height-large; }
+
+  &--unrecoverable-error {
+    height: 100px;
+  }
+}
+
+.query-result-error {
+  align-items: center;
+  background-color: $white;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+}
+
+// The height of a Query Result container in the Grid Dashboard
+// relative to the height of its parent element.
+.query-result-grid {
+  z-index: 0;
+  @media (min-width: 800px) { padding: 10px; }
+  @media (max-width: 800px) { padding: 0px; }
+  height: 100%;
+}
+
+.query-result, .query-result-grid {
+  .result-container {
+    height: calc(100% - 30px);
+  }
+}
+
+.result-container {
+  border-bottom: 1px solid #ddd;
+}
+
+.query-button-container {
+  align-items: center;
+  margin-bottom: $spacing-l;
+  margin-top: $spacing-m;
+  padding-left: 32px;
+}
+
+.result-controls {
+  border-bottom: 1px solid #ddd;
+}
+
+.result-controls-left,
+.result-controls-right {
+  position: absolute;
+}
+
+.result-controls-left {
+  left: 0;
+}
+
+.result-controls-right {
+  right: 0;
+}
+
+.result-controls-top,
+.result-controls-bottom {
+  position: relative;
+}
+
+.result-controls-top {
+  top: -21px;
+}
+
+.result-controls-bottom {
+  margin: 8px;
+  top: 4px;
+}
+
+.aqt-action-button {
+  display: inline-block;
+  padding: 20px 15px;
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  color: $slate;
+  @media (max-width: 1150px) {
+    padding-left: 10px;
+    padding-right: 10px;
+    opacity: 0.5;
+  }
+
+  &--icon {
+    font-size: 20px;
+    vertical-align: bottom;
+  }
+
+  &:hover {
+    background-color: #f3f3f3;
+  }
+}
+
+// TODO(nina): This needs to be 'first-child' or 'first-of-type', but
+// that is causing every button to have padding-left of 25px
+.aqt-action-button-settings-button {
+  display: inline-block;
+  padding-left: 25px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 15px;
+  @media (max-width: 1150px) {
+    padding-left: 15px;
+    padding-right: 10px;
+    opacity: 0.5;
+  }
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: normal;
+  letter-spacing: normal;
+  color: $slate;
+
+  &--icon {
+    font-size: 20px;
+    vertical-align: bottom;
+  }
+
+  &:hover {
+    background-color: #f3f3f3;
+  }
+}
+
+.action-button {
+  background: none;
+  border: none;
+  border-radius: $border-radius;
+  box-shadow: none;
+  color: #808792;
+  font-size: 13px;
+  height: 30px;
+  margin: 0px 0px 0px 0px;
+  padding: 5px 12px 7px 12px;
+  position: relative;
+  top: -1px;
+  width: auto;
+}
+
+.action-button:hover {
+  background: #E1EAF1;
+  color: #2F5973;
+}
+
+.action-button:active {
+  color: black;
+}
+
+.action-button.button-loading {
+  cursor: progress;
+}
+
+.graph-title-block {
+  text-align: center;
+  @media (min-width: 800px) { padding: 20px; }
+  @media (max-width: 800px) { padding: 5px; }
+}
+
+.graph-title {
+  font-size: 24px;
+  line-height: 35px;
+  margin: auto;
+
+  .fieldname {
+    font-weight: normal;
+    &.denom {
+      color: #aaa;
+    }
+  }
+}
+
+.date-range {
+  font-size: 16px;
+}
+
+.small-mode {
+  .date-range {
+    font-size: 12px;
+  }
+}
+
+.query-result-view {
+  height: 100%;
+}
+
+.view-dropdown-custom {
+  background: none;
+  border: none;
+  border-radius: $border-radius;
+  margin: none;
+  padding: 3px 20px;
+  text-align: left;
+  transition: all 0.1s linear;
+  width: 100%;
+}
+
+.view-dropdown-custom:hover{
+  background: rgb(50, 118, 177);
+  color: white;
+}
+
+.ui-button-primary {
+  font-size: 16px;
+  padding: 5px;
+  padding-left: 15px;
+}
+
+.view-btn {
+  border: 1px solid #ddd;
+  bottom: 11px;
+  font-size: 15px;
+  margin-left: -1px;
+  padding: 5px 13px 5px 13px;
+  position: relative;
+  height: 100%;
+  @media (max-width: 1100px) { margin-right: -1px; }
+}
+
+.aqt-view-btn-dropdown {
+  border: 1px solid #ddd;
+  font-size: 15px;
+  margin-left: -1px;
+  padding: 5px 13px 5px 13px;
+  position: relative;
+  border-bottom-right-radius: 4px;
+  background: #f0f0f0;
+  color: #bfc2c9;
+  @media (max-width: 1100px) { margin-right: -1px; }
+}
+
+.view-btn-active {
+  background: white;
+  border-bottom: 1px solid white;
+  border-color: rgb(221, 221, 221);
+  box-shadow: none;
+  color: #333;
+}
+
+.view-btn-inactive {
+  background: rgb(240, 240, 240);
+}
+
+.view-btn-inactive:hover {
+  background: rgb(247, 247, 247);
+}
+
+.view-btn-inactive:active {
+  background: white;
+}
+
+.remove-button {
+  @extend .action-button;
+  @extend .view-btn;
+  background: white;
+  left: -7px;
+  padding-right: 6px;
+  padding-left: 6px;
+  top: -41px;
+}
+
+.control-multiselect {
+  left: -8px;
+}
+
+@media screen and (max-width: 600px) {
+  .query-graph-info-bar {
+    padding: 85px 20px 0px 20px;
+  }
+}
+
+.action-button-text {
+  margin-left: 5px;
+}
+
+.aqt-action-button-text {
+  margin-left: 8px;
+}
+
+.action-button-caret {
+  margin-left: 5px;
+}

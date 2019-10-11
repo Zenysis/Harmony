@@ -1,0 +1,16 @@
+.bubblechart-modal {
+  min-height: 10rem;
+  min-width: 18rem;
+  max-width: 70rem;
+}
+
+.bubblechart-axes-option-label {
+  margin-left: 5px;
+}
+
+.bubblechart-legend {
+	position: relative;;
+  z-index: 1;
+  bottom: 100px;
+  right: 50px;
+}

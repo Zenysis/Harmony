@@ -1,0 +1,33 @@
+{
+  "type": "index_hadoop",
+  "spec": {
+    "ioConfig": {
+      "type": "hadoop",
+      "inputSpec": {{INPUT_SPEC_JSON}}
+    },
+    "dataSchema": {
+      "dataSource": "{{DATASOURCE_NAME}}",
+      "granularitySpec": {
+        "type": "uniform",
+        "segmentGranularity": "month",
+        "queryGranularity": "none",
+        "intervals": [ "{{DATA_START_DATE}}/{{DATA_END_DATE}}" ]
+      },
+      "parser": {
+        "type": "hadoopyString",
+        "parseSpec": {
+          "format": "json",
+          "dimensionsSpec": {
+            "dimensions": {{DIMENSIONS_JSON}}
+          },
+          "timestampSpec": {
+            "format": "auto",
+            "column": "{{DATE_COLUMN_NAME}}"
+          }
+        }
+      },
+      "metricsSpec": {{METRICS_SPEC_JSON}}
+    },
+    "tuningConfig": {{TUNING_CONFIG_JSON}}
+  }
+}

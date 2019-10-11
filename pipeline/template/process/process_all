@@ -1,0 +1,48 @@
+#!/bin/bash -eu
+set -o pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
+ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
+
+EMAIL_ID='pipeline-SAMPLE@zenysis.com'
+MAIL_DOMAIN='corp.zenysis.com'
+
+# Get the date in case the date changes before all the steps are complete.
+DATE=$(date +%Y%m%d)
+
+source "${ZEN_SRC_ROOT}/scripts/slack_announce.sh"
+slack_announce 'SAMPLE: Starting data processing pipeline'
+
+pushd "${SCRIPT_DIR}" &> /dev/null
+
+TASKS='run/...'
+
+# Run the full data processing pipeline.
+# NOTE: We mark this as || true as we always want to attempt exporting the data
+# for whatever we computed. In case the pipeline was aborted, the exporter will
+# not export it.
+./zeus_process \
+  --date="${DATE}" \
+  run \
+    --success_mail="${EMAIL_ID}" \
+    --failure_mail="${EMAIL_ID}" \
+    --mail_domain="${MAIL_DOMAIN}" \
+    "${TASKS}" || true
+
+slack_announce 'SAMPLE: Starting processed data export'
+
+# Export the generated data.
+./zeus_process \
+  --date="${DATE}" \
+  export "${TASKS}"
+
+slack_announce 'SAMPLE: Starting processed data publish'
+
+# Publish the generated data.
+./zeus_process \
+  --date="${DATE}" \
+  publish "${TASKS}"
+
+popd &> /dev/null
+
+slack_announce 'SAMPLE: Finished data processing pipeline'

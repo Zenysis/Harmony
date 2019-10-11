@@ -1,0 +1,31 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# The data processing pipeline is used for transforming source data sets into
+# a common file format that will be stored in a database by the 'index'
+# pipeline. Dimension value matching and unification across sources (like
+# location hierarchy) will happen in this pipeline.
+
+export ZEN_ENV='SITECODE'
+
+SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
+ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
+
+ZEUS_ID='SAMPLE/process'
+ZEUS_OUT_DIRS='feed,out,tmp'
+ZEUS_ROOT_DIR="${SCRIPT_DIR}/run"
+ZEUS_BIN_DIR="${SCRIPT_DIR}/../bin"
+ZEUS_UTILS_DIR="${ZEN_SRC_ROOT}/util/pipeline"
+ZEUS_PUBLISH_DIR="/home/share/data/SAMPLE"
+
+ZEUS_CMD="\
+zeus \
+  --id=${ZEUS_ID} \
+  --root=${ZEUS_ROOT_DIR} \
+  --bin_root=${ZEUS_BIN_DIR} \
+  --utils_root=${ZEUS_UTILS_DIR} \
+  --out_dirs=${ZEUS_OUT_DIRS} \
+  --publish_root=${ZEUS_PUBLISH_DIR} \
+"
+
+${ZEUS_CMD} $@

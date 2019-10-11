@@ -1,0 +1,33 @@
+.user-select {
+  width: 100%;
+}
+
+.role-select, .user-select {
+  margin-top: $spacing-l;
+  position: relative;
+}
+
+.button-add-role {
+	right: $spacing-s;
+}
+
+.button-add-role, .user-select-dropdown {
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: fit !important;
+  z-index: 100;
+
+  .zen-dropdown__menu--open {
+    width: fit;
+    a {
+      .text {
+        margin-left: -$spacing-s;
+        overflow: hidden;
+        padding-right: $spacing-s;
+        text-overflow: ellipsis;
+        width: fit;
+      }
+    }
+  }
+}

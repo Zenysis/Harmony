@@ -1,0 +1,17 @@
+.aqt-customizable-tag {
+  display: block;
+  margin-right: 0;
+
+  .zen-tag__content {
+    align-items: center;
+    display: flex;
+  }
+
+  &__text {
+    flex: 1;
+  }
+
+  &__icon {
+    margin-right: 0.4em;
+  }
+}

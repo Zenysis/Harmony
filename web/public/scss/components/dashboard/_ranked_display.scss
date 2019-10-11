@@ -1,0 +1,40 @@
+.ranked-list-group .dashboard-section {
+  @include make-md-column(5.9); // 2 columns per row
+  &:not(:first-child) {
+    @include make-md-column-offset(0.2); // Even spacing between two columns
+  }
+}
+
+.ranked-list {
+  padding: 0 $grid-gutter-width / 2;
+  background-color: #fff;
+  border-radius: 2px;
+  @include box-shadow(0 -1px 0 #e0e0e0,0 0 2px rgba(0,0,0,.12),0 2px 4px rgba(0,0,0,.24));
+
+  .ranked-list-item {
+    @include make-row;
+    padding: 3px 10px;
+
+    &:nth-of-type(even) {
+      background-color: #eceff1;
+    }
+  }
+}
+
+$card-row-spacing: 15px;
+.ranked-card-list {
+  @include clearfix;
+  margin-bottom: -$card-row-spacing;
+  .title {
+    font-size: $font-size-h3;
+  }
+}
+
+// Fix spacing when containers collapse due to screen being too small
+.ranked-list, .ranked-card-item {
+  &:not(:last-child) {
+    @media (max-width: $screen-md-min) {
+      margin-bottom: 15px;
+    }
+  }
+}

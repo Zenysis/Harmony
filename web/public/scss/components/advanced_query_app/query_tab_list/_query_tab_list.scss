@@ -1,0 +1,20 @@
+
+.query-tab-list {
+  box-shadow: -10px 10px 20px 0 rgba(30, 30, 30, 0.05);
+  z-index: 1;
+  align-items: center;
+  background-color: #f9f9f9;
+  display: flex;
+  flex: 0 0 $aqt-query-tab-list-height;
+  height: $aqt-query-tab-list-height;
+  border-top: 1px solid $gray;
+
+  &__button {
+    color: $slate;
+    flex: 0 0 20px;
+    padding: 0 10px;
+    position: relative;
+
+    @include tooltip-top(nowrap);
+  }
+}

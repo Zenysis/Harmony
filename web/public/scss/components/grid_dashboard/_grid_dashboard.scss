@@ -1,0 +1,724 @@
+.action-button .dashboard-item-button .filter-item-button {
+  padding-left: $spacing-xs;
+}
+
+.RichTextEditor__root___2QXK- {
+  height: 100%;
+  border: none !important;
+}
+
+.filter-item-button {
+  padding: 5px 12px 11px 12px;
+}
+
+.filter-panel-button {
+  border-color: #666;
+  margin-top: -5px;
+  margin-left: 10px;
+  margin-bottom: 10px;
+  height: 35px;
+  transition: background .4s ease;
+  width: 120px;
+
+  &__reset {
+    background: white;
+    color: #666;
+  }
+}
+
+.filter-panel {
+  position: relative;
+
+  .filter-panel-dropdown {
+    .dropdown-toggle {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 2px;
+      color: #808792;
+      height: 30px;
+      margin-right: 10px;
+      margin-bottom: 5px;
+      padding-top: 5px;
+
+      &:hover {
+        background: #E1EAF1;
+        color: #2F5973;
+      }
+    }
+
+    .dropdown-menu {
+      margin-top: -4px;
+    }
+  }
+
+  .filter-panel-config-item {
+    width: 100%;
+
+    .config-input {
+      width: 50%;
+    }
+
+    .config-label {
+      width: 30%;
+    }
+  }
+}
+
+.grid-dashboard-container {
+  background-color: $site-background;
+
+  &__inner {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__scroll {
+    border-radius: 50%;
+    bottom: 20px;
+    box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+    height: 50px;
+    left: 20px;
+    padding: 16px;
+    position: fixed;
+    width: 50px;
+  }
+
+  .header-action-button {
+    background: none;
+    border: none;
+    color: $slate;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 500;
+    font-style: normal;
+    font-stretch: normal;
+    height: 100%;
+    line-height: normal;
+    letter-spacing: normal;
+    padding-top: 21px;
+    padding-bottom: 19px;
+    padding-left: 20px;
+    padding-right: 20px;
+
+    &:hover {
+      background-color: #f3f3f3;
+      color: $slate;
+    }
+
+    &__text {
+      margin-left: 10px;
+    }
+  }
+
+  .dashboard-item-button:hover::before {
+    @include tooltip-arrow();
+  }
+
+  .dashboard-item-button:hover::after {
+    @include tooltip-body();
+  }
+
+  .export-button-dropdown-menu {
+    position: absolute;
+    right: 0px;
+    top: 38px;
+  }
+
+  .unsaved {
+    color: $success-color;
+    font-weight: 700;
+  }
+
+  .unsaved-undo {
+    color: $error-color;
+    font-weight: 700;
+  }
+
+  .filter-pannel-button {
+    margin-left: $spacing-s;
+  }
+
+  .filter-section-container {
+    @include zen-elevation-1;
+
+    background-color: #fff;
+    border-radius: 2px;
+    margin-top: $spacing-m;
+    max-width: calc(100vw - 40px);
+    min-width: 50vw;
+    padding: $spacing-m;
+    width: 500px;
+
+    .disabled {
+      opacity: .4;
+    }
+
+    .checkbox {
+      margin-bottom: $spacing-xs;
+    }
+
+    .form-group {
+      max-width: 100%;
+    }
+
+    .filter-panel-warning {
+      margin-bottom: 1em;
+    }
+
+    .filter-panel-reset {
+      float: right;
+    }
+  }
+
+  .horizontal-layout--normal-date {
+    @media (min-width: 991px) {
+      height: 235px;
+    }
+
+    @media (max-width: 991px) {
+      height: 435px;
+    }
+
+    @media (max-width: 762px) {
+      height: 625px;
+    }
+
+    @media (max-width: 625px) {
+      height: 650px;
+    }
+
+    &.more-filters {
+      @media (min-width: 991px) {
+        height: 525px;
+      }
+
+      @media (max-width: 991px) {
+        height: 525px;
+      }
+    }
+
+    @include zen-elevation-1;
+
+    background: white;
+    border-radius: 2px;
+    color: $dark-gray-3;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    padding: 20px 20px 20px 20px;
+    width: 100%;
+
+    .col-sm {
+      max-width: 10vw;
+    }
+
+    .checkbox {
+      margin-bottom: 5px;
+    }
+
+    .disabled {
+      opacity: .4;
+    }
+
+    .filter-panel-reset {
+      float: right;
+      margin-left: -10px;
+      margin-right: 10px;
+      position: relative;
+      top: 20px;
+    }
+
+    .filter-panel-warning {
+      margin-bottom: 1em;
+    }
+
+    .form-actions {
+      display: inline-flex;
+      float: right;
+      margin-top: 2em;
+    }
+  }
+
+  .horizontal-layout {
+    @media (min-width: 991px) {
+      height: 185px;
+    }
+
+    @media (max-width: 991px) {
+      height: 290px;
+    }
+
+    @media (max-width: 762px) {
+      height: 308px;
+    }
+
+    @media (max-width: 580px) {
+      height: 370px;
+    }
+
+    &.public-small {
+      @media (min-width: 1104px) {
+        height: 100px;
+      }
+
+      @media (max-width: 1164px) {
+        height: 120px;
+      }
+
+      @media (max-width: 991px) {
+        height: 220px;
+      }
+    }
+
+    @include zen-elevation-1;
+
+    background: white;
+    border-radius: $border-radius;
+    color: $dark-gray-3;
+    margin-bottom: $spacing-xs;
+    margin-top: $spacing-xs;
+    padding: $spacing-m;
+    width: 100%;
+
+    .col-sm {
+      max-width: 10vw;
+    }
+
+    .disabled {
+      opacity: .4;
+    }
+
+    .checkbox {
+      margin-bottom: $spacing-xs;
+    }
+
+    .filter-panel-warning {
+      margin-bottom: 1em;
+    }
+
+    .filter-panel-reset {
+      float: right;
+      margin-right: $spacing-s;
+      margin-left: -$spacing-s;
+      position: relative;
+      top: $spacing-m;
+    }
+
+    .form-actions {
+      margin-top: 2em;
+      padding-right: 15px;
+      float: right;
+    }
+  }
+
+  .grid-dashboard-header {
+    align-items: center;
+    background: #f9f9f9;
+    border-bottom: 1px solid #bfc2c9;
+    color: $slate;
+    display: flex;
+    font-size: 15px;
+    height: 60px;
+    padding-left: 20px;
+    padding-right: 20px;
+    text-transform: uppercase;
+    width: 100%;
+
+    &__title {
+      flex: 1;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__controls {
+      flex: 2;
+
+      .save-undo-tooltip {
+        position: relative;
+      }
+
+      .save-undo-tooltip:hover::before {
+        @include tooltip-arrow();
+
+        top: 50px;
+      }
+
+      .save-undo-tooltip:hover::after {
+        @include tooltip-body();
+
+        top: 55px;
+      }
+
+      // remove the margin-right on the last control button
+      span:last-child {
+        button {
+          margin-right: 0;
+        }
+      }
+    }
+
+    // HACK(nina): Until we fix the styling of the filters dropdown
+    &__controls_with_filter_button {
+      align-items: center;
+      display: flex;
+      flex: 2;
+      text-transform: none;
+    }
+
+    &__toggle {
+      // HACK(nina): Change this when we replace with new toggle component
+      transform: scale(0.8);
+
+      // NOTE(nina): Because we scale the toggle button down, we have to
+      // adjust the position to keep it right-aligned
+      position: absolute;
+      right: 7px;
+
+      .zen-switch {
+        float: right;
+      }
+    }
+  }
+
+  .grid-dashboard-title {
+    vertical-align: -webkit-baseline-middle;
+  }
+
+  .grid-dashboard-controls {
+    margin-bottom: 2px;
+    padding-right: $spacing-m;
+    padding-left: $spacing-m;
+
+    .action-button {
+      border: 1px solid #ddd;
+      margin-right: $spacing-s;
+    }
+
+    .save-span {
+      background-color: #fff;
+      border-radius: $border-radius;
+      display: inline-block;
+      height: 30px;
+      margin-right: $spacing-s;
+      padding-top: 1px;
+      position: relative;
+
+      &:hover::before {
+        @include tooltip-arrow();
+      }
+
+      &:hover::after {
+        @include tooltip-body();
+      }
+
+      .action-button {
+        border-bottom-right-radius: 0;
+        border-top-right-radius: 0;
+        margin-left: 0;
+        margin-right: -1px;
+        padding: 0 $spacing-s;
+      }
+
+      .zen-dropdown {
+        float: right;
+        margin-top: -1px;
+
+        &__main-btn {
+          border: 1px solid #ddd;
+          border-radius: $border-radius;
+          border-bottom-left-radius: 0;
+          border-top-left-radius: 0;
+          color: #808792;
+          padding-left: 0;
+          padding-right: $spacing-s;
+          padding-bottom: $spacing-xs;
+        }
+
+        &--open .zen-dropdown__main-btn,
+        &__main-btn:focus,
+        &__main-btn:hover {
+          background-color: #e1eaf1;
+          color: #2f5973;
+        }
+      }
+    }
+  }
+
+  // NOTE(stephen): Applying the spacing directly to each dashboard item
+  // ourselves instead of having react-grid-layout do it since the library does
+  // not ensure the placeholder item (the red box) when dragging is the full
+  // non-padded width/height.
+  .dashboard-item-container {
+    height: 100%;
+    padding: $spacing-s;
+  }
+
+  // Adjust the resize handle so it shows up in the correct place in our
+  // padded item.
+  .react-resizable-handle {
+    bottom: $spacing-s;
+    right: $spacing-s;
+  }
+
+  .dashboard-item {
+    box-shadow: 0 5px 20px 0 rgba(35, 36, 37, 0.15);
+    border-radius: 10px;
+    background-color: #fff;
+    border-radius: $border-radius;
+    height: 100%;
+    overflow: auto;
+    position: relative;
+
+    .box-plot-chart {
+      .svg-class {
+        max-width: 100%;
+        max-height: 100%;
+      }
+    }
+
+    .dashboard-item-buttons {
+      background: transparent;
+      border-color: transparent;
+      border-style: solid;
+      margin-right: 70px;
+      position: absolute;
+      top: 0;
+
+      .action-button {
+        height: 26px;
+        left: 0px;
+        padding: 0;
+        top: 1px;
+        width: 26px;
+      }
+
+      .dashboard-item-button {
+        background: transparent;
+        border-color: transparent;
+        opacity: 0.4;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+
+      .dash-item-lock-icon {
+        color: coral;
+      }
+
+      .dash-item-unlock-icon {
+        color: mediumseagreen;
+      }
+    }
+
+    .dropdown-toggle {}
+  }
+
+  // Wrapper around ReactGridLayout component.
+  .grid-dashboard-wrapper {
+    flex: 1;
+    margin-top: 12.5px;
+  }
+
+  .grid-dashboard {
+    transform-origin: top left;
+    transition: all .3s;
+
+    .result-container {
+      border-bottom: none;
+      flex: 1;
+    }
+
+    .visualization-container {
+      padding-top: 15px;
+
+      .settings-modal-button {
+        border-color: transparent;
+        border-style: solid;
+        font-size: 16px;
+        height: 26px;
+        opacity: 0.4;
+        position: absolute;
+        right: $spacing-s;
+        top: $spacing-xs;
+        width: 26px;
+      }
+
+      &:hover {
+        .settings-modal-button {
+          opacity: 1.0;
+        }
+      }
+    }
+  }
+}
+
+.grid-dashboard-progress-bar {
+  position: relative;
+  top: 100px;
+}
+
+.edit-modal {
+  height: 75vh;
+  width: 60vw;
+}
+
+.present-toggle {
+  float: right;
+  padding-right: 20px;
+}
+
+.save-undo {
+  position: relative;
+
+  .unsaved {
+    color: $error-color;
+    font-weight: 700;
+  }
+}
+
+.save-undo--float {
+  background-color: #f5f8fa;
+  left: 20px;
+  padding: 5px 0px 5px 8px;
+  position: fixed;
+  top: 20px;
+  transition: transform .5s .33333s,opacity .5s .33333s;
+  z-index: 100;
+
+  &__unsaved {
+    color: $error-color;
+    font-weight: 700;
+  }
+}
+
+.grid-dashboard-action-buttons {
+  &__option-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    position: absolute;
+    right: 7px;
+    top: 4px;
+  }
+
+  // TODO(nina): $ConsolidateButtons when dashboards are next to each other,
+  // this appears under the adjacent dashboard
+  &__options-list {
+    align-items: stretch;
+    background-color: #ffffff;
+    border-radius: 5px;
+    box-shadow: 3px 5px 15px 0 rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    margin-left: 5px;
+    position: fixed;
+    right: -207px;
+    top: 8px;
+    width: 205px;
+    // Prevents from being covered by query result viz
+    z-index: 1;
+
+    &__item {
+      background: none;
+      border: none;
+      display: block;
+      flex: 1;
+      font-size: 15px;
+      line-height: 3;
+      margin-left: 0px;
+      padding-left: 10px;
+      padding-top: 0px;
+      text-align: left;
+      width: 100%;
+
+      &:hover {
+        background-color: #f9f9f9;
+      }
+    }
+
+    &__item-dropdown-style {
+      background: none;
+      border: none;
+      flex: 1;
+      font-size: 15px;
+      // NOTE(nina): Instead of setting line-height to 3 like the other buttons
+      height: 50px;
+      margin-left: 0px;
+      padding: 0;
+      padding-right: 15px;
+      padding-left: 10px;
+      text-align: left;
+      width: 100%;
+
+      &:hover {
+        background-color: #f9f9f9;
+      }
+
+      &:focus {
+        background-color: #ffffff;
+      }
+    }
+
+    // TODO(nina): These classes are primarily to override the default
+    // settings. It's a really messy way to do it, but a necessary evil because
+    // the button components are used on different parts of the platform.
+    .action-button-text {
+      margin-left: 11px;
+    }
+
+    .zen-dropdown {
+      margin-right: 0;
+      width: 100%;
+    }
+
+    .zen-dropdown-button {
+      width: 100%;
+
+      &__main-btn {
+        border: none;
+        border-radius: 0px;
+        width: 100%;
+      }
+    }
+
+    &__item-text {
+      display: inline;
+      margin-left: 11px;
+    }
+  }
+}
+
+.dashboard-filters-panel {
+  padding: 10px;
+}
+
+.side-bar-buttons {
+  background-color: white;
+  bottom: 0;
+  box-shadow: 0 0px 10px 0 rgba(0, 0, 0, 0.25), -10px 10px 20px 0 rgba(30, 30, 30, 0.05);
+  display: block;
+  position: fixed;
+  width: 500px;
+
+  // Prevents overlap from any element in the edit query form
+  z-index: 2;
+}
+
+.aqt-side-bar-buttons {
+  background-color: white;
+  bottom: 0;
+  box-shadow: 0 0px 10px 0 rgba(0, 0, 0, 0.25), -10px 10px 20px 0 rgba(30, 30, 30, 0.05);
+  display: block;
+  position: fixed;
+  width: 500px;
+}
+
+.aqt-disclaimer {
+  font-size: 15px;
+  left: 2px;
+  position: absolute;
+  top: 7px;
+}

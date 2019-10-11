@@ -1,0 +1,170 @@
+.admin-app {
+  margin: 0 auto;
+  max-width: 1000px;
+  padding-top: 30px;
+
+  &__tab {
+    background: $white;
+    border-radius: 5px;
+    box-shadow: 0 5px 20px 0 rgba(35, 36, 37, 0.15);
+    padding: 30px;
+
+    .groups-tab__dropdown {
+      .zen-dropdown__menu {
+        max-height: 60vh !important;
+      }
+    }
+  }
+
+  .user-list {
+    .zen-table {
+      .glyphicon {
+        color: $gray;
+        cursor: pointer;
+        &:hover {
+          color: $gray-dark;
+        }
+      }
+    }
+  }
+}
+
+.user-profile {
+  &__tag {
+    margin-bottom: $spacing-xs;
+  }
+  &__row {
+    margin-bottom: $spacing-s;
+    margin-top: $spacing-s;
+  }
+  &__label {
+    font-weight: $bold;
+  }
+  &__editable-field {
+    margin-bottom: $spacing-xs;
+    position: relative;
+    top: -$spacing-s;
+  }
+}
+
+.actions-bar {
+  display: inline-block;
+  position: relative;
+  top: $spacing-l;
+  z-index: 2;
+}
+
+.property-wrapper {
+  display: inline-block;
+  left: 0;
+  margin-top: $spacing-s;
+  padding-left: $spacing-s;
+  position: absolute;
+  text-align: center;
+  width: 100%;
+}
+
+.configuration-tab {
+  &__controls {
+    display: inline-flex;
+    float: right;
+  }
+
+  &__controls:not(:first-child) {
+    margin-left: $spacing-s;
+  }
+
+  &__row {
+    display: flex;
+    width: 100%;
+  }
+
+  &__button:not(:first-child) {
+    margin-left: $spacing-s
+  }
+
+  &__row:not(:first-child) {
+    margin-top: $spacing-s
+  }
+
+  &__card {
+    margin-bottom: $spacing-m;
+
+    .table {
+      margin-bottom: 0;
+    }
+  }
+
+  &__user-select {
+    margin-top: -$spacing-l;
+    width: 100%;
+  }
+
+  &__column {
+    display: inline-block;
+  }
+
+  &__checkbox {
+    display: inline-block;
+    margin-left: $spacing-s;
+  }
+}
+
+.invite-user-block {
+  border-bottom: 1px solid $gray-lighter;
+  padding-bottom: $spacing-m;
+}
+
+.groups-tab {
+  &__controls {
+    border-bottom: 1px solid #eee;
+    padding-bottom: $spacing-m;
+  }
+  &__dropdown {
+    display: inline-block;
+    position: relative;
+    z-index: 101;
+  }
+  &__dropdown-button {
+    border: none;
+    font-size: 13px;
+  }
+  &__property {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+    margin-left: $spacing-s;
+    margin-right: $spacing-s;
+    &--selected {
+      border-bottom: 1px solid black;
+    }
+  }
+
+  &__right-controls {
+    float: right;
+    position: relative;
+    z-index: 2;
+  }
+
+  .user-management__user-select-wrapper {
+    margin-top: $spacing-l;
+  }
+}
+
+.public-access-dropdown, .configuration-flag-dropdown {
+  display: inline-block;
+}
+
+.configuration-flag-dropdown:not(:first-child) {
+  margin-left: $spacing-s;
+}
+
+.public-access-dropdown {
+  margin-left: $spacing-s;
+}
+
+.public-access-text, .configuration-flag-text {
+  display: inline-block;
+  position: relative;
+}

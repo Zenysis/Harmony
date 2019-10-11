@@ -1,0 +1,8 @@
+This directory contains generic interfaces that perform a single purpose. They
+are not constrained to usage on only ZenModels or normal classes, and they should
+not be coupled to specific complex behavior. Good candidates should be simple,
+provide a small number of properties or methods, and should encapsulate a single
+idea. When adding an interface to this directory, consider how widely usable it
+is and whether the methods and properties on the interface are always needed.
+If not, then that interface should be stored much closer to the code it is
+coupled to.

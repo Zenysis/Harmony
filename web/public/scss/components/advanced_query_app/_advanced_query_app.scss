@@ -1,0 +1,319 @@
+.advanced-query-app {
+  background-color: $site-background;
+  color: $aqt-base-font-color;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  &__main-column {
+    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.25), -10px 10px 20px 0 rgba(30, 30, 30, 0.05);
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  &__query-view {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+  }
+}
+
+.aqt-live-results-view {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.aqt-query-form-panel {
+  background-color: $white;
+  flex: 0 0 300px;
+  height: $aqt-query-view-height;
+  overflow: auto;
+  z-index: $aqt-query-form-z-index;
+
+  &__title {
+    color: $slate;
+    padding: 25px 118px 0px 30px;
+  }
+
+  &__selection-blocks {
+    padding: 0px 30px 0px 30px;
+  }
+
+  &__share-query {
+    text-align: center;
+  }
+}
+
+.query-part-selector {
+  background-color: $query-part-selector-bg-color;
+  border: 1px solid $aqt-base-border-color;
+  border-radius: 5px;
+
+  &__add-btn {
+    cursor: pointer;
+    padding: 3px;
+    width: 100%;
+    &:hover {
+      background-color: $query-part-selector-add-btn-hover;
+    }
+  }
+
+  &__add-btn-contents {
+    display: table;
+    margin: 0 auto;
+  }
+
+  &__btn-icon {
+    font-size: 12px;
+    margin-left: 3px;
+  }
+
+  &__hierarchical-selector {
+    @include transition($hierarchical-selector-transition-open-close);
+    margin-top: 4px;
+    position: fixed;
+    transform: scaleY(1);
+    transform-origin: top;
+    white-space: nowrap;
+    z-index: 10;
+
+    &--hide {
+      transform: scaleY(0);
+    }
+  }
+}
+
+.selection-block {
+  margin-bottom: 40px;
+
+  &:first-child {
+    margin-top: 40px;
+  }
+
+  &__title-block {
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    margin-bottom: 5px;
+    font-size: 16px;
+    font-weight: 500;
+    font-style: normal;
+    font-stretch: normal;
+    line-height: normal;
+    letter-spacing: normal;
+    color: $slate;
+  }
+}
+
+.aqt-result-controls-bottom {
+  border-bottom-right-radius: $spacing-xs;
+  box-shadow: 0 9px 20px 0 rgba(35, 36, 37, 0.15);
+  margin-left: 40px;
+  margin-right: 40px;
+
+  &__dropdown-list {
+    bottom: 109px;
+  }
+
+  // TODO(stephen): Why do are the query view type buttons wrapped in a single
+  // parent span???
+  & > span {
+    display: flex;
+
+    .view-btn {
+      bottom: initial;
+      color: $gray;
+      flex: 1;
+
+      &:first-child {
+        border-bottom-left-radius: $spacing-xs;
+      }
+
+      &:last-child {
+        border-bottom-right-radius: $spacing-xs;
+      }
+
+      &.view-btn-active {
+        color: $slate;
+      }
+    }
+  }
+}
+
+.aqt-settings-panel {
+  background-color: $settings-panel-bg-color;
+  border-left: 1px solid $aqt-base-border-color;
+  width: 25%;
+}
+
+.series-element {
+  display: inline-block;
+
+  &__order {
+    display: inline-block;
+    margin-right: 15px;
+  }
+
+  &__visibility {
+    display: inline-block;
+    margin-right: 15px;
+  }
+
+  &__input-text {
+    display: inline-block;
+    // TODO(nina): rethink how we define this width
+    width: 75%;
+  }
+  &__icon {
+    display: inline-block;
+    float: right;
+    margin-top: 5px;
+  }
+}
+
+.collapsable-panel {
+  border-top: 1px solid $aqt-base-border-color;
+  &:first-child {
+    border-top: none;
+  }
+
+  &:last-child {
+    .collapsable-panel__title-row {
+      border-bottom: 1px solid $aqt-base-border-color;
+      &--active {
+        border-bottom: none;
+      }
+    }
+  }
+
+  &__caret {
+    margin-right: 7px;
+    position: relative;
+    top: -1px;
+  }
+
+  &__title-row {
+    @include transition($aqt-base-transition-hover-color);
+    cursor: pointer;
+    font-size: 14px;
+    height: 40px;
+    line-height: 40px;
+    padding: 0 15px;
+
+    &:hover {
+      background-color: $settings-panel-row-hover;
+    }
+
+    &--active {
+      @include zen-elevation-4;
+      background-color: $settings-panel-row-active-color;
+      color: $settings-panel-row-active-font-color;
+      &:hover {
+        background-color: $settings-panel-row-active-hover;
+      }
+    }
+  }
+
+  &__more-series-info {
+    cursor: pointer;
+    padding-bottom: 20px;
+    text-align: center;
+
+    &--active {
+    }
+  }
+}
+
+.series-block {
+  padding: 10px;
+}
+
+.compact-title-block {
+  padding: 10px 10px 20px 10px;
+
+  // TODO(nina): might need to reconsider widths
+
+  &__font-size-title-label {
+    line-height: 18px !important;
+    margin-top: 10px !important;
+    width: 50%;
+  }
+
+  &__font-size-subtitle-label {
+    line-height: 18px !important;
+    margin-top: 10px !important;
+    width: 45%;
+  }
+
+  &__title-control {
+    margin-top: 10px !important;
+  }
+
+  &__subtitle-control {
+    margin-top: 10px !important;
+  }
+}
+
+.compact-series-extra {
+  padding: 10px;
+  width: 100%;
+
+  &__show-constituents {
+    display: inline-block;
+    padding: 0px 20px 0px 0px;
+  }
+
+  &__checkbox {
+    display: inline-block;
+  }
+}
+
+.aqt-query-result-container {
+  // NOTE(stephen): Need to set an explicit height for the query result here
+  // since the child visualizations require an explicit (non-percentage) height
+  // to be set to position properly.
+  height: $aqt-query-view-height;
+  padding-bottom: $aqt-query-result-container-spacing + $aqt-visualization-picker-height;
+
+  &__query-result {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    .leaflet-bottom, .leaflet-top {
+      /*
+      Override z-index to prevent map zoom in and out button from overlaying
+      the visualization picker drop down menu
+      */
+      z-index: 999;
+    }
+
+    .visualization-container {
+      border-top-left-radius: $spacing-xs;
+      border-top-right-radius: $spacing-xs;
+
+      // shadow intentionally added twice according to design spec
+      box-shadow: 0 5px 20px 0 rgba(35, 36, 37, 0.15), 0 5px 20px 0 rgba(35, 36, 37, 0.15);
+      margin-left: $aqt-query-result-container-spacing;
+      margin-right: $aqt-query-result-container-spacing;
+      margin-top: $aqt-query-result-container-spacing;
+
+      .graph-title-block {
+        // TODO(stephen): Fix this. Centering the graph title within all the
+        // padding.
+        padding-top: 5px;
+      }
+    }
+  }
+}
+
+.query-result__aqt-action-buttons {
+  background-color: #f9f9f9;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  padding: 6px 10px 3px 10px;
+}
+
+.copy-to-clipboard-interaction {
+  padding: 10px;
+  text-align: center;
+}

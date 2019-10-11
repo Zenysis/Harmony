@@ -1,0 +1,15 @@
+// @flow
+export type ExportSelection =
+  | 'EXCEL_ALL'
+  | 'EXCEL_WITH_CONSTITUENTS'
+  | 'EXCEL_TIME_SERIES'
+  | 'FIELD_MAPPING'
+  | 'JSON';
+
+export const EXPORT_SELECTIONS: { [ExportSelection]: ExportSelection } = {
+  EXCEL_ALL: 'EXCEL_ALL',
+  EXCEL_WITH_CONSTITUENTS: 'EXCEL_WITH_CONSTITUENTS',
+  EXCEL_TIME_SERIES: 'EXCEL_TIME_SERIES',
+  FIELD_MAPPING: 'FIELD_MAPPING',
+  JSON: 'JSON',
+};

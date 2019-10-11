@@ -1,0 +1,75 @@
+{%- from 'bundle_resource.template' import bundle_resource_url with context -%}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>{{ full_platform_name }}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="{{ favicon_path }}" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="{{ home_icon_path }}" />
+
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="{{ bundle_resource_url('bundle.css') }}">
+    {% block css %}{% endblock %}
+  </head>
+
+  <body class="zen-style {{body_class}} {% if is_screenshot_request %}screenshot-page{% endif %}">
+    <div id="header"></div>
+
+    <!-- MAIN PANEL -->
+    <div id="main" role="main">
+      <!-- MAIN CONTENT -->
+      {% block content %}{% endblock %}
+      <!-- END MAIN CONTENT -->
+    </div>
+    <!-- END MAIN PANEL -->
+
+    {% if pass_to_js %}
+    <script>
+      window.__JSON_FROM_BACKEND = {{ pass_to_js|safe }};
+    </script>
+    {% if not lightweight_js_only %}
+    <script src="/api/backend_config" type="text/javascript"></script>
+    {% endif %}
+    {% endif %}
+
+    <script src="{{config.VENDOR_SCRIPT_PATH}}/jquery-1.9.1.js"></script>
+    <script src="{{config.VENDOR_SCRIPT_PATH}}/bootstrap-3.3.6.js"></script>
+    <script>
+      window.addEventListener('error', function(e) {
+        var errlog = {
+          msg: e.message,
+          location: e.filename + ': ' + e.lineno
+        };
+        analytics.track('js error', errlog);
+      });
+    </script>
+
+    <script src="{{ bundle_resource_url('vendor.bundle.js') }}"></script>
+    <script src="{{ bundle_resource_url('commons.bundle.js') }}"></script>
+
+    <script src="{{config.VENDOR_SCRIPT_PATH}}/toastr-2.1.2.js"></script>
+    {% block flash_messages %}
+      {%- with messages = get_flashed_messages(with_categories=true) -%}
+        {% if messages %}
+          {% for category, message in messages %}
+            {% if category=='success' %}
+              <script>window.toastr.success("{{ message|safe }}");</script>
+            {% elif category=='error' %}
+              <script>window.toastr.error("{{ message|safe }}");</script>
+            {% else %}
+              <script>window.toastr.info("{{ message|safe }}");</script>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {%- endwith %}
+    {% endblock %}
+
+    {% set user=user %}
+    {% include 'tracking.html' %}
+    {% block tracking_event %}{% endblock %}
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% block css %}
+{% endblock %}
+
+{% block content %}
+<section id="widget-grid">
+  <!-- React app -->
+  <div id="app"></div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+  {% include 'query_app_vendor_scripts.html' %}
+
+  <script src="{{ bundle_resource_url('location_admin.bundle.js') }}"></script>
+{% endblock %}

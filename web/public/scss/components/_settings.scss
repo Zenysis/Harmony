@@ -1,0 +1,123 @@
+.settings-dropdown-menu {
+  top: 100%;
+  z-index: 1000;
+  display: none;
+  right: 0;
+  min-width: 260px;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  list-style: none;
+  font-size: 13px;
+  text-align: left;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box;
+}
+
+.settings-dropdown-menu-item {
+  font-size: 16px;
+  padding: 10px 10px;
+  color: #555;
+}
+
+.settings-dropdown-menu-item:hover {
+  background: #f5f5f5;
+  color: black;
+}
+
+.settings-dropdown {
+  font-size: 13px;
+  background: transparent;
+  height: 100%;
+  width: 100px;
+  color: white;
+  border: none;
+}
+
+.dropdown-control {
+  .zen-dropdown {
+    position: relative;
+  }
+}
+
+@media screen and (min-width: 600px) {
+  .small-settings {
+    padding-right: 12px;
+    position: absolute;
+    right: 0;
+    top: 14px;
+  }
+
+  .settings-dropdown-menu {
+    position: absolute;
+    left: -150px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .settings-dropdown {
+    float: right;
+    padding-top: 5px;
+  }
+
+  .small-settings {
+    background: #22262e;
+    width: 100%;
+    height: 33px !important;
+    padding: 100;
+  }
+
+  .settings-dropdown-menu {
+    width: 100%;
+    position: relative;
+    left: 0px;
+  }
+}
+
+.language-dropdown-item {
+  list-style: none;
+  color: #333;
+}
+
+.color-control {
+  &__color-block {
+    align-items: center;
+    background-color: $white;
+    border: 1px solid $gray-5;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    height: $spacing-l;
+    padding: $spacing-s;
+    width: $spacing-xl;
+
+    &:active {
+      // NOTE(stephen): Matching bootstrap dropdown active color to make the
+      // color control consistent with dropdowns on the page.
+      background-color: #e6e6e6;
+    }
+
+    .zen-color-block {
+      flex: 1;
+
+      &__icon {
+        // NOTE(stephen): Matching border color of dropdown.
+        border: 1px solid #ccc;
+        border-radius: 50%;
+      }
+
+      &__color-picker {
+        left: -$spacing-s;
+        top: 25px;
+      }
+    }
+  }
+
+  &__caret {
+    margin: 0;
+  }
+}

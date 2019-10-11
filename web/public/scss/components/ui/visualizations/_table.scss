@@ -1,0 +1,81 @@
+.ui-table-visualization {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  &__virtualized-table {
+    flex: 1;
+  }
+
+  &__header {
+    border-bottom: 2px solid #d9d9d9;
+    text-transform: none;
+    user-select: none;
+  }
+
+  &__header-cell {
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+
+    &--sorted {
+      max-width: calc(100% - 13px);
+    }
+
+    &:hover {
+      &:before {
+        @include tooltip-arrow();
+
+        top: 22px;
+      }
+
+      &:after {
+        @include tooltip-body-base();
+
+        display: flex;
+        font-weight: normal;
+        top: 27px;
+      }
+    }
+  }
+
+  &__row {
+    border-bottom: 1px solid #d9d9d9;
+
+    &--odd {
+      background-color: #f0f0f0;
+    }
+  }
+
+  &__footer {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+  }
+
+  &__search-box {
+    // Need to override annoying SQT form-control styles.
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    height: 25px !important;
+    left: initial !important;
+
+    width: 200px;
+  }
+
+  &__no-rows {
+    align-items: center;
+    color: #bdbdbd;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+  }
+
+  .ReactVirtualized__Table__headerColumn,
+  .ReactVirtualized__Table__rowColumn {
+    margin-right: 0;
+  }
+}

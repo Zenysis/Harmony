@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% block css %}
+{% endblock %}
+
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ bundle_resource_url('upload.bundle.js') }}"></script>
+{% endblock %}
+
+{% block tracking_event %}
+<script>analytics.track('Upload view', {nonInteraction: 1});</script>
+{% endblock %}

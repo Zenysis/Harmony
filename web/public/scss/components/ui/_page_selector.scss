@@ -1,0 +1,36 @@
+.zen-page-selector {
+  align-items: center;
+  display: flex;
+
+  &__button {
+    background-color: white;
+    border: none;
+    border-radius: 50%;
+    height: 28px;
+    padding: 0;
+    width: 28px;
+
+    &:hover {
+      background-color: #ecf0f1; // $aqt-gray-4;
+    }
+
+    &[disabled]:hover {
+      background-color: initial;
+    }
+  }
+
+  &__page-range {
+    color: #7f8c8d; // $aqt-gray-1;
+    margin-right: 10px;
+  }
+
+  &__arrow {
+    fill: #7f8c8d; // $aqt-gray-1;
+    vertical-align: middle;
+    width: 100%;
+
+    &--disabled {
+      fill: #bdc3c7; // $aqt-gray-3;
+    }
+  }
+}

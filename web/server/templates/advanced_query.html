@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% set body_class="condensed-navbar" %}
+
+{% block css %}
+{% if enable_chat %}
+  <link rel="stylesheet" type="text/css" media="screen" href="http://{{chat_host}}/build/chat.bundle.css">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+  <div id="disclaimer"></div>
+{% endblock %}
+
+{% block scripts %}
+  {% include 'query_app_vendor_scripts.html' %}
+
+  {% if enable_chat %}
+    <script>
+      window.chatUserId = "{{user.username}}";
+      window.chatHost = 'http://{{chat_host}}';
+    </script>
+    <div id="chat-app"></div>
+    <script src="http://{{chat_host}}/socket.io/socket.io.js"></script>
+    <script src="http://{{chat_host}}/chat.js"></script>
+  {% endif %}
+
+  <script src="{{ bundle_resource_url('advancedQuery.bundle.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+{% endblock %}
+
+{% block scripts %}
+  {% include 'query_app_vendor_scripts.html' %}
+
+  <script src="{{ bundle_resource_url('admin.bundle.js') }}"></script>
+{% endblock %}
+
+{% block tracking_event %}
+<script>
+analytics.track('User admin view', {nonInteraction: 1});
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+$button-height: 34px;
+
+.hierarchical-selector-dropdown {
+  &__selector-container {
+    position: absolute;
+    z-index: 100;
+  }
+
+  &__button {
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 5px;
+    cursor: pointer;
+    height: $button-height;
+    line-height: $button-height;
+    overflow: hidden;
+    padding-left: 12px;
+    padding-right: 12px;
+    position: relative;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+
+    &:hover {
+      background-color: $hierarchical-selector-item-hover;
+    }
+  }
+
+  &__button-arrow {
+    line-height: $button-height;
+    position: absolute;
+    right: 5px;
+  }
+}
+

@@ -1,0 +1,137 @@
+.zen-table-container {
+  margin-bottom: 15px;
+
+  &--no-headers {
+    margin-bottom: 0;
+
+    // if there are no headers then we hide the border-bottom from the last row
+    .zen-table__row:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.zen-table {
+  background-color: $white;
+  font-size: 15px;
+  table-layout: fixed;
+  width: 100%;
+
+  &--auto-table-layout {
+    table-layout: auto;
+  }
+
+  &--is-hoverable {
+    .zen-table__row:hover {
+      background-color: $white-hover;
+
+      &.zen-table__row--is-selected {
+        background-color: $white-active;
+      }
+    }
+  }
+
+  &__cell,
+  &__header-cell {
+    padding-bottom: 0.5em;
+    padding-left: 0;
+    padding-right: 1em;
+    padding-top: 0.5em;
+
+    &:last-child {
+      padding-right: 0;
+    }
+  }
+
+  &__header {
+    border-bottom: 2px solid $slate;
+  }
+
+  &__header-cell {
+    font-weight: 400;
+    &--sortable {
+      cursor: pointer;
+    }
+  }
+
+  &__header-cell-content-container {
+    display: flex;
+    align-items: center;
+    &--centered {
+      justify-content: center;
+    }
+  }
+
+  &__header-cell-content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__header-cell-content {
+    display: inline-block;
+  }
+
+  &__header-cell-sort-carets {
+    display: inline-block;
+  }
+
+  &__cell {
+    padding-bottom: 1em;
+    padding-top: 1em;
+    word-wrap: break-word;
+  }
+
+  &__row {
+    border-bottom: 1px solid $gray;
+
+    &--is-clickable {
+      cursor: pointer;
+    }
+
+    &--is-selected {
+      background-color: $white-active;
+    }
+
+    &:last-child {
+      border-bottom: 2px solid $slate;
+    }
+  }
+
+  &__sort-caret-container {
+    display: inline-block;
+    margin-left: 5px;
+    position: relative;
+    top: 1px;
+
+    .zen-caret {
+      font-size: 9px;
+    }
+  }
+
+  &__sort-caret {
+    color: $gray;
+    &--selected {
+      color: $blue-primary;
+    }
+  }
+
+  &__sort-caret-up {
+    position: absolute;
+    top: 0;
+  }
+}
+
+.zen-table-search-container {
+  float: right;
+  margin-bottom: 10px;
+}
+
+.zen-table-page-selector-container {
+  display: flex;
+  margin-bottom: 15px;
+}
+
+.zen-table-page-selector {
+  flex: 1;
+  justify-content: flex-end;
+}

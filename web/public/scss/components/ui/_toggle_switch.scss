@@ -1,0 +1,44 @@
+.zen-switch {
+  .btn {
+    height: 40px;
+    border: 1px solid #202b33;
+    display: inline-block;
+    padding: 10px;
+    position: relative;
+    text-align: center;
+    transition: background 400ms ease, color 600ms ease;
+    background: #fff;
+    color: #202b33;
+  }
+
+  .glyphicon {
+    padding-right: 10px
+  }
+
+  input[type="radio"].toggle {
+    display: none;
+    & + label{
+      cursor: pointer;
+      min-width: 70px;
+    }
+
+    &.toggle-left + label {
+      border-right: 0;
+    }
+
+    &.toggle-right + label {
+      margin-left: -5px;
+    }
+
+    &.active-toggle + label {
+      cursor: default;
+      color: #fff;
+      background: #202b33;
+      transition: color 200ms;
+    }
+    &.zen-blue + label {
+      background: #3f73b4 !important;
+    }
+  }
+}
+

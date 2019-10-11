@@ -1,0 +1,20 @@
+.table-visualization {
+  .visualization {
+    display: flex;
+  }
+
+  &__table {
+    flex: 1;
+    margin-left: 20px;
+    margin-right: 20px;
+    overflow: hidden;
+  }
+}
+
+.scorecard-table-cell {
+  padding-left: 10px;
+}
+
+.color-filter-table-cell {
+  padding-left: 10px;
+}

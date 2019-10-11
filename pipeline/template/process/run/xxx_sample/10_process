@@ -1,0 +1,17 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+SetupEnvForPyPy
+
+pushd "${PIPELINE_TMP_DIR}" &> /dev/null
+
+for data_file in "${PIPELINE_FEED_DIR}"/*.csv ; do
+  "${PIPELINE_BIN_DIR}/sample/process_csv.py" \
+    --input_file="${data_file}" \
+    --output_file="${PIPELINE_TMP_DIR}/processed_data_${count}.json.lz4"
+  count=$((count + 1))
+done
+
+popd &> /dev/null

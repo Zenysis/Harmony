@@ -1,0 +1,30 @@
+.aqt-customization-module-wrapper {
+  @include zen-elevation-4;
+  background: white;
+  padding: 1em;
+  position: fixed;
+  width: $aqt-customization-module-width;
+  z-index: 100;
+  border-radius: 5px;
+
+  .zen-label-wrapper {
+    padding-top: 1em;
+
+    &:first-child {
+      padding-top: 0;
+    }
+
+    &__wrapped-content {
+      padding-top: 0.4em;
+    }
+  }
+
+  &__close-row {
+    padding-top: 1em;
+  }
+
+  &__close-btn {
+    float: right;
+    border-radius: 5px;
+  }
+}

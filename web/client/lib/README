@@ -1,0 +1,4 @@
+This directory contains the standalone libraries created by Zenysis. They are
+general purpose and do not depend on any Zenysis code outside this directory.
+You can think of them as "open source candidates": they're generalalized, well
+tested, and have no private dependencies.
