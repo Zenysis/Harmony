@@ -1,0 +1,423 @@
+#!/usr/bin/env groovy
+import groovy.json.JsonOutput
+import groovy.transform.Field
+
+@Field def DETAILED_STAGE_STATUS = [:]
+
+pipeline {
+  agent any
+  environment {
+    // Need to add the source root to the PYTHONPATH so our absolute imports
+    // work from any directory
+    PYTHONPATH = "${WORKSPACE}"
+
+    // Disable the virtualenv PS1 prompt since our use of bash strict
+    // mode causes the scripts to fail because PS1 isn't set.
+    VIRTUAL_ENV_DISABLE_PROMPT = 1
+
+    PIPELINE_DEPLOYMENT_NAME = 'brazil'
+    ZEN_ENV = 'br'
+
+    // Slack notification configurations.
+    SLACK_CHANNEL = '#brazil'
+  }
+  options {
+    timeout(time: 6, unit: 'HOURS')
+  }
+  parameters {
+    booleanParam(name: 'RUN_GENERATE', defaultValue: false,
+                 description: 'Run the generate pipeline')
+    booleanParam(name: 'RUN_PROCESS', defaultValue: true,
+                 description: 'Run the process pipeline')
+    booleanParam(name: 'RUN_INDEX', defaultValue: true,
+                 description: 'Run the index pipeline')
+    booleanParam(name: 'RUN_VALIDATE', defaultValue: false,
+                 description: 'Run the validate pipeline')
+    booleanParam(name: 'RESTART_STAGING', defaultValue: false,
+                 description: 'Restart staging after pipeline completes')
+    booleanParam(name: 'RESTART_PROD', defaultValue: true,
+                 description: 'Restart prod after pipeline completes')
+    string(name: 'PIPELINE_BRANCH', defaultValue: 'master',
+           description: 'Branch to run the pipeline from')
+  }
+  stages {
+    stage('Initialize') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Install Dependencies') {
+      steps {
+        sh '''\
+#!/bin/bash -eu
+set -o pipefail
+
+# The shebang in virtualenv generated scripts might be too long for the
+# system to properly process it. Swap the absolute path with an env lookup.
+# This needs to happen after pip installing since some requirements might add
+# new binaries.
+FixShebangs () {
+  local capture_pattern;
+  capture_pattern=\'^#!"?\'"${WORKSPACE}"\'/venv_dev/bin/(.+?)"?$\'
+
+  # Replace all instances with an env lookup
+  perl -pi -e "s:${capture_pattern}:#!/usr/bin/env \\$1:" venv_dev/bin/*
+}
+
+# If no virtualenv has been set up, initialize a new one.
+if [ ! -d "venv_dev" ] ; then
+  python3.7 -m venv venv_dev
+  FixShebangs
+fi
+
+source venv_dev/bin/activate
+pip install --upgrade pip setuptools
+
+# Need to fix the paths again in case pip was upgraded.
+FixShebangs
+
+# Only need the dev and base requirements
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# Fix shebangs one more time since pip might install new binaries with the wrong
+# long shebang path.
+FixShebangs
+'''
+      }
+      post {
+        failure {
+          script {
+            storeStatus(
+              'Install Dependencies', FAILURE,
+              ['Unknown issue installing dependencies'])
+          }
+        }
+      }
+    }
+
+    stage('Process') {
+      when {
+        expression {
+          params.RUN_PROCESS
+        }
+      }
+      steps {
+        script {
+          runFabricPipelineCommand(
+            'process', env.PIPELINE_DEPLOYMENT_NAME, 'office-pipeline-index',
+            params.PIPELINE_BRANCH)
+        }
+      }
+    }
+
+    stage('Index') {
+      when {
+        expression {
+          params.RUN_INDEX
+        }
+      }
+      steps {
+        script {
+          runFabricPipelineCommand(
+            'index', env.PIPELINE_DEPLOYMENT_NAME, 'office-pipeline-index',
+            params.PIPELINE_BRANCH)
+        }
+      }
+    }
+
+    stage('Validate') {
+      when {
+        expression {
+          params.RUN_VALIDATE
+        }
+      }
+      steps {
+        script {
+          runFabricPipelineCommand(
+            'validate', env.PIPELINE_DEPLOYMENT_NAME, 'office-pipeline-index',
+            params.PIPELINE_BRANCH)
+        }
+      }
+    }
+
+    stage('Restart Staging') {
+      when {
+        expression {
+          params.RESTART_STAGING
+        }
+      }
+      steps {
+        script {
+          runDockerFabricCommand('restart:web', 'br-staging')
+        }
+      }
+    }
+
+    stage('Restart Prod') {
+      when {
+        expression {
+          params.RESTART_PROD
+        }
+      }
+      steps {
+        script {
+          runDockerFabricCommand('restart:web', 'br-prod')
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      notifyBuild()
+    }
+  }
+}
+
+// Run a docker specific fabric command on a remote machine.
+def runDockerFabricCommand(String fabCommand, String machine) {
+  sh """\
+#!/bin/bash -eu
+set -o pipefail
+
+source venv_dev/bin/activate
+fab --fabfile=prod/docker_fabfile.py -R '${machine}' '${fabCommand}'
+"""
+}
+
+// Run a fabric command on a remote machine.
+def runFabricCommand(String fabCommand, String machine) {
+  sh """\
+#!/bin/bash -eu
+set -o pipefail
+
+source venv_dev/bin/activate
+fab --fabfile=prod/fabfile.py -R '${machine}' '${fabCommand}'
+"""
+}
+
+// Constants for Zeus parsing.
+@Field def CONFIG_START = 'CONFIG:\n'
+@Field def FAILURE_START = 'FAILURE: tasks: [\n'
+@Field def ZEUS_RUN = 'run'
+@Field def ZEUS_EXPORT = 'export'
+@Field def ZEUS_PUBLISH = 'publish'
+@Field def ZEUS_STEPS = ['run', 'export', 'publish']
+@Field def ZEUS_STEPS_REVERSE = ['publish', 'export', 'run']
+// Constants for slack messages.
+@Field def SUCCESS = 'good'
+@Field def PARTIAL_FAILURE = 'warning'
+@Field def FAILURE = 'danger'
+
+// Run a zeus pipeline command on a remote machine and wait for it to complete.
+// Since the fabric script detaches from the pipeline process and lets it run
+// on its own, we want to send a webhook url and wait for the detached process
+// to notify us when the pipeline run is complete
+// TODO(stephen): Probably should handle timeouts
+// TODO(stephen): When Jenkins adds support for failing tasks to not stop
+// the pipeline, remove the allowPipelineFailure option and use that behavior.
+def runFabricPipelineCommand(String pipelineStage, String deploymentName,
+                             String machine, String branch, String steps = null,
+                             boolean allowPipelineFailure = false) {
+  // Generate a webhook that pipeline results should be passed to
+  def hook = registerWebhook()
+  def hookURL = hook.getURL()
+
+  // Collect the command options
+  def params = [
+    deployment_name: deploymentName,
+    branch:branch,
+    ci_callback_url:hookURL
+  ]
+  // Certain pipeline stages require the list of steps to run to be specified.
+  if (steps) {
+    params['steps'] = steps
+  }
+
+  // Kick off the pipeline on the specified machine
+  def fabCommand = "${pipelineStage}_pipeline:" +
+    params.collect { k, v -> "${k}=${v}" }.join(',')
+
+  try {
+    runFabricCommand(fabCommand, machine)
+  } catch (Exception e) {
+    storeStatus(pipelineStage, FAILURE, ['*** Unknown Failure ***'])
+    throw e
+  }
+
+  echo "Waiting for command to finish. URL: ${hookURL}"
+
+  def data = waitForWebhook hook
+  data = data.trim()
+  echo "Pipeline result:\n${data}"
+
+  def (status, failures) = parseZeusOutput(data)
+  if (allowPipelineFailure && status == FAILURE) {
+    status = PARTIAL_FAILURE
+  }
+
+  storeStatus(pipelineStage, status, failures)
+  if (status == FAILURE) {
+    error('Pipeline Failed')
+  }
+}
+
+// Parse the Zeus output message returned to Jenkins and determine the status
+// and failure messages to show.
+def parseZeusOutput(String message) {
+  def stageResults = parseZeusStages(message)
+  def failures = []
+  if (!stageResults) {
+    return [FAILURE, ['*** Unknown Failure ***']]
+  }
+
+  // Determine which zeus stages failed and at what severity.
+  if (stageResults[ZEUS_RUN]) {
+    // Always add the `run` failures since they are the most useful.
+    failures.addAll(stageResults[ZEUS_RUN])
+  } else if (stageResults[ZEUS_EXPORT]) {
+    // The export step failing is interesting, but the failure messages are only
+    // interesting if the run step passed.
+    for (failedStep in stageResults[ZEUS_EXPORT]) {
+      failures.add("${failedStep} (export)")
+    }
+  }
+
+  // The status is SUCCESS if all stages that ran had no failures (since export
+  // and publish are not always guaranteed to run).
+  def status = failures ? FAILURE : SUCCESS
+  for (step in ZEUS_STEPS_REVERSE) {
+    def stepFailures = stageResults[step]
+    // If a step ran, it will have a non-null failures list.
+    if (stepFailures != null) {
+      // Change the status to PARTIAL_FAILURE if there is a zeus step that ran
+      // successfully after a failed earlier step (like if `run` had failures
+      // but did not abort, `export` and `publish` will still run successfully.
+      // In those cases, we want a partial failure to be reported not a full
+      // failure).
+      if (!stepFailures && status == FAILURE) {
+        status = PARTIAL_FAILURE
+      }
+      break
+    }
+  }
+  return [status, failures]
+}
+
+// Extract the failures from each zeus stage: run, export, and publish. If a
+// stage is not run (either by design or due to a pipeline abort) it will be
+// null in the output.
+def parseZeusStages(String message) {
+  def output = [:]
+  def firstBlockIdx = message.indexOf(CONFIG_START)
+  if (firstBlockIdx < 0) {
+    return null
+  }
+  def blocks = message[firstBlockIdx + 1..-1].split(CONFIG_START)
+  blocks.eachWithIndex {
+    block, index ->
+      output[ZEUS_STEPS[index]] = extractFailures(block)
+  }
+
+  return output
+}
+
+// Return a list of the failed pipeline steps from a zeus stage's message.
+def extractFailures(String zeusStageMessage) {
+  def failureStartIdx = zeusStageMessage.indexOf(FAILURE_START)
+  // No failures exist.
+  if (failureStartIdx < 0) {
+    return []
+  }
+
+  failureStartIdx += FAILURE_START.size()
+
+  // HACK(stephen): Awful workaround because Jenkins does not whitelist the
+  // String.indexOf(String, int) Java method inside Groovy.
+  def failures = zeusStageMessage[failureStartIdx..-1]
+  def failureEndIdx = failures.indexOf('\n]')
+
+  // Something went horribly wrong.
+  if (failureEndIdx < 0) {
+    return ['*** Unknown Failure ***']
+  }
+
+  // Extract the failed stages from the list, clean them, and return as a list.
+  return failures[0..failureEndIdx]
+    .replaceAll('[ ",]', '')
+    .replace('//', '')
+    .replace('/', '.')
+    .split('\n')
+}
+
+// Store a stage's status and failures on the global detailed stage tracking
+// variable.
+def storeStatus(String stage, String status, List<String> failures) {
+  def stageName = stage.capitalize()
+  def currentTime = System.currentTimeMillis() / 1000 as Integer
+  if (!DETAILED_STAGE_STATUS[stageName]) {
+    DETAILED_STAGE_STATUS[stageName] = [
+      status: status,
+      failures: failures,
+      completionTime: currentTime,
+    ]
+    return
+  }
+
+  // Update an existing stage's status (like if two parts of the same stage are
+  // run in parallel).
+  def stageStatus = DETAILED_STAGE_STATUS[stageName]
+  stageStatus.failures.addAll(failures)
+  stageStatus.completionTime = currentTime
+
+  // If the new status is not successful, store it for the stage. We don't want
+  // to overwrite an unsuccessful status with a successful one. And if this
+  // stage's status is successful, then we should preserve the existing status
+  // because it is at least the same as this one.
+  if (status != SUCCESS) {
+    stageStatus.status = status
+  }
+}
+
+// Send a detailed and pretty slack message indicating the result of this
+// pipeline.
+def notifyBuild() {
+  // If no stages have set a status, do nothing.
+  if (!DETAILED_STAGE_STATUS) {
+    return
+  }
+
+  def attachments = [[
+    title: "${env.PIPELINE_DEPLOYMENT_NAME.capitalize()} Pipeline Status",
+    title_link: blueOceanBuildUri(),
+    color: '#FFF'
+  ]]
+
+  for (item in DETAILED_STAGE_STATUS) {
+    def attachment = [
+      color: item.value.status,
+      title: item.key,
+      ts: item.value.completionTime,
+    ]
+
+    if (item.value.failures) {
+      attachment.fields = [[
+        value: item.value.failures.join('\n'),
+        short: true,
+      ]]
+    }
+    attachments.add(attachment)
+  }
+
+  slackSend(
+    message: '',
+    channel: env.SLACK_CHANNEL,
+    attachments: JsonOutput.toJson(attachments))
+}
+
+// Programatically build the blue ocean URI since it isn't provided in env
+def blueOceanBuildUri() {
+  return "${env.JENKINS_URL}blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_BASE_NAME}/${env.BUILD_NUMBER}/pipeline/"
+}
