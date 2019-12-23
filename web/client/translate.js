@@ -1,8 +1,5 @@
 const counterpart = require('counterpart');
-const am = require('./locales/am');
 const en = require('./locales/en');
-const fr = require('./locales/fr');
-const pt = require('./locales/pt');
 
 const LOCALE = window.__JSON_FROM_BACKEND.locale;
 
@@ -11,15 +8,12 @@ counterpart.registerTranslations('en', en);
 counterpart.setFallbackLocale('en');
 
 switch (LOCALE) {
+  // To register a new locale, enter it as a case here:
+  /*
   case 'am':
     counterpart.registerTranslations('am', am);
     break;
-  case 'fr':
-    counterpart.registerTranslations('fr', fr);
-    break;
-  case 'pt':
-    counterpart.registerTranslations('pt', pt);
-    break;
+  */
 }
 counterpart.setLocale(LOCALE);
 
