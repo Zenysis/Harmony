@@ -19,23 +19,11 @@ module.exports = {
   },
   entry: {
     admin: absPath('web/client/entryPoints/adminEntry.js'),
-    alerts: absPath('web/client/entryPoints/alertsAppEntry.js'),
-    advancedQuery: absPath('web/client/entryPoints/advancedQueryEntry.js'),
-    caseManagement: absPath('web/client/entryPoints/caseManagementEntry.js'),
-    dataQuality: absPath('web/client/entryPoints/dataQualityEntry.js'),
-    fieldDashboard: absPath('web/client/entryPoints/fieldDashboardEntry.js'),
-    geoDashboard: absPath('web/client/entryPoints/geoDashboardEntry.js'),
     gridDashboard: absPath('web/client/entryPoints/gridDashboardEntry.js'),
     navbar: absPath('web/client/entryPoints/navbarEntry.js'),
     query: absPath('web/client/entryPoints/queryEntry.js'),
     upload: absPath('web/client/entryPoints/dataUploadEntry.js'),
     newUserButton: absPath('web/client/entryPoints/newUserButtonEntry.js'),
-    geoExplorer: absPath('web/client/entryPoints/geoExplorerEntry.js'),
-    location_admin: absPath('web/client/entryPoints/locationAdminAppEntry.js'),
-    review_admin: absPath('web/client/entryPoints/reviewAdminAppEntry.js'),
-    mfr_explorer: absPath(
-      'web/client/entryPoints/masterFacilityExplorerAppEntry.js',
-    ),
     unauthorizedPage: absPath(
       'web/client/entryPoints/unauthorizedPageEntry.js',
     ),
