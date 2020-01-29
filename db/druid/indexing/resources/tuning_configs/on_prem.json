@@ -10,22 +10,22 @@
   "jobProperties": {
     "io.compression.codecs": "org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.Lz4Codec",
 
-    "mapreduce.job.jvm.numtasks": 6,
+    "mapreduce.job.jvm.numtasks": 2,
     "mapreduce.task.io.sort.mb": 1024,
     "mapreduce.task.io.sort.factor": 80,
 
-    "mapreduce.map.java.opts": "-server -Xmx7g -Duser.timezone=UTC -Dfile.encoding=UTF-8 -XX:MaxDirectMemorySize=7g",
-    "mapreduce.map.memory.mb": 8192,
+    "mapreduce.map.java.opts": "-server -Xmx2g -Duser.timezone=UTC -Dfile.encoding=UTF-8 -XX:MaxDirectMemorySize=2g",
+    "mapreduce.map.memory.mb": 2048,
     "mapreduce.map.output.compress": true,
     "mapreduce.map.output.compress.codec": "org.apache.hadoop.io.compress.Lz4Codec",
     "mapreduce.map.speculative": false,
 
-    "mapreduce.reduce.java.opts": "-server -Xmx8g -Duser.timezone=UTC -Dfile.encoding=UTF-8 -XX:MaxDirectMemorySize=8g",
-    "mapreduce.reduce.memory.mb": 8192,
+    "mapreduce.reduce.java.opts": "-server -Xmx2g -Duser.timezone=UTC -Dfile.encoding=UTF-8 -XX:MaxDirectMemorySize=2g",
+    "mapreduce.reduce.memory.mb": 2048,
     "mapreduce.reduce.speculative": false,
 
-    "mapreduce.local.map.tasks.maximum": 6,
-    "mapreduce.local.reduce.tasks.maximum": 6
+    "mapreduce.local.map.tasks.maximum": 4,
+    "mapreduce.local.reduce.tasks.maximum": 2
   },
   "indexSpec": {
     "bitmap": {
@@ -33,5 +33,5 @@
     }
   },
   "buildV9Directly": true,
-  "maxRowsInMemory": 200000
+  "maxRowsInMemory": 50000
 }
