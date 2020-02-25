@@ -146,8 +146,6 @@ source "${PIPELINE_UTILS_DIR}/bash/common.sh"
   --output_indicators="${PIPELINE_TMP_DIR}/indicators.json"
 ```
 
-## Matching across 
-
 ## Indexing data
 
 After you&#39;ve developed processing and transformation steps for each data source, the next step is to index the data in the Druid database.  Harmony will index all data sources in the same database, allowing them to be queried together.
@@ -257,24 +255,6 @@ webpack-dashboard -- webpack-dev-server --config web/webpack.config.js --mode 'd
 
 Production environments do not need Python dev dependencies (`requirements-dev.txt`) or Javascript (`yarn`/`node`) dependencies, as long as assets built on the frontend (via `yarn build`) are distributed on the production server.
 
-## Running locally
-
-The platform is built on [Flask](http://flask.palletsprojects.com/en/1.1.x/).  To run a local development server, run:
-
-```
-FLASK_ENV=development python ./web/runserver.py
-```
-
-You will also need to set a `ZEN_ENV` environmental variable that corresponds with a config you&#39;d like to load.
-
-## Running in production
-
-We use gunicorn using the `gunicorn_server.py` entrypoint.  You&#39;ll also want to set the `ZEN_ENV` envar to reflect the deployment config you want to load, as well as the `ZEN_PROD` envar to indicate that we should load production assets.  Here&#39;s an example:
-
-```
-ZEN_ENV=us ZEN_PROD=1 ./web/gunicorn_server.py
-```
-
 # PostgreSQL
 
 You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to host relational data and web application state.
@@ -283,7 +263,9 @@ You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to 
 
 To ensure that you keep data from separate deployments separate, it is recommended that you create a new database for each deployment that you are working on. Unfortunately, we do not have the tooling in place to make this easy for developers to do, so we will start by creating a single database for all depolyments.
 
-Once you are inside the Postgres CLI, enter the following command to create the Harmony Database
+Enter the Postgres CLI.  If you've just set up Postgres locally, the command to do this is probably `psql postgres`.
+
+Once you are inside the Postgres CLI, enter the following command to create the Harmony database:
 
 ```
 CREATE DATABASE harmony;
@@ -342,37 +324,92 @@ CREATE DATABASE "druid"
 
 By default, Flask will look for the SQLite Database to retrieve user information. You can override the database that Flask uses by setting DATABASE_URL. It is recommended you do this in your environment initialization step. For example, this is what a sample value for DATABASE_URL can look like (you can also place it in your bash_profile file).
 
+On the command line:
+
 ```
-export DATABASE_URL 'postgresql://test_admin:an4978wauGednmYZ@my.postgres.host/harmony'
+export DATABASE_URL='postgresql://test_admin:an4978wauGednmYZ@localhost/harmony'
 ```
+
+If you are hosting postgres remotely, replace "localhost" with the appropriate hostname.
 
 ## **Seeding the Database**
 
-Once we&#39;ve created our application database, we need to initialize it with seed data. This section will deal with upgrading the database schema to ensure that it is consistent with the latest version. By default, our application will _not_ start unless the database schema version matches the latest version in the source tree.
+Once we've created our application database, we need to initialize it with seed data. This section will deal with upgrading the database schema to ensure that it is consistent with the latest version. By default, our application will _not_ start unless the database schema version matches the latest version in the source tree.
+
+Make sure `DATABASE_URL` is set - you should see it when you run this:
 
 ```
-# Make sure `DATABASE_URL` is set
 echo "${DATABASE_URL}"
-# We first need to create all the Tables in the Database and set up all constraints, 
-# sequences and other details contained in the Database Schema. If `DATABASE_URL` 
-# is not set, this step will 'upgrade' the hard-coded database.
-scripts/upgrade_database.sh
-
-
-# Once we've upgraded the database and populated the appropriate seed values, we'll
-# need to create a user account so that we can login via the Web UI. 
-scripts/create_user.py -f "Your First Name" -l "Your Last Name" -u "username@zenysis.com" -
 ```
 
+We first need to create all the Tables in the Database and set up all
+constraints, sequences and other details contained in the Database Schema. If
+`DATABASE_URL` is not set, this step will 'upgrade' the hard-coded database.
 
+```
+ZEN_ENV=br scripts/upgrade_database.sh
+```
+
+Once we've upgraded the database and populated the appropriate seed values,
+we'll need to create a user account so that we can login via the Web UI:
+
+```
+ZEN_ENV=br scripts/create_user.py --first_name "Your First Name" --last_name "Your Last Name" --username "username@example.com" --site_admin
+```
+
+Be sure to record the password it generates for you.  You can also specify a password of your own using the `--password` option.
 
 # Druid
 
+Harmony comes pre-configured with a Brazil deployment (configuration directory `config/br`).  This guide will use the Brazil as an example and walk you through how to set up and run the pipeline.
+
+## Application configuration
+
 You will have to set up an [Apache Druid database](https://druid.apache.org/) to host your data.
 
-To point the web server at Druid, set `DRUID_HOST` in `config/XX/druid.py`, where `XX` corresponds to the configuration directory you created.  This can be overridden by the `DRUID_HOST` environmental variable.
+To point the web server at Druid, set `DRUID_HOST` in `config/XX/druid.py`, where `XX` corresponds to the configuration directory of your deployment.  This can be overridden by the `DRUID_HOST` environmental variable.
+
+In this case, edit `config/br/druid.py` and find the `DRUID_HOST` variable.  Replace it with the URL of your Druid database endpoint.
 
 Finally, if you are running multiple deployments, you can set `DEFAULT_DRUID_HOST` in your global settings config to set a default host.
+
+## Preparing data
+
+Download the sample data here: https://drive.google.com/a/zenysis.com/file/d/19RyMvCH3vygfYT1wffNBGYFYOJXjA1ZF/view?usp=sharing.  This is a mixture of public and simulated data.
+
+Let's take a look at the data:
+
+```
+zless br_demo_data.csv.gz
+```
+
+Note that it is a well-formed CSV.
+
+Use the `process_csv.py` module (described above) to convert it to Druid format and ingest it into the database.  See [Druid docs](https://druid.apache.org/docs/latest/ingestion/data-formats.html) on how to ingest CSV and other basic formats.  We plan to add more Harmony-specific guidance on how to create Druid indexing jobs, stay tuned!
+
+## Running locally
+
+The platform is built on [Flask](http://flask.palletsprojects.com/en/1.1.x/).  To run a local development server, run:
+
+```
+FLASK_ENV=development python ./web/runserver.py
+```
+
+You will also need to set a `ZEN_ENV` environmental variable that corresponds with a config you&#39;d like to load.
+
+Harmony ships with a Brazil/"br" config.  You can set `ZEN_ENV=br` to use it:
+
+```
+ZEN_ENV=br FLASK_ENV=development python ./web/runserver.py
+```
+
+## Running in production
+
+We use gunicorn using the `gunicorn_server.py` entrypoint.  You&#39;ll also want to set the `ZEN_ENV` envar to reflect the deployment config you want to load, as well as the `ZEN_PROD` envar to indicate that we should load production assets.  Here&#39;s an example:
+
+```
+ZEN_ENV=br ZEN_PROD=1 ./web/gunicorn_server.py
+```
 
 # Contributing
 
