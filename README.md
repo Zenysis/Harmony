@@ -222,7 +222,10 @@ source venv/bin/activate
 
 pip install -r requirements.txt -r requirements-web.txt -r requirements-pipeline.txt -r requirements-dev.txt
 ```
-
+Run the following command to run necessary database migrations such as configurations et cetera:
+```
+FLASK_APP='web.server.app' ZEN_OFFLINE='1' flask db upgrade
+```
 ### Javascript dependencies
 
 This project uses [yarn](https://yarnpkg.com/lang/en/) for Javascript dependency management.  You can install Javascript dependencies via:
