@@ -1,0 +1,46 @@
+[ignore]
+
+# Exclude minified vendor files.
+<PROJECT_ROOT>/web/public/js/vendor/min/.*
+
+# Exclude non-js files in the public directory (like scss, images, build).
+<PROJECT_ROOT>/web/public/[^j][^s].*
+
+# Exclude non web/ and node_modules/ paths.
+# NOTE(stephen): This is kind a hack. We keep the .flowconfig in our src root
+# but we have a lot of non-js files in our source tree, so we want to flexibly
+# exclude those folders without having to specifically blacklist them all here.
+<PROJECT_ROOT>/\(w[^e][^b]\|n[^o][^d][^e]\|[^wn]\).*
+
+# Declarations allow us to use the types of the external interfaces of
+# third-party packages without type-checking the contents.
+[declarations]
+<PROJECT_ROOT>/node_modules/.*
+
+[include]
+web/client/
+web/public/js/
+
+[libs]
+web/public/js/vendor/flow-typed/
+web/client/types/globals.js
+
+[lints]
+
+[options]
+esproposal.decorators=ignore
+exact_by_default=true
+include_warnings=true
+module.system.node.resolve_dirname=node_modules
+module.system.node.allow_root_relative=true
+module.system.node.root_relative_dirname=web/client
+suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
+suppress_comment= \\(.\\|\n\\)*\\$FlowIssue
+suppress_comment= \\(.\\|\n\\)*\\$FlowIndexerIssue
+suppress_comment= \\(.\\|\n\\)*\\$FlowSuppressError
+suppress_comment= \\(.\\|\n\\)*\\$ExpectError
+suppress_type=$AllowZenModelDefaultProp
+suppress_type=$AllowAny
+suppress_type=$Cast
+
+[strict]
