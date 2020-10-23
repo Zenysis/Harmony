@@ -7,7 +7,7 @@ MAILGUN_NAME = 'mg.hostname.com'
 MAILGUN_SENDER = 'noreply@mg.hostname.com'
 
 # Druid settings
-DEFAULT_DRUID_HOST = 'https://druid.hostname.com'
+DEFAULT_DRUID_HOST = 'http://172.17.0.1'
 
 # Phabricator settings
 PASSPHRASE_ENDPOINT = 'https://phab.hostname.com/api/passphrase.query'

@@ -9,7 +9,7 @@ from gunicorn.app.base import BaseApplication
 from multiprocessing import cpu_count
 from pylib.file.file_utils import FileUtils
 
-from log.log import setup_stackdriver_logger, LOG
+from log.log import LOG
 from web.server.app import create_app
 from web.server.environment import IS_TEST
 

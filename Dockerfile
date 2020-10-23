@@ -8,7 +8,10 @@ ENV NODE_ENV 'production'
 ENV ZEN_ENV 'br'
 ENV ZEN_PROD 1
 ENV ZEN_DOCKER 1
+
+# Change to your database postgres
 ENV DATABASE_URL 'postgresql://test_admin:zenpass@zen_postgres/zenysis'
+
 ENV PYTHONPATH "${ZENYSIS_SRC_ROOT}:${PYTHONPATH}"
 
 # Install dependencies needed by python and node requirements
@@ -38,13 +41,16 @@ RUN mkdir -p /data/output
 WORKDIR ${INSTALL_PATH}
 
 # Install python dependencies
+RUN python3 -m pip install --upgrade pip
 COPY requirements.txt requirements.txt
 COPY requirements-web.txt requirements-web.txt
-RUN pip3 install -r requirements.txt
-RUN pip3 install -r requirements-web.txt
+COPY requirements-web.txt requirements-pipeline.txt
+COPY requirements-web.txt requirements-dev.txt
+
+RUN pip3 install -r requirements.txt -r requirements-web.txt -r requirements-pipeline.txt -r requirements-dev.txt
 
 # Lint is baked into the yarn install process
-COPY lint lint
+# COPY lint lint
 
 # Handle web/client dependencies first.
 # Install node dependencies
@@ -77,11 +83,13 @@ COPY web/server web/server
 # Copy over misc that does not get yarn built.
 COPY docker docker
 COPY scripts scripts
+COPY global_config.py global_config.py 
 #COPY test test
 #COPY bin bin
 
 # Log dir
 RUN mkdir -p /logs
+RUN echo '{}' > /zenysis/instance_config.json
 
 # Upgrade database and run
 EXPOSE 5000
