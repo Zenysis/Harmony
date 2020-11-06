@@ -9,7 +9,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.session import sessionmaker
 from pylib.base.flags import Flags
 
-from data.alerts.credentials import get_credentials
+# TODO: Verify this import after, because crashing when we try the create user.
+# from data.alerts.credentials import get_credentials
 from log import LOG
 from models.alchemy.user import User, UserRoles, UserStatusEnum
 

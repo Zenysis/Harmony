@@ -1,6 +1,4 @@
 #!/bin/bash -e
-# Script called from docker to upgrade and run the server in production.
-
 pushd /zenysis &>/dev/null
 
 # Copy static assets to a directory that nginx can access.

@@ -1,0 +1,14 @@
+storage/
+metadata_data/
+.dockerignore
+# Byte-compiled / optimized / DLL files
+__pycache__/
+**/__pycache__
+**/*__pycache__
+**/*__pycache__*
+**/*__pycache__/
+**/__pycache__/
+*.pyc
+
+database/*
+database

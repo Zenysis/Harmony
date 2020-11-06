@@ -414,6 +414,16 @@ We use gunicorn using the `gunicorn_server.py` entrypoint.  You&#39;ll also want
 ZEN_ENV=br ZEN_PROD=1 ./web/gunicorn_server.py
 ```
 
+## Running with docker
+
+```bash
+$ docker-compose build
+$ docker-compose run --rm harmony_app yarn install --pure-lockfile --frozen-lockfile --production=false --no-cache
+$ docker-compose run --rm harmony_app yarn run build
+$ docker-compose up -d --force-recreate
+$ docker-compose run --rm harmony_app scripts/create_user.py --first_name "Your First Name" --last_name "Your Last Name" --username "username@example.com" --site_admin --password "123456"
+```
+
 # Contributing
 
 Contributions are welcome!  Use Github&#39;s Issues and Pull Requests feature to report bugs, plan features, or submit changes.

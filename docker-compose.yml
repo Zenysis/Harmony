@@ -1,16 +1,28 @@
 version: "3.8"
 
 services:
-  app:
-    build: .
+
+  postgres_druid:
+    container_name: postgres_druid
+    image: postgres:13
+    volumes:
+      - metadata_data:/var/lib/postgresql/data   
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_DRUID}
+      - POSTGRES_USER=${POSTGRES_USER_DRUID}
+      - POSTGRES_DB=${POSTGRES_DB_DRUID}
+
+  postgres_harmony:
+    container_name: postgres_harmony
+    image: postgres:13
     ports:
-      - "5000:5000"
-    depends_on:
-      - middlemanager
-      - zookeeper
-      - coordinator
-      - broker
-      - historical
+      - 51432:5432
+    volumes:
+      - ./database:/var/lib/postgresql/data   
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_HARMONY}
+      - POSTGRES_USER=${POSTGRES_USER_HARMONY}
+      - POSTGRES_DB=${POSTGRES_DB_HARMONY}
 
   # Need 3.5 or later for container nodes
   zookeeper:
@@ -27,6 +39,7 @@ services:
       - coordinator_var:/opt/druid/var
     depends_on: 
       - zookeeper
+      - postgres_druid
     ports:
       - "8081:8081"
     command:
@@ -41,6 +54,7 @@ services:
       - broker_var:/opt/druid/var
     depends_on: 
       - zookeeper
+      - postgres_druid
       - coordinator
     ports:
       - "8082:8082"
@@ -58,6 +72,7 @@ services:
     depends_on: 
       - zookeeper
       - coordinator
+      - postgres_druid
     ports:
       - "8083:8083"
     command:
@@ -73,6 +88,7 @@ services:
       - middle_var:/opt/druid/var
     depends_on: 
       - zookeeper
+      - postgres_druid
       - coordinator
     ports:
       - "8091:8091"
@@ -88,6 +104,7 @@ services:
       - router_var:/opt/druid/var
     depends_on:
       - zookeeper
+      - postgres_druid
       - coordinator
     ports:
       - "8888:8888"
@@ -95,11 +112,28 @@ services:
       - router
     env_file:
       - environment
-      
+
+  harmony_app:
+    build: .
+    container_name: harmony_app
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/zenysis
+    depends_on:
+      - middlemanager
+      - zookeeper
+      - coordinator
+      - broker
+      - historical
+      - postgres_druid
+      - postgres_harmony
+    environment:
+      - DATABASE_URL=postgresql://test_admin:zenpass@postgres_harmony:5432/zenysis
 volumes:
-  metadata_data: {}
-  middle_var: {}
-  historical_var: {}
-  broker_var: {}
-  coordinator_var: {}
-  router_var: {}
+  metadata_data:
+  middle_var:
+  historical_var:
+  broker_var:
+  coordinator_var:
+  router_var:

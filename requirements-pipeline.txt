@@ -12,10 +12,4 @@ pystan>=2.18.1.0 ; platform_python_implementation != 'PyPy'
 isoweek
 unidecode
 zeep==3.4.0
-
-# NOTE(stephen): Workaround for latest version of pymssql (2.1.4) which
-# impromperly specifies its library requirements. This causes an issue where a
-# Cython dependency is required but not automatically installed. When this
-# happens it causes the rest of the requirements file to not be installed.
-# TODO(stephen): When pymssql 2.1.5 is released, remove this.
--e git+https://github.com/pymssql/pymssql.git@fda5fd38f30eaeeb40a911235692144493d69864#egg=pymssql
+pymssql==2.1.5

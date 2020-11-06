@@ -45,7 +45,9 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
-build/
+build/*
+!build/.keep
+
 develop-eggs/
 dist/
 downloads/
@@ -121,4 +123,14 @@ build/Release
 # Dependency directory
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
 node_modules
+storage/*
+!storage/.keep
 
+web/public/build/
+!web/public/build/.keep
+
+src/*
+!src/.keep
+
+.env
+database
