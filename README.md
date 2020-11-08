@@ -417,6 +417,7 @@ ZEN_ENV=br ZEN_PROD=1 ./web/gunicorn_server.py
 ## Running with docker
 
 ```bash
+$ cp env.example .env
 $ docker-compose build
 $ docker-compose run --rm harmony_app yarn install --pure-lockfile --frozen-lockfile --production=false --no-cache
 $ docker-compose run --rm harmony_app yarn run build
