@@ -41,8 +41,6 @@ RUN \
 # Install python dependencies
 RUN python3.7 -m pip install --upgrade pip
 RUN pip3.7 install -r requirements.txt -r requirements-web.txt -r requirements-pipeline.txt -r requirements-dev.txt
-RUN pip3.7 install -e git+https://github.com/room77/py77.git@de4c39b79f5cf404a720eaeaeed60aeee6cffa1f#egg=pylib
-RUN pip3.7 install -e git+https://github.com/druid-io/pydruid.git@2420109553812470ed4d91cd0f8d5e70bbf2cfd3#egg=pydruid
 
 # Log dir
 RUN mkdir -p /logs

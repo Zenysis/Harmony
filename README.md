@@ -420,6 +420,8 @@ ZEN_ENV=br ZEN_PROD=1 ./web/gunicorn_server.py
 $ cp .env.example .env
 $ export $(grep -v '^#' .env | xargs)
 $ docker-compose build
+$ docker-compose run --rm harmony_app pip3.7 install -e git+https://github.com/room77/py77.git@de4c39b79f5cf404a720eaeaeed60aeee6cffa1f#egg=pylib
+$ docker-compose run --rm harmony_app pip3.7 install -e git+https://github.com/druid-io/pydruid.git@2420109553812470ed4d91cd0f8d5e70bbf2cfd3#egg=pydruid
 $ docker-compose run --rm harmony_app yarn install --pure-lockfile --frozen-lockfile --production=false --no-cache
 $ docker-compose run --rm harmony_app yarn run build
 $ docker-compose up -d --force-recreate
