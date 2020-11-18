@@ -1,30 +1,26 @@
-#!/bin/bash -e
-# Script called from docker to upgrade and run the server in production.
+#!/bin/bash -eu
+set -o pipefail
+
+# Script called from docker to upgrade and run the web server in production.
+
+# File that will be created to show that entrypoint initialization has been
+# completed. This helps avoid spamming Rollbar with the same sourcemaps, and
+# allows us to skip DB upgrading when the container is reused. When
+# `docker restart web` is called, the same container filesystem will be used and
+# this flag will be set.
+INIT_COMPLETE='/tmp/initialization_completed'
 
 pushd /zenysis &>/dev/null
 
-# Copy static assets to a directory that nginx can access.
-echo 'Copying static files...'
-mkdir -p /data/output/zenysis_static
-rm -rf /data/output/zenysis_static/*
-cp -r /zenysis/web/public/{build,images,js} /data/output/zenysis_static
+if ! [ -f "${INIT_COMPLETE}" ] ; then
+  echo 'Initializing server'
+  ./initialize_new_container.sh
 
-# Don't want to expose sourcemaps to the user.
-# TODO(stephen): This could be an nginx rule also.
-rm -f /data/output/zenysis_static/build/min/*.js.map
-
-echo 'Running db upgrade...'
-FLASK_APP='web.server.app' ZEN_OFFLINE=1 flask db upgrade
-
-if [ -z "${DONT_SYNC_SOURCEMAPS}" ]; then
-  echo 'Syncing sourcemaps'
-  # Don't spend more than 5 min syncing sourcemaps
-  timeout 300 scripts/sync_sourcemaps.py || echo 'WARNING: Sourcemap upload timed out'
+  echo 'Initialization complete'
+  touch "${INIT_COMPLETE}"
 fi
 
 echo 'Running server...'
-# If adjusting this timeout, also adjust nginx timeout in
-# prod/nginx/nginx_vhost_default_location
-web/gunicorn_server.py --timeout=600
+./run_web_gunicorn.sh
 
 popd &>/dev/null
