@@ -6,7 +6,12 @@ from flask import g
 from models.alchemy.configuration import Configuration
 from log import LOG
 from web.server.data.data_access import get_db_adapter, find_one_by_fields, Transaction
-from web.server.util.util import assert_boolean, assert_string, assert_users_exist
+from web.server.util.util import (
+    assert_boolean,
+    assert_string,
+    assert_optional_string,
+    assert_users_exist,
+)
 
 '''
 The configuration setting for toggling public access to the site. If enabled, unregistered
@@ -27,6 +32,27 @@ CRISP_ID_KEY = 'crisp_id'
 CRISP_ENABLED_KEY = 'crisp_enabled'
 CUR_DATASOURCE_KEY = 'cur_datasource'
 
+'''
+This setting dictates whether or not users will be automatically signed out after
+30 minutes of inactivity by default. Users will still be able to select the
+'Keep me signed in' check box to avoid being automatically signed out
+'''
+AUTOMATIC_SIGN_OUT_KEY = 'keep_me_signed_in'
+
+'''
+This setting enable case management for this instance
+'''
+ENABLE_CASE_MANAGEMENT = 'enable_case_management'
+
+'''
+This setting controls the case management app name to be displayed on the navbar
+'''
+CASE_MANAGEMENT_APP_NAME = 'case_management_app_name'
+
+'''
+This setting holds the slug for the dashboard to use as the case management home page
+'''
+CASE_MANAGEMENT_HOME_PAGE_DASHBOARD = 'case_management_home_page_dashboard'
 
 CONFIGURATION_KEYS = set(
     [
@@ -36,6 +62,10 @@ CONFIGURATION_KEYS = set(
         CRISP_ENABLED_KEY,
         CRISP_ID_KEY,
         CUR_DATASOURCE_KEY,
+        AUTOMATIC_SIGN_OUT_KEY,
+        ENABLE_CASE_MANAGEMENT,
+        CASE_MANAGEMENT_APP_NAME,
+        CASE_MANAGEMENT_HOME_PAGE_DASHBOARD,
     ]
 )
 
@@ -49,17 +79,25 @@ _KEY_TO_VALIDATOR = {
     CRISP_ENABLED_KEY: assert_boolean,
     CRISP_ID_KEY: assert_string,
     CUR_DATASOURCE_KEY: assert_string,
+    AUTOMATIC_SIGN_OUT_KEY: assert_boolean,
+    ENABLE_CASE_MANAGEMENT: assert_boolean,
+    CASE_MANAGEMENT_APP_NAME: assert_string,
+    CASE_MANAGEMENT_HOME_PAGE_DASHBOARD: assert_optional_string,
 }
 
 '''The default values for all configuration settings.
 '''
 _DEFAULT_SETTINGS = {
     PUBLIC_ACCESS_KEY: False,
-    DEFAULT_URL_KEY: '/query',
+    DEFAULT_URL_KEY: '/overview',
     PROJECT_MANAGER_ID_KEY: [],
     CRISP_ENABLED_KEY: False,
     CRISP_ID_KEY: '00000000-0000-0000-0000-000000000000',
     CUR_DATASOURCE_KEY: 'LATEST_DATASOURCE',
+    AUTOMATIC_SIGN_OUT_KEY: True,
+    ENABLE_CASE_MANAGEMENT: False,
+    CASE_MANAGEMENT_APP_NAME: 'Case Management',
+    CASE_MANAGEMENT_HOME_PAGE_DASHBOARD: None,
 }
 
 _SETTING_TO_DESCRIPTION = {
@@ -74,6 +112,15 @@ _SETTING_TO_DESCRIPTION = {
     CRISP_ID_KEY: 'A unique identifier that Crisp uses to resolve a chat session to an individual'
     'domain.',
     CUR_DATASOURCE_KEY: 'Datasource used for this platform.',
+    AUTOMATIC_SIGN_OUT_KEY: 'This setting dictates whether or not users will be automatically '
+    'signed out after 30 minutes of inactivity by default.'
+    'Users will still be able to select the \'Keep me signed in\''
+    'check box to avoid being automatically signed out.',
+    ENABLE_CASE_MANAGEMENT: 'This setting dictates whether or not to enable the case '
+    'management app',
+    CASE_MANAGEMENT_APP_NAME: 'The app name to display in the navbar',
+    CASE_MANAGEMENT_HOME_PAGE_DASHBOARD: 'The dashboard to optionally use as the '
+    'case management home page',
 }
 
 ''' The in-memory configuration store containing all the default values. You should NOT reference

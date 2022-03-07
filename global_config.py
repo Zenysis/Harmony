@@ -18,3 +18,11 @@ SUPPORT_EMAIL = 'support@hostname.com'
 RENDERBOT_EMAIL = 'render_bot@hostname.com'
 
 DATA_UPLOAD_DEFAULT_NOTIFY = ['foo@hostname.com', 'bar@hostname.com']
+
+# In order to read and write from google sheet you will need proper authorization.
+# https://developers.google.com/identity/protocols/oauth2
+GOOGLE_SERVICE_SECRET_CREDENTIAL = ''
+
+POSTGRES_DB_URI = 'postgresql://username:password@hostname/db-name'
+
+REDIS_HOST = 'redis'

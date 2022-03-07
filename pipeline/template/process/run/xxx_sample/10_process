@@ -7,11 +7,14 @@ SetupEnvForPyPy
 
 pushd "${PIPELINE_TMP_DIR}" &> /dev/null
 
-for data_file in "${PIPELINE_FEED_DIR}"/*.csv ; do
-  "${PIPELINE_BIN_DIR}/sample/process_csv.py" \
-    --input_file="${data_file}" \
-    --output_file="${PIPELINE_TMP_DIR}/processed_data_${count}.json.lz4"
-  count=$((count + 1))
-done
+"${PIPELINE_SRC_ROOT}/data/pipeline/scripts/process_csv.py" \
+  --date 'date' \
+  --dimensions 'GeoDimension1' 'GeoDimension2' 'SomeOtherDimension' \
+  --prefix 'mysourcename' \
+  --sourcename 'My Source Name' \
+  --input='my_input_file.csv' \
+  --output_locations="${PIPELINE_TMP_DIR}/locations.csv" \
+  --output_fields="${PIPELINE_TMP_DIR}/fields.csv" \
+  --output_rows="${PIPELINE_TMP_DIR}/processed_data.json.lz4"
 
 popd &> /dev/null

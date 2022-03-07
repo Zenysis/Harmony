@@ -3,9 +3,7 @@ import Promise from 'bluebird';
 
 import * as Zen from 'lib/Zen';
 import Dimension from 'models/core/wip/Dimension';
-import DimensionService from 'services/wip/DimensionService';
 import QueryFilterUtil from 'models/core/wip/QueryFilter/QueryFilterUtil';
-import type { JSONRef } from 'services/types/api';
 import type {
   QueryFilter,
   SerializedQueryFilter,
@@ -13,19 +11,19 @@ import type {
 import type { Serializable } from 'lib/Zen';
 
 type Values = {
-  dimension: Dimension,
+  dimension: string,
   filter: QueryFilter | null,
 };
 
 type SerializedCountDistinctCalculation = {
-  dimension: JSONRef,
+  dimension: string,
   type: 'COUNT_DISTINCT',
 
   // NOTE(stephen): An empty object is a valid serialized filter, but it will
   // cause issues with flow if the type is defined with it. Choosing to define
   // an object with an optional type property so we can get flow to properly
   // refine during deserialization. It will never be used.
-  filter: SerializedQueryFilter | { type?: void } | null,
+  filter: SerializedQueryFilter | { type?: void, ... } | null,
 };
 
 /**
@@ -68,41 +66,41 @@ class CountDistinctCalculation
   static deserializeAsync(
     values: SerializedCountDistinctCalculation,
   ): Promise<Zen.Model<CountDistinctCalculation>> {
-    const dimensionURI = values.dimension.$ref;
-    const dimensionPromise = DimensionService.get(
-      DimensionService.convertURIToID(dimensionURI),
-    );
-    const serializedFilter = values.filter;
-    if (serializedFilter === null || serializedFilter.type === undefined) {
-      return dimensionPromise.then((dimension: Dimension) =>
-        CountDistinctCalculation.create({ dimension, filter: null }),
+    const { dimension, filter } = values;
+    const newDimension = Dimension.deserializeToString(dimension);
+    if (filter === null || filter.type === undefined) {
+      return Promise.resolve(
+        CountDistinctCalculation.create({
+          dimension: newDimension,
+          filter: null,
+        }),
       );
     }
-    return Promise.all([
-      DimensionService.get(DimensionService.convertURIToID(dimensionURI)),
-      QueryFilterUtil.deserializeAsync(serializedFilter),
-    ]).then(result => {
+    return QueryFilterUtil.deserializeAsync(filter).then(deserializedFilter => {
       // TODO(stephen): Fix Promise.all type to have flow properly understand
       // the return types instead of having to manually pull them out.
-      const dimension: Dimension = result[0];
-      const filter: QueryFilter = result[1];
-      return CountDistinctCalculation.create({ dimension, filter });
+      return CountDistinctCalculation.create({
+        dimension: newDimension,
+        filter: deserializedFilter,
+      });
     });
   }
 
   static UNSAFE_deserialize(
     values: SerializedCountDistinctCalculation,
   ): Zen.Model<CountDistinctCalculation> {
-    const dimension = DimensionService.UNSAFE_get(
-      DimensionService.convertURIToID(values.dimension.$ref),
-    );
-    if (values.filter === null || values.filter.type === undefined) {
-      return CountDistinctCalculation.create({ dimension, filter: null });
+    const { dimension, filter } = values;
+    const newDimension = Dimension.deserializeToString(dimension);
+    if (filter === null || filter.type === undefined) {
+      return CountDistinctCalculation.create({
+        dimension: newDimension,
+        filter: null,
+      });
     }
 
     return CountDistinctCalculation.create({
-      dimension,
-      filter: QueryFilterUtil.UNSAFE_deserialize(values.filter),
+      dimension: newDimension,
+      filter: QueryFilterUtil.UNSAFE_deserialize(filter),
     });
   }
 
@@ -110,12 +108,12 @@ class CountDistinctCalculation
     const filter = this._.filter();
     return {
       type: this.tag,
-      dimension: this._.dimension().serialize(),
+      dimension: this._.dimension(),
       filter: filter ? filter.serialize() : {},
     };
   }
 }
 
-export default ((CountDistinctCalculation: any): Class<
+export default ((CountDistinctCalculation: $Cast): Class<
   Zen.Model<CountDistinctCalculation>,
 >);

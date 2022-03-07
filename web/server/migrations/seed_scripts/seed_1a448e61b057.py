@@ -39,8 +39,7 @@ class Resource(Base):
 
 
 class Role(Base):
-    '''A class that defines permissions that can be assigned to a `User` or a `Group`.
-    '''
+    '''A class that defines permissions that can be assigned to a `User` or a `Group`.'''
 
     __tablename__ = 'role'
 
@@ -57,8 +56,7 @@ class Role(Base):
 
 
 class Permission(Base):
-    '''A permission that is tied to a `ResourceType`
-    '''
+    '''A permission that is tied to a `ResourceType`'''
 
     __tablename__ = 'permission'
 
@@ -75,8 +73,7 @@ class Permission(Base):
 
 
 class RolePermissions(Base):
-    '''Represents a mapping between a `Role` and a `Permission`.
-    '''
+    '''Represents a mapping between a `Role` and a `Permission`.'''
 
     __tablename__ = 'role_permissions'
 
@@ -92,8 +89,7 @@ class RolePermissions(Base):
 
 
 class User(Base):
-    '''A class that represents an individual user on the site.
-    '''
+    '''A class that represents an individual user on the site.'''
 
     __tablename__ = 'user'
 
@@ -352,7 +348,7 @@ def delete_new_permissions(transaction):
 
         if entity:
             transaction.delete(entity)
-    LOG.debug('Added Group, User and Query Policy Permissions')
+    LOG.debug('Deleted Group, User and Query Policy Permissions')
 
 
 def add_role_permissions(transaction):

@@ -14,7 +14,7 @@ export type Intent =
   | 'danger'
   | 'link';
 
-const Intents: { [string]: Intent } = {
+const Intents = {
   DEFAULT: 'default',
   PRIMARY: 'primary',
   SUCCESS: 'success',

@@ -1,6 +1,6 @@
 import Promise from 'bluebird';
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import hoistNonReactStatic from 'hoist-non-react-statics';
 
 import VendorScript from 'vendor/models/VendorScript';
@@ -28,7 +28,7 @@ import { uniqueId } from 'util/util';
 
 const propTypes = {
   children: PropTypes.func.isRequired,
-  componentId: PropTypes.number.isRequired,
+  componentId: PropTypes.string.isRequired,
   scripts: PropTypes.arrayOf(PropTypes.instanceOf(VendorScript)).isRequired,
 
   loadingNode: PropTypes.node,
@@ -107,12 +107,14 @@ LibraryLazyLoader.propTypes = propTypes;
 LibraryLazyLoader.defaultProps = defaultProps;
 
 export default function withScriptLoader(Component, scriptOrConfig) {
-  const scripts = scriptOrConfig instanceof VendorScript
-    ? [scriptOrConfig]
-    : scriptOrConfig.scripts || [];
-  const loadingNode = scriptOrConfig instanceof VendorScript
-    ? null
-    : scriptOrConfig.loadingNode || null;
+  const scripts =
+    scriptOrConfig instanceof VendorScript
+      ? [scriptOrConfig]
+      : scriptOrConfig.scripts || [];
+  const loadingNode =
+    scriptOrConfig instanceof VendorScript
+      ? null
+      : scriptOrConfig.loadingNode || null;
 
   // Create a unique ID for each script dependent component so that we can
   // skip loading scripts after the component is first rendered.

@@ -7,13 +7,16 @@ import type { StyleObject } from 'types/jsCore';
 
 const AUTO = 'auto';
 
-type Lifecycle =
-  | 'BASE'
-  | 'CALCULATE_START_HEIGHT'
-  | 'CALCULATE_END_HEIGHT'
-  | 'SET_START_HEIGHT';
+type LifecycleMap = {
+  BASE: 'BASE',
+  CALCULATE_START_HEIGHT: 'CALCULATE_START_HEIGHT',
+  CALCULATE_END_HEIGHT: 'CALCULATE_END_HEIGHT',
+  SET_START_HEIGHT: 'SET_START_HEIGHT',
+};
 
-const LIFECYCLES: { [Lifecycle]: Lifecycle } = {
+type Lifecycle = $Keys<LifecycleMap>;
+
+const LIFECYCLES: LifecycleMap = {
   BASE: 'BASE',
   CALCULATE_START_HEIGHT: 'CALCULATE_START_HEIGHT',
   CALCULATE_END_HEIGHT: 'CALCULATE_END_HEIGHT',
@@ -22,9 +25,7 @@ const LIFECYCLES: { [Lifecycle]: Lifecycle } = {
 
 type Height = number | 'auto';
 
-type Props = {|
-  children: React.Node,
-
+type DefaultProps = {
   className: string,
   duration: number,
 
@@ -37,7 +38,12 @@ type Props = {|
    * behavior in this component and make the animation stop working.
    */
   style?: StyleObject,
-|};
+};
+
+type Props = {
+  ...DefaultProps,
+  children: React.Node,
+};
 
 type State = {
   lifecycle: Lifecycle,
@@ -85,20 +91,20 @@ type State = {
  * calculated.
  */
 export default class AnimateHeight extends React.PureComponent<Props, State> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     className: '',
     duration: 300,
     height: AUTO,
     style: undefined,
   };
 
-  static getDerivedStateFromProps(props: Props, state: State) {
+  static getDerivedStateFromProps(props: Props, state: State): State | null {
     if (state.lifecycle === LIFECYCLES.BASE) {
       const oldHeight = state.prevRequestedHeight;
       const newHeight = props.height;
       const newChildren = props.children;
 
-      let nextLifecycle: Lifecycle;
+      let nextLifecycle: Lifecycle = state.lifecycle;
       let { startHeight, endHeight, heightToSet, childrenToSet } = state;
       const { timeoutId } = state;
 
@@ -155,7 +161,7 @@ export default class AnimateHeight extends React.PureComponent<Props, State> {
     return null;
   }
 
-  _containerElt: $RefObject<'div'> = React.createRef();
+  _containerElt: $ElementRefObject<'div'> = React.createRef();
 
   constructor(props: Props) {
     super(props);
@@ -285,7 +291,7 @@ export default class AnimateHeight extends React.PureComponent<Props, State> {
     }
   }
 
-  render() {
+  render(): React.Element<'div'> {
     const divClassName = classNames(
       'zen-slide-transition-container',
       this.props.className,

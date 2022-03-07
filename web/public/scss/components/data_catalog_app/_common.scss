@@ -1,0 +1,130 @@
+.editable-text-input {
+  @extend .zen-input-text;
+
+  &--input-textarea {
+    height: auto;
+    min-height: 35px;
+    resize: vertical;
+  }
+}
+
+.category-path {
+  display: flex;
+  flex-wrap: wrap;
+
+  // Include the ui breadcrumb base styles since we have replaced the
+  // <Breadcrumb> wrapper component with our own version.
+  @extend .zen-breadcrumb;
+
+  &__breadcrumb-item {
+    background-color: $gray-light-active;
+    color: #b3bcbd;
+    pointer-events: none;
+
+    &:after {
+      border-left: ($breadcrumb-item-height / 3) solid $gray-light-active;
+    }
+  }
+}
+
+.formula-text {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: $space-m-px;
+
+  &__token-characters {
+    margin: 0 $space-xxs-px;
+
+    &:first-of-type {
+      margin-left: 0;
+    }
+
+    &:last-of-type {
+      margin-right: 0;
+    }
+  }
+
+  &__token-field {
+    background-color: $aqt-indicator-item-color;
+    border-radius: 5px;
+    color: $slate;
+    margin: $space-xs-px $space-xxs-px;
+    padding: $space-xs-px $space-s-px;
+
+    &--link {
+      color: $slate;
+
+      &:hover {
+        background-color: rgba($aqt-indicator-item-color, 0.8);
+        color: $slate;
+      }
+    }
+  }
+}
+
+@keyframes fallback-pill-wave {
+  0% {
+    transform: translateX(-100%);
+  }
+  60% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.dc-fallback-pill {
+  background: $gray-light-active;
+  background-image: linear-gradient(
+    to left,
+    $gray-light-active 0%,
+    $gray-light-hover 20%,
+    $gray-light-active 40%,
+    $gray-light-active 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 400px 100px;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+
+  // The pill will animate to indicate that loading is happening.
+  &:before {
+    content: ' ';
+  }
+
+  &:after {
+    animation: fallback-pill-wave 1s linear 0.5s infinite;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 0, 0, 0.04),
+      transparent
+    );
+    background-repeat: no-repeat;
+    background-size: 400px 100px;
+    bottom: 0;
+    content: '';
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transform: translateX(-100%);
+  }
+}
+
+.dc-copy-indicator-view {
+  &__customization-block {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: 175px 200px auto;
+    max-width: 400px;
+  }
+
+  &__field-name {
+    font-weight: 600;
+  }
+}

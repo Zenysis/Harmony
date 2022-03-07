@@ -1,0 +1,206 @@
+// TODO(stephen): Remove the body class prefix when legacy mode is removed. This
+// is needed so that we can distinguish the different styles at the css level
+// and avoid having the TextTile know about legacy mode at all.
+body.dashboard-modern-mode .gd-dashboard-text-tile {
+  // Perform a CSS calculation to convert a raw pixel value (stored as a number,
+  // and not as a numberpx) into em units. This is needed since we are using css
+  // variables to control the font element sizing and enable experimentation.
+  // TODO(stephen): Remove this when we the font sizing is stabilized.
+  @function calc-em($pixels, $base) {
+    @return calc(#{$pixels / $base} * 1em);
+  }
+
+  // Apply text element styles for an element. All sizes are set as unitless
+  // pixel values based on Carlo's design. We need to convert these pixel values
+  // into em values so that zoom level scaling can be applied cleanly.
+  // TODO(stephen): When the values have stabilized, remove this helper and just
+  // apply the styles directly inside the element style definition instead of by
+  // including a mixin.
+  // NOTE(stephen): I ordered the padding variables this way so that they match
+  // the single `padding: top right bottom left` format that Carlo's design
+  // definition uses. This made it easier to transpose.
+  @mixin text-tile-element(
+    $font-size-px,
+    $font-weight,
+    $line-height-px,
+    $padding-top-px,
+    $padding-right-px,
+    $padding-bottom-px,
+    $padding-left-px,
+  ) {
+    // NOTE(stephen): The font-size base is 16px in the TextTile component.
+    font-size: calc-em($font-size-px, 16);
+    font-weight: $font-weight;
+
+    // NOTE(stephen): line-height is in its unitless mode which means it will be
+    // multiplied by the element's font-size. This is a quick shorthand so that
+    // we don't need to include that calculation ourselves.
+    line-height: calc(#{$line-height-px / $font-size-px});
+
+    // Clear out any margins applied by the default styling of this element.
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    
+    padding-bottom: calc-em($padding-bottom-px, $font-size-px);
+    padding-left: calc-em($padding-left-px, $font-size-px);
+    padding-right: calc-em($padding-right-px, $font-size-px);
+    padding-top: calc-em($padding-top-px, $font-size-px);
+  }
+
+  // This is the default reference font size that dictates what 1 em maps to.
+  // It is overridden by the TextTile as an inline style to apply text scaling
+  // based on zoom level.
+  font-family: $base-font-family;
+  font-size: 16px;
+  overflow-wrap: break-word;
+
+  h1 {
+    @include text-tile-element(
+      $font-size-px: var(--gd-text-tile-font-size--h1, 51),
+      $font-weight: var(--gd-text-tile-font-weight--h1, 400),
+      $line-height-px: var(--gd-text-tile-line-height--h1, 60),
+      $padding-top-px: var(--gd-text-tile-padding-top--h1, 12),
+      $padding-right-px: var(--gd-text-tile-padding-right--h1, 4),
+      $padding-bottom-px: var(--gd-text-tile-padding-bottom--h1, 0),
+      $padding-left-px: var(--gd-text-tile-padding-left--h1, 4),
+    );
+  }
+
+  h2 {
+    @include text-tile-element(
+      $font-size-px: var(--gd-text-tile-font-size--h2, 29),
+      $font-weight: var(--gd-text-tile-font-weight--h2, 600),
+      $line-height-px: var(--gd-text-tile-line-height--h2, 36),
+      $padding-top-px: var(--gd-text-tile-padding-top--h2, 48),
+      $padding-right-px: var(--gd-text-tile-padding-right--h2, 4),
+      $padding-bottom-px: var(--gd-text-tile-padding-bottom--h2, 12),
+      $padding-left-px: var(--gd-text-tile-padding-left--h2, 4),
+    );
+  }
+
+  h3 {
+    @include text-tile-element(
+      $font-size-px: var(--gd-text-tile-font-size--h3, 19),
+      $font-weight: var(--gd-text-tile-font-weight--h3, 600),
+      $line-height-px: var(--gd-text-tile-line-height--h3, 24),
+      $padding-top-px: var(--gd-text-tile-padding-top--h3, 36),
+      $padding-right-px: var(--gd-text-tile-padding-right--h3, 4),
+      $padding-bottom-px: var(--gd-text-tile-padding-bottom--h3, 12),
+      $padding-left-px: var(--gd-text-tile-padding-left--h3, 4),
+    );
+  }
+
+  // NOTE(stephen): If H3 comes directly after H2, we reduce the top padding of
+  // the H3 element to make the text flow a little better.
+  // TODO(stephen): When we remove the debug mode and settle on the font system,
+  // this section can just be overriding the `padding-top` instead of
+  // duplicating everything.
+  h2 + h3 {
+    @include text-tile-element(
+      $font-size-px: var(--gd-text-tile-font-size--h3, 19),
+      $font-weight: var(--gd-text-tile-font-weight--h3, 600),
+      $line-height-px: var(--gd-text-tile-line-height--h3, 24),
+      $padding-top-px: var(--gd-text-tile-padding-top--h3, 12),
+      $padding-right-px: var(--gd-text-tile-padding-right--h3, 4),
+      $padding-bottom-px: var(--gd-text-tile-padding-bottom--h3, 12),
+      $padding-left-px: var(--gd-text-tile-padding-left--h3, 4),
+    );
+  }
+
+  // TODO(stephen): There are no style definitions from carlo yet for list
+  // elements. Use the paragraph styles for now.
+  p, ol, ul {
+    @include text-tile-element(
+      $font-size-px: var(--gd-text-tile-font-size--p, 15),
+      $font-weight: var(--gd-text-tile-font-weight--p, 400),
+      $line-height-px: var(--gd-text-tile-line-height--p, 24),
+      $padding-top-px: var(--gd-text-tile-padding-top--p, 12),
+      $padding-right-px: var(--gd-text-tile-padding-right--p, 4),
+      $padding-bottom-px: var(--gd-text-tile-padding-bottom--p, 12),
+      $padding-left-px: var(--gd-text-tile-padding-left--p, 4),
+    );
+  }
+
+  li {
+    margin-left: 2.8em;
+  }
+
+  // HACK(stephen): If the text element is empty, we still want to apply a
+  // minimum amount of styling. This makes it so that when the user is editing
+  // an empty text tile, the cursor is still placed in the correct starting
+  // position. Use the <p> element as the default styling.
+  &:empty {
+    @include text-tile-element(
+      $font-size-px: var(--gd-text-tile-font-size--p, 15),
+      $font-weight: var(--gd-text-tile-font-weight--p, 400),
+      $line-height-px: var(--gd-text-tile-line-height--p, 24),
+      $padding-top-px: var(--gd-text-tile-padding-top--p, 12),
+      $padding-right-px: var(--gd-text-tile-padding-right--p, 4),
+      $padding-bottom-px: var(--gd-text-tile-padding-bottom--p, 12),
+      $padding-left-px: var(--gd-text-tile-padding-left--p, 4),
+    );
+  }
+}
+
+// NOTE(stephen): This is the legacy dashboard text tile format. It includes
+// some styles that are never used that are a holdover from the React-RTE days
+// (before we used Jodit Editor).
+// TODO(stephen): Remove this when legacy mode is removed.
+body.dashboard-legacy-mode .gd-dashboard-text-tile {
+  font-family: $base-font-family;
+  overflow-wrap: break-word;
+  padding-left: 0.75em;
+
+  *:first-child {
+    margin-top: 0;
+  }
+
+  // This is essentially the "paragraph" block. It is the block used when
+  // the font size is not a heading.
+  div[data-block='true'],
+  p,
+  ul,
+  ol {
+    margin: 0.25em 0;
+  }
+
+  ul,
+  ol {
+    padding: 0px;
+  }
+
+  li {
+    margin-left: 2.8em;
+  }
+
+  // The stylings of the headings are actually applied by the _normalize.scss
+  // library. So we have to go override those values too. The `em` sizes here
+  // are calculated by taking a reference pixel font size (16px) as the
+  // denominator.
+  h1 {
+    font-size: 1.5em;
+  }
+
+  h2 {
+    font-size: 1.375em;
+  }
+
+  h3 {
+    font-size: 1.125em;
+  }
+
+  h4,
+  p {
+    font-size: 1em;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    margin-bottom: 0.25em;
+    margin-top: 0.25em;
+  }
+}

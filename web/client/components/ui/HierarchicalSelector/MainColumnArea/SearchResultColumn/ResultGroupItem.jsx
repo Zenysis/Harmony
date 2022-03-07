@@ -5,21 +5,24 @@ import MatchTextHighlighter from 'components/ui/TextHighlighter/MatchTextHighlig
 import autobind from 'decorators/autobind';
 import type HierarchyItem from 'models/ui/HierarchicalSelector/HierarchyItem';
 import type StringMatcher from 'lib/StringMatcher';
+import type { NamedItem } from 'models/ui/HierarchicalSelector/types';
 
-type Props = {
-  item: HierarchyItem,
+type Props<T> = {
+  item: HierarchyItem<T>,
   matcher: StringMatcher,
-  onClick: (item: HierarchyItem, event: SyntheticEvent<HTMLElement>) => void,
+  onClick: (item: HierarchyItem<T>, event: SyntheticEvent<HTMLElement>) => void,
 };
 
-export default class ResultGroupItem extends React.PureComponent<Props> {
+export default class ResultGroupItem<T: NamedItem> extends React.PureComponent<
+  Props<T>,
+> {
   @autobind
   onClick(event: SyntheticEvent<HTMLElement>) {
     const { onClick, item } = this.props;
     onClick(item, event);
   }
 
-  render() {
+  render(): React.Element<'div'> {
     const { item, matcher } = this.props;
     return (
       <div

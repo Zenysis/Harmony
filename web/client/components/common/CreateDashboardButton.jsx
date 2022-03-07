@@ -1,65 +1,35 @@
 // @flow
 import * as React from 'react';
-import Promise from 'bluebird';
 
 import Button from 'components/ui/Button';
-import Dashboard from 'models/core/Dashboard';
-import DashboardService from 'services/DashboardService';
-import InputModal from 'components/common/InputModal';
+import CreateDashboardModal from 'components/common/CreateDashboardModal';
+import I18N from 'lib/I18N';
 import autobind from 'decorators/autobind';
-import { localizeUrl, onLinkClicked } from 'components/Navbar/util';
+import type DashboardMeta from 'models/core/Dashboard/DashboardMeta';
 
-type Props = {
+type DefaultProps = {
   className: string,
-  onCreatePost?: (dashbord: Dashboard, dashboardName: string) => void,
+  onCreatePost?: (dashbord: DashboardMeta, dashboardName: string) => void,
 };
+
+type Props = DefaultProps;
 
 type State = {
-  createNewDashboard: (dashboardName: string) => Promise<Dashboard>,
   showCreateDashboardModal: boolean,
 };
-
-const TEXT = t('Navbar');
-const TEXT_DASHBOARD = t('dashboard_builder');
 
 export default class CreateDashboardButton extends React.PureComponent<
   Props,
   State,
 > {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     className: '',
     onCreatePost: undefined,
   };
 
-  state = {
-    createNewDashboard: DashboardService.createDashboard,
+  state: State = {
     showCreateDashboardModal: false,
   };
-
-  @autobind
-  createNewDashboard(dashboardName: string) {
-    this.state
-      .createNewDashboard(dashboardName)
-      .then(dashboard => {
-        // redirect to the new dashboard
-        const { onCreatePost } = this.props;
-        if (!onCreatePost) {
-          onLinkClicked(
-            localizeUrl(`/dashboard/${dashboard.slug()}`),
-            {},
-            TEXT_DASHBOARD.created,
-            { dashboardName, createdInSaveToDashboardModal: false },
-          );
-        } else {
-          onCreatePost(dashboard, dashboardName);
-        }
-      })
-      .catch(error => {
-        window.toastr.error(error.message);
-        console.error(error);
-        analytics.track(TEXT_DASHBOARD.creation_error, error);
-      });
-  }
 
   @autobind
   onOpenCreateDashboardModal() {
@@ -71,39 +41,33 @@ export default class CreateDashboardButton extends React.PureComponent<
     this.setState({ showCreateDashboardModal: false });
   }
 
-  maybeRenderCreateDashboardModal() {
-    if (!this.state.showCreateDashboardModal) {
-      return null;
-    }
+  renderCreateDashboardModal(): React.Element<typeof CreateDashboardModal> {
     return (
-      <InputModal
-        show={this.state.showCreateDashboardModal}
-        title={TEXT.createNewDashboard}
-        textElement={TEXT.createDashboardTitlePrompt}
+      <CreateDashboardModal
+        onCreatePost={this.props.onCreatePost}
         onRequestClose={this.onCloseCreateDashboardModal}
-        defaultHeight={260}
-        primaryButtonText={TEXT.create}
-        onPrimaryAction={this.createNewDashboard}
+        show={this.state.showCreateDashboardModal}
       />
     );
   }
 
-  renderCreateDashboardButton() {
+  renderCreateDashboardButton(): React.Node {
     return (
       <Button
         className={this.props.className}
         onClick={this.onOpenCreateDashboardModal}
+        testId="create-dashboard-button"
       >
-        {TEXT_DASHBOARD.create}
+        <I18N>Create Dashboard</I18N>
       </Button>
     );
   }
 
-  render() {
+  render(): React.Node {
     return (
       <React.Fragment>
         {this.renderCreateDashboardButton()}
-        {this.maybeRenderCreateDashboardModal()}
+        {this.renderCreateDashboardModal()}
       </React.Fragment>
     );
   }

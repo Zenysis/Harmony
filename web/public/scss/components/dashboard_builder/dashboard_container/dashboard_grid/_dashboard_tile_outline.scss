@@ -1,0 +1,41 @@
+.gd-dashboard-tile-outline {
+  grid-column: 1;
+  grid-row: 1;
+  pointer-events: none;
+  z-index: 2;
+
+  // NOTE(david): The dashboard tile outline is drawn on top of the dashboard
+  // tiles. By default, we set pointer-events: none to pass any pointer events
+  // through to the tile underneath. However, when editing a tile, we want to
+  // disable distracting interactions with other tiles so we reset to default
+  // pointer behavior.
+  &--editing {
+    pointer-events: auto;
+  }
+
+  &__tile {
+    &--selected {
+      stroke: #0f6fff;
+      stroke-dasharray: none;
+    }
+
+    &--hover {
+      stroke: #78a9ff;
+      stroke-dasharray: none;
+    }
+
+    // HACK(stephen): There is a bug in Chrome where the tile outlines don't
+    // always draw in full. Applying a transform fixes this.
+    & > path {
+      transform: translateZ(0);
+    }
+  }
+
+  &__resize-handle {
+    border-radius: 1px;
+    fill: white;
+    stroke: #0f6fff;
+    stroke-dasharray: none;
+    stroke-width: 2px;
+  }
+}

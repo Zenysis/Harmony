@@ -2,13 +2,11 @@
 import Promise from 'bluebird';
 
 import APIService, { API_VERSION } from 'services/APIService';
+import I18N from 'lib/I18N';
 import PromiseQueue from 'lib/Queue/PromiseQueue';
+import Toaster from 'components/ui/Toaster';
+import { UncancellablePromise } from 'util/promiseUtil';
 import type { APIVersion } from 'services/APIService';
-
-// Allow our promises to be cancelable so that their handlers can be
-// cleaned up if a component is unmounted before the promise resolves
-// TODO(stephen): Can this be configured globally?
-Promise.config({ cancellation: true });
 
 // Very naive query cache implementation that uses endpoint + JSON request
 // as the cache key.
@@ -16,10 +14,10 @@ Promise.config({ cancellation: true });
 // version. If the server changes datasources and the user does not refresh,
 // the data being returned could be out of date. This is an OK tradeoff for
 // now.
-const QUERY_CACHE: { [string]: mixed } = {};
+const QUERY_CACHE: { [string]: mixed, ... } = {};
 
 // Store pending promises so that we don't kick off duplicate requests
-const PENDING: { [string]: Promise<*> } = {};
+const PENDING: { [string]: UncancellablePromise<*>, ... } = {};
 
 // How many queries we allow to run at the same time.
 const MAX_CONCURRENT_QUERIES = 6;
@@ -41,7 +39,7 @@ export default class QueryInterface<Request, Response> {
     this._useCache = useCache;
   }
 
-  buildRequest() {
+  buildRequest(): this {
     // eslint-disable-next-line no-console
     console.error('Must be implemented by subclass');
     return this;
@@ -53,13 +51,14 @@ export default class QueryInterface<Request, Response> {
     // Check first to see if this request has already been made and a
     // cached value can be returned
     if (this._useCache && QUERY_CACHE[cacheKey]) {
+      // $FlowExpectedError[incompatible-return]: this isn't type safe but we're being careful
       return Promise.resolve(QUERY_CACHE[cacheKey]);
     }
 
     // Check if an identical request has already been initiated
     // and is still pending
     if (PENDING[cacheKey]) {
-      return PENDING[cacheKey];
+      return PENDING[cacheKey].use();
     }
 
     // If we don't have a cached value and an identical request is not
@@ -72,6 +71,12 @@ export default class QueryInterface<Request, Response> {
         .catch(e => {
           // eslint-disable-next-line no-console
           console.error(e.message);
+          Toaster.error(
+            I18N.text(
+              'The server was unable to complete the query.',
+              'unableToCompleteQuery',
+            ),
+          );
           analytics.track('Query Error', e.message);
           if (window.Rollbar !== undefined) {
             window.Rollbar.error(e);
@@ -101,15 +106,10 @@ export default class QueryInterface<Request, Response> {
       return undefined;
     });
 
-    // Add noop callback to work around a quirk (bug?) in bluebird:
-    // If there is only one child promise, and that promise is cancelled,
-    // the parent promise will also be cancelled. We never want the
-    // parent promise to be cancelled since caching and completing the
-    // query call is much more useful than kicking off the query call again.
-    promise.then(() => {});
-
-    PENDING[cacheKey] = promise;
-    return promise;
+    // Wrap the query request in an uncancellable promise since queries are
+    // *expensive* and if we can still cache the query result, we should try to.
+    PENDING[cacheKey] = UncancellablePromise.create(promise);
+    return PENDING[cacheKey].use();
   }
 
   // Create a cache key from the endpoint + request object
@@ -127,7 +127,7 @@ export default class QueryInterface<Request, Response> {
     return value;
   }
 
-  setRequest(request: Request) {
+  setRequest(request: Request): this {
     this._request = request;
     return this;
   }

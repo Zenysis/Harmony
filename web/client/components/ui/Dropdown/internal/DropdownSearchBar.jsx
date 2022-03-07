@@ -4,20 +4,25 @@ import * as React from 'react';
 import InputText from 'components/ui/InputText';
 import autobind from 'decorators/autobind';
 
+type DefaultProps = {
+  extraClass: string,
+  inputRef?: $ElementRefObject<typeof InputText.Uncontrolled>,
+  testId?: string,
+};
+
 type Props = {
+  ...DefaultProps,
   debounce: boolean,
   debounceTimeoutMs: number,
   onChange: (value: string, event: SyntheticEvent<HTMLInputElement>) => void,
   searchInputPlaceholder: string,
-
-  extraClass: string,
-  inputRef?: $RefObject<typeof InputText.Uncontrolled>,
 };
 
 export default class DropdownSearchBar extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     extraClass: '',
     inputRef: undefined,
+    testId: undefined,
   };
 
   @autobind
@@ -26,7 +31,7 @@ export default class DropdownSearchBar extends React.PureComponent<Props> {
     event.nativeEvent.stopImmediatePropagation();
   }
 
-  render() {
+  render(): React.Element<'div'> {
     const {
       debounce,
       debounceTimeoutMs,
@@ -34,6 +39,7 @@ export default class DropdownSearchBar extends React.PureComponent<Props> {
       onChange,
       searchInputPlaceholder,
       extraClass,
+      testId,
     } = this.props;
     return (
       <div className={`zen-dropdown__search-bar ${extraClass}`}>
@@ -46,6 +52,7 @@ export default class DropdownSearchBar extends React.PureComponent<Props> {
           debounceTimeoutMs={debounceTimeoutMs}
           onChange={onChange}
           placeholder={searchInputPlaceholder}
+          testId={testId}
         />
       </div>
     );

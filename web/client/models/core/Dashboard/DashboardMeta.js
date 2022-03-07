@@ -1,9 +1,69 @@
 // @flow
-import PropTypes from 'prop-types';
-
+import * as Zen from 'lib/Zen';
 import Moment from 'models/core/wip/DateTime/Moment';
-import ZenModel, { def } from 'util/ZenModel';
-import override from 'decorators/override';
+
+type RequiredValues = {
+  /** The username of the author who created this dashboard. */
+  author: string,
+
+  /**
+   * The unique uri that can be used to look up the authorization resource
+   * corresponding to this dashboard.
+   */
+  authorizationUri: string,
+
+  /** The time at which this dashboard was created. */
+  created: Moment,
+
+  /**
+   * Indicates whether or not the dashboard has been favorited by the current
+   * user.
+   */
+  isFavorite: boolean,
+
+  /**
+   * Indicates whether or not an administrator has flagged the dashboard as
+   * "official" or not.
+   */
+  isOfficial: boolean,
+
+  /**
+   * The time at which any attribute of the Dashboard model was last modified.
+   */
+  lastModified: Moment,
+
+  /**
+   * The last time the dashboard was accessed (if ever) by the current user.
+   */
+  lastAccessedByCurrentUser: Moment,
+
+  /**
+   * The last time the dashboard was modified (if ever) by the current user.
+   */
+  lastModifiedByCurrentUser: Moment,
+
+  /**
+   * The short-name of the dashboard that the user can use to navigate
+   * directly to the UI representation of the dashboard.
+   */
+  slug: string,
+
+  /** The number of times the dashboard has been view. */
+  totalViews: number,
+
+  /** The title of the dashboard. */
+  title: string,
+
+  /**
+   * The number of times the dashboard has been view by the current user.
+   */
+  totalViewsByUser: number,
+
+  /**
+   * The unique uri that can be used to locate this dashboard on the server.
+   */
+  uri: string,
+};
 
 type SerializedDashboardMeta = {
   $uri: string,
@@ -22,128 +82,37 @@ type SerializedDashboardMeta = {
 };
 
 /**
- * @readonly
- * The DashboardMeta is a readonly model is used by the `DashboardService` to
- * represent all the metadata associated with a dashboard (but not the actual
- * dashboard itself).
+ * The DashboardMeta is used by the `DashboardService` to represent all the
+ * metadata associated with a dashboard (but not the actual dashboard itself).
  */
-export default class DashboardMeta extends ZenModel.withTypes({
-  /**
-   * @readonly
-   * The username of the author who created this dashboard.
-   */
-  author: def(PropTypes.string, '', ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The unique uri that can be used to look up the authorization resource
-   * corresponding to this dashboard.
-   */
-  authorizationUri: def(PropTypes.string, undefined, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The time at which this dashboard was created.
-   */
-  created: def(PropTypes.instanceOf(Moment), undefined, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * Indicates whether or not an administrator has flagged the dashboard as
-   * "official" or not.
-   */
-  isOfficial: def(PropTypes.bool, false, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * Indicates whether or not the dashboard has been favorited by the current
-   * user.
-   */
-  isFavorite: def(PropTypes.bool, false),
-
-  /**
-   * @readonly
-   * The time at which any attribute of the Dashboard model was last modified.
-   */
-  lastModified: def(PropTypes.instanceOf(Moment), undefined, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The last time the dashboard was accessed (if ever) by the current user.
-   */
-  lastAccessedByCurrentUser: def(
-    PropTypes.instanceOf(Moment),
-    undefined,
-    ZenModel.PRIVATE,
-  ),
-
-  /**
-   * @readonly
-   * The last time the dashboard was modified (if ever) by the current user.
-   */
-  lastModifiedByCurrentUser: def(
-    PropTypes.instanceOf(Moment),
-    undefined,
-    ZenModel.PRIVATE,
-  ),
-
-  /**
-  * @readonly
-  * The number of times the dashboard has been view by the current user.
-  */
-  totalViewsByUser: def(PropTypes.number, 0, ZenModel.PRIVATE),
-
-  /**
-  * @readonly
-  * The number of times the dashboard has been view.
-  */
-  totalViews: def(PropTypes.number, 0, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The short-name of the dashboard that the user can use to navigate
-   * directly to the UI representation of the dashboard.
-   */
-  slug: def(PropTypes.string.isRequired, '', ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The title of the dashboard.
-   */
-  title: def(PropTypes.string, '', ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The unique uri that can be used to locate this dashboard on the server
-   */
-  uri: def(PropTypes.string, undefined, ZenModel.PRIVATE),
-}) {
-  @override
-  static deserialize(values: SerializedDashboardMeta) {
-    const {
-      authorUsername,
-      created,
-      isOfficial,
-      isFavorite,
-      lastModified,
-      lastAccessedByCurrentUser,
-      lastModifiedByCurrentUser,
-      slug,
-      title,
-      totalViewsByUser,
-      totalViews,
-    } = values;
-
+class DashboardMeta extends Zen.BaseModel<DashboardMeta, RequiredValues> {
+  static deserialize({
+    $uri,
+    authorUsername,
+    created,
+    isOfficial,
+    isFavorite,
+    lastModified,
+    lastAccessedByCurrentUser,
+    lastModifiedByCurrentUser,
+    resource,
+    slug,
+    title,
+    totalViewsByUser,
+    totalViews,
+  }: SerializedDashboardMeta): Zen.Model<DashboardMeta> {
+    // all dates should be processed in UTC timezones, then converted to the
+    // user's local timezone.
     return DashboardMeta.create({
       author: authorUsername || '',
-      authorizationUri: values.resource,
-      uri: values.$uri,
-      created: Moment.create(created),
+      authorizationUri: resource,
+      uri: $uri,
+      created: Moment.utc(created).local(),
       isOfficial,
       isFavorite,
-      lastAccessedByCurrentUser: Moment.create(lastAccessedByCurrentUser),
-      lastModified: Moment.create(lastModified),
-      lastModifiedByCurrentUser: Moment.create(lastModifiedByCurrentUser),
+      lastAccessedByCurrentUser: Moment.utc(lastAccessedByCurrentUser).local(),
+      lastModified: Moment.utc(lastModified).local(),
+      lastModifiedByCurrentUser: Moment.utc(lastModifiedByCurrentUser).local(),
       slug,
       title,
       totalViewsByUser,
@@ -151,3 +120,5 @@ export default class DashboardMeta extends ZenModel.withTypes({
     });
   }
 }
+
+export default ((DashboardMeta: $Cast): Class<Zen.Model<DashboardMeta>>);

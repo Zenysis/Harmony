@@ -1,11 +1,8 @@
 // @flow
 import * as Zen from 'lib/Zen';
-import {
-  sortValuesAsc,
-  twoDecimalPlaces,
-} from 'models/core/QueryResultSpec/ValueRule/rulesUtil';
+import { sortValuesAsc } from 'models/core/QueryResultSpec/ValueRule/rulesUtil';
 import type { Serializable } from 'lib/Zen';
-import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/types';
+import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/TestableRule';
 
 type Values = {
   n: number,
@@ -16,7 +13,7 @@ type SerializedBottomRule = {
   n: number,
 };
 
-const TEXT = t('models.core.QueryResultSpec.ValueRule');
+const TEXT_PATH = 'models.core.QueryResultSpec.ValueRule';
 
 /**
  * Test if a value is in the bottom N values of its array.
@@ -47,9 +44,11 @@ class BottomRule extends Zen.BaseModel<BottomRule, Values>
     return val <= this._getBottomValue(allValues);
   }
 
-  getRuleString(allValues: $ReadOnlyArray<?number>): string {
-    const bottomVal = twoDecimalPlaces(this._getBottomValue(allValues));
-    return `${TEXT.values} <= ${bottomVal}`;
+  getRuleString(): string {
+    return t('bottom', {
+      scope: TEXT_PATH,
+      num: this._.n().toString(),
+    });
   }
 
   serialize(): SerializedBottomRule {
@@ -60,4 +59,4 @@ class BottomRule extends Zen.BaseModel<BottomRule, Values>
   }
 }
 
-export default ((BottomRule: any): Class<Zen.Model<BottomRule>>);
+export default ((BottomRule: $Cast): Class<Zen.Model<BottomRule>>);

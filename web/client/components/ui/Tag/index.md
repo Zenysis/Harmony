@@ -8,8 +8,10 @@ A simple unclickable tag. Note that if all you need is a display tag, you may no
 
 Tags can have different intents, represented by different colors. They can also have different sizes:
 ```jsx
-<React.Fragment>
-  <p>
+import Group from 'components/ui/Group';
+
+<Group.Vertical spacing="xs">
+  <Group.Horizontal>
     <Tag.Simple size={Tag.Sizes.LARGE} intent={Tag.Intents.PRIMARY}>
       Primary
     </Tag.Simple>
@@ -19,8 +21,8 @@ Tags can have different intents, represented by different colors. They can also 
     <Tag.Simple size={Tag.Sizes.LARGE} intent={Tag.Intents.SUCCESS}>
       Success
     </Tag.Simple>
-  </p>
-  <p>
+  </Group.Horizontal>
+  <Group.Horizontal>
     <Tag.Simple size={Tag.Sizes.MEDIUM} intent={Tag.Intents.PRIMARY}>
       Primary
     </Tag.Simple>
@@ -30,8 +32,8 @@ Tags can have different intents, represented by different colors. They can also 
     <Tag.Simple size={Tag.Sizes.MEDIUM} intent={Tag.Intents.SUCCESS}>
       Success
     </Tag.Simple>
-  </p>
-  <p>
+  </Group.Horizontal>
+  <Group.Horizontal>
     <Tag.Simple size={Tag.Sizes.SMALL} intent={Tag.Intents.PRIMARY}>
       Primary
     </Tag.Simple>
@@ -41,17 +43,19 @@ Tags can have different intents, represented by different colors. They can also 
     <Tag.Simple size={Tag.Sizes.SMALL} intent={Tag.Intents.SUCCESS}>
       Success
     </Tag.Simple>
-  </p>
-</React.Fragment>
+  </Group.Horizontal>
+</Group.Vertical>
 ```
 
 A clickable tag:
 ```jsx
+import Group from 'components/ui/Group';
+
 function onClick(value) {
   alert(value);
 }
-<React.Fragment>
-  <p>
+<Group.Vertical spacing="xs">
+  <Group.Horizontal>
     Tags with gradients:
     <Tag value="my-tag-primary" onClick={onClick} intent={Tag.Intents.PRIMARY}>
       Click me
@@ -68,8 +72,8 @@ function onClick(value) {
     <Tag value="my-tag-info" onClick={onClick} intent={Tag.Intents.INFO}>
       Click me
     </Tag>
-  </p>
-  <p>
+  </Group.Horizontal>
+  <Group.Horizontal>
     Tags with solid colors:
     <Tag
       solidColor
@@ -111,8 +115,8 @@ function onClick(value) {
     >
       Click me
     </Tag>
-  </p>
-</React.Fragment>
+  </Group.Horizontal>
+</Group.Vertical>
 ```
 
 Removable tags:
@@ -121,22 +125,18 @@ import LegacyButton from 'components/ui/LegacyButton';
 
 const initialTags = ZenArray.create(['Vinh', 'Vedant', 'Moriah', 'Stephen']);
 
-initialState = {
-  tagNames: initialTags,
-};
+const [tagNames, setTagNames] = React.useState(initialTags);
 
 function onTagRemoveClick(name) {
-  setState((prevState) => (
-    { tagNames: prevState.tagNames.findAndDelete(n => n === name) }
-  ));
+  setTagNames(tagNames.findAndDelete(n => n === name));
 }
 
 function resetTags() {
-  setState({ tagNames: initialTags });
+  setTagNames(initialTags);
 }
 
 function getTags() {
-  return state.tagNames.map(name => (
+  return tagNames.map(name => (
     <Tag
       removable
       key={name}
@@ -150,7 +150,7 @@ function getTags() {
 
 <div>
   {getTags()}
-  <LegacyButton 
+  <LegacyButton
     onClick={resetTags}
     type={LegacyButton.Intents.LINK}
   >

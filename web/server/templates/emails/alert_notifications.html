@@ -16,7 +16,7 @@
 	  <table width="100%" border="0" cellspacing="0" cellpadding="0">
 		<tbody><tr>
 		  <td width="250" style="border-radius: 5px;" height="50" bgcolor="#5b92e5" style="text-align:center;">
-			<a href="{{invite_link}}" align="center" 
+			<a href="{{alerts_link}}" align="center" 
 			style="font-family:'Open Sans',Calibri, Arial, sans-serif;; font-size:15px; color:#ffffff; text-align: center; line-height:50px; display:block; text-decoration:none;border-radius:100%; ">{{btn_text}}</a>
 		  </td>
 		  <td>&nbsp;</td>
@@ -27,19 +27,15 @@
                 <table style="border-spacing: 50px;"  border="0" cellspacing="0" cellpadding="0">
                     <tr>
                         <td style="font-size:15px; font-weight:bold; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;">
-                            {{indicator_td}}
+                            {{title_td}}
                         </td>
-                        <td style="font-size:15px; font-weight:bold; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;" >
-                            {{rule_td}}
-                        </td>
-
                         <td style="font-size:15px; font-weight:bold; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;" >
                             {{geography_td}}
                         </td>
                     </tr>
                 {% for entry in new_notifications %}
                     <tr>
-                    {% for var in ['field', 'checks', 'dimensions'] %}
+                    {% for var in ['title', 'dimensions'] %}
                         <td style="font-size:15px; font-weight:normal; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;">
                             {{entry[var]}}
                         </td>
@@ -61,10 +57,7 @@
                 <table style="border-spacing: 50px;" border="0" cellspacing="0" cellpadding="0">
                     <tr>
                         <td style="font-size:15px; font-weight:bold; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;" >
-                            {{indicator_td}}
-                        </td>
-                        <td style="font-size:15px; font-weight:bold; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;">
-                           {{rule_td}}
+                            {{title_td}}
                         </td>
                         <td style="font-size:15px; font-weight:bold; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;">
                             {{geography_td}}
@@ -72,7 +65,7 @@
                     </tr>
                 {% for entry in existing_notifications %}
                     <tr>
-                    {% for var in ['field', 'checks', 'dimensions'] %}
+                    {% for var in ['title', 'dimensions'] %}
                         <td style="font-size:15px; font-weight:normal; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;">
                             {{entry[var]}}
                         </td>
@@ -81,7 +74,7 @@
                 {% endfor %}
                 </table>
             </td>
-        </tr>
+        </tr>   
     {% else %}
         <tr>
             <td>

@@ -1,4 +1,6 @@
-from builtins import object
+import math
+
+from datetime import date, timedelta
 from abc import ABCMeta, abstractmethod
 
 from pydruid.utils.aggregators import filtered as filtered_aggregator
@@ -6,7 +8,6 @@ from pydruid.utils.filters import Filter
 
 from db.druid.aggregations.query_dependent_aggregation import QueryDependentAggregation
 from db.druid.util import build_filter_from_aggregation, unpack_time_interval
-from future.utils import with_metaclass
 
 GRANULARITY_ORDER = ['day', 'week', 'month', 'quarter', 'year', 'all']
 
@@ -48,7 +49,7 @@ class TimeIntervalAggregation(QueryDependentAggregation):
 
 # Simple interface defining how a filtered time interval should be created
 # for a given query
-class IntervalCreator(with_metaclass(ABCMeta, object)):
+class IntervalCreator(metaclass=ABCMeta):
     @abstractmethod
     def get_interval_filter(self, granularity, intervals):
         pass
@@ -58,12 +59,19 @@ class IntervalCreator(with_metaclass(ABCMeta, object)):
 # be calculated. This class uses the current query's granularity and intervals
 # to create the list of time intervals a stock indicator can be calculated
 # during.
-class StockIntervalCreator(with_metaclass(ABCMeta, IntervalCreator)):
+class StockIntervalCreator(IntervalCreator, metaclass=ABCMeta):
     def __init__(self, stock_granularity, bucket_index):
         self.stock_granularity = stock_granularity
         self.bucket_index = bucket_index
 
     def get_interval_filter(self, granularity, intervals):
+        # TODO(david, stephen): Rewrite this entire function and
+        # build_interval_buckets. We basically have two cases:
+        # 1) query granularity <= stock granularity => no intervals needed
+        # 2) query granularity > stock granularity => we split the intervals
+        # into sub-intervals determined by the query granularity and then we
+        # want to select the last value within those intervals
+
         query_intervals = []
 
         if granularity == 'all':
@@ -113,6 +121,7 @@ class StockIntervalCreator(with_metaclass(ABCMeta, IntervalCreator)):
             ]
             for interval in query_intervals
         ]
+
         return Filter(type='interval', dimension='__time', intervals=filter_intervals)
 
     @abstractmethod
@@ -140,8 +149,34 @@ class GregorianStockIntervalCreator(StockIntervalCreator):
 
     def build_interval_buckets(self, granularity, interval):
         output = []
-        (start_date, end_date) = unpack_time_interval(interval)
+        (start_date, raw_end_date) = unpack_time_interval(interval)
+
+        # We clamp the end_interval date to not be later than todays date to
+        # avoid return buckets for which there will be no data.
+        # TODO(david, stephen): This will break any stock interval forecasts.
+        # We should see if we can instead limit it to the last date for which we
+        # have data for the specific indicator.
+        end_date = min(raw_end_date, date.today() + timedelta(days=1))
+
         if start_date >= end_date:
+            return output
+
+        if granularity == 'day':
+            for i in range((end_date - start_date).days):
+                interval_start = (start_date + timedelta(days=i)).strftime('%Y-%m-%d')
+                interval_end = (start_date + timedelta(days=i + 1)).strftime('%Y-%m-%d')
+                output.append('%s/%s' % (interval_start, interval_end))
+            return output
+
+        if granularity == 'week':
+            for i in range(math.ceil((end_date - start_date).days / 7)):
+                interval_start = (start_date + timedelta(days=i * 7)).strftime(
+                    '%Y-%m-%d'
+                )
+                interval_end = (start_date + timedelta(days=(i + 1) * 7)).strftime(
+                    '%Y-%m-%d'
+                )
+                output.append('%s/%s' % (interval_start, interval_end))
             return output
 
         bucket_size = self.BUCKET_SIZE[granularity]
@@ -168,5 +203,4 @@ class GregorianStockIntervalCreator(StockIntervalCreator):
                 year += 1
             interval_end = '%s-%02d-01' % (year, month)
             output.append('%s/%s' % (interval_start, interval_end))
-
         return output

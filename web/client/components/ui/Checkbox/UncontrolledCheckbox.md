@@ -1,6 +1,8 @@
 Here's an uncontrolled Checkbox example:
 
 ```jsx
+import Checkbox from 'components/ui/Checkbox';
+
 <Checkbox.Uncontrolled
   initialValue={false}
   label="Uncontrolled Checkbox"
@@ -10,16 +12,13 @@ Here's an uncontrolled Checkbox example:
 
 Checkbox with custom icon:
 ```jsx
+import Checkbox from 'components/ui/Checkbox';
 import Icon from 'components/ui/Icon';
 
-initialState = {
-  checked: false,
-};
+const [checked, setChecked] = React.useState(false);
 
 function toggleCheckedValue() {
-  setState(prevState => (
-    { checked: !prevState.checked }
-  ));
+  setChecked(!checked);
 }
 
 <Checkbox.Uncontrolled
@@ -28,12 +27,13 @@ function toggleCheckedValue() {
   label="Toggle Visibility"
   labelPlacement="left"
 >
-  {state.checked ? <Icon type="eye-close" /> : <Icon type="eye-open" />}
+  {checked ? <Icon type="eye-close" /> : <Icon type="eye-open" />}
 </Checkbox.Uncontrolled>
 ```
 
 Disabled checkbox:
 ```jsx
+import Checkbox from 'components/ui/Checkbox';
 
 <Checkbox.Uncontrolled
   initialValue

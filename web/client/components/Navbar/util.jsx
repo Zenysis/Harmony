@@ -1,8 +1,12 @@
 // @flow
 import * as React from 'react';
 import classNames from 'classnames';
+import type Promise from 'bluebird';
 
+import DirectoryService from 'services/DirectoryService';
 import Dropdown from 'components/ui/Dropdown';
+import { API_VERSION } from 'services/APIService';
+import { convertIDToURI } from 'services/wip/util';
 import { maybeOpenNewTab } from 'util/util';
 
 export type DropdownOptionEventHandler = (
@@ -10,12 +14,24 @@ export type DropdownOptionEventHandler = (
 ) => void;
 
 // eslint-disable-next-line max-len
-export const MOBILE_REGEX = /android|fennec|iemobile|iphone|opera (?:mini|mobi)/i;
+export const MOBILE_REGEX: RegExp = /android|fennec|iemobile|iphone|opera (?:mini|mobi)/i;
 
 // eslint-disable-next-line max-len
-export const ALLOWED_MOBILE_PATHS_REGEX = /\/(?:query|dashboard|user|unauthorized|login|zen\/)/i;
+export const MOBILE_OPTIMIZED_PATHS_REGEX: RegExp = /\/(?:query|dashboard|user|unauthorized|login|zen\/)/i;
 
 const DEFAULT_LOCALE = window.__JSON_FROM_BACKEND.ui.defaultLocale;
+
+// NOTE(stephen): We know that the document body will always be non-null.
+// Cast it to a non-null type so that Flow is happy.
+const DOCUMENT_BODY = ((document.body: $Cast): HTMLBodyElement);
+
+// The width below which we should switch to the mobile view
+// This should correspond to $max-mobile-width in _navbar.scss
+const MOBILE_VIEW_WIDTH = 678;
+
+export function isMobileView(): boolean {
+  return DOCUMENT_BODY.clientWidth < MOBILE_VIEW_WIDTH;
+}
 
 export function localizeUrl(path: string): string {
   const { locale } = window.__JSON_FROM_BACKEND;
@@ -30,10 +46,13 @@ export function localizeUrl(path: string): string {
 
 export function onLinkClicked(
   url: string,
-  e: MouseEvent | Object = {},
-  analyticsEvent: any = undefined,
-  analyticsProperties: any = undefined,
-  openNewTab: boolean = false,
+  e?:
+    | SyntheticMouseEvent<HTMLElement>
+    | MouseEvent
+    | { metaKey?: boolean, ... } = {},
+  analyticsEvent?: string | void = undefined,
+  analyticsProperties?: { [string]: mixed, ... } | void = undefined,
+  openNewTab?: boolean = false,
 ): void {
   const openUrl = () => maybeOpenNewTab(url, e.metaKey || openNewTab);
   if (analyticsEvent === undefined) {
@@ -56,7 +75,7 @@ export function asDropdownOption(
   return (
     <Dropdown.Option key={text || iconClassName} value={onClick}>
       {iconClassName && (
-        <span className="navbar-dropdown__icon">
+        <span className="navbar-dropdown-menu__icon">
           <i className={iconClassName} />
         </span>
       )}
@@ -71,17 +90,26 @@ export function asButton(
   text: string,
   isActive: boolean = false,
   children: React.Node = null,
+  testId: string = '',
+  buttonClassName: string = '',
+  icon: React.Node | void = undefined, // TODO(nina): Correctly type this
 ): React.Node {
-  const className = classNames('navbar__item', 'navbar__item--link', {
-    'navbar__item--active': isActive,
+  const className = classNames('navbar-item', buttonClassName, {
+    'navbar-item--active': isActive,
   });
+
   return (
-    <div className={className} key={text}>
-      <button type="button" onClick={onClick}>
-        {text}
-        {children}
-      </button>
-    </div>
+    <button
+      className={className}
+      key={text}
+      type="button"
+      onClick={onClick}
+      data-testid={testId}
+    >
+      {icon || null}
+      {text}
+      {children}
+    </button>
   );
 }
 
@@ -91,6 +119,15 @@ export function isMobileBrowser(): boolean {
   return MOBILE_REGEX.test(userAgent);
 }
 
-export function isForbiddenPath(url: string) {
-  return !ALLOWED_MOBILE_PATHS_REGEX.test(url);
+export function isUnoptimizedForMobile(url: string): boolean {
+  return !MOBILE_OPTIMIZED_PATHS_REGEX.test(url);
+}
+
+export function isUserInGroup(groupName: string): Promise<boolean> {
+  const currentUserUri = convertIDToURI(
+    window.__JSON_FROM_BACKEND.user.id,
+    API_VERSION.V2,
+    'user',
+  );
+  return DirectoryService.getIsUserInGroup(currentUserUri, groupName);
 }

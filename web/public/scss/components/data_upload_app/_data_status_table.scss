@@ -1,0 +1,94 @@
+$table-row-height: 54px;
+
+.data-status-table {
+  border: 1px solid $gray;
+  border-radius: 5px;
+
+  // HACK(abby): These three overrides are hacks to alter the default zen table
+  // formatting and should be removed when the table overhaul is done.
+  .zen-table {
+    border-radius: 5px;
+  }
+
+  .zen-table__header {
+    border-bottom: 1px solid $gray;
+  }
+
+  // HACK(abby): This override fixes the no data row to match the rest of the
+  // formatting.
+  .zen-table__row:last-child {
+    border-bottom: none;
+  }
+
+  &__header-cell {
+    color: $slate-hover;
+    font-size: 16px;
+    font-weight: bold;
+    height: $table-row-height;
+    padding: 0px 0px 0px $space-l-px;
+  }
+
+  &__row {
+    font-size: 16px;
+
+    // In the row hover state, the delete icon should be visible.
+    &:hover {
+      .data-status-table__delete-icon {
+        visibility: visible;
+      }
+    }
+  }
+
+  &__cell {
+    padding: $space-m-px 0px $space-m-px $space-l-px;
+  }
+
+  &__no-data-cell {
+    padding-left: $space-l-px;
+  }
+
+  &__datasource-cell {
+    font-weight: bold;
+  }
+
+  &__update-data-cell {
+    padding-left: $space-s-px;
+  }
+
+  &__queued-cell {
+    background: #fff9e0;
+  }
+
+  &__queued-pill {
+    background: #ffe380;
+    border-radius: 100px;
+    display: inline-block;
+    padding: $space-xxs-px $space-xs-px;
+  }
+
+  &__update-failed-cell {
+    background: #ffebe6;
+  }
+
+  &__update-failed-pill {
+    background: #ff8f73;
+    border-radius: 100px;
+    display: inline-block;
+    padding: $space-xxs-px $space-xs-px;
+  }
+
+  &__action-link {
+    color: $blue-dark;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 19px;
+    text-decoration-line: underline;
+    width: max-content;
+  }
+
+  &__delete-icon {
+    color: $slate-hover;
+    height: $space-l-px;
+    visibility: hidden;
+  }
+}

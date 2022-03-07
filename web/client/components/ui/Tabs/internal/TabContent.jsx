@@ -5,13 +5,30 @@ import classNames from 'classnames';
 type Props = {
   children: React.Node,
   isActive: boolean,
+  lazyLoad: boolean,
+
+  containerType?: 'default' | 'no padding',
+  className?: string | void,
 };
 
-export default function TabContent(props: Props) {
-  const { children, isActive } = props;
-  const className = classNames('zen-tab-content-wrapper', {
+export default function TabContent({
+  children,
+  isActive,
+  lazyLoad,
+  className = undefined,
+  containerType = 'default',
+}: Props): React.Element<'div'> | null {
+  // if this tab should lazy-load, then we won't render anything until it is
+  // active.
+  if (lazyLoad && !isActive) {
+    return null;
+  }
+
+  const fullClassName = classNames(className, 'zen-tab-content-wrapper', {
     'zen-tab-content-wrapper--active': isActive,
     'zen-tab-content-wrapper--hidden': !isActive,
+    'zen-tab-content-wrapper--no-padding': containerType === 'no padding',
   });
-  return <div className={className}>{children}</div>;
+
+  return <div className={fullClassName}>{children}</div>;
 }

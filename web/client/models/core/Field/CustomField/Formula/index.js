@@ -1,22 +1,46 @@
 // @flow
-import * as Zen from 'lib/Zen';
-import FormulaMetadata from 'models/core/Field/CustomField/Formula/FormulaMetadata';
-import LegacyField from 'models/core/Field';
+import memoizeOne from 'memoize-one';
 
-// The type of the JS Interpreter
-type Interpreter = any;
+import * as Zen from 'lib/Zen';
+import sortDataFrame from 'models/core/Field/CustomField/Formula/sortDataFrame';
+import {
+  cumulativeSum,
+  differenceFromPrevious,
+  memoizedPseudoSum,
+  movingAverage,
+  memoizedValuesByDimension,
+  memoizedValuesWithDimension,
+} from 'models/core/Field/CustomField/Formula/interpreterUtil';
+import type FormulaMetadata, {
+  FieldShape,
+} from 'models/core/Field/CustomField/Formula/FormulaMetadata';
+import type {
+  DataFrame,
+  DataFrameRow,
+  Environment,
+  Interpreter,
+  InterpreterArray,
+  InterpreterObject,
+} from 'models/core/Field/CustomField/Formula/types';
 
 // The type of the abstract syntax tree (obtained by parsing the user's input)
-type AST = any;
-
-// An environment maps JavaScript identifiers to number values. Think of it
-// as a lookup dict for variable names used when calculating a formula
-type Environment = { [string]: number };
+type AST = $AllowAny;
 
 // options for the Acorn JS interpreter
 const ACORN_OPTIONS = {
   ecmaVersion: 5,
 };
+
+/**
+ * This function converts a datafrme to a pseudo-object that can be used by
+ * the JS interpreter. It is memoized for performance reasons to avoid having
+ * to do such an expensive computation over the same dataframe over and over
+ * again.
+ */
+const prepareDataFrameForInterpreter = memoizeOne(
+  (interpreter: Interpreter, dataframe: DataFrame) =>
+    interpreter.nativeToPseudo(dataframe),
+);
 
 function _buildAST(formulaText: string): AST {
   try {
@@ -46,9 +70,7 @@ function _buildAST(formulaText: string): AST {
     }
 
     throw new Error(
-      `[Formula] Unable to parse formula.\nError: ${
-        ex.message
-      }\nFormula: ${formulaText}`,
+      `[Formula] Unable to parse formula.\nError: ${ex.message}\nFormula: ${formulaText}`,
     );
   }
 }
@@ -67,30 +89,69 @@ type DerivedValues = {
    * (it is just a copy of metadata.fields() to make it easily accessible
    * from this model)
    */
-  fields: Zen.Array<LegacyField>,
+  fields: Zen.Array<FieldShape>,
 
   /**
    * The formula text as a single string that is ready to be parsed by a
    * JS Interpreter and evaluated (meaning all fields are represented as
    * their JS Identifiers)
    */
-  text: string,
+  jsEvaluatableText: string,
 };
 
 class Formula extends Zen.BaseModel<Formula, Values, {}, DerivedValues> {
-  static derivedConfig = {
+  static derivedConfig: Zen.DerivedConfig<Formula, DerivedValues> = {
     fields: [
       Zen.hasChangedDeep('metadata.fields'),
       formula => formula.metadata().fields(),
     ],
-    text: [
+    jsEvaluatableText: [
       Zen.hasChangedDeep('metadata.lines'),
-      formula => formula.metadata().getJSFormulaText(),
+      formula => {
+        const metadata = formula.metadata();
+        const jsText = formula.metadata().getJSFormulaText();
+
+        // apply any field configurations, e.g. if any fields were configured
+        // to treat 'No data' as zeros, then we need to make some last
+        // modifications to the JS to account for that.
+        return metadata.sortedFields().reduce((finalText, field) => {
+          const fieldConfig = metadata.fieldConfigurations().get(field.id());
+          if (fieldConfig && fieldConfig.treatNoDataAsZero) {
+            // NOTE(stephen): It is possible for field IDs to be substrings of
+            // each other. If we try to replace the shorter field ID with this
+            // field configuration, we could end up partially replacing the
+            // substring of a different field in the formula. This breaks things
+            // (see T8214). This regex will match the exact js indentifier and
+            // will *not* match anything else in the string that has this
+            // identifier as a substring (i.e. if the identifier is test_1234,
+            // it will match test_1234 but will not match test_1234_4567).
+            // NOTE(abby): With advanced custom calcs, fields may be referenced
+            // from the dataframe or from a javascript variable (ie. row.test_1234
+            // or data.values.test_1234). When modifying to convert no data to 0,
+            // we need to capture the full field name (ie. data.values.test_1234
+            // -> (data.values.test_1234 || 0)). The regex group [a-zA-Z0-9_$]
+            // should account for all possible javascript variable names.
+            const pattern = new RegExp(
+              `([a-zA-Z0-9_$]*\\.)*\\b(${field.jsIdentifier()})\\b`,
+              'gm',
+            );
+            return finalText.replace(pattern, match => `(${match} || 0)`);
+          }
+          return finalText;
+        }, jsText);
+      },
     ],
   };
 
   _interpreter: Interpreter | void = undefined;
-  _ast: AST = _buildAST(this._.text());
+  _ast: AST = _buildAST(this._.jsEvaluatableText());
+
+  /**
+   * Array of all available dimensions
+   */
+  dimensions(): $ReadOnlyArray<string> {
+    return this._.metadata().dimensions();
+  }
 
   _prepareInterpreterForEval(environment: Environment): void {
     if (this._interpreter === undefined) {
@@ -98,7 +159,9 @@ class Formula extends Zen.BaseModel<Formula, Values, {}, DerivedValues> {
         '[Formula] Cannot prepare interpreter for eval because interpreter is undefined.',
       );
     }
-    const interpreter = Zen.cast<Interpreter>(this._interpreter);
+    const { dataFrame, row, rowNum } = environment;
+    const interpreter = this._interpreter;
+
     // Reset our program so that we can reuse the already parsed interpreter
     // and avoid building a new one with each invocation of evaluateFormula
     const state0 = interpreter.stateStack[0];
@@ -106,14 +169,133 @@ class Formula extends Zen.BaseModel<Formula, Values, {}, DerivedValues> {
     state0.done = false;
     interpreter.value = undefined;
 
-    // Bind the new environment variables as globals
     const scope = interpreter.getScope();
+
+    // Bind all referenced fields to the scope
     this._.fields().forEach(field =>
+      interpreter.setProperty(scope, field.jsIdentifier(), row[field.id()]),
+    );
+
+    // Bind all dimensions to the scope
+    this.dimensions().forEach(dimId =>
+      interpreter.setProperty(scope, dimId, row[dimId]),
+    );
+
+    // Bind other variables into the scope to allow calculations using the full
+    // dataframe
+    interpreter.setProperty(scope, 'rowNum', rowNum);
+
+    if (this.referencesDataFrame()) {
+      const preparedDataframe = prepareDataFrameForInterpreter(
+        interpreter,
+        dataFrame,
+      );
+      interpreter.setProperty(scope, 'data', preparedDataframe);
+
       interpreter.setProperty(
         scope,
-        field.jsIdentifier(),
-        environment[field.id()],
+        'valuesWithDimension',
+        interpreter.createNativeFunction(
+          // set a default for `dataframeRows` to the current dataframe.rows,
+          // this way the user doesn't have to explicitly pass it
+          (
+            values: InterpreterArray<number | null>,
+            dimensionId: string,
+            dimensionValue: string,
+            dataframeRows: InterpreterArray<
+              InterpreterObject<DataFrameRow>,
+            > = preparedDataframe.properties.rows,
+          ) =>
+            memoizedValuesWithDimension(
+              values,
+              dimensionId,
+              dimensionValue,
+              dataframeRows,
+              interpreter,
+            ),
+        ),
+      );
+
+      interpreter.setProperty(
+        scope,
+        'valuesByDimension',
+        // set a default for `dataframeRows` to the current dataframe.rows,
+        // this way the user doesn't have to explicitly pass it
+        (
+          values: InterpreterArray<number | null>,
+          dimensionId: string,
+          dataframeRows: InterpreterArray<
+            InterpreterObject<DataFrameRow>,
+          > = preparedDataframe.properties.rows,
+        ) => memoizedValuesByDimension(values, dimensionId, dataframeRows),
+      );
+    }
+
+    // Bind useful helper functions to make accessible to the custom calculation
+    // TODO(pablo): pull all of these from a registry of helper functions.
+    // This will involve moving all the functions in `interpreterUtil` to
+    // separate files, and then having a registry for them
+    interpreter.setProperty(
+      scope,
+      'sum',
+      interpreter.createNativeFunction(memoizedPseudoSum),
+    );
+
+    interpreter.setProperty(
+      scope,
+      'differenceFromPrevious',
+      interpreter.createNativeFunction(
+        // add default for `rowIdx` so that we automatically take the current
+        // row without the user having to provide the hidden `rowNum` variable
+        // to make this function work.
+        (arr: InterpreterArray<?(number | string)>, rowIdx?: number = rowNum) =>
+          differenceFromPrevious(arr, rowIdx),
       ),
+    );
+
+    interpreter.setProperty(
+      scope,
+      'movingAverage',
+      interpreter.createNativeFunction(
+        // set a default for `currIdx` to the current `rowNum`, since this is
+        // the most common use case. That way the user doesn't have to remember
+        // to reference this variable in their custom calculation.
+        (
+          arr: InterpreterArray<?(number | string)>,
+          windowSize: number,
+          currIdx?: number = rowNum,
+        ) => movingAverage(arr, windowSize, currIdx),
+      ),
+    );
+
+    interpreter.setProperty(
+      scope,
+      'cumulativeSum',
+      interpreter.createNativeFunction(
+        // set a default for `lastIdx` to the current `rowNum`, since this is
+        // the most common use case. That way the user doesn't have to remember
+        // to reference this variable in their custom calculation.
+        (
+          arr: InterpreterArray<?(number | string)>,
+          lastIdx?: number = rowNum,
+        ) => cumulativeSum(arr, lastIdx),
+      ),
+    );
+  }
+
+  /**
+   * NOTE(pablo): preparing the dataframe to a pseudo-object that can be used
+   * in the interpreter is a *very* expensive operation. We should only do it
+   * if the calculation actually references the data frame. A very hacky way
+   * to do this is just checking if `data.values` or `data.rows` is ever
+   * referenced in the formula text. If it is, then we will prepare the
+   * dataframe to be added to the interpreter's scope.
+   */
+  @memoizeOne
+  referencesDataFrame(): boolean {
+    return (
+      this._.jsEvaluatableText().includes('data.values') ||
+      this._.jsEvaluatableText().includes('data.rows')
     );
   }
 
@@ -130,8 +312,10 @@ class Formula extends Zen.BaseModel<Formula, Values, {}, DerivedValues> {
   }
 
   /**
-   * Evaluate the formula with a given environment (a dictionary of field ids
-   * to values), and return the calculated value.
+   * Evaluate the formula for the full dataframe.
+   * This will apply the formula on each row of the dataframe, and return an
+   * array of results. The i-th result corresponds to the i-th row of the
+   * dataframe.
    *
    * The JS Interpreter library
    * (https://neil.fraser.name/software/JS-Interpreter/docs.html)
@@ -140,46 +324,120 @@ class Formula extends Zen.BaseModel<Formula, Values, {}, DerivedValues> {
    * objects (such as window, document, etc.) that users could use to generate
    * XSS attacks.
    *
-   * @param {Object<fieldId, ?number>} environment
-   *   In order to evaluate a formula, we need an `environment`, which is an
-   *   object that maps variable names (i.e. the field Ids used in the formula)
-   *   to their numerical values.
-   * @returns {number | undefined} the result from evaluating the formula with
+   * @param {DataFrame} dataFrame The dataframe of all rows. This dataframe
+   * is what the custom field's formula will use to look up values.
+   * @returns {number | null} the result from evaluating the formula with
    * the given environment.
+   * NOTE(pablo): we intentionally return `null` here instead of `void`
+   * because all of our visualizations were built to expect null values.
+   * This is a legacy decision and to overhaul that would be too much work.
    */
-  evaluateFormula(environment: Environment): number | void {
-    const newEnv = {};
-    let hasNonNullValue = false;
+  evaluateFormula(dataFrame: DataFrame): Array<number | null> {
+    let sortedIdxOrder;
+    let sortedDataFrame;
 
-    this._.fields().forEach(field => {
-      // Initialize the env to have all necessary fields set.
-      const fieldId = field.id();
-      newEnv[fieldId] = 0;
-
-      const val = environment[fieldId];
-      if (Number.isFinite(val)) {
-        newEnv[fieldId] = val;
-        hasNonNullValue = true;
-      }
-    });
-
-    if (!hasNonNullValue) {
-      return undefined;
+    if (this.referencesDataFrame()) {
+      const sortedDataFrameInfo = sortDataFrame(
+        dataFrame,
+        // sort the dataframe across all dimensions in 'ASC' order by default.
+        // TODO(pablo): eventually if advanced custom calcs gets generalized
+        // with a UI to do dataframe operations, then we will want to give users
+        // the power to decide for themselves how the dataframe should be sorted.
+        this.dimensions().map(dimension => ({ dimension, direction: 'ASC' })),
+      );
+      sortedIdxOrder = sortedDataFrameInfo.sortedIdxOrder;
+      sortedDataFrame = sortedDataFrameInfo.sortedDataFrame;
+    } else {
+      // If the formula makes no reference to a dataframe then we'll skip
+      // sorting the dataframe, because it won't matter in this case.
+      // We'll just use the dataframe as is, and keep the same idx order
+      sortedIdxOrder = [...dataFrame.rows.keys()];
+      sortedDataFrame = dataFrame;
     }
 
+    const { rows } = dataFrame;
+    const fieldConfigurations = this._.metadata().fieldConfigurations();
+
+    // set up the interpreter
     if (this._interpreter === undefined) {
       this._interpreter = this._buildInterpreter();
     }
 
-    const interpreter = Zen.cast<Interpreter>(this._interpreter);
-    this._prepareInterpreterForEval(newEnv);
-    interpreter.run();
-    const result = interpreter.value;
-    if (typeof result !== 'number') {
-      throw new Error('[Formula] The formula must evaluate to a number');
-    }
-    return result;
+    const interpreter = this._interpreter;
+
+    // create an array of nulls that we will populate with the calculation
+    // results as we go collecting them
+    const results: Array<number | null> = new Array(dataFrame.rows.length).fill(
+      null,
+    );
+
+    sortedIdxOrder.forEach((originalIdx, rowNum) => {
+      const row = rows[originalIdx];
+      const rowData: { [string]: string | number | void, ... } = {};
+
+      let allRowValuesAreNull = true;
+
+      this._.fields().forEach(field => {
+        // initialize the row to have all necessary fields set
+        const fieldId = field.id();
+        rowData[fieldId] = undefined;
+
+        const val = row[fieldId];
+        const fieldConfig = fieldConfigurations.get(fieldId, undefined);
+        const treatNoDataAsZero = fieldConfig
+          ? fieldConfig.treatNoDataAsZero
+          : false;
+
+        if (Number.isFinite(val)) {
+          rowData[fieldId] = val;
+          allRowValuesAreNull = false;
+        } else if (treatNoDataAsZero) {
+          rowData[fieldId] = 0;
+          allRowValuesAreNull = false;
+        }
+      });
+
+      let result;
+
+      // if all row values are null AND we have at least one field AND
+      // we do not have operations that reference the dataframe,
+      // then this should short-circuit and just return `null` (which
+      // would translate to 'No Data' in our table)
+      if (
+        allRowValuesAreNull &&
+        !this._.fields().isEmpty() &&
+        !this.referencesDataFrame()
+      ) {
+        result = null;
+      } else {
+        this.dimensions().forEach(dim => {
+          rowData[dim] = row[dim];
+        });
+
+        const env: Environment = {
+          rowNum,
+          dataFrame: sortedDataFrame,
+          row: rowData,
+        };
+
+        this._prepareInterpreterForEval(env);
+        interpreter.run();
+
+        result = interpreter.value;
+        if (result === undefined || result === null) {
+          result = null;
+        } else if (typeof result !== 'number') {
+          console.error('Failed to evaluate to a number for row', row);
+          throw new Error('[Formula] The formula must evaluate to a number');
+        }
+      }
+
+      // store the result back to the original unsorted index
+      results[originalIdx] = result;
+    });
+
+    return results;
   }
 }
 
-export default ((Formula: any): Class<Zen.Model<Formula>>);
+export default ((Formula: $Cast): Class<Zen.Model<Formula>>);

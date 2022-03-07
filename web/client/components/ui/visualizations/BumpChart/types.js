@@ -1,5 +1,7 @@
 // @flow
-import type { RawTimestamp } from 'components/visualizations/BumpChart/types';
+// TODO(pablo): move this import to somewhere else. components/ui shouldnt depend
+// on anything outside of the ui library
+import type { RawTimestamp } from 'models/visualizations/BumpChart/types';
 
 export type MutableDataPoint = {|
   key: string,
@@ -14,10 +16,12 @@ export type LineData = $ReadOnlyArray<DataPoint>;
 
 export type ValueDomainMap = {
   [RawTimestamp]: [number, number],
+  ...,
 };
 
 export type ColorScaleMap = {
   [RawTimestamp]: *, // scaleLinear(...) -- Need types for @vx/scale
+  ...,
 };
 
 // NOTE(stephen): Seems reusable.

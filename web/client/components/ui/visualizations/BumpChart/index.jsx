@@ -2,44 +2,53 @@
 import * as React from 'react';
 import { AxisLeft, AxisTop } from '@vx/axis';
 import { GlyphDot } from '@vx/glyph';
-import { Group } from '@vx/group';
 import { LinePath } from '@vx/shape';
 import { curveLinear } from '@vx/curve';
 import { localPoint } from '@vx/event';
+import { scaleLinear, scalePoint } from '@vx/scale';
 
-import * as BumpChartUtil from 'components/ui/visualizations/BumpChart/BumpChartUtil';
+import * as Zen from 'lib/Zen';
 import BumpChartTheme, {
   DARK_THEME,
 } from 'components/ui/visualizations/BumpChart/models/BumpChartTheme';
-import BumpChartTooltip from 'components/ui/visualizations/BumpChart/BumpChartTooltip';
-import ZenMap from 'util/ZenModel/ZenMap';
+import BumpChartTooltip from 'components/ui/visualizations/BumpChart/internal/BumpChartTooltip';
+import ResponsiveContainer from 'components/ui/visualizations/common/ResponsiveContainer';
 import { autobind, memoizeOne } from 'decorators';
-import type {
-  ChartSize,
-  RawTimestamp,
-} from 'components/visualizations/BumpChart/types';
+import type { ChartSize } from 'components/ui/visualizations/types';
 import type {
   ColorScaleMap,
   DataPoint,
   HoverPoint,
   LineData,
-  Margin,
+  ValueDomainMap,
 } from 'components/ui/visualizations/BumpChart/types';
+// TODO(pablo): move these imports to somewhere else.
+import type { RawTimestamp } from 'models/visualizations/BumpChart/types';
 
-export type Props = ChartSize & {
+type DefaultProps = {
+  axisMargins: $PropertyType<
+    React.ElementProps<typeof ResponsiveContainer>,
+    'axisMargins',
+  >,
+  selectedKeys: Zen.Map<number>,
+  theme: BumpChartTheme,
+};
+
+export type Props = {
+  ...DefaultProps,
   dateFormatter: string => string,
   dates: $ReadOnlyArray<RawTimestamp>,
+  height: number,
   lines: $ReadOnlyArray<LineData>,
-  margin: Margin,
   onLineSelected: string => void,
-  selectedKeys: ZenMap<number>,
-  theme: BumpChartTheme,
   valueFormatter: number => string | number,
+  width: number,
 };
 
 type State = {
   hoverData: DataPoint | void,
   hoverPoint: HoverPoint | void,
+  innerChartSize: ChartSize,
 };
 
 type LineHoverEvent = SyntheticEvent<*>;
@@ -48,53 +57,117 @@ type Stroke = {
   strokeWidth: number,
 };
 
-const { DataPointView } = BumpChartUtil;
+// TODO(stephen): FIX THIS EVERYWHERE.
+type LinearScale = $FlowTODO;
+type PointScale = $FlowTODO;
+
+const BUMP_RADIUS = 8;
+const PADDING = {
+  bottom: 10,
+  left: 10,
+  right: 10,
+  top: 10,
+};
 
 export default class BumpChartCore extends React.PureComponent<Props, State> {
-  static defaultProps = {
-    margin: {
-      top: 80, // Slightly larger top margin so that x-axis labels can fit.
-      left: 200, // Much higher left margin so that y-axis labels can fit.
-      right: 60,
-      bottom: 40,
+  static defaultProps: DefaultProps = {
+    axisMargins: {
+      axisTop: { bottom: 20 },
+      axisLeft: { right: 10 + BUMP_RADIUS },
     },
-
-    selectedKeys: (ZenMap.create(): ZenMap<number>),
+    selectedKeys: Zen.Map.create<number>(),
     theme: DARK_THEME,
   };
 
-  state = {
+  state: State = {
     hoverData: undefined,
     hoverPoint: undefined,
+    innerChartSize: {
+      height: 10,
+      width: 10,
+    },
   };
 
-  // Memoize these costly processing functions based on the last params used.
-  // This allows us to avoid storing these values in state, freeing us from
-  // making convoluted prevProps/prevState comparisons in
-  // getDerivedStateFromProps.
+  /**
+   * Build the x-axis scale that can convert a given line's date value (bucket)
+   * into the appropriate x-axis positioning.
+   */
   @memoizeOne
-  buildXScale = BumpChartUtil.buildXScale;
-
-  @memoizeOne
-  buildYScale = BumpChartUtil.buildYScale;
-
-  @memoizeOne
-  buildGlyphColorScales = BumpChartUtil.buildGlyphColorScales;
-
-  @memoizeOne
-  buildValueDomains = BumpChartUtil.buildValueDomains;
-
-  getXScale() {
-    const { dates, margin, width } = this.props;
-    return this.buildXScale(
-      dates,
-      BumpChartUtil.calculateXMax(width, margin, dates.length),
-    );
+  buildXScale(dates: $ReadOnlyArray<RawTimestamp>, width: number): PointScale {
+    return scalePoint({
+      domain: dates,
+      range: [0, width],
+    });
   }
 
-  getYScale() {
-    const { height, lines, margin } = this.props;
-    return this.buildYScale(lines, BumpChartUtil.calculateYMax(height, margin));
+  /**
+   * Build the y-axis scale that can convert a given line's value (rank) into
+   * the appropriate y-axis positioning.
+   */
+  @memoizeOne
+  buildYScale(data: $ReadOnlyArray<LineData>, height: number): LinearScale {
+    return scaleLinear({
+      domain: [0, data.length - 1],
+      range: [0, height],
+    });
+  }
+
+  /**
+   * For each timestamp's value domain ([min, max] value of each column),
+   * generate a color scaling function that can produce a color for a given
+   * value in that column.
+   */
+  @memoizeOne
+  buildGlyphColorScales(
+    valueDomains: ValueDomainMap,
+    theme: BumpChartTheme,
+  ): ColorScaleMap {
+    const output: ColorScaleMap = {};
+    const heatTilesColorRange = theme.heatTilesColorRange();
+    const range = [heatTilesColorRange.get(0), heatTilesColorRange.get(1)];
+    Object.entries(valueDomains).forEach(([dateVal, domain]) => {
+      output[dateVal] = scaleLinear({ range, domain });
+    });
+    return output;
+  }
+
+  /**
+   * Find the minimum and maximum values for each timestamp column in the data.
+   * These values are used for producing the heat tiles gradient for each
+   * timestamp column.
+   */
+  @memoizeOne
+  buildValueDomains(data: $ReadOnlyArray<LineData>): ValueDomainMap {
+    const output: ValueDomainMap = {};
+    data.forEach(line => {
+      line.forEach(({ timestamp, val }) => {
+        if (!output[timestamp]) {
+          output[timestamp] = [Infinity, -Infinity];
+        }
+
+        const minMax = output[timestamp];
+        minMax[0] = Math.min(minMax[0], val);
+        minMax[1] = Math.max(minMax[1], val);
+      });
+    });
+
+    return output;
+  }
+
+  @memoizeOne
+  buildBackgroundProps(theme: BumpChartTheme): { fill: string, rx: number } {
+    return {
+      fill: theme.backgroundColor(),
+      rx: 14,
+    };
+  }
+
+  getXScale(): PointScale {
+    return this.buildXScale(this.props.dates, this.state.innerChartSize.width);
+  }
+
+  getYScale(): LinearScale {
+    return this.buildYScale(this.props.lines, this.state.innerChartSize.height);
   }
 
   getGlyphColorScales(): ColorScaleMap {
@@ -170,7 +243,7 @@ export default class BumpChartCore extends React.PureComponent<Props, State> {
   @autobind
   getLineXCoordinate(d: DataPoint): number {
     const xScale = this.getXScale();
-    return xScale(DataPointView.getTimestamp(d));
+    return xScale(d.timestamp);
   }
 
   // Compute the X coordinate value the data point should be drawn at on the
@@ -178,7 +251,32 @@ export default class BumpChartCore extends React.PureComponent<Props, State> {
   @autobind
   getLineYCoordinate(d: DataPoint): number {
     const yScale = this.getYScale();
-    return yScale(DataPointView.getRank(d));
+    return yScale(d.rank);
+  }
+
+  @autobind
+  onInnerChartResize(height: number, width: number) {
+    this.setState(prevState => {
+      const prevWidth = prevState.innerChartSize.width;
+      const prevHeight = prevState.innerChartSize.height;
+      if (prevWidth === width && prevHeight === height) {
+        return prevState;
+      }
+
+      return {
+        ...prevState,
+        innerChartSize: {
+          // Subtract the bump radius from the dimensions since the bump will
+          // render outside the chart area. This is because the radius extends
+          // outward from the center point of the bump. The bump is positioned
+          // based on its center point and not from the top/left like the lines.
+          // NOTE(stephen): Using a Math.max to ensure we never render a
+          // negative dimension.
+          height: Math.max(height - 2 * BUMP_RADIUS, 10),
+          width: Math.max(width - 2 * BUMP_RADIUS, 10),
+        },
+      };
+    });
   }
 
   onHoverStart(d: DataPoint, event: LineHoverEvent) {
@@ -190,17 +288,19 @@ export default class BumpChartCore extends React.PureComponent<Props, State> {
     this.setState({ hoverData: undefined, hoverPoint: undefined });
   }
 
-  maybeRenderTooltip() {
+  maybeRenderTooltip(): React.Node {
     const { hoverData, hoverPoint } = this.state;
     if (!hoverData || !hoverPoint) {
       return null;
     }
 
+    const { dateFormatter, valueFormatter } = this.props;
     return (
       <BumpChartTooltip
         data={hoverData}
+        dateFormatter={dateFormatter}
         point={hoverPoint}
-        valueFormatter={this.props.valueFormatter}
+        valueFormatter={valueFormatter}
       />
     );
   }
@@ -214,7 +314,7 @@ export default class BumpChartCore extends React.PureComponent<Props, State> {
     const yScale = this.getYScale();
     const colorScales = this.getGlyphColorScales();
     return line.map(d => {
-      const timestamp = DataPointView.getTimestamp(d);
+      const { rank, timestamp, val } = d;
       return (
         <g
           key={`line-point-${key}-${timestamp}`}
@@ -224,9 +324,9 @@ export default class BumpChartCore extends React.PureComponent<Props, State> {
         >
           <GlyphDot
             cx={xScale(timestamp)}
-            cy={yScale(DataPointView.getRank(d))}
-            fill={colorScales[timestamp](DataPointView.getValue(d))}
-            r={8}
+            cy={yScale(rank)}
+            fill={colorScales[timestamp](val)}
+            r={BUMP_RADIUS}
             {...stroke}
           />
         </g>
@@ -235,7 +335,7 @@ export default class BumpChartCore extends React.PureComponent<Props, State> {
   }
 
   @autobind
-  renderLine(line: LineData) {
+  renderLine(line: LineData): React.Node {
     const { key } = line[0];
     const stroke = this.getHighlightedStroke(line) || this.getDefaultStroke();
     return (
@@ -253,22 +353,16 @@ export default class BumpChartCore extends React.PureComponent<Props, State> {
     );
   }
 
-  renderXAxis() {
-    const { dateFormatter, margin, theme } = this.props;
+  @autobind
+  renderXAxis(): React.Element<typeof AxisTop> {
+    const { dateFormatter, theme } = this.props;
     const axisTextColor = theme.axisTextColor();
     const xScale = this.getXScale();
-    const bandWidth = xScale.bandwidth();
-
-    // Offset the top axis by half the column size so that the labels are
-    // properly centered over the columns.
-    const leftOffset = bandWidth / 2;
     return (
       <AxisTop
         scale={xScale}
         hideAxisLine
         hideTicks
-        top={margin.top - 20}
-        left={margin.left - leftOffset}
         stroke={axisTextColor}
         tickFormat={dateFormatter}
         tickLabelProps={() => ({
@@ -276,28 +370,26 @@ export default class BumpChartCore extends React.PureComponent<Props, State> {
           fontSize: 14,
           fontWeight: 700,
           textAnchor: 'middle',
-          width: bandWidth - 8,
+          verticalAnchor: 'start',
+          width: xScale.step() - 8,
         })}
+        tickLength={0}
       />
     );
   }
 
-  renderYAxis() {
-    const { lines, margin, theme } = this.props;
+  renderYAxis(): React.Element<typeof AxisLeft> {
+    const { lines, theme } = this.props;
     const axisTextColor = theme.axisTextColor();
     const yScale = this.getYScale();
-    const { left, top } = margin;
-    const tickWidth = left - 10;
     return (
       <AxisLeft
         scale={yScale}
         hideAxisLine
         hideTicks
-        left={left - 5}
-        top={top}
         numTicks={lines.length}
         stroke={axisTextColor}
-        tickFormat={rank => BumpChartUtil.getLabel(lines[rank])}
+        tickFormat={rank => (lines[rank] ? lines[rank][0].label : '')}
         tickStroke={axisTextColor}
         tickLabelProps={rank => {
           const line = lines[rank];
@@ -315,37 +407,36 @@ export default class BumpChartCore extends React.PureComponent<Props, State> {
             textAnchor: 'end',
             onMouseEnter: event => this.onHoverStart(point, event),
             onMouseLeave: this.onHoverEnd,
-            width: tickWidth,
           };
         }}
+        tickLength={0}
       />
     );
   }
 
-  render() {
-    const { lines, width, height, margin, theme } = this.props;
+  renderInnerChart(): React.Element<'g'> {
+    return <g>{this.props.lines.map(this.renderLine)}</g>;
+  }
+
+  render(): React.Element<'div'> | null {
+    const { axisMargins, height, lines, theme, width } = this.props;
     if (!lines || !lines.length) {
       return null;
     }
 
-    const { top, left } = margin;
     return (
       <div style={{ position: 'relative' }}>
-        <svg width={width} height={height}>
-          <rect
-            x={0}
-            y={0}
-            width={width}
-            height={height}
-            fill={theme.backgroundColor()}
-            rx={14}
-          />
-          <Group top={top} left={left}>
-            {lines.map(this.renderLine)}
-          </Group>
-          {this.renderXAxis()}
-          {this.renderYAxis()}
-        </svg>
+        <ResponsiveContainer
+          axisLeft={this.renderYAxis()}
+          axisMargins={axisMargins}
+          axisTop={this.renderXAxis()}
+          backgroundProps={this.buildBackgroundProps(theme)}
+          chart={this.renderInnerChart()}
+          height={height}
+          onChartResize={this.onInnerChartResize}
+          padding={PADDING}
+          width={width}
+        />
         {this.maybeRenderTooltip()}
       </div>
     );

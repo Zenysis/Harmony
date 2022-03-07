@@ -1,23 +1,34 @@
 // @flow
 import * as React from 'react';
 
+import ElementResizeService from 'services/ui/ElementResizeService';
 import ProgressBar from 'components/ui/ProgressBar';
 import Visualization from 'components/visualizations/common/Visualization';
 import withScriptLoader from 'components/common/withScriptLoader';
 import { VENDOR_SCRIPTS } from 'vendor/registry';
 import { autobind, memoizeOne } from 'decorators';
-import type ExpandoTreeQueryResultData from 'components/visualizations/ExpandoTree/models/ExpandoTreeQueryResultData';
-import type { D3HierarchyNode } from 'components/visualizations/ExpandoTree/types';
-import type { VisualizationProps } from 'components/visualizations/common/commonTypes';
+import type ExpandoTreeQueryResultData from 'models/visualizations/ExpandoTree/ExpandoTreeQueryResultData';
+import type { D3HierarchyNode } from 'models/visualizations/ExpandoTree/types';
+import type {
+  VisualizationDefaultProps,
+  VisualizationProps,
+} from 'components/visualizations/common/commonTypes';
 
 type Props = VisualizationProps<'EXPANDOTREE'>;
+type State = {
+  height: number,
+  width: number,
+};
 
-type D3Tree = any;
+type D3Tree = $FlowTODO;
 
 const MARGIN_LEFT = 200;
 
-const ANIMATION_DURATION_MS = 750;
+const ANIMATION_DURATION_MS = window.__JSON_FROM_BACKEND.is_screenshot_request
+  ? 0
+  : 750;
 const ROOT_NAME = window.__JSON_FROM_BACKEND.nationName;
+const MIN_NODE_HEIGHT = 20;
 
 // NOTE(stephen): Many D3 operations here modify the nodes in place. This is
 // valid D3 code, so we can disable the eslint rule for this file.
@@ -31,10 +42,16 @@ function collapse(node: D3HierarchyNode) {
   }
 }
 
-class ExpandoTree extends React.PureComponent<Props> {
+class ExpandoTree extends React.PureComponent<Props, State> {
   _idCounter: number = 0;
-  _treeRef: $RefObject<'svg'> = React.createRef();
+  _treeRef: $ElementRefObject<'svg'> = React.createRef();
   diagonalProjection = window.d3.svg.diagonal().projection(d => [d.y, d.x]);
+  resizeRegistration = ElementResizeService.register(this.onResize);
+  state = {
+    height: 10,
+    width: 10,
+  };
+
   tree = window.d3.layout.tree();
 
   componentDidMount() {
@@ -43,19 +60,6 @@ class ExpandoTree extends React.PureComponent<Props> {
 
   componentDidUpdate() {
     this.update(this.getRoot());
-  }
-
-  getBounds(): { height: number, width: number } {
-    const { current } = this._treeRef;
-    if (!current) {
-      return { height: 0, width: 0 };
-    }
-
-    const { height, width } = current.getBoundingClientRect();
-    return {
-      height,
-      width: width - MARGIN_LEFT,
-    };
   }
 
   // HACK(stephen): D3 mutates objects. To ensure we do not taint the original
@@ -85,14 +89,9 @@ class ExpandoTree extends React.PureComponent<Props> {
       return ROOT_NAME;
     }
 
-    // TODO(stephen): Shouldn't QueryResultGrouping handle this case?
-    if (name === null) {
-      return 'null';
-    }
-
     const grouping = groupBySettings.settingsForGroup(dimension);
     if (grouping === undefined) {
-      return name;
+      return name || '';
     }
 
     return grouping.formatGroupingValue(name);
@@ -100,7 +99,7 @@ class ExpandoTree extends React.PureComponent<Props> {
 
   getNodeDisplayValue({ depth, metrics }: D3HierarchyNode): string | void {
     const { controls, seriesSettings } = this.props;
-    const { selectedField } = controls;
+    const selectedField = controls.selectedField();
     const value = metrics[selectedField];
 
     // If the root node has no total value, skip rendering the value completely.
@@ -125,6 +124,29 @@ class ExpandoTree extends React.PureComponent<Props> {
       : displayName;
   }
 
+  // Find the largest number of nodes that are visible in any column.
+  getMaxColumnNodeCount(): number {
+    const root = this.getRoot();
+    const nodesPerLevel: Map<number, number> = new Map();
+    function countNodesPerLevel({ children, depth }: D3HierarchyNode) {
+      const count = nodesPerLevel.get(depth) || 0;
+      nodesPerLevel.set(depth, count + 1);
+      if (children) {
+        children.map(c => countNodesPerLevel(c));
+      }
+    }
+
+    countNodesPerLevel(root);
+    return Math.max(...nodesPerLevel.values()) || 1;
+  }
+
+  getTreeHeight(): number {
+    // Force a minimum node height by changing the height of the tree that is
+    // rendered.
+    const maxNodeCount = this.getMaxColumnNodeCount();
+    return Math.max(this.state.height, maxNodeCount * MIN_NODE_HEIGHT) - 5;
+  }
+
   update(source: D3HierarchyNode | void) {
     const { current } = this._treeRef;
     if (!current || source === undefined) {
@@ -132,11 +154,17 @@ class ExpandoTree extends React.PureComponent<Props> {
     }
 
     // Update the root and tree layout based on size changes.
-    const { height, width } = this.getBounds();
+    const height = this.getTreeHeight();
+    const trueWidth = this.state.width - MARGIN_LEFT;
     const root = this.getRoot();
     root.x0 = height / 2;
     root.y0 = 0;
-    this.tree.size([height, width]);
+    this.tree.size([height, trueWidth]);
+
+    // HACK(stephen): Directly set the height of the SVG so that scrolling can
+    // happen if it is too large for the container.
+    // $FlowExpectedError[prop-missing]
+    current.style.height = `${height}px`;
 
     // Create the nodes and links to be drawn.
     const nodes = this.tree.nodes(root).reverse();
@@ -150,7 +178,7 @@ class ExpandoTree extends React.PureComponent<Props> {
     // visible levels. To do this, we normalize the y position based on the
     // node's depth.
     const levels = this.props.queryResult.levels().length + 1;
-    const columnWidth = width / levels;
+    const columnWidth = trueWidth / levels;
     nodes.forEach(d => {
       d.y = d.depth * columnWidth;
     });
@@ -175,12 +203,15 @@ class ExpandoTree extends React.PureComponent<Props> {
     nodeEnter
       .append('circle')
       .attr('r', 1e-6)
-      .style('fill', d => (d._children ? 'lightsteelblue' : '#fff'));
+      .attr('stroke', 'steelblue')
+      .attr('stroke-width', 1.5)
+      .attr('fill', d => (d._children ? 'lightsteelblue' : '#fff'));
 
     nodeEnter
       .append('text')
       .attr('x', d => (d.children || d._children ? -10 : 10))
       .attr('dy', '.35em')
+      .attr('font-family', 'Lato, Arial')
       .attr('text-anchor', d => (d.children || d._children ? 'end' : 'start'))
       .text(this.getNodeText)
       .style('fill-opacity', 1e-6)
@@ -219,6 +250,9 @@ class ExpandoTree extends React.PureComponent<Props> {
       .enter()
       .insert('path', 'g')
       .attr('class', 'link')
+      .attr('fill', 'none')
+      .attr('stroke', '#ccc')
+      .attr('stroke-width', 1.5)
       .attr('d', () => {
         const o = { x: source.x0, y: source.y0 };
         return this.diagonalProjection({ source: o, target: o });
@@ -261,12 +295,34 @@ class ExpandoTree extends React.PureComponent<Props> {
     this.update(node);
   }
 
-  render() {
+  @autobind
+  onResize({ contentRect }: ResizeObserverEntry) {
+    const { height, width } = contentRect;
+    this.setState({ height, width });
+  }
+
+  // To support scrollability inside the expandotree, both the parent container
+  // size (passed into renderVisualization) and the tree size are needed.
+  // TODO(stephen): This visualization needs to be rebuilt.
+  @autobind
+  renderVisualization(height: number): React.Node {
     return (
-      <Visualization loading={this.props.loading} className="expando-tree">
-        <svg className="expando-tree" ref={this._treeRef}>
+      <div
+        className="expando-tree"
+        ref={this.resizeRegistration.setRef}
+        style={{ height, overflow: 'auto' }}
+      >
+        <svg className="expando-tree__chart" ref={this._treeRef}>
           <g transform={`translate(${MARGIN_LEFT}, 0)`} />
         </svg>
+      </div>
+    );
+  }
+
+  render(): React.Node {
+    return (
+      <Visualization loading={this.props.loading}>
+        {this.renderVisualization}
       </Visualization>
     );
   }
@@ -274,7 +330,9 @@ class ExpandoTree extends React.PureComponent<Props> {
 
 /* eslint-enable no-param-reassign */
 
-export default withScriptLoader(ExpandoTree, {
+export default (withScriptLoader(ExpandoTree, {
   scripts: [VENDOR_SCRIPTS.d3],
   loadingNode: <ProgressBar enabled />,
-});
+}): React.AbstractComponent<
+  React.Config<Props, VisualizationDefaultProps<'EXPANDOTREE'>>,
+>);

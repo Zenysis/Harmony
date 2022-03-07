@@ -4,16 +4,19 @@ import * as React from 'react';
 import autobind from 'decorators/autobind';
 import type { StyleObject } from 'types/jsCore';
 
-type Props = {
-  children: React.Node,
-
+type DefaultProps = {
   height?: number,
   maxHeight?: number,
   onScrollToBottom?: () => void,
 };
 
+type Props = {
+  ...DefaultProps,
+  children: React.Node,
+};
+
 export default class ColumnWrapper extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     height: undefined,
     maxHeight: undefined,
     onScrollToBottom: undefined,
@@ -43,7 +46,7 @@ export default class ColumnWrapper extends React.PureComponent<Props> {
     }
   }
 
-  render() {
+  render(): React.Element<'div'> {
     return (
       <div
         className="hierarchical-selector__column-wrapper"

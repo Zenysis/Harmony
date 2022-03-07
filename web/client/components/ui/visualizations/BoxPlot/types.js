@@ -16,7 +16,7 @@ export type BinDataPoint = {
 };
 
 // essential numbers required to draw the BoxPlot and the outliers
-export type BoxPlotSummary = {
+export type BoxPlotSummary = {|
   thirdQuartile: number,
 
   /** Min value before considering outliers */
@@ -26,10 +26,19 @@ export type BoxPlotSummary = {
   max: number,
   median: number,
   firstQuartile: number,
+|};
+
+export type BoxPlotDataPoint = {
+  value: number,
+  dimensions: {
+    +[dimensionID: string]: string | null,
+    ...,
+  },
 };
 
-// Category Data whose Box Plot is to be drawn
-export type BoxPlotData = {
+// Data for a single box in the box plot visualization (which can contain many
+// boxes)
+export type BoxPlotBoxData = {
   data: {
     /** All points that lie in the current category excluding outliers */
     binData: $ReadOnlyArray<BinDataPoint>,
@@ -41,37 +50,35 @@ export type BoxPlotData = {
      * Numbers below (firstQuartile-1.5*IQR) and numbers above
      * (1.5*IQR + firstQuartile) where IQR is Inter Quartile Range
      */
-    outliers: $ReadOnlyArray<number>,
+    outliers: $ReadOnlyArray<BoxPlotDataPoint>,
   },
 
   /** The name of the category */
   key: string,
 };
 
-export type Accessors = {
-  getMin?: (d: BoxPlotData) => number,
-  getMax?: (d: BoxPlotData) => number,
-  getOutliers?: (d: BoxPlotData) => $ReadOnlyArray<number>,
+export type BoxTooltipData = {
+  boxPlotSummary: BoxPlotSummary,
+  dimensionValue: string,
+  left: number,
+  top: number,
 };
 
-export type XScale = (category: string) => number;
-
-export type YScale = (value: number) => number;
-
-export type TooltipData = {
-  name: string,
-  min?: number,
-  max?: number,
-  median?: number,
-  firstQuartile?: number,
-  thirdQuartile?: number,
+export type OutlierTooltipData = {
+  dimensionValue: string,
+  left: number,
+  top: number,
+  dataPoint: BoxPlotDataPoint,
 };
 
-export type ViolinPatternsNames =
-  | 'horizontal'
-  | 'vertical'
-  | 'diagonal'
-  | 'all'
-  | 'horizontalAndDiagonal'
-  | 'horizontalAndVertical'
-  | 'verticalAndDiagonal';
+export type ViolinPatternMap = {
+  horizontal: 'horizontal',
+  vertical: 'vertical',
+  diagonal: 'diagonal',
+  horizontalAndVertical: 'horizontalAndVertical',
+  horizontalAndDiagonal: 'horizontalAndDiagonal',
+  verticalAndDiagonal: 'verticalAndDiagonal',
+  all: 'all',
+};
+
+export type ViolinPatternsNames = $Keys<ViolinPatternMap>;

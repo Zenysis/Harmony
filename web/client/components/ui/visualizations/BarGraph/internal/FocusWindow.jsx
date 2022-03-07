@@ -1,21 +1,23 @@
 // @flow
 import * as React from 'react';
-import { Bar as BarOriginal } from '@vx/shape';
 import { DraggableCore } from 'react-draggable';
 
 import autobind from 'decorators/autobind';
 import type { DraggableData } from 'components/ui/DraggableItem';
 
+type DefaultProps = {
+  onDragStart: () => void,
+  onDragStop: () => void,
+};
+
 type Props = {
+  ...DefaultProps,
   children: React.Node,
   focusEnd: number,
   focusStart: number,
   height: number,
   onFocusAreaChange: (number, number) => void,
   width: number,
-
-  onDragStart: () => void,
-  onDragStop: () => void,
 };
 
 const DRAG_HANDLE_STYLE = {
@@ -28,12 +30,8 @@ const DRAG_WINDOW_STYLE = {
 
 const FOCUS_DRAG_BAR_WIDTH = 3;
 
-// Convert the functional Bar component to a PureComponent so that we don't
-// needlessly rerender all the Text nodes (which are quite nonperformant).
-const Bar = React.memo(BarOriginal);
-
 export default class FocusWindow extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     onDragStart: () => {},
     onDragStop: () => {},
   };
@@ -50,10 +48,7 @@ export default class FocusWindow extends React.PureComponent<Props> {
   }
 
   @autobind
-  onDragStart(
-    event: SyntheticMouseEvent<window.SVGRectElement>,
-    data: DraggableData,
-  ) {
+  onDragStart(event: SyntheticMouseEvent<SVGRectElement>, data: DraggableData) {
     this.props.onDragStart();
   }
 
@@ -64,7 +59,7 @@ export default class FocusWindow extends React.PureComponent<Props> {
 
   @autobind
   onDragStartHandle(
-    event: SyntheticMouseEvent<window.SVGRectElement>,
+    event: SyntheticMouseEvent<SVGRectElement>,
     data: DraggableData,
   ) {
     const { focusEnd, focusStart } = this.props;
@@ -78,7 +73,7 @@ export default class FocusWindow extends React.PureComponent<Props> {
 
   @autobind
   onDragEndHandle(
-    event: SyntheticMouseEvent<window.SVGRectElement>,
+    event: SyntheticMouseEvent<SVGRectElement>,
     data: DraggableData,
   ) {
     const { focusEnd, focusStart, width } = this.props;
@@ -92,7 +87,7 @@ export default class FocusWindow extends React.PureComponent<Props> {
 
   @autobind
   onDragFocusWindow(
-    event: SyntheticMouseEvent<window.SVGRectElement>,
+    event: SyntheticMouseEvent<SVGRectElement>,
     data: DraggableData,
   ) {
     const { focusEnd, focusStart, width } = this.props;
@@ -113,12 +108,12 @@ export default class FocusWindow extends React.PureComponent<Props> {
     this.updateFocusPosition(newStart, newEnd);
   }
 
-  renderDragLayer() {
+  renderDragLayer(): React.Element<'g'> {
     const { focusEnd, focusStart, height, width } = this.props;
     const focusWidth = focusEnd - focusStart;
     return (
       <g className="focus-window__drag-layer" style={{ userSelect: 'none' }}>
-        <Bar
+        <rect
           fill="white"
           height={height}
           opacity={0.8}
@@ -126,7 +121,7 @@ export default class FocusWindow extends React.PureComponent<Props> {
           x={0}
           y={0}
         />
-        <Bar
+        <rect
           fill="white"
           height={height}
           opacity={0.8}
@@ -139,7 +134,7 @@ export default class FocusWindow extends React.PureComponent<Props> {
           onDrag={this.onDragStartHandle}
           onStop={this.onDragStop}
         >
-          <Bar
+          <rect
             fill="#555555"
             height={height}
             style={DRAG_HANDLE_STYLE}
@@ -153,7 +148,7 @@ export default class FocusWindow extends React.PureComponent<Props> {
           onDrag={this.onDragFocusWindow}
           onStop={this.onDragStop}
         >
-          <Bar
+          <rect
             fill="transparent"
             height={height}
             style={DRAG_WINDOW_STYLE}
@@ -162,8 +157,12 @@ export default class FocusWindow extends React.PureComponent<Props> {
             y={0}
           />
         </DraggableCore>
-        <DraggableCore onStart={this.onDragStart} onDrag={this.onDragEndHandle}>
-          <Bar
+        <DraggableCore
+          onStart={this.onDragStart}
+          onDrag={this.onDragEndHandle}
+          onStop={this.onDragStop}
+        >
+          <rect
             fill="#555555"
             height={height}
             style={DRAG_HANDLE_STYLE}
@@ -176,11 +175,11 @@ export default class FocusWindow extends React.PureComponent<Props> {
     );
   }
 
-  renderChart() {
+  renderChart(): React.Element<'g'> {
     return <g className="focus-window__chart">{this.props.children}</g>;
   }
 
-  render() {
+  render(): React.Element<'g'> {
     return (
       <g className="focus-window">
         {this.renderChart()}

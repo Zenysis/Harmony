@@ -15,33 +15,42 @@ function onSelection(
   value(e);
 }
 
-type Props = {|
-  isAuthenticated: boolean,
-  visibleName: string,
-
-  isAdmin: boolean,
-  showLocales: boolean,
-  locales: $ReadOnlyArray<Locale>,
+type DefaultProps = {
   children: ?React.ChildrenArray<
     React.Element<Class<Dropdown.Option<DropdownOptionEventHandler>>>,
   >,
-|};
+  isAdmin: boolean,
+  locales: $ReadOnlyArray<Locale>,
+  showDataUpload: boolean,
+  showDataUpload: boolean,
+  showLocales: boolean,
+  visibleName: string,
+};
+
+type Props = {
+  ...DefaultProps,
+  isAuthenticated: boolean,
+};
 
 // TODO(stephen): Use the memoizeOne decorator all over the place here.
 export default class NavigationDropdown extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     children: null,
     isAdmin: false,
-    showLocales: false,
     locales: [],
+    showDataUpload: false,
+    showLocales: false,
     visibleName: '',
   };
 
-  getDropdownButtonDisplayContent() {
+  getDropdownButtonDisplayContent(): React.Element<'span'> {
     const { isAuthenticated, visibleName } = this.props;
 
     return (
-      <span className="navbar-dropdown__main-icon">
+      <span
+        className="navbar-dropdown-button__main-icon"
+        data-testid="more-items-dropdown"
+      >
         {isAuthenticated && `${visibleName}`}&nbsp;&nbsp;
         <i className="glyphicon glyphicon-option-horizontal" />
       </span>
@@ -57,12 +66,13 @@ export default class NavigationDropdown extends React.PureComponent<Props> {
     const { children } = this.props;
     return (
       <Dropdown
-        hideCaret
-        className="navbar-dropdown navbar-navigation-dropdown"
+        buttonClassName="navbar-dropdown-button"
         defaultDisplayContent={this.getDropdownButtonDisplayContent()}
         displayCurrentSelection={false}
-        onSelectionChange={onSelection}
+        hideCaret
         menuAlignment={Dropdown.Alignments.RIGHT}
+        menuClassName="navbar-dropdown-menu navbar-navigation-dropdown"
+        onSelectionChange={onSelection}
         value={undefined}
       >
         {children}
@@ -71,7 +81,7 @@ export default class NavigationDropdown extends React.PureComponent<Props> {
     );
   }
 
-  render() {
+  render(): React.Node {
     const { visibleName, ...moreLinksProps } = this.props;
     return <MoreLinks {...moreLinksProps}>{this.renderDropdown}</MoreLinks>;
   }

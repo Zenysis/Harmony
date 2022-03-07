@@ -1,23 +1,28 @@
-from future import standard_library
-
-standard_library.install_aliases()
-from builtins import object
-from http.client import OK, CREATED
+from http.client import OK, CREATED, UNAUTHORIZED
 
 from flask import g
+from flask_login import current_user
 from flask_potion import fields
-from flask_potion.routes import ItemRoute, Relation
+from flask_potion.routes import ItemRoute, Relation, Route
 
-from models.alchemy.security_group import Group
+from models.alchemy.security_group import Group, GroupAcl
 from web.server.api.api_models import PrincipalResource
 from web.server.api.model_schemas import (
+    ACL_SCHEMA,
     CONCISE_USER_SCHEMA,
     GROUP_ROLES_SCHEMA,
     ROLE_MAP_SCHEMA,
     group_role_as_dictionary,
-    role_list_as_map,
 )
+from web.server.api.permission_api_schemas import (
+    RESOURCE_ROLE_SUMMARY,
+    RESOURCE_SUMMARY,
+)
+
+# pylint:disable=C0413
+from web.server.api.permission_api_models import RoleResource
 from web.server.api.responses import STANDARD_RESPONSE_SCHEMA, StandardResponse
+from web.server.potion.managers import GroupResourceManager
 from web.server.routes.views.authorization import AuthorizedOperation
 from web.server.routes.views.groups import (
     add_group_role,
@@ -26,17 +31,40 @@ from web.server.routes.views.groups import (
     add_group_user,
     delete_group_user,
     update_group_users,
+    build_group,
+    update_group_acls,
+    delete_group,
 )
+from web.server.security.permissions import SuperUserPermission, principals
 from web.server.util.util import get_resource_string, get_user_string
+
+FRONTEND_GROUP_SCHEMA = fields.Object(
+    {
+        '$uri': fields.String(),
+        'name': fields.String(),
+        'acls': fields.List(ACL_SCHEMA),
+        'users': fields.List(fields.String(description='Users username')),
+        'roles': fields.List(fields.String(description='Role uris')),
+    }
+)
+
+
+class GroupAclResource(PrincipalResource):
+    class Meta:
+        name = 'group_acl'
+        model = GroupAcl
+
+    class Schema:
+        resource = RESOURCE_SUMMARY
+        resourceRole = RESOURCE_ROLE_SUMMARY
 
 
 class GroupResource(PrincipalResource):
-    '''The potion class for performing CRUD operations on the `Group` class.
-    '''
+    '''The potion class for performing CRUD operations on the `Group` class.'''
 
     users = Relation('user', io='r')
 
-    class Meta(object):
+    class Meta:
         name = 'group'
         title = 'Groups API'
         description = (
@@ -53,21 +81,76 @@ class GroupResource(PrincipalResource):
         # Signal Handlers installed when the API for this Resource
         # are initialized in `web.server.security.signal_handlers.py`
 
-    class Schema(object):
+        manager = principals(GroupResourceManager)
+
+    class Schema:
         users = fields.List(
             CONCISE_USER_SCHEMA, description='The individual users in a group.', io='r'
         )
-        roles = fields.Custom(
-            ROLE_MAP_SCHEMA,
-            description='The role(s) that all members of the group possess',
-            attribute='roles',
-            formatter=role_list_as_map,
-            default=[],
-            io='r',
+        roles = fields.Array(
+            fields.Inline(RoleResource),
+            description='The role(s) that all members of the group possess.',
         )
+        acls = fields.Array(fields.Inline(GroupAclResource), attribute='acls')
+
+    # pylint: disable=E1101
+    @Route.POST(
+        '',
+        rel='create',
+        title='Add New Group',
+        description='Creates a new group',
+        schema=FRONTEND_GROUP_SCHEMA,
+        response_schema=fields.Inline('self'),
+    )
+    def create_group(self, group_obj):
+        '''
+        This endpoint creates a group and adds the creator to that group if the creator is not
+        `Admin` like a `Manager`.
+        '''
+        with AuthorizedOperation('create_resource', 'group'):
+            # We update users separately because self.manager.update cannot
+            # hash users list.
+            group = self.manager.create(build_group(group_obj))
+            if current_user.is_superuser():
+                update_group_users(group, group_obj.get('users', []))
+            else:
+                update_group_users(group, [current_user.username])
+            update_group_acls(group, group_obj.get('acls', []))
+            return None, OK
+
+    @ItemRoute.PATCH(
+        '',
+        rel='update',
+        title='Update group',
+        description='Updates a group',
+        schema=FRONTEND_GROUP_SCHEMA,
+        response_schema=fields.Inline('self'),
+    )
+    def update_group(self, group, obj):
+        with AuthorizedOperation('edit_resource', 'group'):
+            # We update users separately because self.manager.update cannot
+            # hash users list.
+            updated_group = self.manager.update(group, build_group(obj))
+            update_group_users(updated_group, obj.get('users', []))
+            update_group_acls(updated_group, obj.get('acls', []))
+            return None, OK
+
+    # Overriding the default method here because Flask-Potion is unable to
+    # serialize users. We manually remove group_users mappings before removing
+    # the group.
+    # Flask-Potion requires that these be methods and NOT functions
+    # pylint: disable=R0201
+    @ItemRoute.DELETE(
+        '', rel='destroy', title='Delete group', description='Deletes a group'
+    )
+    def delete_group(self, group):
+        with AuthorizedOperation('delete_resource', 'group'):
+            delete_group(group)
+            return None, OK
 
     # Flask-Potion requires that these be methods and NOT functions
     # pylint: disable=R0201
+    # pylint: disable=E1101
     @ItemRoute.POST(
         '/roles',
         title='Add Group Role',
@@ -94,6 +177,7 @@ class GroupResource(PrincipalResource):
 
     # Flask-Potion requires that these be methods and NOT functions
     # pylint: disable=R0201
+    # pylint: disable=E1101
     @ItemRoute.PATCH(
         '/roles',
         title='Update Group Roles',
@@ -115,6 +199,7 @@ class GroupResource(PrincipalResource):
 
     # Flask-Potion requires that these be methods and NOT functions
     # pylint: disable=R0201
+    # pylint: disable=E1101
     @ItemRoute.DELETE(
         '/roles',
         title='Delete Group Role',
@@ -140,6 +225,7 @@ class GroupResource(PrincipalResource):
             g.request_logger.info(message)
             return StandardResponse(message, OK, True)
 
+    # pylint: disable=E1101
     @ItemRoute.PATCH(
         '/users',
         title='Update Group Users',
@@ -212,4 +298,4 @@ class GroupResource(PrincipalResource):
             return StandardResponse(message, OK, True)
 
 
-RESOURCE_TYPES = [GroupResource]
+RESOURCE_TYPES = [GroupAclResource, GroupResource]

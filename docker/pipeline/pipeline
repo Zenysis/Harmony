@@ -1,0 +1,33 @@
+ARG TAG
+
+# Build on top of the pipeline base where all our packages and virtual
+# environments are set initialized.
+FROM gcr.io/zen-1234/pipeline-base:${TAG} AS pipeline-base
+
+# Force bash to be the default shell.
+SHELL ["/bin/bash", "-c"]
+
+ENV INSTALL_PATH /zenysis
+ENV R77_SRC_ROOT ${INSTALL_PATH}
+ENV ZENYSIS_SRC_ROOT ${INSTALL_PATH}
+ENV PYTHONPATH "${ZENYSIS_SRC_ROOT}:${PYTHONPATH}"
+ENV PYTHONUNBUFFERED 1
+
+# Copy over python code.
+COPY config config
+COPY data data
+COPY db db
+COPY log log
+COPY models models
+COPY pipeline pipeline
+COPY prod prod
+COPY util util
+COPY web/*.py web/
+COPY web/server web/server
+
+COPY docker/pipeline/scripts/* ./
+COPY docker/pipeline/scripts/zeus_prefect zeus_prefect
+
+RUN source venv/bin/activate
+
+CMD ./entrypoint.sh

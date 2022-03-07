@@ -11,9 +11,38 @@ import type {
   LayerValue,
 } from 'components/ui/visualizations/BarGraph/internal/LayeredAxis/types';
 
-type BandScale = any;
+type BandScale = $FlowTODO;
+
+type DefaultProps = {
+  fontSize: number,
+
+  /**
+   * The maximum height the LayeredAxis should try to fit within. Since the
+   * LayeredAxis cannot actually guarantee that it matches an exact height
+   * (since the child layers have variable height), it will use this as a
+   * guideline to determine how many rows each child axis can use.
+   */
+  maxHeightSuggestion: number | void,
+  textColor: string,
+  tickColor: string,
+  title: string,
+  titleLabelProps: {
+    fill?: string,
+    fontSize?: number,
+    textAnchor?: string,
+    fontWeight?: string | number,
+    cursor?: string,
+  },
+  top: number,
+};
 
 type Props = {
+  ...DefaultProps,
+  axisValueFormatter: (
+    layerValue: LayerValue,
+    layerDimensions: $ReadOnlyArray<DimensionID>,
+  ) => string,
+
   /**
    * The padding between the end of one bar group and the beginning of the next
    * bar group.
@@ -25,31 +54,32 @@ type Props = {
     layerDimensions: $ReadOnlyArray<DimensionID>,
   ) => void,
   scale: BandScale,
-
-  axisValueFormatter: (
-    layerValue: LayerValue,
-    layerDimensions: $ReadOnlyArray<DimensionID>,
-  ) => string,
-  fontSize: number,
-  textColor: string,
-  tickColor: string,
   tickLabelProps: (
     layerValue: LayerValue,
     layerDimensions: $ReadOnlyArray<DimensionID>,
-  ) => {},
-  title: string,
-  titleLabelProps: {}, // TODO(stephen): FIX THIS.
-  top: number,
+  ) => { fontWeight?: 'bold' | number, cursor?: string },
   width: number,
 };
 
 type State = {
   axisHeights: Zen.Array<number>,
+
+  // Track the max-height seen for an axis layer separately from the current
+  // axis layer height. The max-height is needed since the `maxRows` for each
+  // axis can change, which triggers a change to `axisHeights`. This happens
+  // when we try to keep the height of the `LayeredAxis` within the
+  // `maxHeightSuggestion`.
+  axisMaxHeights: Zen.Array<number>,
 };
 
+function zeroFilledArray(size: number): Array<number> {
+  return Array(size).fill(0);
+}
+
 export default class LayeredAxis extends React.PureComponent<Props, State> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     fontSize: 12,
+    maxHeightSuggestion: undefined,
     textColor: '#000000',
     tickColor: '#000000',
     title: '',
@@ -62,8 +92,44 @@ export default class LayeredAxis extends React.PureComponent<Props, State> {
   };
 
   state: State = {
-    axisHeights: Zen.Array.create(),
+    axisHeights: Zen.Array.create(zeroFilledArray(this.props.layers.length)),
+    axisMaxHeights: Zen.Array.create(zeroFilledArray(this.props.layers.length)),
   };
+
+  componentDidMount() {
+    this.updateAxisHeights(true);
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    this.updateAxisHeights(this.props.layers !== prevProps.layers);
+  }
+
+  updateAxisHeights(layersChanged: boolean) {
+    const { axisHeights } = this.state;
+    const axisHeightsSize = axisHeights.size();
+    const newSize = this.props.layers.length;
+    if (axisHeightsSize === newSize && !layersChanged) {
+      return;
+    }
+
+    const newState = {};
+    if (axisHeightsSize !== newSize) {
+      newState.axisHeights =
+        axisHeightsSize > newSize
+          ? axisHeights.slice(0, newSize)
+          : axisHeights.concat(zeroFilledArray(newSize - axisHeightsSize));
+    }
+
+    // If the layers have changed then we need to clear out the max height
+    // stored and recalculate it the next time the height update comes in. This
+    // is needed because even if the layer count stays the same, since if the
+    // layers have changed we cannot rely on the previous layer max (the number
+    // of rows the layer takes up might have changed with the update).
+    if (layersChanged) {
+      newState.axisMaxHeights = Zen.Array.create(zeroFilledArray(newSize));
+    }
+    this.setState(newState);
+  }
 
   @memoizeOne
   calculateAxisOffsets(axisHeights: Zen.Array<number>): $ReadOnlyArray<number> {
@@ -87,43 +153,74 @@ export default class LayeredAxis extends React.PureComponent<Props, State> {
   }
 
   @memoizeOne
-  calculateTitleOffset(axisHeights: Zen.Array<number>): number {
-    return axisHeights.reduce((acc, height) => acc + height, 0);
+  calculateTitleOffset(
+    axisHeights: Zen.Array<number>,
+    axisOffsets: $ReadOnlyArray<number>,
+  ): number {
+    if (axisOffsets.length === 0 || axisHeights.isEmpty()) {
+      return 20;
+    }
+    return axisOffsets[0] + axisHeights.first() + 20;
+  }
+
+  /**
+   * Determine how many rows each layer can use so that they fit within the
+   * suggested maximum height.
+   * NOTE(stephen): This is a really rough approximation.
+   */
+  @memoizeOne
+  calculateMaxRows(
+    axisMaxHeights: Zen.Array<number>,
+    maxHeightSuggestion: number | void,
+  ): number {
+    if (maxHeightSuggestion === undefined) {
+      return 3;
+    }
+
+    const currentHeight = axisMaxHeights.reduce((acc, v) => acc + v, 0);
+    return currentHeight > maxHeightSuggestion ? 1 : 3;
   }
 
   @autobind
   onAxisHeightUpdate(height: number, layerIdx: number) {
     if (layerIdx >= 0 && height > 0) {
-      this.setState(({ axisHeights }) => {
-        if (axisHeights.get(layerIdx) !== height) {
+      this.setState(({ axisHeights, axisMaxHeights }) => {
+        if (
+          axisHeights.size() > layerIdx &&
+          axisHeights.get(layerIdx) !== height &&
+          axisHeights.size() === axisMaxHeights.size()
+        ) {
           return {
             axisHeights: axisHeights.set(layerIdx, height),
+            axisMaxHeights: axisMaxHeights.set(
+              layerIdx,
+              Math.max(height, axisMaxHeights.get(layerIdx)),
+            ),
           };
         }
 
-        return { axisHeights };
+        return undefined;
       });
     }
   }
 
-  maybeRenderAxisTitle() {
+  maybeRenderAxisTitle(): React.Node {
     const { title, titleLabelProps, width } = this.props;
     if (title.length === 0) {
       return null;
     }
 
-    const offset = this.calculateTitleOffset(this.state.axisHeights);
+    const { axisHeights } = this.state;
+    const offset = this.calculateTitleOffset(
+      axisHeights,
+      this.calculateAxisOffsets(axisHeights),
+    );
     return (
       <g
         className="ui-layered-axis__axis-title"
-        transform={`translate(0, ${offset})`}
+        transform={`translate(${width / 2}, ${offset})`}
       >
-        <text
-          dominantBaseline="hanging"
-          x={width / 2}
-          y={10}
-          {...titleLabelProps}
-        >
+        <text dy="0.35em" {...titleLabelProps}>
           {title}
         </text>
       </g>
@@ -134,7 +231,7 @@ export default class LayeredAxis extends React.PureComponent<Props, State> {
     layerDimensions: $ReadOnlyArray<DimensionID>,
     layerValue: LayerValue,
     nextLayerValue: LayerValue | void,
-  ) {
+  ): React.Element<typeof GroupAxisLine> {
     const {
       groupPadding,
       onAxisValueClick,
@@ -171,11 +268,12 @@ export default class LayeredAxis extends React.PureComponent<Props, State> {
   }
 
   @autobind
-  renderLayer(layerData: LayerData, idx: number) {
+  renderLayer(layerData: LayerData, idx: number): React.Element<'g'> {
     const {
       axisValueFormatter,
       fontSize,
       groupPadding,
+      maxHeightSuggestion,
       onAxisValueClick,
       scale,
       textColor,
@@ -188,6 +286,10 @@ export default class LayeredAxis extends React.PureComponent<Props, State> {
     // bars.
     const axisLines =
       offset !== 0 ? this.renderGroupAxisLines(layerData) : null;
+    const maxRows =
+      layerData.angle === 'horizontal'
+        ? this.calculateMaxRows(this.state.axisMaxHeights, maxHeightSuggestion)
+        : 1;
     return (
       <g
         className="ui-layered-axis__axis-layer"
@@ -202,6 +304,8 @@ export default class LayeredAxis extends React.PureComponent<Props, State> {
           hideOverlapping
           layerData={layerData}
           layerID={idx}
+          maxRows={maxRows}
+          minTickLength={layerData.angle === 'vertical' ? 0 : undefined}
           onAxisValueClick={onAxisValueClick}
           onHeightUpdate={this.onAxisHeightUpdate}
           scale={scale}
@@ -214,11 +318,13 @@ export default class LayeredAxis extends React.PureComponent<Props, State> {
     );
   }
 
-  render() {
-    const { layers, top } = this.props;
+  render(): React.Element<'g'> {
+    // NOTE(stephen): Only render the layers if there is enough space to draw
+    // them in without things looking terrible.
+    const { layers, top, width } = this.props;
     return (
       <g className="ui-layered-axis" transform={`translate(0, ${top})`}>
-        {layers.map(this.renderLayer)}
+        {width > 10 && layers.map(this.renderLayer)}
         {this.maybeRenderAxisTitle()}
       </g>
     );

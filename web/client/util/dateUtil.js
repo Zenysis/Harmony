@@ -1,16 +1,22 @@
-// @noflow
+// @flow
 import { toGregorian, toEthiopian } from 'ethiopian-date';
 
+import CalendarSettings from 'models/config/CalendarSettings';
 import LRUCache from 'lib/LRUCache';
 import Moment from 'models/core/wip/DateTime/Moment';
 import {
   ETHIOPIAN_MONTHS,
   ETHIOPIAN_MONTHS_SHORT,
 } from 'components/ethiopian_time';
-import { DISPLAY_DATE_FORMAT as GRAPH_DATE_FORMAT } from 'components/QueryResult/graphUtil';
+import { calculateEpiYear } from 'models/core/wip/DateTime/formatEpiWeek';
+import type DateOption from 'models/config/CalendarSettings/DateOption';
+
+type MomentDateRange = {
+  +endDate: Moment,
+  +startDate: Moment,
+};
 
 const BACKEND_USING_ET_DATES = window.__JSON_FROM_BACKEND.enableEtDateSelection;
-const FISCAL_START_MONTH = window.__JSON_FROM_BACKEND.fiscalStartMonth;
 
 export const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -19,63 +25,30 @@ export const WEEK_GRANULARITY = 'week';
 export const MONTH_GRANULARITY = 'month';
 export const QUARTER_GRANULARITY = 'quarter';
 export const YEAR_GRANULARITY = 'year';
-const FISCAL_QUARTER_GRANULARITY = 'fiscal_quarter';
-const FISCAL_YEAR_GRANULARITY = 'fiscal_year';
 
-const DATE_FORMAT_MAP = {
-  default: {
-    [DAY_GRANULARITY]: DATE_FORMAT,
-    [WEEK_GRANULARITY]: DATE_FORMAT,
-    [MONTH_GRANULARITY]: 'MMM YYYY',
-    [QUARTER_GRANULARITY]: '[Q]Q YYYY',
-    [YEAR_GRANULARITY]: 'YYYY',
-    [FISCAL_QUARTER_GRANULARITY]: '[Q]Q [FY]YYYY',
-    [FISCAL_YEAR_GRANULARITY]: '[FY]YYYY',
-    day_of_year: 'MMM D',
-    week_of_year: 'MMM D',
-    month_of_year: 'MMM',
-    quarter_of_year: '[Q]Q',
-  },
-  simplified: {
-    [DAY_GRANULARITY]: 'MM-DD',
-    [WEEK_GRANULARITY]: 'MM-DD',
-    [MONTH_GRANULARITY]: 'MMM',
-    [QUARTER_GRANULARITY]: '[Q]Q',
-    [YEAR_GRANULARITY]: 'YYYY',
-    [FISCAL_QUARTER_GRANULARITY]: '[Q]Q',
-    [FISCAL_YEAR_GRANULARITY]: '[FY]YYYY',
-    day_of_year: 'MMM D',
-    week_of_year: 'MMM D',
-    month_of_year: 'MMM',
-    quarter_of_year: '[Q]Q',
-  },
-  graph: {
-    [DAY_GRANULARITY]: GRAPH_DATE_FORMAT,
-    [WEEK_GRANULARITY]: GRAPH_DATE_FORMAT,
-    [MONTH_GRANULARITY]: 'MMM YYYY',
-    [QUARTER_GRANULARITY]: '[Q]Q YYYY',
-    [YEAR_GRANULARITY]: 'YYYY',
-    [FISCAL_QUARTER_GRANULARITY]: '[Q]Q [FY]YYYY',
-    [FISCAL_YEAR_GRANULARITY]: '[FY]YYYY',
-    day_of_year: 'D MMM',
-    week_of_year: 'D MMM',
-    month_of_year: 'MMM',
-    quarter_of_year: '[Q]Q',
-  },
-  graphSimplified: {
-    [DAY_GRANULARITY]: 'D MMM',
-    [WEEK_GRANULARITY]: 'D MMM',
-    [MONTH_GRANULARITY]: 'MMM',
-    [QUARTER_GRANULARITY]: '[Q]Q',
-    [YEAR_GRANULARITY]: 'YYYY',
-    [FISCAL_QUARTER_GRANULARITY]: '[Q]Q',
-    [FISCAL_YEAR_GRANULARITY]: '[FY]YYYY',
-    day_of_year: 'D MMM',
-    week_of_year: 'D MMM',
-    month_of_year: 'MMM',
-    quarter_of_year: '[Q]Q',
-  },
-};
+const [
+  GRANULARITY_SETTINGS_MAP,
+  FISCAL_START_MONTH,
+  FISCAL_DATE_USES_CALENDAR_YEAR,
+]: [Map<string, DateOption>, number, boolean] = (() => {
+  const granularitySettingsMap = new Map();
+  if (!window.__JSON_FROM_BACKEND.calendarSettings) {
+    return [granularitySettingsMap, 1, false];
+  }
+
+  const calendarSettings = CalendarSettings.current();
+  calendarSettings
+    .granularitySettings()
+    .granularities()
+    .forEach(granularity => {
+      granularitySettingsMap.set(granularity.id(), granularity);
+    });
+  return [
+    granularitySettingsMap,
+    calendarSettings.fiscalStartMonth(),
+    calendarSettings.fiscalDateUsesCalendarYear(),
+  ];
+})();
 
 // List of granularities that have special handling in ET.
 const ET_EXCLUDE_DAY = [
@@ -93,7 +66,11 @@ const ET_EXCLUDE_YEAR = [
   'quarter_of_year',
 ];
 
-export function getDefaultGregorianDateRangeMoment() {
+function isFiscalGranularity(granularityId: string): boolean {
+  return granularityId.startsWith('fiscal');
+}
+
+export function getDefaultGregorianDateRangeMoment(): MomentDateRange {
   // Default: past 2 years.
   return {
     startDate: Moment.create().subtract(2, 'year'),
@@ -112,12 +89,16 @@ export const ET_DEFAULT_DATES_OBJ = {
   },
 };
 
-export function getCurrentEthiopianYear() {
+export function getCurrentEthiopianYear(): number {
   const now = Moment.create();
   return toEthiopian(now.year(), now.month() + 1, now.date())[0];
 }
 
-export function toGregorianWithZeroIndexedMonth(year, month, day) {
+export function toGregorianWithZeroIndexedMonth(
+  year: number,
+  month: number,
+  day: number,
+): [number, number, number] {
   // Helper function for ET dates.
   // toGregorian uses 1-indexed months.  This is extremely confusing if it's
   // used directly in the code because months are 0-indexed in Javascript and
@@ -126,13 +107,17 @@ export function toGregorianWithZeroIndexedMonth(year, month, day) {
   return [gregYear, gregMonth - 1, gregDay];
 }
 
-export function toGregorianStartDate(dateObj) {
+export function toGregorianStartDate(
+  dateObj: $PropertyType<typeof ET_DEFAULT_DATES_OBJ, 'start'>,
+): [number, number, number] {
   // Helper function for ET dates.
   // Start from beginning of this month.
   return toGregorianWithZeroIndexedMonth(dateObj.year, dateObj.month, 1);
 }
 
-export function toGregorianEndDate(dateObj) {
+export function toGregorianEndDate(
+  dateObj: $PropertyType<typeof ET_DEFAULT_DATES_OBJ, 'end'>,
+): [number, number, number] {
   // Helper function for ET dates.
   // End at beginning of NEXT month.
   const newMonth = dateObj.month + 1;
@@ -143,14 +128,14 @@ export function toGregorianEndDate(dateObj) {
   return toGregorianWithZeroIndexedMonth(dateObj.year, newMonth, 1);
 }
 
-export function getDefaultEtDateRangeMoment() {
+export function getDefaultEtDateRangeMoment(): MomentDateRange {
   return {
     startDate: Moment.create(toGregorianStartDate(ET_DEFAULT_DATES_OBJ.start)),
     endDate: Moment.create(toGregorianEndDate(ET_DEFAULT_DATES_OBJ.end)),
   };
 }
 
-export function getDefaultDateRange() {
+export function getDefaultDateRange(): { endDate: string, startDate: string } {
   // Returns {startDate, endDate} in YYYY-MM-DD format.
   const momentRanges = BACKEND_USING_ET_DATES
     ? getDefaultEtDateRangeMoment()
@@ -188,12 +173,12 @@ export function momentToEthiopian(
 }
 
 export function getEthiopianDateLabel(
-  momentDate,
-  mergePagumeIntoMeskerem = true,
-  excludeDay = false,
-  excludeMonth = false,
-  excludeYear = false,
-) {
+  momentDate: Moment,
+  mergePagumeIntoMeskerem: boolean = true,
+  excludeDay: boolean = false,
+  excludeMonth: boolean = false,
+  excludeYear: boolean = false,
+): string {
   const [year, month, day] = momentToEthiopian(
     momentDate,
     mergePagumeIntoMeskerem,
@@ -215,21 +200,30 @@ export function getEthiopianDateLabel(
   return dateComponents.join(' ');
 }
 
-function getDateFormat(granularity, useGraphDateFormat, simplify) {
+function getDateFormat(
+  granularity: string,
+  useGraphDateFormat: boolean,
+  simplify: boolean,
+): string {
+  const dateOption = GRANULARITY_SETTINGS_MAP.get(granularity);
+  if (dateOption === undefined) {
+    return DATE_FORMAT;
+  }
+
   if (useGraphDateFormat && simplify) {
-    return DATE_FORMAT_MAP.graphSimplified[granularity];
+    return dateOption.shortGraphDateFormat();
   }
   if (useGraphDateFormat) {
-    return DATE_FORMAT_MAP.graph[granularity];
+    return dateOption.graphDateFormat();
   }
   if (simplify) {
-    return DATE_FORMAT_MAP.simplified[granularity];
+    return dateOption.shortDateFormat();
   }
-  return DATE_FORMAT_MAP.default[granularity];
+  return dateOption.defaultDateFormat();
 }
 
-const DATE_CACHE: LRUCache<typeof Moment> = new LRUCache();
-function getMomentDate(date: string) {
+const DATE_CACHE: LRUCache<Moment> = new LRUCache();
+function getMomentDate(date: string): Moment {
   let momentDate = DATE_CACHE.get(date);
   if (momentDate === undefined) {
     momentDate = Moment.utc(date);
@@ -238,17 +232,22 @@ function getMomentDate(date: string) {
   return momentDate;
 }
 
+export function formatDate(date: string, dateFormat: string): string {
+  return getMomentDate(date).format(dateFormat);
+}
+
 export function formatDateByGranularity(
   date: string,
-  granularity,
+  granularity: string,
   useGraphDateFormat: boolean,
   displayEthiopianDatesIfEt: boolean = true,
-  simplify = false,
+  simplify: boolean = false,
 ): string {
   let momentDate = getMomentDate(date);
 
   if (BACKEND_USING_ET_DATES && displayEthiopianDatesIfEt) {
     const excludeMonth = granularity === YEAR_GRANULARITY;
+
     return getEthiopianDateLabel(
       momentDate,
       true,
@@ -261,11 +260,7 @@ export function formatDateByGranularity(
   // If the granularity we are formatting is a fiscal granularity, and the
   // fiscal start month is not January, update the momentDate so that when it
   // is formatted it will display the correct fiscal quarter / year.
-  if (
-    FISCAL_START_MONTH !== 1 &&
-    (granularity === FISCAL_QUARTER_GRANULARITY ||
-      granularity === FISCAL_YEAR_GRANULARITY)
-  ) {
+  if (FISCAL_START_MONTH !== 1 && isFiscalGranularity(granularity)) {
     // By subtracting the fiscal start month from the date, we can still use
     // moment date formatting like normal to produce the correct display result.
     // Example:
@@ -279,7 +274,11 @@ export function formatDateByGranularity(
     // when formatted.
     // NOTE(stephen): If the date format includes the actual month value, it
     // will be incorrect since the adjusted month will be shown.
+    const calendarYear = momentDate.year();
     momentDate = momentDate.subtract(FISCAL_START_MONTH - 1, 'month');
+    if (FISCAL_DATE_USES_CALENDAR_YEAR && momentDate.year() !== calendarYear) {
+      momentDate = momentDate.add(1, 'year');
+    }
   }
 
   // If we are on the ethiopian platform but the ethiopian dates ui setting has
@@ -314,10 +313,7 @@ function datesHaveSameYear(
 
   // For fiscal granularities, we need to compare the fiscal year, not the
   // calendar year.
-  if (
-    granularity === FISCAL_QUARTER_GRANULARITY ||
-    granularity === FISCAL_YEAR_GRANULARITY
-  ) {
+  if (isFiscalGranularity(granularity)) {
     const fiscalOffset = FISCAL_START_MONTH - 1;
     return (
       momentA.subtract(fiscalOffset, 'month').year() ===
@@ -325,16 +321,23 @@ function datesHaveSameYear(
     );
   }
 
+  if (granularity === 'epi_week') {
+    const dateFormat = getDateFormat(granularity, false, false);
+    const epiYearA = calculateEpiYear(momentA.momentView(), dateFormat);
+    const epiYearB = calculateEpiYear(momentB.momentView(), dateFormat);
+    return epiYearA === epiYearB;
+  }
+
   return momentA.year() === momentB.year();
 }
 
 export function formatDatesByGranularity(
-  dates,
-  granularity,
-  useGraphDateFormat,
-  displayEthiopianDatesIfEt = true,
-  simplifyDates = false,
-) {
+  dates: $ReadOnlyArray<string>,
+  granularity: string,
+  useGraphDateFormat: boolean,
+  displayEthiopianDatesIfEt: boolean = true,
+  simplifyDates: boolean = false,
+): Array<string> {
   return dates.map((date, index) => {
     // In time series graphs we want to simplify dates such that the year is
     // only shown if it is different from the previous date. This is to make the
@@ -346,14 +349,14 @@ export function formatDatesByGranularity(
       simplifyDates &&
       index !== 0 &&
       datesHaveSameYear(
-        getMomentDate(date.toString()),
-        getMomentDate(dates[index - 1].toString()),
+        getMomentDate(date),
+        getMomentDate(dates[index - 1]),
         displayEthiopianDatesIfEt,
         granularity,
       );
 
     return formatDateByGranularity(
-      date.toString(),
+      date,
       granularity,
       useGraphDateFormat,
       displayEthiopianDatesIfEt,

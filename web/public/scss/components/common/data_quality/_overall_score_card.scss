@@ -1,0 +1,39 @@
+.overall-score-card {
+  align-items: center;
+  background-color: $white;
+  border: 1px solid $gray-light;
+  border-radius: 3px;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.302),
+    0 1px 3px 1px rgba(60, 64, 67, 0.149);
+  color: $slate;
+  display: flex;
+  flex-direction: column;
+  height: 125px;
+  justify-content: center;
+  text-align: center;
+  text-transform: capitalize;
+  width: 180px;
+
+  &:hover {
+    background-color: $white-hover;
+    color: $slate;
+    cursor: pointer;
+  }
+
+  &__beta-tag {
+    border-radius: 100px;
+    font-size: 9px;
+    margin-bottom: $spacing-xs;
+    padding: 3px 10px;
+    text-transform: uppercase;
+  }
+
+  &__score {
+    font-size: $font-xl;
+  }
+
+  &__title {
+    font-size: $font-l;
+    text-transform: uppercase;
+  }
+}

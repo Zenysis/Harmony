@@ -1,5 +1,5 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const path = require('path');
 const webpack = require('webpack');
 
@@ -13,10 +13,17 @@ module.exports = {
   devtool: 'hidden-source-map',
   entry: {
     admin: absPath('web/client/entryPoints/adminEntry.js'),
-    gridDashboard: absPath('web/client/entryPoints/gridDashboardEntry.js'),
+    alerts: absPath('web/client/entryPoints/alertsAppEntry.js'),
+    advancedQuery: absPath('web/client/entryPoints/advancedQueryEntry.js'),
+    dashboardBuilder: absPath(
+      'web/client/entryPoints/DashboardBuilderEntry.js',
+    ),
+    dataCatalog: absPath('web/client/entryPoints/dataCatalogEntry.js'),
+    dataDigest: absPath('web/client/entryPoints/dataDigestEntry.js'),
+    dataQuality: absPath('web/client/entryPoints/dataQualityEntry.js'),
+    embeddedQuery: absPath('web/client/entryPoints/embeddedQueryEntry.js'),
+    fieldSetup: absPath('web/client/entryPoints/fieldSetupEntry.js'),
     navbar: absPath('web/client/entryPoints/navbarEntry.js'),
-    query: absPath('web/client/entryPoints/queryEntry.js'),
-    upload: absPath('web/client/entryPoints/dataUploadEntry.js'),
     newUserButton: absPath('web/client/entryPoints/newUserButtonEntry.js'),
     unauthorizedPage: absPath(
       'web/client/entryPoints/unauthorizedPageEntry.js',
@@ -47,9 +54,13 @@ module.exports = {
         NODE_ENV: JSON.stringify('production'),
       },
     }),
+    new webpack.SourceMapDevToolPlugin({
+      filename: '[name].js.map',
+      exclude: /cssBundle/,
+    }),
   ],
   optimization: {
-    noEmitOnErrors: true,
+    emitOnErrors: false,
     splitChunks: {
       cacheGroups: {
         commons: {
@@ -66,14 +77,32 @@ module.exports = {
         // TODO(stephen): Make sure we set up flask and webpack to make this
         // cacheable.
         vendor: {
-          chunks: 'all',
+          chunks: 'initial',
           name: 'vendor',
           test: absPath('node_modules'),
           enforce: true,
         },
       },
     },
-    minimizer: [new UglifyJsPlugin({ sourceMap: true })],
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        sourceMap: true,
+        terserOptions: {
+          compress: {
+            arguments: true,
+            passes: 2,
+          },
+          ecma: 2016,
+          extractComments: false,
+          mangle: true,
+          output: {
+            comments: false,
+          },
+        },
+        test: /\.jsx?$/,
+      }),
+    ],
   },
   module: {
     rules: [
@@ -85,7 +114,6 @@ module.exports = {
           options: {
             presets: [
               '@babel/flow',
-              ['@babel/stage-2', { decoratorsLegacy: true }],
               [
                 '@babel/env',
                 {
@@ -106,6 +134,7 @@ module.exports = {
               '@babel/react',
             ],
             plugins: [
+              'relay',
               ['@babel/plugin-proposal-decorators', { legacy: true }],
               ['@babel/plugin-proposal-class-properties', { loose: true }],
             ],
@@ -121,11 +150,7 @@ module.exports = {
       {
         test: /\.scss$/,
         exclude: /node_modules/,
-        use: [
-          MiniCssExtractPlugin.loader,
-          'css-loader?sourceMap',
-          'sass-loader?sourceMap',
-        ],
+        use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
       },
     ],
     // Used so babel doesn't check this and throw a warning for precompiled
@@ -136,5 +161,15 @@ module.exports = {
     // You can now require('file') instead of require('file.jsx').
     extensions: ['.js', '.json', '.jsx'],
     modules: [absPath('web/client'), absPath('node_modules')],
+
+    // HACK(stephen): Rewrite the react-draggable import to use an ES6 compatible
+    // module and not an ES5 compatible version. Rough workaround to this bug:
+    // https://github.com/STRML/react-draggable/issues/476. We upgraded
+    // react-draggable for a fix here: https://zenysis.slack.com/archives/C011YAL3YKA/p1588955698055100
+    alias: {
+      'react-draggable': absPath(
+        'node_modules/react-draggable/build/module/cjs.js',
+      ),
+    },
   },
 };

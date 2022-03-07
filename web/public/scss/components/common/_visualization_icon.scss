@@ -1,0 +1,22 @@
+.visualization-icon {
+  color: #2d80c2;
+
+  &--disabled {
+    color: $gray;
+  }
+
+  &--outline {
+    // Remove any shading from the visualization icon and leave only the outline
+    // behind. There are a few icons that do not support outline mode, like
+    // Heat Tiles and Scorecard since the icon would be confusing without
+    // shading.
+    // NOTE(stephen): Using the knowledge that all shaded areas of the viz
+    // icons are marked with a `fillOpacity` property to set the shading
+    // opacity.
+    &:not([data-viz-icon-no-outline]) {
+      [fill-opacity] {
+        fill-opacity: 0;
+      }
+    }
+  }
+}

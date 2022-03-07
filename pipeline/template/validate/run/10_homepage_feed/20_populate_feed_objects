@@ -1,0 +1,12 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# TODO: INSERT CORRECT ROLES
+SOURCES=()
+
+for source in "${SOURCES[@]}"; do
+    echo '[info] Running 20_populate_feed_objects for ${source}'
+    "${PIPELINE_SRC_ROOT}/data/datasource_delta/populate_feed_objects.py" \
+        --deployment_name=${source} \
+        --generated_signals_filename="${PIPELINE_TMP_DIR}/feed_gen_signals_${source}.json"
+done

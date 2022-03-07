@@ -1,162 +1,155 @@
 // @flow
 import * as React from 'react';
 
-import AlertMessage, { ALERT_TYPE } from 'components/common/AlertMessage';
+import * as Zen from 'lib/Zen';
+import DataActionRule from 'models/core/QueryResultSpec/DataActionRule';
+import DataActionRulesDispatch, {
+  dataActionRulesReducer,
+} from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/ColorRulesContainer/DataActionRulesDispatch';
+import DataActionsContainer from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/DataActionsContainer';
+import DragHandle from 'components/ui/DraggableItem/DragHandle';
+import DraggableItemList from 'components/ui/DraggableItemList';
+import Group from 'components/ui/Group';
 import SeriesRow from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/SeriesRow';
-import SettingsBlock from 'components/common/visualizationSettings/SettingsPage/SettingsBlock';
 import SettingsPage from 'components/common/visualizationSettings/SettingsPage';
-import Table from 'components/ui/Table';
-import autobind from 'decorators/autobind';
-import memoizeOne from 'decorators/memoizeOne';
-import { TABLE_HEADERS } from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/constants';
+import { SERIES_SETTINGS_CONFIG } from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/constants';
+import {
+  dataActionRulesToColorRuleTemplateHolder,
+  colorRuleTemplateHoldersToDataActionRules,
+} from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/ColorRulesContainer/util/util';
 import type SeriesSettings from 'models/core/QueryResultSpec/VisualizationSettings/SeriesSettings';
-import type {
-  SeriesRowData,
-  SeriesTableHeader,
-} from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/constants';
+import type { ColorRuleTemplateHolder } from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/ColorRulesContainer/types';
+import type { DataRuleDispatchAction } from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/ColorRulesContainer/DataActionRulesDispatch';
+import type { EnabledSeriesSettingsConfig } from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/defaults';
 import type { SeriesRowEvents } from 'components/visualizations/common/SettingsModal/SeriesSettingsTab/SeriesRow';
 
-export type SeriesSettingsEvents = SeriesRowEvents;
-
-export type SeriesBlockOptions = {
-  canEditOrder: boolean,
-  canEditDataLabelFormat: boolean,
-  canEditDataLabelFontSize: boolean,
-  canEditSeriesLabel: boolean,
-  canEditYAxis: boolean,
-  canEditColor: boolean,
-  canToggleConstituents: boolean,
-  canToggleSeriesValue: boolean,
-  canToggleVisibility: boolean,
-};
-
-type Props = $Merge<SeriesBlockOptions, SeriesRowEvents> & {
+type Props = {
+  ...SeriesRowEvents,
+  enabledSettings: EnabledSeriesSettingsConfig,
+  onSeriesOrderChange: (seriesOrder: Zen.Array<string>) => void,
+  onDataActionsChange: (dataActions: Zen.Array<DataActionRule>) => void,
   settings: SeriesSettings,
+
+  // HACK(yitian): This is for allowing hide series toggle for map viz. The
+  // series settings tab needs to know which field is currently selected so we
+  // can disable the hide series toggle for that series row.
+  selectedMapField?: string | void,
 };
 
-const TEXT = t('visualizations.common.SettingsModal.SeriesSettingsTab');
+function SeriesSettingsTab({
+  onDataActionsChange,
+  onSeriesOrderChange,
+  onSeriesSettingsGlobalChange,
+  onSeriesSettingsLocalChange,
+  enabledSettings,
+  settings,
+  selectedMapField = undefined,
+}: Props) {
+  // Get only the settings types that are enabled
+  const enabledSettingConfigs = React.useMemo(
+    () => SERIES_SETTINGS_CONFIG.filter(config => enabledSettings[config.type]),
+    [enabledSettings],
+  );
 
-export default class SeriesSettingsTab extends React.PureComponent<Props> {
-  static eventNames: Array<$Keys<SeriesRowEvents>> = SeriesRow.eventNames;
-  static defaultProps = {
-    canEditDataLabelFormat: false,
-    canEditDataLabelFontSize: false,
-    canEditOrder: false,
-    canEditSeriesLabel: true,
-    canEditYAxis: false,
-    canEditColor: false,
-    canToggleConstituents: false,
-    canToggleSeriesValue: false,
-    canToggleVisibility: false,
+  const [ruleTemplates, setRuleTemplates] = React.useState<
+    Zen.Array<ColorRuleTemplateHolder>,
+  >(dataActionRulesToColorRuleTemplateHolder(settings.dataActionRules()));
+
+  React.useEffect(() => {
+    const newActionRules = colorRuleTemplateHoldersToDataActionRules(
+      ruleTemplates,
+    );
+    onDataActionsChange(newActionRules);
+  }, [ruleTemplates, onDataActionsChange]);
+
+  const onDataActionRulesDispatch = (action: DataRuleDispatchAction) => {
+    setRuleTemplates(dataActionRulesReducer(ruleTemplates, action));
   };
 
-  // Get only the headers that this.props says should be visible
-  getHeaders(): Array<SeriesTableHeader> {
-    return TABLE_HEADERS.filter(header => this.props[header.propKey]);
-  }
+  const enabledSettingTypes = enabledSettingConfigs.map(s => s.type);
+  const {
+    seriesOrder,
+    seriesObjects,
+    dataActionRules,
+  } = settings.modelValues();
+  const numVisibleSeries = Object.keys(seriesObjects).reduce(
+    (acc, key) => (seriesObjects[key].isVisible() ? acc + 1 : acc),
+    0,
+  );
 
-  @memoizeOne
-  getSeriesTableData(
-    seriesOrder: $ReadOnlyArray<string>,
-  ): Array<SeriesRowData> {
-    return seriesOrder.map((seriesId, idx) => ({ seriesId, idx }));
-  }
-
-  maybeRenderInstructions() {
-    if (this.props.canEditOrder) {
-      const { reorderBarsInstructions } = TEXT;
-      return (
-        <AlertMessage type={ALERT_TYPE.INFO}>
-          <span className="glyphicon glyphicon-info-sign" />{' '}
-          {reorderBarsInstructions}
-        </AlertMessage>
-      );
-    }
-    return null;
-  }
-
-  @autobind
-  renderSeriesRow(rowData: SeriesRowData) {
-    const { seriesId, idx } = rowData;
-    const headerNames = this.getHeaders().map(header => header.id);
-    const {
-      onSeriesOrderChange,
-      onSeriesSettingsLocalChange,
-      onSeriesSettingsGlobalChange,
-      settings,
-    } = this.props;
-    const { seriesOrder, seriesObjects } = settings.modelValues();
-    const visibleSeries = Object.keys(seriesObjects).reduce(
-      (acc, key) => (seriesObjects[key].isVisible() ? acc + 1 : acc),
-      0,
-    );
-
+  function renderSeriesRow(seriesId: string) {
     // Don't let users toggle visibility if it would make everything invisible
+    const visibilityToggle = numVisibleSeries !== 1;
+    // HACK(yitian): If we are on the map viz, make sure the current series id
+    // doesn't match the currently selected field from the general settings tab
+    const mapVisibilityToggle =
+      selectedMapField !== undefined
+        ? seriesId !== selectedMapField
+        : undefined;
+    const allowVisibilityToggle =
+      mapVisibilityToggle !== undefined
+        ? visibilityToggle && mapVisibilityToggle
+        : visibilityToggle;
+
     return (
-      <Table.Row key={seriesId}>
-        <SeriesRow
-          index={idx}
-          series={seriesObjects[seriesId]}
-          headers={headerNames}
-          isFirstRow={idx === 0}
-          isLastRow={idx === seriesOrder.length - 1}
-          allowVisibilityToggle={visibleSeries !== 1}
-          onSeriesOrderChange={onSeriesOrderChange}
-          onSeriesSettingsLocalChange={onSeriesSettingsLocalChange}
-          onSeriesSettingsGlobalChange={onSeriesSettingsGlobalChange}
-        />
-      </Table.Row>
+      <SeriesRow
+        dataActionRules={dataActionRules}
+        series={seriesObjects[seriesId]}
+        headers={enabledSettingTypes}
+        isLastRow={seriesId === seriesOrder[seriesOrder.length - 1]}
+        allowVisibilityToggle={allowVisibilityToggle}
+        onSeriesSettingsLocalChange={onSeriesSettingsLocalChange}
+        onSeriesSettingsGlobalChange={onSeriesSettingsGlobalChange}
+        onDataActionsChange={onDataActionsChange}
+      />
     );
   }
 
-  // Render two different settings block treatments based on how many series
-  // settings can be changed. If there is only one setting that can be changed,
-  // use the setting title as the SettingsBlock title and skip rendering a
-  // table. This keeps the SettingsBlock visual style consistent with other
-  // tabs. If there is more than one setting to render, then render a full
-  // Table that can better organize multiple setting options.
-  renderSettingsBlock() {
-    const seriesOrder = this.props.settings.seriesOrder();
-    const headers = this.getHeaders();
-    const singleSetting = headers.length === 1;
-    const tableData = this.getSeriesTableData(seriesOrder);
+  function renderHeaderRow() {
+    const classNames = enabledSettingConfigs.map(
+      setting =>
+        `series-settings-tab-header-row__cell series-settings-tab-header-row__${setting.type}`,
+    );
 
-    // TODO(pablo): this is not an ideal usecase for a Table component. Consider
-    // creating a generic List UI component. Using a Table here actually adds
-    // unnecessary indirection to generate the row data and render each row.
-    if (!singleSetting) {
-      return (
-        <Table
-          data={tableData}
-          headers={headers}
-          isHoverable={false}
-          renderRow={this.renderSeriesRow}
-        />
-      );
-    }
-
+    const headerNames = enabledSettingConfigs.map((setting, i) => (
+      <Group.Item key={setting.type} className={classNames[i]}>
+        {setting.headerName}
+      </Group.Item>
+    ));
     return (
-      <SettingsBlock
-        className="series-settings-tab--single-setting"
-        title={headers[0].displayContent}
+      <Group.Horizontal
+        flex
+        alignItems="center"
+        className="series-settings-tab-header-row"
+        spacing="xs"
       >
-        <Table
-          showHeaders={false}
-          data={tableData}
-          headers={headers}
-          renderRow={this.renderSeriesRow}
-          isHoverable={false}
-        />
-      </SettingsBlock>
+        {headerNames}
+      </Group.Horizontal>
     );
   }
 
-  render() {
-    return (
+  const settingsBlock = (
+    <div className="series-settings-tab__settings-table-container">
+      {renderHeaderRow()}
+      <DraggableItemList
+        dragRestrictionSelector={DragHandle.DEFAULT_SELECTOR}
+        items={Zen.Array.create<string>(seriesOrder)}
+        onItemOrderChanged={onSeriesOrderChange}
+        renderItem={renderSeriesRow}
+      />
+    </div>
+  );
+
+  return (
+    <DataActionRulesDispatch.Provider value={onDataActionRulesDispatch}>
       <SettingsPage className="series-settings-tab">
-        {this.renderSettingsBlock()}
-        {this.maybeRenderInstructions()}
+        <Group.Vertical spacing="m">{settingsBlock}</Group.Vertical>
+        {enabledSettings.colorActions && (
+          <DataActionsContainer ruleTemplates={ruleTemplates} />
+        )}
       </SettingsPage>
-    );
-  }
+    </DataActionRulesDispatch.Provider>
+  );
 }
+
+export default (React.memo(SeriesSettingsTab): React.AbstractComponent<Props>);

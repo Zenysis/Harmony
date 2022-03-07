@@ -1,0 +1,288 @@
+$records-table-border: 1px solid $gray;
+$records-table-pagination-block-height: 52px;
+$records-table-row-height: 91px;
+
+$records-table-green: #a7f0ba;
+$records-table-red: #ffd7d9;
+
+.em-records-table {
+  &__sticky-bar {
+    background-color: $site-background;
+    // NOTE(david): Safari version 13 is the first version that supports
+    // `position: sticky`. Previous versions require the webkit prefix.
+    position: sticky;
+    /* stylelint-disable-next-line declaration-block-no-duplicate-properties */
+    position: -webkit-sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  &__header-row-wrapper {
+    position: relative;
+  }
+
+  &__header-row {
+    background-color: $white;
+    border: $records-table-border;
+    border-radius: 5px 5px 0 0;
+    display: grid;
+    font-size: 16px;
+    font-weight: bold;
+    overflow-x: hidden;
+  }
+
+  &__header-cell {
+    align-items: center;
+    color: $slate-hover;
+    display: flex;
+    padding: $space-m-px;
+
+    &--id-cell {
+      background-color: $white;
+      border-bottom: $records-table-border;
+      border-radius: 5px 0 0 0;
+      border-right: $records-table-border;
+      box-shadow: 2px 0px 4px rgba(0, 0, 0, 0.15);
+      // NOTE(david): we subtract 1 px to account for the bottom border
+      height: calc(100% - 1px);
+      justify-content: left;
+      padding-left: $space-xxl-px;
+      position: absolute;
+      text-transform: capitalize;
+    }
+  }
+
+  &__main-content-wrapper {
+    border-bottom: $records-table-border;
+    border-left: $records-table-border;
+    border-radius: 0px 0px 5px 5px;
+    border-right: $records-table-border;
+    overflow-x: auto;
+  }
+
+  &__main-content {
+    font-size: 14px;
+  }
+
+  &__match-section {
+    background-color: $white;
+    border: 1px solid $gray;
+    border-radius: 5px;
+  }
+
+  &__row {
+    display: grid;
+    height: $records-table-row-height;
+
+    &:not(:last-child) {
+      border-bottom: $records-table-border;
+    }
+  }
+
+  &__cell {
+    align-items: center;
+    border-right: $records-table-border;
+    display: flex;
+    font-size: 12px;
+    padding: $space-s-px;
+
+    &--primary-entity {
+      border: none;
+    }
+
+    &:last-child {
+      border: none;
+    }
+
+    &--matching {
+      background: rgba(167, 240, 186, 0.3);
+    }
+    &--not-matching {
+      background: rgba(255, 215, 217, 0.3);
+    }
+  }
+
+  &__id-cell {
+    background-color: $white;
+    border-bottom: $records-table-border;
+    border-left: $records-table-border;
+    border-right: none;
+    fill: rgba(0, 0, 0, 0.54);
+    font-size: 14px;
+    height: $records-table-row-height;
+    justify-content: left;
+    padding-left: $space-l-px;
+    position: absolute;
+    text-align: left;
+    text-transform: none;
+
+    &.em-records-table__cell--primary-entity {
+      border-top: $records-table-border;
+      border-top-left-radius: 5px;
+      height: $records-table-row-height + 1px;
+      // HACK(david): This border needs to line up with the row border.
+      margin-top: -1px;
+
+      &.em-records-table__cell--final-entity {
+        height: $records-table-row-height + 2px;
+      }
+    }
+
+    &.em-records-table__cell--final-entity {
+      border-bottom-left-radius: 5px;
+      height: $records-table-row-height + 1px;
+    }
+  }
+
+  &__canonical-id {
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  &__canonical-id-label {
+    color: $slate-hover;
+    font-size: 12px;
+  }
+
+  &__action-button {
+    color: $slate;
+    font-size: 14px;
+    min-height: 30px;
+    padding: 1px 14px !important;
+
+    &:hover {
+      color: $slate-hover;
+    }
+  }
+
+  &__action-button-contents {
+    height: $space-l-px;
+    letter-spacing: 0.16px;
+    text-transform: none;
+  }
+
+  &__action-icon {
+    height: $space-l-px;
+  }
+
+  &__status-label {
+    font-weight: bold;
+  }
+
+  &__validate-button {
+    background-color: $records-table-green;
+
+    &:hover {
+      background-color: lighten($records-table-green, 2%);
+    }
+  }
+
+  &__unmatch-button-full-width {
+    background-color: $records-table-red;
+
+    &:hover {
+      background-color: lighten($records-table-red, 1%);
+    }
+  }
+
+  &__unmatch-button-half-width {
+    background-color: $records-table-red;
+    border-radius: 100px 0 0 100px;
+    margin-right: 0;
+
+    &:hover {
+      background-color: lighten($records-table-red, 1%);
+    }
+  }
+
+  &__unmatch-dropdown {
+    background-color: $records-table-red;
+    border-left: none;
+    border-radius: 0 100px 100px 0;
+    margin-left: 0;
+    padding: 1px 4px !important;
+
+    &:hover {
+      background-color: lighten($records-table-red, 1%);
+      border-left: none;
+    }
+  }
+
+  &__action-link {
+    color: $blue-primary-active;
+    text-decoration: underline;
+
+    &:hover {
+      color: $blue-primary-hover;
+      cursor: pointer;
+    }
+  }
+
+  &__dividing-line {
+    background-color: $gray-light;
+    border-radius: 0px 0px 0px 5px;
+    border-right: $records-table-border;
+    box-shadow: 2px 0px 4px rgba(0, 0, 0, 0.15);
+    position: absolute;
+  }
+
+  &__loading-spinner-wrapper {
+    text-align: center;
+  }
+
+  &__scroll-bar-wrapper {
+    bottom: 0;
+    overflow-x: auto;
+    position: fixed;
+  }
+
+  &__scroll-bar {
+    height: 1px;
+  }
+}
+
+.em-filters-section {
+  display: flex;
+
+  &__filter-button {
+    align-items: center;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    display: flex;
+    height: 38px;
+    // HACK(abby): This is to override the "query-part-selector" css
+    margin: -1px;
+    padding: $space-xs-px;
+    width: 112px;
+
+    &:hover {
+      background-color: $white-hover;
+    }
+  }
+
+  &__filter-icon {
+    height: 20px;
+  }
+
+  &__filter-tag {
+    background-color: $white;
+    background-image: none;
+    border: 1px solid $gray;
+    color: $slate;
+    height: 38px;
+    margin-bottom: $space-xxs-px;
+
+    &:hover {
+      background-color: $white-hover;
+    }
+  }
+
+  &__validations-tag {
+    background-color: $white;
+    background-image: none;
+    border: 1px solid $gray;
+    color: $slate;
+    height: 38px;
+    margin-bottom: $space-xxs-px;
+  }
+}

@@ -1,0 +1,45 @@
+.aqt-action-button {
+  background: none;
+  border: none;
+  color: $slate;
+  display: inline-block;
+  font-size: 15px;
+  padding: 19px 15px;
+  @media (max-width: 1250px) {
+    padding-left: $space-s-px;
+    padding-right: $space-s-px;
+  }
+
+  &__icon {
+    font-size: 20px;
+    vertical-align: bottom;
+  }
+
+  &__text {
+    margin-left: $space-xs-px;
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+
+    &:hover {
+      background-color: $gray-light;
+    }
+  }
+
+  &--enabled {
+    &:hover {
+      background-color: $gray-light-hover;
+    }
+  }
+
+  &:first-of-type {
+    padding-left: 25px;
+
+    @media (max-width: 1250px) {
+      padding-left: $space-s-px;
+      padding-right: $space-s-px;
+    }
+  }
+}

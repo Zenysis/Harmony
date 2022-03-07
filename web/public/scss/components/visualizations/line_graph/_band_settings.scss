@@ -1,0 +1,107 @@
+.single-band-setting-control {
+  // HACK(stephen): Use the same style that is used on the Goal Lines for the
+  // BarGraph.
+  @extend .goal-lines-section__box;
+  display: flex;
+  flex-direction: column;
+
+  &__block {
+    align-items: center;
+    display: grid;
+    grid-template-columns: 30px 100px 1fr;
+
+    // Make sure that the rows always are at least the size of the field
+    // dropdown that could be shown.
+    grid-template-rows: repeat(2, minmax(35px, 1fr));
+    row-gap: $space-xs-px;
+  }
+
+  // The add bound checkbox should always be the first item in the row.
+  &__add-bound-button {
+    grid-column: 1;
+  }
+
+  &__bound-label {
+    cursor: pointer;
+    font-weight: normal;
+    margin: 0;
+
+    &--enabled {
+      font-weight: 700;
+    }
+  }
+
+  &__area-color-block {
+    align-items: center;
+    display: flex;
+    grid-column: span 3;
+  }
+
+  &__area-color-block-label {
+    margin-right: $space-xs-px;
+  }
+
+  &__area-color-label-input {
+    flex: 0 1 250px;
+    margin-left: $space-xs-px;
+
+    &::placeholder {
+      font-size: $font-m;
+      font-weight: normal;
+    }
+  }
+
+  &__remove-band-button {
+    // Align the remove button all the way to the right. Need to use some funky
+    // margin settings to get this to happen in flex space.
+    margin-left: auto;
+  }
+}
+
+.band-bound-control {
+  align-items: center;
+  display: flex;
+  flex: 1;
+
+  &__bound-type-control {
+    display: flex;
+    flex: 0 0 150px;
+    justify-content: space-evenly;
+
+    & > .radio {
+      // Override the default radio margins since we are displaying the radio
+      // buttons all on the same line.
+      margin-bottom: 0;
+      margin-top: 0 !important;
+
+      &:first-of-type {
+        margin-right: $space-xxs-px;
+      }
+
+      label {
+        align-items: center;
+        display: flex;
+      }
+    }
+  }
+}
+
+.value-bound-control {
+  align-items: center;
+  display: flex;
+
+  &__value-input {
+    margin-right: 0;
+    width: 130px;
+  }
+
+  & > * {
+    margin-right: $space-xs-px;
+  }
+
+  // NOTE(stephen): Need to override the zen-color-block's styles to force it
+  // to vertically align. There's no way to pass a custom class through.
+  .zen-color-block {
+    display: block;
+  }
+}

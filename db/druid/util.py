@@ -48,11 +48,10 @@ def _build_aggregator_workaround(name, kwargs):
 # pylint: disable=protected-access
 pydruid.utils.aggregators._build_aggregator = _build_aggregator_workaround
 
-# HACK(stephen): The stupid pydruid library allowed another dumb bug in
-# when they patched pull #74 in. It added validation to the datasource being
-# passed in, but left out support for the 'query' datasource type. We are
-# using the library properly, so just remove the checks here.
-@staticmethod
+# HACK(stephen): The pydruid bug from pull #74. It added validation to the
+# datasource being passed in, but left out support for the 'query' datasource
+# type. We are using the library properly, so just remove the checks here.
+@staticmethod  # type: ignore
 def _parse_datasource_workaround(datasource, _):
     return datasource
 
@@ -175,6 +174,10 @@ def _recursive_get_post_aggregation_fields(post_aggregation, found_fields):
         found_fields.update(get_constituent_fields(formula))
         return
 
+    if post_agg_type == 'javascript':
+        found_fields.update(post_aggregation['fieldNames'])
+        return
+
     fields = post_aggregation.get('fields')
     field_name = post_aggregation.get('fieldName')
     # If the current post_aggregation has a field name, add it to
@@ -234,7 +237,11 @@ def build_query_filter_from_aggregations(aggregations):
     for aggregation in aggregations.values():
         agg_filter = build_filter_from_aggregation(aggregation)
         if not agg_filter:
-            continue
+            # If one of the aggregations is not filtered, we cannot build an optimized
+            # full query filter. This is because that one aggregation might require
+            # access to rows that all other aggregations might filter out.
+            # NOTE(stephen): This might poison the query to be significantly slower.
+            return EmptyFilter()
 
         if not merged_filters:
             merged_filters = agg_filter
@@ -260,7 +267,7 @@ def build_query_filter_from_aggregations(aggregations):
         if len(values) == 1:
             output |= Filter(dimension=dimension, value=values.pop())
         else:
-            output |= Filter(type='in', dimension=dimension, values=list(values))
+            output |= Filter(type='in', dimension=dimension, values=sorted(values))
 
     for dimension, patterns in regex_output.items():
         regex = '(%s)' % ')|('.join(patterns)
@@ -294,7 +301,7 @@ _DIMENSION_VALUE_FIELD_MAP = {'in': 'values', 'regex': 'pattern', 'selector': 'v
 # Only care about filters that either filter a dimension or could
 # contain a dimension filter in its child filters.
 # TODO(stephen): Javascript filter?
-_ALLOWED_FILTERS = set(['and', 'or'] + list(_DIMENSION_VALUE_FIELD_MAP.keys()))
+_ALLOWED_FILTERS = set(['and', 'or', *_DIMENSION_VALUE_FIELD_MAP.keys()])
 
 # Traverse a nested filter tree and extract the dimension values and
 # regex patterns that are being filtered on. If a filter type is found that

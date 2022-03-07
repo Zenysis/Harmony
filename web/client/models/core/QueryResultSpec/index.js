@@ -4,39 +4,33 @@ import update from 'immutability-helper';
 
 import * as Zen from 'lib/Zen';
 import CustomField from 'models/core/Field/CustomField';
-import DashboardItemSettings from 'models/core/Dashboard/DashboardSpecification/DashboardItemSettings';
-import Field from 'models/core/Field';
+import DataActionRule from 'models/core/QueryResultSpec/DataActionRule';
+import DataFilterGroup from 'models/core/QueryResultSpec/DataFilterGroup';
 import GroupBySettings from 'models/core/QueryResultSpec/GroupBySettings';
 import QuerySelections from 'models/core/wip/QuerySelections';
-import SimpleQuerySelections from 'models/core/SimpleQuerySelections';
 import TitleSettings from 'models/core/QueryResultSpec/TitleSettings';
 import VisualizationSettings from 'models/core/QueryResultSpec/VisualizationSettings';
 import VisualizationSettingsUtil from 'models/core/QueryResultSpec/VisualizationSettings/VisualizationSettingsUtil';
-import ZenMap from 'util/ZenModel/ZenMap';
-import { AQT_RESULT_VIEW_ORDER } from 'components/AdvancedQueryApp/registry/viewTypes';
-import { RESULT_VIEW_ORDER as SQT_RESULT_VIEW_ORDER } from 'components/QueryResult/viewTypes';
+import upgradeQueryResultSpec20211130 from 'models/core/QueryResultSpec/upgradeQueryResultSpec20211130';
 import {
-  computeColorFilters,
-  computeDataFilters,
-} from 'models/core/QueryResultSpec/derivedComputations';
-import { difference } from 'util/util';
-import { getDimensionsForQuery } from 'components/visualizations/common/Query/util';
+  NO_DATA_DISPLAY_VALUE,
+  ZERO_DISPLAY_VALUE,
+} from 'models/core/QueryResultSpec/QueryResultSeries';
+import { difference } from 'util/setUtil';
 import type AxesSettings from 'models/core/QueryResultSpec/VisualizationSettings/AxesSettings';
-import type ColorFilter from 'models/core/QueryResultSpec/QueryResultFilter/ColorFilter';
-import type DataFilter from 'models/core/QueryResultSpec/QueryResultFilter/DataFilter';
+import type Field from 'models/core/wip/Field';
 import type LegendSettings from 'models/core/QueryResultSpec/VisualizationSettings/LegendSettings';
+import type QueryResultSeries from 'models/core/QueryResultSpec/QueryResultSeries';
 import type SeriesSettings from 'models/core/QueryResultSpec/VisualizationSettings/SeriesSettings';
-import type { FieldFilterSelections } from 'components/QueryResult/QueryResultActionButtons/FilterColorModal/types';
+import type { GroupingItem } from 'models/core/wip/GroupingItem/types';
+import type { IViewSpecificSettings } from 'models/visualizations/common/interfaces';
 import type { ResultViewType } from 'components/QueryResult/viewTypes';
 import type { Serializable } from 'lib/Zen';
-import type { SerializedCustomField } from 'models/core/Field/CustomField';
-import type { SerializedDashboardItemSettings } from 'models/core/Dashboard/DashboardSpecification/DashboardItemSettings';
-import type { SerializedDashboardQuery } from 'models/core/Dashboard/DashboardSpecification/RelationalDashboardQuery';
-
-// TODO(pablo): move everything here to use ZenArray and ZenMap, that way we
+import type { ViewSpecificSettings } from 'models/visualizations/common/types';
+// TODO(pablo): move everything here to use Zen.Array and Zen.Map, that way we
 // can remove the dependency of immutability-helper
 
-type Values = {
+type RequiredValues = {
   /**
    * Contains grouping data about the query that produced this queryResultSpec.
    * E.g. is the query grouped by Region, by Month, by Quarter, etc.?
@@ -49,21 +43,24 @@ type Values = {
   titleSettings: TitleSettings,
 
   /**
-   * An object mapping a viewType to a VisualizationSettings object.
-   * The VisualizationSettings object contains the AxesSettings,
-   * SeriesSettings, LegendSettings, and controls used for each visualization
-   */
-  visualizationSettings: { +[viewType: ResultViewType]: VisualizationSettings },
-
-  /**
    * An array of view types that represent which visualizations this
    * QueryResultSpec can support. A view type is a key that represents
-   * a visualization type: ANIMATED_MAP, CHART, etc.
+   * a visualization type: MAP, TABLE, etc.
    * All view types are defined in QueryResult/viewTypes.js
    * ... we probably should have named it visualizationType but that just
    * looks too long.
    */
-  viewTypes: Zen.ReadOnly<$ReadOnlyArray<ResultViewType>>,
+  viewTypes: $ReadOnlyArray<ResultViewType>,
+
+  /**
+   * An object mapping a viewType to a VisualizationSettings object.
+   * The VisualizationSettings object contains the AxesSettings,
+   * SeriesSettings, LegendSettings, and controls used for each visualization
+   */
+  visualizationSettings: {
+    +[viewType: ResultViewType]: VisualizationSettings,
+    ...,
+  },
 };
 
 type DefaultValues = {
@@ -72,69 +69,21 @@ type DefaultValues = {
    */
   customFields: $ReadOnlyArray<CustomField>,
 
-  /**
-   * Object mapping fieldId to an object that represents a filter.
-   * Filters are created through the Color/Filter modal.
-   * TODO(pablo): create DataFilter model to represent frontend filters
-   */
-  filters: { [fieldId: string]: any },
-
-  /**
-   * Object mapping fieldId to an object that represents filter selections
-   * from the Color/Filter modal.
-   * TODO(pablo): filters code is terrifying and creates separate 'filters'
-   * and 'modalFilters' objects that ultimately mean the same thing but
-   * serve different purposes and omg this really needs to be refactored
-   */
-  modalFilters: { [fieldId: string]: FieldFilterSelections },
+  /** A DataFilterGroup to apply to the query result data */
+  dataFilters: DataFilterGroup,
 };
 
-// TODO(pablo): we are currently deriving the `dataFilters` from the
-// `modalFilters`. Eventually this should not be the case, and instead
-// dataFilters should be stored directly as DataFilter models
-// and persisted in that way. That will require a lot of changes to the
-// Filter/Color modal to work with DataFilter models, and will involve
-// changes to the backend to upgrade dashboard specs to store this data.
-type DerivedValues = {
-  colorFilters: Zen.Map<ColorFilter>,
-  dataFilters: Zen.Map<DataFilter>,
-};
-
-export type SerializedLegacySettings = {
-  seriesSettings?: Zen.Serialized<SeriesSettings>,
-  titleSettings?: Zen.Serialized<TitleSettings>,
-  [viewType: ResultViewType]: {
-    axesSettings?: Zen.Serialized<AxesSettings>,
-    legendSettings?: Zen.Serialized<LegendSettings>,
-    viewSpecificSettings?: {},
-  },
-};
-type SerializedVisualizationSettingsMap = {
+export type SerializedVisualizationSettingsMap = {
   +[ResultViewType]: Zen.Serialized<VisualizationSettings>,
 };
 
-type SerializedQueryResultSpec = {
+export type SerializedQueryResultSpec = {
+  customFields: $ReadOnlyArray<Zen.Serialized<CustomField>>,
+  dataFilters: Zen.Serialized<DataFilterGroup>,
   groupBySettings: Zen.Serialized<GroupBySettings>,
   titleSettings: Zen.Serialized<TitleSettings>,
-  visualizationSettings: SerializedVisualizationSettingsMap,
   viewTypes: $ReadOnlyArray<ResultViewType>,
-  customFields: $ReadOnlyArray<SerializedCustomField>,
-  filters: { [string]: any },
-  modalFilters: { [fieldId: string]: FieldFilterSelections },
-};
-
-// TODO(pablo): there should not be different representations for a
-// SerializedQueryResultSpec
-export type SerializedQueryResultSpecForDashboard = {
-  settings: SerializedDashboardItemSettings,
-  filters: { [string]: any },
-  modalFilters: { [string]: FieldFilterSelections },
-  customFields: Array<SerializedCustomField>,
-};
-
-const RESULT_VIEW_ORDER_MAP = {
-  AQT: AQT_RESULT_VIEW_ORDER,
-  SQT: SQT_RESULT_VIEW_ORDER,
+  visualizationSettings: SerializedVisualizationSettingsMap,
 };
 
 /**
@@ -143,28 +92,28 @@ const RESULT_VIEW_ORDER_MAP = {
  * like if a new visualization is added, build the VisualizationSettings from
  * a different viewType's settings.
  */
-function deserializeVisualizationSettingsMap(
+export function deserializeVisualizationSettingsMap(
   serializedObj: SerializedVisualizationSettingsMap,
   viewTypes: $ReadOnlyArray<ResultViewType>,
   groupBySettings: GroupBySettings,
   currentViewType: ResultViewType | void = undefined,
-): { +[ResultViewType]: VisualizationSettings } {
+): { +[ResultViewType]: VisualizationSettings, ... } {
   const vizSettings = {};
   const missingViewSettings = [];
   viewTypes.forEach((viewType: ResultViewType) => {
     const viewSettings = serializedObj[viewType];
     // It is possible for serialized settings to be missing because a new
     // ResultViewType was added.
-    if (viewSettings === undefined) {
+    if (viewSettings === undefined || viewSettings === null) {
       missingViewSettings.push(viewType);
       return;
     }
 
     vizSettings[viewType] = VisualizationSettings.deserialize(
       {
-        seriesSettings: viewSettings.seriesSettings,
         axesSettings: viewSettings.axesSettings,
         legendSettings: viewSettings.legendSettings,
+        seriesSettings: viewSettings.seriesSettings,
         viewSpecificSettings: viewSettings.viewSpecificSettings,
       },
       { viewType },
@@ -203,41 +152,33 @@ function deserializeVisualizationSettingsMap(
 
   return vizSettings;
 }
+
 /**
  * QueryResultSpec is our frontend representation of a QueryResult.
  * A QueryResultSpec holds everything about the *frontend* configuration
  * of a QueryResult:
  *   The custom calculations, frontend filters, settings, etc.
+ *
  * It does NOT hold the selections that were sent to the backend in order
  * to produce this result (e.g. the queried fields, date selections,
  * grouping dimensions, etc.). That information is held in a
- * SimpleQuerySelections model.
+ * QuerySelections model.
  *
  * The QuerySelections model is intentionally kept separate from the
- * QueryResultSpec because there are many ways to select a query (e.g.
- * Simple query selections, Advanced query selections), but they all end
- * up producing a QueryResultSpec on the frontend.
+ * QueryResultSpec because they represent different stages of a query.
+ * QuerySelections represents how data is *requested*, whereas the
+ * QueryResultSpec represents how that data is processed once it returns.
  *
  * Note that a single QueryResultSpec can represent *multiple* visualizations.
+ * Each visualization type can have its own settings which are stored in the
+ * `visualizationSettings` map.
  */
 class QueryResultSpec
-  extends Zen.BaseModel<QueryResultSpec, Values, DefaultValues, DerivedValues>
+  extends Zen.BaseModel<QueryResultSpec, RequiredValues, DefaultValues>
   implements Serializable<SerializedQueryResultSpec> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     customFields: [],
-    filters: {},
-    modalFilters: {},
-  };
-
-  static derivedConfig = {
-    colorFilters: [
-      Zen.hasChanged<QueryResultSpec>('modalFilters'),
-      computeColorFilters,
-    ],
-    dataFilters: [
-      Zen.hasChanged<QueryResultSpec>('modalFilters'),
-      computeDataFilters,
-    ],
+    dataFilters: DataFilterGroup.create({ filters: Zen.Array.create() }),
   };
 
   static fromQuerySelections(
@@ -246,8 +187,7 @@ class QueryResultSpec
     smallMode: boolean = false,
   ): Zen.Model<QueryResultSpec> {
     const { fields, groups } = querySelections.modelValues();
-    const legacyFields: Array<Field> = fields.mapValues(f => f.legacyField());
-    const titleSettings = TitleSettings.fromFields(legacyFields);
+    const titleSettings = TitleSettings.create({});
     const groupBySettings = GroupBySettings.fromGroupingItems(groups);
 
     // set up visualization settings
@@ -256,73 +196,40 @@ class QueryResultSpec
     viewTypes.forEach(viewType => {
       visualizationSettings[viewType] = VisualizationSettingsUtil.fromViewType(
         viewType,
-        legacyFields,
+        fields.arrayView(),
         groupings,
         smallMode,
       );
     });
 
     return QueryResultSpec.create({
-      viewTypes,
       groupBySettings,
       titleSettings,
-      visualizationSettings,
-    });
-  }
-
-  static fromSimpleQuerySelections(
-    viewTypes: $ReadOnlyArray<ResultViewType>,
-    simpleQuerySelections: SimpleQuerySelections,
-    smallMode: boolean = false,
-  ): Zen.Model<QueryResultSpec> {
-    const {
-      denominator,
-      fields,
-      granularity,
-    } = simpleQuerySelections.modelValues();
-    const titleSettings = TitleSettings.fromFields(fields, denominator);
-
-    // Use the same method SQT uses to build the dimensions being queried.
-    const groupBySettings = GroupBySettings.fromSimpleQueryGroupings(
-      getDimensionsForQuery(simpleQuerySelections),
-    );
-
-    // set up visualization settings
-    const groupings = Zen.Array.create([
-      groupBySettings.groupings().forceGet(granularity),
-    ]);
-    const visualizationSettings = {};
-    viewTypes.forEach(viewType => {
-      visualizationSettings[viewType] = VisualizationSettingsUtil.fromViewType(
-        viewType,
-        fields,
-        groupings,
-        smallMode,
-      );
-    });
-
-    return QueryResultSpec.create({
       viewTypes,
-      groupBySettings,
-      titleSettings,
       visualizationSettings,
     });
   }
 
   static deserialize(
-    serializedObj: SerializedQueryResultSpec,
+    serializedObject: SerializedQueryResultSpec,
   ): Zen.Model<QueryResultSpec> {
+    // NOTE(isabel): Remove use of this function and delete the corresponding
+    // file upgradeQueryResultSpec20211130.js after February 28 2022, as it would've
+    // upgraded all existing AQT user tabs.
+    const upgradedSerializedObj = upgradeQueryResultSpec20211130(
+      serializedObject,
+    );
+
     const {
       customFields,
-      filters,
-      modalFilters,
+      dataFilters,
       titleSettings,
       viewTypes,
       visualizationSettings,
-    } = serializedObj;
+    } = upgradedSerializedObj;
 
     const groupBySettings = GroupBySettings.deserialize(
-      serializedObj.groupBySettings,
+      upgradedSerializedObj.groupBySettings,
     );
     const vizSettings = deserializeVisualizationSettingsMap(
       visualizationSettings,
@@ -337,73 +244,18 @@ class QueryResultSpec
       ? TitleSettings.deserialize(titleSettings)
       : titleSettings;
     return QueryResultSpec.create({
-      filters,
       groupBySettings,
-      modalFilters,
       viewTypes,
       customFields: Zen.deserializeArray(CustomField, customFields, {
+        dimensions: groupBySettings
+          .groupings()
+          .values()
+          .map(group => group.getDimensionId()),
         seriesSettings: seriesSettingsSample,
       }),
+      dataFilters: DataFilterGroup.deserialize(dataFilters),
       titleSettings: deserializedTitleSettings,
       visualizationSettings: vizSettings,
-    });
-  }
-
-  // TODO(vedant) - This can be built directly from a DashboardItem. Refactor
-  // this method.
-  static deserializeFromDashboard(
-    serializedObj: {
-      query: SerializedDashboardQuery,
-      settings: SerializedDashboardItemSettings,
-    },
-    extraConfig: { isAdvancedQueryItem: boolean },
-  ): Zen.Model<QueryResultSpec> {
-    const { isAdvancedQueryItem } = extraConfig;
-    const viewTypes = isAdvancedQueryItem
-      ? RESULT_VIEW_ORDER_MAP.AQT
-      : RESULT_VIEW_ORDER_MAP.SQT;
-
-    const { settings, query } = serializedObj;
-    const customFields = query.customFields || [];
-    const frontendSelectionsFilter = query.frontendSelectionsFilter || {};
-    const filterModalSelections = query.filterModalSelections || {};
-
-    // a query result in a dashboard spec has the series settings separated
-    // from the viz settings. We need to structure the viz settings to mirror
-    // the VisualizationSettings model before passing them to the create
-    // function
-    const { titleSettings } = settings;
-    const groupBySettings = GroupBySettings.deserialize(
-      settings.groupBySettings,
-    );
-    const visualizationSettings = deserializeVisualizationSettingsMap(
-      settings.viewTypeSettings,
-      viewTypes,
-      groupBySettings,
-      query.type,
-    );
-
-    // TODO(pablo): this deserialization only works for Custom Fields that do
-    // not depend on other Custom Fields. For an array of Custom Fields,
-    // there may be some dependencies, which means we need to deserialize the
-    // entire array by first topological sorting in order to first deserialize
-    // the fields that others depend on.
-    // NOTE(stephen): Need to access the current visible series settings so that
-    // we can semi-accurately instantiate the custom fields. This is necessary
-    // since CustomField has a dependency on full Field models. When that
-    // dependency is broken, we can remove this.
-    const customFieldModels = Zen.deserializeArray(CustomField, customFields, {
-      seriesSettings: visualizationSettings[query.type].seriesSettings(),
-    });
-
-    return QueryResultSpec.create({
-      groupBySettings,
-      viewTypes,
-      visualizationSettings,
-      customFields: customFieldModels,
-      titleSettings: TitleSettings.deserialize(titleSettings),
-      filters: frontendSelectionsFilter,
-      modalFilters: filterModalSelections,
     });
   }
 
@@ -419,74 +271,65 @@ class QueryResultSpec
     return this._.visualizationSettings()[viewType].legendSettings();
   }
 
-  // TODO(pablo): remove the usage of `any` from here
-  getVisualizationControls(viewType: ResultViewType): any {
-    return this._.visualizationSettings()[viewType].viewSpecificSettings();
-  }
-
-  updateSpecFromNewSimpleQuerySelections(
-    newSelections: SimpleQuerySelections,
-    oldSelections: SimpleQuerySelections,
-  ): Zen.Model<QueryResultSpec> {
-    const newGroupBySettings = GroupBySettings.fromSimpleQueryGroupings(
-      getDimensionsForQuery(oldSelections),
-    );
-    const newFields = newSelections.fields();
-    const prevFields = oldSelections.fields();
-    return this.updateSeriesSettingsFromNewFields(
-      newFields,
-      prevFields,
-    ).groupBySettings(newGroupBySettings);
-  }
-
-  updateSpecFromNewQuerySelections(
-    newSelections: QuerySelections,
-    oldSelections: QuerySelections,
-  ): Zen.Model<QueryResultSpec> {
-    const newGroupBySettings = GroupBySettings.fromGroupingItems(
-      newSelections.groups(),
-    );
-
-    const newFields = newSelections.fields();
-    const prevFields = oldSelections.fields();
-    let newQueryResultSpec = this.updateSeriesSettingsFromNewFields(
-      newFields.mapValues(f => f.legacyField()),
-      prevFields.mapValues(f => f.legacyField()),
-    ).groupBySettings(newGroupBySettings);
-
-    // Try to determine if the user has customized the title by comparing the
-    // previous first field's label to the current title stored in the spec.
-    // If they are the same, assume the user has not customized the title and
-    // update the title to match the new first field's label.
-    // TODO(pablo, stephen): this is not the ideal way of checking and we
-    // should figure out how to keep track of a dirty bit or some flag that
-    // determines if the user has edited things.
-    const titleSettings = newQueryResultSpec.titleSettings();
-    const prevFirstFieldLabel = prevFields.get(0).label();
-    const newFirstFieldLabel = newFields.get(0).label();
-    if (
-      titleSettings.title() === prevFirstFieldLabel &&
-      newFirstFieldLabel !== prevFirstFieldLabel
-    ) {
-      newQueryResultSpec = newQueryResultSpec.titleSettings(
-        titleSettings.title(newFirstFieldLabel),
-      );
-    }
-    return newQueryResultSpec;
-  }
-
   /**
    * Sometimes (e.g. when editing a query in a dashboard) the underlying
    * query selections will change, but we need to update the queryResultSpec
    * *without* recreating it from scratch (so that other settings don't get
    * reset).
-   * This function handles finding which fields were added and removed, and
-   * specifically updating the SeriesSettings to handle those fields.
-   *
-   * TODO(pablo): its possible that the query selection's granularities may
-   * have updated too. Instead of just a function to update series settings,
-   * we should have a more general function to update from a new QuerySelections
-   * model: e.g. `updateFromNewQuerySelections`
+   */
+  updateSpecFromNewQuerySelections(
+    newSelections: QuerySelections,
+    oldSelections: QuerySelections,
+  ): Zen.Model<QueryResultSpec> {
+    const newFields = newSelections.fields().arrayView();
+    const prevFields = oldSelections.fields().arrayView();
+
+    const prevGroups = oldSelections.groups();
+    const newGroups = newSelections.groups();
+
+    const newQueryResultSpec = this.updateGroupBySettingsFromGroupingItems(
+      prevGroups,
+      newGroups,
+    )
+      .updateDataFiltersFromNewFields(newFields, prevFields)
+      .updateSeriesSettingsFromNewFields(newFields, prevFields)
+      .updateCustomFieldsFromNewFields(newFields, prevFields);
+    return newQueryResultSpec;
+  }
+
+  updateGroupBySettingsFromGroupingItems(
+    prevGroups: Zen.Array<GroupingItem>,
+    newGroups: Zen.Array<GroupingItem>,
+  ): Zen.Model<QueryResultSpec> {
+    if (newGroups === prevGroups) {
+      return this._;
+    }
+
+    const newGroupBySettings = GroupBySettings.fromGroupingItems(newGroups);
+
+    const newQueryResultSpec = this._.groupBySettings(newGroupBySettings);
+
+    // Now we've updated the GroupBySettings we need to update any
+    // viewSpecificSettings which are dependent on GroupBySettings.
+    return this._.viewTypes().reduce(
+      (queryResultSpec, viewType) =>
+        queryResultSpec.updateVisualizationSettings(viewType, vizSettings => {
+          const viewSpecificSettings = vizSettings.viewSpecificSettings();
+
+          return vizSettings.viewSpecificSettings(
+            viewSpecificSettings.updateFromNewGroupBySettings(
+              newGroupBySettings,
+            ),
+          );
+        }),
+      newQueryResultSpec,
+    );
+  }
+
+  /**
+   * This function handles finding which fields were added and removed from the
+   * QuerySelctions, and specifically updating the SeriesSettings to handle
+   * those fields.
    */
   updateSeriesSettingsFromNewFields(
     newFields: $ReadOnlyArray<Field>,
@@ -500,20 +343,31 @@ class QueryResultSpec
     // series settings.
     const changedLabels = {};
     const prevLabels = {};
+    // Track the showNullAsZero values that have changed so that we can
+    // selectively update series settings.
+    const changedNoDataValueToZero = {};
+    const prevNoDataValueToZero = {};
     prevFields.forEach(field => {
-      prevLabels[field.id()] = field.label();
+      const fieldId = field.get('id');
+      const fieldLabel = field.label();
+      prevLabels[fieldId] = fieldLabel;
+      prevNoDataValueToZero[fieldId] = field.showNullAsZero();
     });
     newFields.forEach(field => {
-      const fieldId = field.id();
+      const fieldId = field.get('id');
       const fieldLabel = field.label();
       if (prevLabels[fieldId] && prevLabels[fieldId] !== fieldLabel) {
         changedLabels[fieldId] = fieldLabel;
       }
+      const fieldNoDataValueToZero = field.showNullAsZero();
+      if (prevNoDataValueToZero[fieldId] !== fieldNoDataValueToZero) {
+        changedNoDataValueToZero[fieldId] = fieldNoDataValueToZero;
+      }
     });
 
-    const customFieldIds = Field.pullIds(this._.customFields());
-    const newFieldIds = Field.pullIds(newFields);
-    const prevFieldIds = Field.pullIds(prevFields);
+    const customFieldIds = this._.customFields().map(field => field.get('id'));
+    const newFieldIds = newFields.map(field => field.get('id'));
+    const prevFieldIds = prevFields.map(field => field.get('id'));
     const newFieldsSet = new Set(newFieldIds.concat(customFieldIds));
     const fieldOrderChanged =
       newFieldIds.length !== prevFieldIds.length ||
@@ -536,9 +390,14 @@ class QueryResultSpec
         const removedFields = difference(oldFieldsSet, newFieldsSet);
         if (addedFields.size > 0 || removedFields.size > 0) {
           addedFields.forEach(id => {
-            const field = newFields.find(f => f.id() === id);
+            const field = newFields.find(f => f.get('id') === id);
             if (field) {
-              newSpec = newSpec.addNewSeries(viewType, id, field.label());
+              newSpec = newSpec.addNewSeries(
+                viewType,
+                id,
+                field.label(),
+                field.showNullAsZero(),
+              );
             }
           });
           removedFields.forEach(id => {
@@ -560,7 +419,7 @@ class QueryResultSpec
             (fieldId, idx) => prevFieldIds[idx] === fieldId,
           );
           if (seriesOrderUnmodified) {
-            newSpec = newSpec._updateVisualizationSettings(
+            newSpec = newSpec.updateVisualizationSettings(
               viewType,
               vizSettings =>
                 vizSettings.seriesSettings(
@@ -582,10 +441,88 @@ class QueryResultSpec
             ),
           newSpec,
         );
+
+        newSpec = Object.keys(changedNoDataValueToZero).reduce(
+          (currSpec, fieldId) =>
+            currSpec.updateSeriesObjectValue(
+              viewType,
+              fieldId,
+              'nullValueDisplay',
+              changedNoDataValueToZero[fieldId]
+                ? ZERO_DISPLAY_VALUE
+                : NO_DATA_DISPLAY_VALUE,
+            ),
+          newSpec,
+        );
         return newSpec;
       },
       this._,
     );
+  }
+
+  /**
+   * The query selections will change when editing a field to (or to not)
+   * display 'no data results as zero'. If this field is used in a custom
+   * calculated field, then we need to update the custom field's formula
+   * metadata to reflect this change.
+   */
+  updateCustomFieldsFromNewFields(
+    newFields: $ReadOnlyArray<Field>,
+    prevFields: $ReadOnlyArray<Field>,
+  ): Zen.Model<QueryResultSpec> {
+    const prevCustomFields = this._.customFields();
+    if (prevCustomFields.length === 0 || newFields === prevFields) {
+      return this._;
+    }
+
+    return this._.customFields(
+      prevCustomFields.map(customField => {
+        const fieldConfigurations = customField
+          .formula()
+          .metadata()
+          .fieldConfigurations();
+        return customField
+          .deepUpdate()
+          .formula()
+          .metadata()
+          .fieldConfigurations(
+            fieldConfigurations.map(fieldConfig => {
+              const configId = fieldConfig.fieldId;
+              const field = newFields.find(f => f.id() === configId);
+              if (field) {
+                return {
+                  ...fieldConfig,
+                  treatNoDataAsZero: field.showNullAsZero(),
+                };
+              }
+              return fieldConfig;
+            }),
+          );
+      }),
+    );
+  }
+
+  /**
+   * Sometimes (e.g. when editing a query in a dashboard) the underlying
+   * query selections will change, so we need to update the dataFilters to
+   * remove any references to the removed fields.
+   */
+  updateDataFiltersFromNewFields(
+    newFields: $ReadOnlyArray<Field>,
+    prevFields: $ReadOnlyArray<Field>,
+  ): Zen.Model<QueryResultSpec> {
+    const newIds = new Set(newFields.map(f => f.get('id')));
+    const removedIds = new Set(
+      prevFields.map(f => f.get('id')).filter(id => !newIds.has(id)),
+    );
+    if (removedIds.size === 0) {
+      return this._;
+    }
+
+    const newDataFilters = this._.dataFilters().removeFiltersForFields(
+      removedIds,
+    );
+    return this._.dataFilters(newDataFilters);
   }
 
   updateTitleSettingValue(
@@ -597,12 +534,12 @@ class QueryResultSpec
       [settingKey](settingValue);
   }
 
-  _updateVisualizationSettings(
+  updateVisualizationSettings(
     viewType: ResultViewType,
     updaterFn: VisualizationSettings => VisualizationSettings,
   ): Zen.Model<QueryResultSpec> {
     const newVisualizationSettings = update(this._.visualizationSettings(), {
-      [viewType]: { $apply: updaterFn },
+      [(viewType: any)]: { $apply: updaterFn },
     });
     return this._.visualizationSettings(newVisualizationSettings);
   }
@@ -613,7 +550,7 @@ class QueryResultSpec
     settingKey: string,
     settingValue: any,
   ): Zen.Model<QueryResultSpec> {
-    return this._updateVisualizationSettings(viewType, vizSettings =>
+    return this.updateVisualizationSettings(viewType, vizSettings =>
       vizSettings
         .deepUpdate()
         .axesSettings()
@@ -622,12 +559,42 @@ class QueryResultSpec
     );
   }
 
-  updateGlobalSeriesObjectValue(
+  updateGlobalSeriesObjectValue<K: Zen.SettableValueKeys<QueryResultSeries>>(
     seriesId: string,
-    settingType: string,
-    settingValue: any,
+    settingType: K,
+    // $FlowIssue[incompatible-type] this is safe
+    settingValue: Zen.SettableValueType<QueryResultSeries, K>,
   ): Zen.Model<QueryResultSpec> {
-    return this._.viewTypes().reduce(
+    let newSpec = this._;
+
+    if (settingType === 'label' && typeof settingValue === 'string') {
+      // if we are globally updating the series label, then we need to check
+      // if this id matches any custom calculations, and if so, update the
+      // custom calculation label too
+      const customFieldToEdit = newSpec
+        .customFields()
+        .find(f => f.id() === seriesId);
+      if (customFieldToEdit) {
+        newSpec = this.changeExistingCustomField(
+          customFieldToEdit,
+          customFieldToEdit.label(settingValue),
+        );
+      }
+
+      // We still need to check if any custom fields depended on the
+      // changed field, because then we'd have to update the contained
+      // label so that their formulae can still render with the correct
+      // labels in the custom calculations modal
+      newSpec = newSpec.customFields(
+        newSpec
+          .customFields()
+          .map(customField =>
+            customField.updateInternalFieldLabel(seriesId, settingValue),
+          ),
+      );
+    }
+
+    return newSpec._.viewTypes().reduce(
       (spec, viewType) =>
         spec.updateSeriesObjectValue(
           viewType,
@@ -635,23 +602,28 @@ class QueryResultSpec
           settingType,
           settingValue,
         ),
-      this._,
+      newSpec,
     );
   }
 
-  updateSeriesObjectValue(
+  updateSeriesObjectValue<K: Zen.SettableValueKeys<QueryResultSeries>>(
     viewType: ResultViewType,
     seriesId: string,
-    settingType: string,
-    settingValue: any,
+    settingType: K,
+    settingValue: Zen.SettableValueType<QueryResultSeries, K>,
   ): Zen.Model<QueryResultSpec> {
-    return this._updateVisualizationSettings(viewType, vizSettings =>
-      vizSettings.seriesSettings(
-        vizSettings
-          .seriesSettings()
-          .updateSeries(seriesId, settingType, settingValue),
-      ),
-    );
+    return this.updateVisualizationSettings(viewType, vizSettings => {
+      // $FlowFixMe[incompatible-call] - fix when ViewSpecificSettingsUnion has better type support
+      const viewSpecificSettings = vizSettings.viewSpecificSettings();
+      const seriesSettings = vizSettings
+        .seriesSettings()
+        .updateSeries(seriesId, settingType, settingValue);
+      return vizSettings
+        .seriesSettings(seriesSettings)
+        .viewSpecificSettings(
+          viewSpecificSettings.updateFromNewSeriesSettings(seriesSettings),
+        );
+    });
   }
 
   updateLegendSettingValue(
@@ -659,7 +631,7 @@ class QueryResultSpec
     settingKey: string,
     settingValue: any,
   ): Zen.Model<QueryResultSpec> {
-    return this._updateVisualizationSettings(viewType, vizSettings =>
+    return this.updateVisualizationSettings(viewType, vizSettings =>
       vizSettings
         .deepUpdate()
         .legendSettings()
@@ -672,19 +644,29 @@ class QueryResultSpec
     controlKey: string,
     value: any,
   ): Zen.Model<QueryResultSpec> {
-    return this._updateVisualizationSettings(viewType, vizSettings =>
+    return this.updateVisualizationSettings(viewType, vizSettings =>
       vizSettings.updateVisualizationControlValue(controlKey, value),
     );
   }
 
-  moveSeriesToNewIndex(
+  updateSeriesOrder(
     viewType: ResultViewType,
-    seriesId: string,
-    newIndex: number,
+    newSeriesOrder: $ReadOnlyArray<string>,
   ): Zen.Model<QueryResultSpec> {
-    return this._updateVisualizationSettings(viewType, vizSettings =>
+    return this.updateVisualizationSettings(viewType, vizSettings =>
       vizSettings.seriesSettings(
-        vizSettings.seriesSettings().moveSeriesToNewIndex(seriesId, newIndex),
+        vizSettings.seriesSettings().seriesOrder(newSeriesOrder),
+      ),
+    );
+  }
+
+  updateDataActionRules(
+    viewType: ResultViewType,
+    dataActionRules: Zen.Array<DataActionRule>,
+  ): Zen.Model<QueryResultSpec> {
+    return this.updateVisualizationSettings(viewType, vizSettings =>
+      vizSettings.seriesSettings(
+        vizSettings.seriesSettings().dataActionRules(dataActionRules),
       ),
     );
   }
@@ -696,7 +678,7 @@ class QueryResultSpec
 
     // add the new custom field to the Series Settings for all view types
     return this._.viewTypes().reduce(
-      (spec, viewType) => spec.addNewSeries(viewType, id, label),
+      (spec, viewType) => spec.addNewSeries(viewType, id, label, false),
       newSpec,
     );
   }
@@ -705,21 +687,13 @@ class QueryResultSpec
     previousField: CustomField,
     editedField: CustomField,
   ): Zen.Model<QueryResultSpec> {
-    const { id } = previousField.modelValues();
-    const { label } = editedField.modelValues();
     const index = this._.customFields().findIndex(
       field => field === previousField,
     );
 
     const customFields = [...this._.customFields()];
     customFields.splice(index, 1, editedField);
-    const newSpec = this._.customFields(customFields);
-
-    // update the edited custom field to the Series Settings for all view types
-    return this._.viewTypes().reduce(
-      (spec, viewType) => spec.updateSeries(viewType, id, label),
-      newSpec,
-    );
+    return this._.customFields(customFields);
   }
 
   removeExistingCustomField(
@@ -727,7 +701,12 @@ class QueryResultSpec
   ): Zen.Model<QueryResultSpec> {
     const id = customField.id();
     const customFields = this._.customFields().filter(f => f.id() !== id);
-    const newSpec = this._.customFields(customFields);
+    let newSpec = this._.customFields(customFields);
+
+    // remove any filters that apply to this custom field
+    newSpec = newSpec.dataFilters(
+      newSpec.dataFilters().removeFiltersForField(id),
+    );
 
     // remove the custom field from the Series Settings for all view types
     return this._.viewTypes().reduce(
@@ -740,81 +719,111 @@ class QueryResultSpec
     viewType: ResultViewType,
     id: string,
     label: string,
+    noDataValueToZero: boolean,
   ): Zen.Model<QueryResultSpec> {
-    return this._updateVisualizationSettings(viewType, vizSettings =>
-      vizSettings.seriesSettings(
-        vizSettings.seriesSettings().addNewSeries(id, label),
-      ),
-    );
-  }
+    return this.updateVisualizationSettings(viewType, vizSettings => {
+      // $FlowFixMe[incompatible-call] - fix when ViewSpecificSettingsUnion has better type support
+      const viewSpecificSettings = vizSettings.viewSpecificSettings();
+      const seriesSettings = vizSettings
+        .seriesSettings()
+        .addNewSeries(id, label, noDataValueToZero);
 
-  updateSeries(
-    viewType: ResultViewType,
-    id: string,
-    label: string,
-  ): Zen.Model<QueryResultSpec> {
-    return this._updateVisualizationSettings(viewType, vizSettings =>
-      vizSettings.seriesSettings(
-        vizSettings.seriesSettings().updateSeriesFromEdit(id, label),
-      ),
-    );
+      return vizSettings
+        .seriesSettings(seriesSettings)
+        .viewSpecificSettings(
+          viewSpecificSettings.updateFromNewSeriesSettings(seriesSettings),
+        );
+    });
   }
 
   removeSeries(
     viewType: ResultViewType,
     id: string,
   ): Zen.Model<QueryResultSpec> {
-    return this._updateVisualizationSettings(viewType, vizSettings =>
-      vizSettings.seriesSettings(vizSettings.seriesSettings().removeSeries(id)),
-    );
-  }
-
-  /**
-   * Converts the settings encompassed by this QueryResultSpec into an
-   * instance of `DashboardItemSettings` such that they can be persisted to
-   * a DashboardSpecification.
-   *
-   * @returns {DashboardItemSettings} The resulting settings object.
-   */
-  getSettingsForDashboard(): DashboardItemSettings {
-    let viewTypeSettings: ZenMap<VisualizationSettings> = ZenMap.create();
-    // add all the settings for each view type
-    this._.viewTypes().forEach((viewType: ResultViewType) => {
-      const setting: VisualizationSettings = this._.visualizationSettings()[
-        viewType
-      ];
-      viewTypeSettings = viewTypeSettings.set(viewType, setting);
+    return this.updateVisualizationSettings(viewType, vizSettings => {
+      // $FlowFixMe[incompatible-call] - fix when ViewSpecificSettingsUnion has better type support
+      const viewSpecificSettings = vizSettings.viewSpecificSettings();
+      const seriesSettings = vizSettings.seriesSettings().removeSeries(id);
+      return vizSettings
+        .seriesSettings(seriesSettings)
+        .viewSpecificSettings(
+          viewSpecificSettings.updateFromNewSeriesSettings(seriesSettings),
+        );
     });
-    return DashboardItemSettings.create({
-      id: '',
-      viewTypeSettings,
-      titleSettings: this._.titleSettings(),
-      groupBySettings: this._.groupBySettings(),
-    });
-  }
-
-  serializeForDashboard(): SerializedQueryResultSpecForDashboard {
-    return {
-      settings: this.getSettingsForDashboard().serialize(),
-      filters: { ...this._.filters() },
-      modalFilters: { ...this._.modalFilters() },
-      customFields: this._.customFields().map(customField =>
-        customField.serialize(),
-      ),
-    };
   }
 
   serialize(): SerializedQueryResultSpec {
     return {
+      customFields: Zen.serializeArray(this._.customFields()),
+      dataFilters: this._.dataFilters().serialize(),
       groupBySettings: this._.groupBySettings().serialize(),
       titleSettings: this._.titleSettings().serialize(),
-      visualizationSettings: Zen.serializeMap(this._.visualizationSettings()),
       viewTypes: this._.viewTypes(),
-      customFields: Zen.serializeArray(this._.customFields()),
-      filters: this._.filters(),
-      modalFilters: this._.modalFilters(),
+      visualizationSettings: Zen.serializeMap(this._.visualizationSettings()),
     };
+  }
+
+  getVisualizationControls<ViewType: ResultViewType>(
+    viewType: ViewType,
+  ): ViewSpecificSettings<ViewType> &
+    IViewSpecificSettings<ViewSpecificSettings<ViewType>> {
+    // $FlowFixMe[incompatible-call] - fix when ViewSpecificSettingsUnion has better type support
+    return this._.visualizationSettings()[viewType].viewSpecificSettings();
+  }
+
+  /**
+   * Each field has a configuration that determines what to display on a
+   * visualization when encountering a null value. This function is responsible
+   * for checking if the configuration has changed for any field between the
+   * old version of the query result spec, and the current version.
+   *
+   * NOTE(nina): However, we only care about changing values if custom fields
+   * have been created from the query. This is because custom fields need
+   * to recalculate their formula if the display for null values have
+   * changed. This allows them to properly convert null values to 0 (if
+   * necessary) or just treat them as null values, when dealing with data
+   * from non-custom fields. Thus, when the null value display has changed,
+   * shouldRebuildQueryResult() will get triggered and the custom calculations
+   * will update as well. In the future, we might reasonably extend this to
+   * other cases.
+   */
+  nullValueDisplayHasChanged(
+    prevSpec: Zen.Model<QueryResultSpec>,
+    viewType: ResultViewType,
+  ): boolean {
+    const newCustomFields = this._.customFields();
+    const prevCustomFields = prevSpec.customFields();
+    const newSeriesSettings = this._.visualizationSettings()[
+      viewType
+    ].seriesSettings();
+    const prevSeriesSettings = prevSpec
+      .visualizationSettings()
+      [viewType].seriesSettings();
+
+    // If there are no custom fields, then the value shouldn't be tracked
+    if (newCustomFields.length === 0) {
+      return false;
+    }
+
+    // If there are new custom fields, then the value has inherently changed
+    if (prevCustomFields.length === 0) {
+      return true;
+    }
+
+    return Object.keys(newSeriesSettings.seriesObjects()).some(fieldId => {
+      const newSeriesObject = newSeriesSettings.getSeriesObject(fieldId);
+      const prevSeriesObject = prevSeriesSettings.getSeriesObject(fieldId);
+
+      // True if we are encountering a new field, or the nullValueDisplay
+      // properties are different. Otherwise false.
+      return (
+        newSeriesObject &&
+        (!prevSeriesObject ||
+          newSeriesObject.nullValueDisplay() !==
+            prevSeriesObject.nullValueDisplay())
+      );
+    });
   }
 }
 
-export default ((QueryResultSpec: any): Class<Zen.Model<QueryResultSpec>>);
+export default ((QueryResultSpec: $Cast): Class<Zen.Model<QueryResultSpec>>);

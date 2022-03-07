@@ -1,9 +1,16 @@
 from enum import Enum
+from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship, backref
 
 from models.alchemy.base import Base
+
+
+if TYPE_CHECKING:
+    from models.alchemy.user import User
+    from models.alchemy.security_group import Group
+    from models.alchemy.query_policy import QueryPolicy
 
 
 # Disable this rule because we actually want to use the id
@@ -33,16 +40,23 @@ class ResourceTypeEnum(Enum):
     # A resource type that represents a security group on the site
     GROUP = 4
 
-    # A resource type that represents a query policy controlling how users can query the system
-    # for data
-    QUERY_POLICY = 5
-
     # A resource type that represents an alert definition and any of the notification objects
     # corresponding to the alert definition
     ALERT = 6
 
 
 RESOURCE_TYPES = [e.name for e in ResourceTypeEnum]
+
+
+RESOURCE_ROLE_NAMES = {
+    'DASHBOARD_VIEWER': 'dashboard_viewer',
+    'DASHBOARD_EDITOR': 'dashboard_editor',
+    'DASHBOARD_ADMIN': 'dashboard_admin',
+    'ALERT_ADMIN': 'alert_admin',
+    'ALERT_CREATOR': 'alert_creator',
+    'ALERT_EDITOR': 'alert_editor',
+    'ALERT_VIEWER': 'alert_viewer',
+}
 
 
 class RolePermissions(Base):
@@ -89,22 +103,64 @@ class Resource(Base):
     resource_type = relationship('ResourceType', viewonly=True)
     users = relationship(
         'User',
-        secondary='user_roles',
-        backref=backref('user_roles_backref', lazy='dynamic'),
+        secondary='user_acl',
+        backref=backref('user_acl_backref', lazy='dynamic'),
         viewonly=True,
     )
     groups = relationship(
         'Group',
-        secondary='security_group_roles',
-        backref=backref('security_group_roles_backref', lazy='dynamic'),
+        secondary='security_group_acl',
+        backref=backref('security_group_acl_backref', lazy='dynamic'),
         viewonly=True,
     )
-    default_roles = relationship(
-        'Role',
-        secondary='default_roles',
-        backref=backref('default_roles_backref', lazy='dynamic'),
-        viewonly=True,
+
+
+class ResourceRole(Base):
+    '''Defines a role which applies to a resource that can be assigned to a
+    UserAcl or GroupAcl. An example of this would be a dashboard_admin or
+    dashboard_editor.
+    '''
+
+    __tablename__ = 'resource_role'
+
+    id = sa.Column(sa.Integer(), primary_key=True, autoincrement=True)
+
+    name = sa.Column(sa.String(50), nullable=False, server_default=u'', unique=True)
+    resource_type_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey(
+            'resource_type.id', ondelete='RESTRICT', name='valid_resource_type'
+        ),
+        nullable=False,
     )
+    permissions = relationship(
+        'Permission',
+        secondary='resource_role_permission',
+        backref=backref('resource_role_permission_backref', lazy='dynamic'),
+        viewonly=False,
+    )
+
+    resource_type = relationship('ResourceType', viewonly=True)
+
+
+class ResourceRolePermission(Base):
+    '''Mapping between ResourceRole and the Permissions it represents.
+    '''
+
+    __tablename__ = 'resource_role_permission'
+
+    id = sa.Column(sa.Integer(), primary_key=True, autoincrement=True)
+    resource_role_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey('resource_role.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    permission_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey('permission.id', ondelete='CASCADE', name='valid_permission'),
+        nullable=False,
+    )
+    permission = relationship('Permission', viewonly=True)
 
 
 class Permission(Base):
@@ -166,17 +222,81 @@ class Role(Base):
     name = sa.Column(sa.String(50), nullable=False, server_default=u'', unique=True)
     # for display purposes
     label = sa.Column(sa.Unicode(255), server_default=u'')
-    resource_type_id = sa.Column(
+    dashboard_resource_role_id = sa.Column(
         sa.Integer(),
         sa.ForeignKey(
-            'resource_type.id', ondelete='RESTRICT', name='valid_resource_type'
+            'resource_role.id',
+            ondelete='SET NULL',
+            name='valid_dashboard_resource_role',
         ),
-        nullable=False,
+        nullable=True,
     )
+    alert_resource_role_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey(
+            'resource_role.id', ondelete='SET NULL', name='valid_alert_resource_role'
+        ),
+        nullable=True,
+    )
+    enable_data_export = sa.Column(sa.Boolean(), server_default='false', nullable=False)
+
     permissions = relationship(
         'Permission',
         secondary='role_permissions',
         backref=backref('role_permissions_backref', lazy='dynamic'),
-        viewonly=True,
+        viewonly=False,
     )
-    resource_type = relationship('ResourceType', viewonly=True)
+    query_policies = relationship(
+        'QueryPolicy',
+        secondary='query_policy_role',
+        backref=backref('query_policy_role_backref', lazy='dynamic'),
+        viewonly=False,
+    )
+    dashboard_resource_role = relationship(
+        'ResourceRole', foreign_keys=[dashboard_resource_role_id], viewonly=True
+    )
+    alert_resource_role = relationship(
+        'ResourceRole', foreign_keys=[alert_resource_role_id], viewonly=True
+    )
+
+
+class SitewideResourceAcl(Base):
+    '''Represents resources and their sitewide `ResourceRole` for both
+    registered and unregistered users.
+    '''
+
+    __tablename__ = 'sitewide_resource_acl'
+
+    id = sa.Column(sa.Integer(), primary_key=True)
+    resource_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey('resource.id', ondelete='CASCADE', name='valid_resource'),
+        nullable=False,
+        unique=True,
+    )
+    registered_resource_role_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey(
+            'resource_role.id',
+            ondelete='CASCADE',
+            name='valid_registered_resource_role',
+        ),
+        nullable=True,
+    )
+    unregistered_resource_role_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey(
+            'resource_role.id',
+            ondelete='CASCADE',
+            name='valid_unregistered_resource_role',
+        ),
+        nullable=True,
+    )
+
+    resource = relationship('Resource', viewonly=True)
+    registered_resource_role = relationship(
+        'ResourceRole', foreign_keys=[registered_resource_role_id], viewonly=True
+    )
+    unregistered_resource_role = relationship(
+        'ResourceRole', foreign_keys=[unregistered_resource_role_id], viewonly=True
+    )

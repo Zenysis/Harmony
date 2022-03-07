@@ -25,7 +25,7 @@
     "mapreduce.reduce.speculative": false,
 
     "mapreduce.local.map.tasks.maximum": 12,
-    "mapreduce.local.reduce.tasks.maximum": 12
+    "mapreduce.local.reduce.tasks.maximum": 8
   },
   "indexSpec": {
     "bitmap": {
@@ -33,5 +33,7 @@
     }
   },
   "buildV9Directly": true,
+  "cleanupOnFailure": true,
+  "leaveIntermediate": false,
   "maxRowsInMemory": 600000
 }

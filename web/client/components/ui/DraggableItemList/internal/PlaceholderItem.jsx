@@ -11,7 +11,10 @@ type Props = {
  * dragging will end up if they stop dragging. It is a simple rectangle with a
  * background color.
  */
-export default function PlaceholderItem({ height, width }: Props) {
+export default function PlaceholderItem({
+  height,
+  width,
+}: Props): React.Element<'div'> {
   const style = {
     backgroundColor: 'rgba(155, 89, 182, 0.15)', // $aqt-purple-2 with opacity
     height,

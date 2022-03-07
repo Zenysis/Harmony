@@ -10,7 +10,11 @@ from flask_user.translations import gettext
 from werkzeug.exceptions import BadGateway
 
 from models.alchemy.user import User, UserStatusEnum
-from web.server.configuration.settings import get_configuration, DEFAULT_URL_KEY
+from web.server.configuration.settings import (
+    get_configuration,
+    AUTOMATIC_SIGN_OUT_KEY,
+    DEFAULT_URL_KEY,
+)
 from web.server.data.data_access import Transaction
 from web.server.routes.views.admin import send_reset_password
 from web.server.errors import ItemNotFound
@@ -64,12 +68,11 @@ def forgot_password():
         locale='en',
         js_params=_build_base_js_params(template_renderer),
         pass_to_template=template_params,
-        lightweight_js_only=True,
     )
 
 
 def register():
-    ''' Display registration form and create new User '''
+    '''Display registration form and create new User'''
     with Transaction() as transaction:
         user_manager = current_app.user_manager
 
@@ -143,12 +146,11 @@ def register():
         locale='en',
         js_params=_build_base_js_params(template_renderer),
         pass_to_template=template_params,
-        lightweight_js_only=True,
     )
 
 
 def login():
-    ''' Prompt for username/email and password and sign the user in.'''
+    '''Prompt for username/email and password and sign the user in.'''
     user_manager = current_app.user_manager
     next_endpoint = request.args.get(
         'next', _endpoint_url(user_manager.after_login_endpoint)
@@ -181,6 +183,9 @@ def login():
 
     # Process GET or invalid POST
     login_form.remember_me.label.text = 'Keep me signed in'
+    automatic_sign_out_enabled = get_configuration(AUTOMATIC_SIGN_OUT_KEY)
+    if not automatic_sign_out_enabled:
+        login_form.remember_me.data = True
     template_params = {
         'form': login_form,
         'login_form': login_form,
@@ -193,7 +198,6 @@ def login():
         locale='en',
         js_params=_build_base_js_params(template_renderer),
         pass_to_template=template_params,
-        lightweight_js_only=True,
     )
 
 
@@ -209,7 +213,7 @@ def _build_base_js_params(template_renderer):
 
 
 def unauthenticated():
-    """ Prepare a Flash message and redirect to USER_UNAUTHENTICATED_ENDPOINT"""
+    """Prepare a Flash message and redirect to USER_UNAUTHENTICATED_ENDPOINT"""
     user_manager = current_app.user_manager
 
     # Prepare Flash message

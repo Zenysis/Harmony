@@ -1,19 +1,25 @@
 // @flow
 import * as Zen from 'lib/Zen';
-import DefaultIdentityRoleMap from 'services/models/DefaultIdentityRoleMap';
-import DefaultRole from 'services/models/Role/DefaultRole';
 import IdentityRoleMap from 'services/models/IdentityRoleMap';
 import Role from 'services/models/Role';
 import SecurityGroup from 'services/models/SecurityGroup';
 import User from 'services/models/User';
-import type { ResourceType } from 'services/AuthorizationService';
+import type { ResourceType } from 'services/AuthorizationService/types';
 import type { Serializable } from 'lib/Zen';
+
+/**
+ * Represents the SitewideAcl for a given resource
+ */
+export type SitewideResourceAcl = {
+  registeredResourceRole: string,
+  unregisteredResourceRole: string,
+};
 
 // Model representation that we receive from the backend
 type BackendResourceRoleMap = {
-  defaultRoles: Zen.Serialized<DefaultIdentityRoleMap>,
   userRoles: Zen.Serialized<IdentityRoleMap>,
   groupRoles: Zen.Serialized<IdentityRoleMap>,
+  sitewideResourceAcl: SitewideResourceAcl,
 };
 
 type SerializedResourceRoleMap = {
@@ -27,26 +33,21 @@ type SerializedResourceRoleMap = {
  * by:
  *  1 - Individual users
  *  2 - Individual security groups
- *  3 - ALL registered users (and potentially, unregistered users)
+ *  3 - Sitewide Users (Including unregistered users)
  */
-
 type DefaultValues = {
+  /** The resource type that this role map corresponds to */
+  resourceName: string,
+
+  /** Values from sitewideAcl. */
+  sitewideResourceAcl: SitewideResourceAcl,
+
   /**
-   * The role map corresponding to which roles ALL registered users (and
-   * potentially, unregistered users) hold on the authorization resource.
-   */
-  defaultRoles: DefaultIdentityRoleMap,
-  /**
-   * @readonly
-   * The resource type that this role map corresponds to
-   */
-  resourceName: Zen.ReadOnly<string>,
-  /**
-   * @readonly
    * The name of the specific `AuthorizationResource` that this role map
    * corresponds to.
    */
   securityGroupRoles: IdentityRoleMap,
+
   /**
    * The role map corresponding to which roles individual security groups hold
    * on the authorization resource.
@@ -56,9 +57,12 @@ type DefaultValues = {
 
 class ResourceRoleMap extends Zen.BaseModel<ResourceRoleMap, {}, DefaultValues>
   implements Serializable<BackendResourceRoleMap> {
-  static defaultValues = {
-    defaultRoles: DefaultIdentityRoleMap.create({}),
+  static defaultValues: DefaultValues = {
     resourceName: '',
+    sitewideResourceAcl: {
+      registeredResourceRole: '',
+      unregisteredResourceRole: '',
+    },
     securityGroupRoles: IdentityRoleMap.create({}),
     userRoles: IdentityRoleMap.create({}),
   };
@@ -68,15 +72,15 @@ class ResourceRoleMap extends Zen.BaseModel<ResourceRoleMap, {}, DefaultValues>
     resourceType,
     resourceName,
   }: SerializedResourceRoleMap): Zen.Model<ResourceRoleMap> {
-    const { userRoles, groupRoles, defaultRoles } = backendResourceRoleMap;
+    const {
+      userRoles,
+      groupRoles,
+      sitewideResourceAcl,
+    } = backendResourceRoleMap;
 
     return ResourceRoleMap.create({
-      defaultRoles: DefaultIdentityRoleMap.deserialize({
-        backendRoleMap: defaultRoles || {},
-        resourceType,
-        resourceName,
-      }),
       resourceName,
+      sitewideResourceAcl,
       securityGroupRoles: IdentityRoleMap.deserialize({
         backendRoleMap: groupRoles || {},
         resourceType,
@@ -91,12 +95,16 @@ class ResourceRoleMap extends Zen.BaseModel<ResourceRoleMap, {}, DefaultValues>
   }
 
   serialize(): BackendResourceRoleMap {
-    const { userRoles, securityGroupRoles, defaultRoles } = this.modelValues();
+    const {
+      userRoles,
+      securityGroupRoles,
+      sitewideResourceAcl,
+    } = this.modelValues();
 
     return {
-      userRoles: userRoles.serialize(),
+      sitewideResourceAcl,
       groupRoles: securityGroupRoles.serialize(),
-      defaultRoles: defaultRoles.serialize(),
+      userRoles: userRoles.serialize(),
     };
   }
 
@@ -116,11 +124,6 @@ class ResourceRoleMap extends Zen.BaseModel<ResourceRoleMap, {}, DefaultValues>
     return this._.securityGroupRoles(securityGroupRoles);
   }
 
-  addDefaultRole(role: DefaultRole): Zen.Model<ResourceRoleMap> {
-    const defaultRoles = this._.defaultRoles().addRole(role);
-    return this._.defaultRoles(defaultRoles);
-  }
-
   deleteUserRole(user: User, role: Role): Zen.Model<ResourceRoleMap> {
     const userRoles = this._.userRoles().deleteRole(user.username(), role);
     return this._.userRoles(userRoles);
@@ -137,15 +140,6 @@ class ResourceRoleMap extends Zen.BaseModel<ResourceRoleMap, {}, DefaultValues>
     return this._.securityGroupRoles(securityGroupRoles);
   }
 
-  deleteDefaultRole(role: DefaultRole): Zen.Model<ResourceRoleMap> {
-    const defaultRoles = this._.defaultRoles().deleteRole(role);
-    return this._.defaultRoles(defaultRoles);
-  }
-
-  allUsersHaveRole(role: DefaultRole): boolean {
-    return this._.defaultRoles().hasRole(role);
-  }
-
   userHasRole(user: User, role: Role): boolean {
     return this._.userRoles().hasRole(user.username(), role);
   }
@@ -155,4 +149,4 @@ class ResourceRoleMap extends Zen.BaseModel<ResourceRoleMap, {}, DefaultValues>
   }
 }
 
-export default ((ResourceRoleMap: any): Class<Zen.Model<ResourceRoleMap>>);
+export default ((ResourceRoleMap: $Cast): Class<Zen.Model<ResourceRoleMap>>);

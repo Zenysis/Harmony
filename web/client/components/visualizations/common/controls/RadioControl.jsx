@@ -2,39 +2,33 @@
 import * as React from 'react';
 
 import Control from 'components/visualizations/common/controls/Control';
-import RadioGroup from 'components/common/RadioGroup';
-import type { RadioItem } from 'components/common/RadioGroup';
+import RadioGroup from 'components/ui/RadioGroup';
+import type { RadioItemElement } from 'components/ui/RadioGroup/RadioItem';
 import type { VisualizationControlProps } from 'components/visualizations/common/controls/commonTypes';
 
-type Props<T> = VisualizationControlProps<T> & {
-  children: React.ChildrenArray<React.Element<React.ComponentType<RadioItem>>>,
-  label: string,
+type Props<T> = {
+  ...VisualizationControlProps<T>,
+  children: React.ChildrenArray<RadioItemElement<T>>,
 
-  radioGroupClassName: string,
-  className: string,
+  className?: string,
+  label?: $PropertyType<React.ElementConfig<typeof Control>, 'label'>,
+  radioGroupClassName?: string,
 };
 
-const defaultProps = {
-  ...Control.defaultColumnCounts,
-  className: '',
-  radioGroupClassName: '',
-};
-
-export default function RadioControl<T>(props: Props<T>) {
-  const {
-    radioGroupClassName,
-    children,
-    controlKey,
-    onValueChange,
-    value,
-    ...passThroughControlProps
-  } = props;
+export default function RadioControl<T: string>({
+  children,
+  controlKey,
+  onValueChange,
+  value,
+  className = '',
+  label = undefined,
+  radioGroupClassName = '',
+}: Props<T>): React.Node {
   const onChange = val => onValueChange(controlKey, val);
 
   return (
-    <Control htmlFor={controlKey} {...passThroughControlProps}>
+    <Control label={label} className={className}>
       <RadioGroup
-        id={controlKey}
         value={value}
         onChange={onChange}
         className={radioGroupClassName}
@@ -44,5 +38,3 @@ export default function RadioControl<T>(props: Props<T>) {
     </Control>
   );
 }
-
-RadioControl.defaultProps = defaultProps;

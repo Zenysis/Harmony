@@ -1,6 +1,4 @@
-from builtins import str
-from builtins import object
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from datetime import datetime
 import requests
 
@@ -9,7 +7,6 @@ from pydruid.utils.filters import Filter
 from db.druid.datasource import DruidDatasource, SiteDruidDatasource
 from db.druid.errors import MissingDatasourceException
 from db.druid.query_client import DruidQueryClient_
-from future.utils import with_metaclass
 from log import LOG
 
 ISO_8601_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -24,7 +21,7 @@ DEFAULT_DATASOURCE_LIST_PATH = 'druid/coordinator/v1/metadata/datasources'
 DEFAULT_DATASOURCE_LOAD_STATUS_PATH = 'druid/coordinator/v1/loadstatus'
 
 
-class AbstractDruidMetadata(with_metaclass(ABCMeta, object)):
+class AbstractDruidMetadata(ABC):
     @abstractmethod
     def get_all_datasources(self):
         raise NotImplementedError()
@@ -74,7 +71,6 @@ class DruidMetadata_(AbstractDruidMetadata):
         self.druid_configuration = druid_configuration
         self.datasource_list_path = datasource_list_path
         self.load_status_path = load_status_path
-        super(DruidMetadata_, self).__init__()
 
     # Return an unfiltered list of all druid datasources available
     def get_all_datasources(self):
@@ -128,7 +124,7 @@ class DruidMetadata_(AbstractDruidMetadata):
         # datasource endpoint doesn't work. When it gets fixed, see if it
         # includes version. If so, include it above as part of the core
         # DruidDatasource class.
-        url = '%s/%s/%s/segments?full' % (
+        url = '%s/%s/%s?simple' % (
             self.druid_configuration.segment_metadata_endpoint(),
             self.datasource_list_path,
             datasource_name,
@@ -140,11 +136,13 @@ class DruidMetadata_(AbstractDruidMetadata):
                 'exist: %s' % datasource_name
             )
 
-        versions = set(segment['version'] for segment in r.json())
-        if len(versions) == 1:
+        versions = set(segment['version'] for segment in r.json()['segments'])
+        if len(versions) != 1:
             LOG.warn(
-                'Somehow datasource has multiple live versions! Taking the most recent.  Datasource: %s\n'
-                'Versions: %s' % (datasource_name, versions)
+                'Somehow datasource has multiple live versions! Taking the most '
+                'recent. Datasource: %s\nVersions: %s',
+                datasource_name,
+                versions,
             )
         return sorted(versions, reverse=True)[0]
 
@@ -204,9 +202,6 @@ class DruidMetadata(AbstractDruidMetadata):
     DATASOURCE_LOAD_STATUS = 'druid/coordinator/v1/loadstatus'
     DATASOURCE_SOURCES = 'druid/coordinator/v1/datasources'
 
-    def __init__(self):
-        super(DruidMetadata, self).__init__()
-
     # Return an unfiltered list of all druid datasources available
     @classmethod
     def get_all_datasources(cls):
@@ -265,11 +260,7 @@ class DruidMetadata(AbstractDruidMetadata):
     def get_datasource_version(cls, datasource_name):
         from db.druid.config import DruidConfig
 
-        # TODO(stephen): Druid has a bug where the "full" version of the
-        # datasource endpoint doesn't work. When it gets fixed, see if it
-        # includes version. If so, include it above as part of the core
-        # DruidDatasource class.
-        url = '%s/%s/%s/segments?full' % (
+        url = '%s/%s/%s?simple' % (
             DruidConfig.segment_metadata_endpoint(),
             cls.DATASOURCE_LIST_PATH,
             datasource_name,
@@ -281,11 +272,13 @@ class DruidMetadata(AbstractDruidMetadata):
                 'exist: %s' % datasource_name
             )
 
-        versions = set(segment['version'] for segment in r.json())
-        if len(versions) == 1:
+        versions = set(segment['version'] for segment in r.json()['segments'])
+        if len(versions) != 1:
             LOG.warn(
-                'Somehow datasource has multiple live versions! Taking the most recent.  Datasource: %s\n'
-                'Versions: %s' % (datasource_name, versions)
+                'Somehow datasource has multiple live versions! Taking the most '
+                'recent. Datasource: %s\nVersions: %s',
+                datasource_name,
+                versions,
             )
         return sorted(versions, reverse=True)[0]
 
@@ -340,7 +333,12 @@ class DruidMetadata(AbstractDruidMetadata):
             if isinstance(query_filter, Filter):
                 query_filter = query_filter.build_filter()
             query['filter'] = query_filter
-        query_result = DruidQueryClient.run_raw_query(query)[0]['result']
+        query_result = DruidQueryClient.run_raw_query(query)
+        # This condition should only be true if there is a filter passed in. If there
+        # is no filter, there should be a query_result returned.
+        if not query_result:
+            return (None, None)
+        query_result = query_result[0]['result']
         return (
             datetime.strptime(query_result['minTime'], ISO_8601_FORMAT),
             datetime.strptime(query_result['maxTime'], ISO_8601_FORMAT),

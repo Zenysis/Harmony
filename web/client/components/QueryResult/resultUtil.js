@@ -1,16 +1,11 @@
 import numeral from 'numeral';
 
-import { BACKEND_GRANULARITIES, BUCKET_TYPE } from 'components/QueryResult/timeSeriesUtil';
+import {
+  BACKEND_GRANULARITIES,
+  BUCKET_TYPE,
+} from 'components/QueryResult/timeSeriesUtil';
 import { capitalizeEachWord } from 'util/stringUtil';
-import { sortNumeric } from 'util/util';
-import { GEO_NAME_MAP } from 'backend_config.js';
-
-export function uniqueGeoName(geoName, geoObj) {
-  if (geoName in GEO_NAME_MAP) {
-    return `${geoName} (${geoObj[GEO_NAME_MAP[geoName]]})`;
-  }
-  return geoName;
-}
+import { sortNumeric } from 'util/arrayUtil';
 
 export function passesFilter(filters, fieldId, value) {
   if (filters && value !== undefined) {
@@ -25,11 +20,10 @@ export function passesFilter(filters, fieldId, value) {
     if (fieldFilter.removeNulls && value === null) {
       return false;
     }
-    if (value < fieldFilter.removeMin ||
-          value > fieldFilter.removeMax) {
+    if (value < fieldFilter.removeMin || value > fieldFilter.removeMax) {
       return false;
     }
-    if (!isFinite(value)) {
+    if (!Number.isFinite(value)) {
       return false;
     }
   }
@@ -39,22 +33,22 @@ export function passesFilter(filters, fieldId, value) {
 // Return the structure of the processed query response
 export function getEmptyLegacyResult() {
   return {
+    errorMessage: null,
+    hasError: false,
     metadata: {
+      first_quartile: {},
       max: {},
       mean: {},
       median: {},
       min: {},
-      first_quartile: {},
-      third_quartile: {},
       num_nonzero: {},
       std: {},
+      third_quartile: {},
       totals: {},
       variance: {},
     },
     series: [],
     unfilteredSeries: [],
-    hasError: false,
-    errorMessage: null
   };
 }
 
@@ -82,7 +76,7 @@ export function processQueryResponse(
   const output = getEmptyLegacyResult();
   let numNonzeroValues = 0;
 
-  Object.keys(data.byGeo).forEach((geoKey) => {
+  Object.keys(data.byGeo).forEach(geoKey => {
     const apiGeoObj = data.byGeo[geoKey];
 
     // TODO(ian): Send the correct display name and object structure from
@@ -95,13 +89,13 @@ export function processQueryResponse(
     dataSeries.dates = [];
 
     let shouldPublishThisSeries = true;
-    fieldIds.forEach((fieldId) => {
+    fieldIds.forEach(fieldId => {
       let totalIndicatorValue;
       if (apiGeoObj.data[BACKEND_GRANULARITIES.ALL]) {
         const totalValues = extractTotalValues(apiGeoObj.data);
         totalIndicatorValue = totalValues[fieldId];
         // Total value.
-        if (!isFinite(totalIndicatorValue)) {
+        if (!Number.isFinite(totalIndicatorValue)) {
           // There's no value for this (geo, field) pair.
           return;
         }
@@ -120,16 +114,18 @@ export function processQueryResponse(
       // Time series value.
       if (apiGeoObj.data[timeSeriesBucket]) {
         const geoData = apiGeoObj.data[timeSeriesBucket];
-        const timeSeries = Object.keys(geoData).map((dateKey) => {
-          const datePoint = geoData[dateKey];
-          datePoint.Real_Date = dateKey;
-          return datePoint;
-        }).sort((datePointA, datePointB) => {
-          return datePointA.Real_Date.localeCompare(datePointB.Real_Date);
-        });
+        const timeSeries = Object.keys(geoData)
+          .map(dateKey => {
+            const datePoint = geoData[dateKey];
+            datePoint.Real_Date = dateKey;
+            return datePoint;
+          })
+          .sort((datePointA, datePointB) =>
+            datePointA.Real_Date.localeCompare(datePointB.Real_Date),
+          );
         dataSeries[`yValue_date_${fieldId}`] = [];
 
-        timeSeries.forEach((datePoint) => {
+        timeSeries.forEach(datePoint => {
           dataSeries.dates.push(datePoint.Real_Date);
           dataSeries[`yValue_date_${fieldId}`].push(datePoint[fieldId]);
         });
@@ -143,9 +139,7 @@ export function processQueryResponse(
 
   // Sort series by greatest value first, by the first indicator.
   const key = `yValue_${fieldIds[0]}`;
-  output.series.sort((a, b) => {
-    return sortNumeric(a[key], b[key], true);
-  });
+  output.series.sort((a, b) => sortNumeric(a[key], b[key], true));
 
   output.metadata = data.overall;
 
@@ -158,4 +152,4 @@ export function processQueryResponse(
   return output;
 }
 
-export const formatNum = (num) => numeral(num).format('0,0.[00000000]');
+export const formatNum = num => numeral(num).format('0,0.[00000000]');

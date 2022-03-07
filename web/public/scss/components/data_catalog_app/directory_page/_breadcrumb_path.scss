@@ -1,0 +1,178 @@
+.dc-breadcrumb-path {
+  align-items: flex-start;
+  display: flex;
+  // All breadcrumb items have an inner padding that allows the background color
+  // to extend outside the breadcrumb item text. This padding causes the first
+  // breadcrumb item text to not align with the directory table below it on the
+  // page.
+  margin-left: -$space-s-px;
+  min-height: 32px;
+
+  &__divider {
+    color: $gray;
+    // NOTE(stephen): Need to clear the margin-right that is inexplicably set on
+    // the core zen-icon.
+    margin-right: 0;
+    padding: 0 $space-s-px;
+    // NOTE(stephen): Also need to clear the `top` manual positioning that I
+    // think originally was added to the zen-icon because of problems vertically
+    // positioning before we started using flexbox better.
+    top: 0;
+  }
+
+  &__parent-items {
+    align-items: center;
+    display: flex;
+  }
+
+  &__root-item {
+    white-space: nowrap;
+  }
+
+  // NOTE(stephen): Setting a small height for the dropdown so that it does
+  // not affect the alignment or height of the breadcrumb-path container. The
+  // inner content of the dropdown will still render at the correct height and
+  // not be clipped.
+  &__dropdown {
+    align-items: center;
+    display: flex;
+    height: 12px;
+  }
+
+  &__dropdown-button {
+    background-color: initial !important;
+    border: initial !important;
+    height: auto;
+    padding: 0;
+
+    .zen-dropdown-button__button-content {
+      display: flex;
+    }
+
+    &--open,
+    &:hover {
+      background-color: initial;
+      .dc-breadcrumb-path__collapse-icon-button {
+        background-color: $gray-hover !important;
+      }
+
+      &:active {
+        .dc-breadcrumb-path__collapse-icon-button {
+          background-color: $gray-active !important;
+        }
+      }
+    }
+  }
+}
+
+.dc-breadcrumb-item {
+  border-radius: 5px;
+  display: flex;
+  padding: 0 $space-s-px;
+
+  &:hover {
+    background-color: $gray-hover;
+  }
+
+  &__text {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.dc-breadcrumb-leaf-item {
+  align-items: center;
+  display: flex;
+  width: fit-content;
+
+  &--left-open {
+    background-color: $gray-active;
+    border-radius: 5px;
+    .dc-breadcrumb-leaf-item__left-button {
+      border-color: $slate;
+    }
+  }
+
+  &--right-open {
+    .dc-breadcrumb-leaf-item__left-button {
+      background-color: $gray !important;
+      border-color: $slate;
+    }
+    .dc-breadcrumb-menu__dropdown-button-wrapper {
+      background-color: $gray-active !important;
+    }
+  }
+
+  // NOTE(yitian): We are adding hover states here because there are different
+  // hover states depending on which part of the button a user is hovering over.
+  // We opted to explicitly define the hover states here instead of utilizing
+  // the &:hover states because that requires us to update a sibling item
+  // styling from within the item. This is also a somewhat unreliable solution
+  // as it also depends on the exact positioning of the div elements in the DOM.
+  &--right-hover {
+    .dc-breadcrumb-leaf-item__left-button {
+      background-color: $gray !important;
+      border-color: $slate;
+    }
+    .dc-breadcrumb-menu__dropdown-button-wrapper {
+      background-color: $gray-hover !important;
+    }
+  }
+  &--left-hover {
+    .dc-breadcrumb-leaf-item__left-button {
+      background-color: $gray !important;
+      border-color: $slate;
+    }
+    .dc-breadcrumb-menu__dropdown-button-wrapper {
+      background-color: $gray !important;
+    }
+  }
+
+  &__left-button {
+    border-radius: 5px 0px 0px 5px;
+    border-right: 1px solid transparent;
+    padding: 0 $space-s-px;
+  }
+
+  &__text {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__tooltip-wrapper {
+    display: flex;
+    width: fit-content;
+  }
+}
+
+.dc-breadcrumb-menu {
+  height: 100%;
+
+  &__dropdown-button-wrapper {
+    background-color: initial !important;
+    border: none !important;
+    border-radius: 0px 5px 5px 0px;
+    height: 100%;
+    justify-content: center;
+    padding: 0;
+
+    // This width came from the design.
+    width: 32px;
+
+    // Hide the button content since it throws off the flexbox centering.
+    .zen-dropdown-button__button-content {
+      display: none;
+    }
+  }
+
+  // Force the dropdown and button heights to be 100% so that the actual
+  // main button wrapper can take up the full height too.
+  .zen-dropdown,
+  .zen-dropdown-button {
+    height: 100%;
+  }
+}

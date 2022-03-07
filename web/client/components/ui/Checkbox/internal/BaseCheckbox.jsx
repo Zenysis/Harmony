@@ -4,7 +4,10 @@ import classNames from 'classnames';
 
 import LabelWrapper from 'components/ui/LabelWrapper';
 import autobind from 'decorators/autobind';
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
 import { uniqueId } from 'util/util';
+
+export type CheckboxValue = boolean | 'indeterminate';
 
 type CheckboxChangeEventHandler = (
   isSelected: boolean,
@@ -12,33 +15,40 @@ type CheckboxChangeEventHandler = (
   event: SyntheticEvent<HTMLElement>,
 ) => void;
 
-// NOTE(pablo): look at InputText/index.jsx and UncontrolledInputText.jsx for
-// documentation on all of these props.
 type UncontrolledProps = {
-  initialValue: boolean,
+  initialValue: CheckboxValue,
   isControlled: false,
   onChange?: CheckboxChangeEventHandler,
 };
 
 type ControlledProps = {
   isControlled: true,
-  value: boolean,
+  value: CheckboxValue,
   onChange: CheckboxChangeEventHandler,
 };
 
-type BaseProps = {
+type DefaultProps = {
+  ariaName?: string,
   children: React.Node,
   className: string,
   disabled: boolean,
   id?: string, // DOM ID for this checkbox
-  label?: string,
+  label?: React.Node,
   labelPlacement: 'left' | 'right',
-  name: string, // an optional name used to identify the checkbox
+
+  // an optional name used to identify the checkbox in the `onChange` handler.
+  // This is not the same as the `ariaName` which is used for accessibility
+  // purposes.
+  name: string,
+  testId?: string,
 };
 
-type Props = (BaseProps & ControlledProps) | (BaseProps & UncontrolledProps);
+type Props =
+  | { ...DefaultProps, ...ControlledProps }
+  | { ...DefaultProps, ...UncontrolledProps };
+
 type State = {
-  isSelected: boolean,
+  isSelected: CheckboxValue,
 
   // due to the custom styling of the checkbox, we cannot capture hover events
   // through CSS (because the hover event is captured on the `input` element,
@@ -48,17 +58,19 @@ type State = {
 };
 
 export default class BaseCheckbox extends React.PureComponent<Props, State> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
+    ariaName: undefined,
     children: null,
     className: '',
     disabled: false,
     id: undefined,
-    label: undefined,
+    label: null,
     labelPlacement: 'right',
     name: '',
+    testId: undefined,
   };
 
-  _checkboxUniqueId = `zen_checkbox_${uniqueId()}`;
+  _checkboxUniqueId: string = `zen_checkbox_${uniqueId()}`;
 
   constructor(props: Props) {
     super(props);
@@ -77,7 +89,7 @@ export default class BaseCheckbox extends React.PureComponent<Props, State> {
     }
   }
 
-  getValue(): boolean {
+  getValue(): CheckboxValue {
     return this.props.isControlled ? this.props.value : this.state.isSelected;
   }
 
@@ -100,7 +112,9 @@ export default class BaseCheckbox extends React.PureComponent<Props, State> {
       return;
     }
 
-    const isSelected = !this.getValue();
+    // State should go from unselected to selected on click. If the checkbox is
+    // indeterminate, the state should go to selected next.
+    const isSelected = this.getValue() !== true;
     if (!this.props.isControlled) {
       this.setState({ isSelected });
     }
@@ -110,21 +124,43 @@ export default class BaseCheckbox extends React.PureComponent<Props, State> {
     }
   }
 
-  renderCheckboxItem() {
-    const { children, id, name, disabled } = this.props;
+  renderCheckboxItem(): React.Node {
+    const {
+      children,
+      ariaName,
+      label,
+      id,
+      name,
+      disabled,
+      testId,
+    } = this.props;
     const { isHovered } = this.state;
-    const isChecked = this.getValue();
+    const value = this.getValue();
+    const isChecked = value === true;
+    const isIndeterminate = value === 'indeterminate';
+
+    // if no ARIA Name was specified, use the checkbox label if it's a string
+    // or a number
+    const ariaNameToUse =
+      ariaName ||
+      (typeof label === 'string' || typeof label === 'number'
+        ? String(label)
+        : undefined);
 
     if (!children) {
       const overrideClassName = classNames(
         'zen-checkbox__input-item-override',
         {
           'zen-checkbox__input-item-override--checked': isChecked && !disabled,
+          'zen-checkbox__input-item-override--checked-and-disabled':
+            isChecked && disabled,
           'zen-checkbox__input-item-override--is-hovered':
             isHovered && !disabled,
           'zen-checkbox__input-item-override--disabled': disabled,
-          'zen-checkbox__input-item-override--checked-and-disabled':
-            isChecked && disabled,
+          'zen-checkbox__input-item-override--indeterminate':
+            isIndeterminate && !disabled,
+          'zen-checkbox__input-item-override--indeterminate-and-disabled':
+            isIndeterminate && disabled,
         },
       );
       return (
@@ -133,6 +169,7 @@ export default class BaseCheckbox extends React.PureComponent<Props, State> {
             className="zen-checkbox__input-item"
             onChange={this.onItemSelect}
             type="checkbox"
+            aria-label={normalizeARIAName(ariaNameToUse)}
             id={id === undefined ? this._checkboxUniqueId : id}
             name={name}
             value={name}
@@ -140,6 +177,7 @@ export default class BaseCheckbox extends React.PureComponent<Props, State> {
             disabled={disabled}
             onMouseEnter={this.onMouseEnterCheckbox}
             onMouseLeave={this.onMouseLeaveCheckbox}
+            data-testid={testId}
           />
           <span className={overrideClassName} />
         </div>
@@ -152,6 +190,8 @@ export default class BaseCheckbox extends React.PureComponent<Props, State> {
       <div
         role="checkbox"
         aria-checked={isChecked}
+        aria-label={normalizeARIAName(ariaNameToUse)}
+        aria-disabled={disabled}
         onClick={this.onItemSelect}
         className="zen-checkbox__custom-item-wrapper"
       >
@@ -160,12 +200,30 @@ export default class BaseCheckbox extends React.PureComponent<Props, State> {
     );
   }
 
-  renderWithLabel(label: string) {
+  renderLabel(label: React.Node): React.Node {
+    const { children } = this.props;
+    if (!children) {
+      return label;
+    }
+
+    // if the user is providing their own children then we need to make the
+    // label clickable (so that the user can still toggle the checked state
+    // by clicking the label). We didn't have to explicitly do this otherwise
+    // because the browser automatically handles this with htmlFor and the
+    // input's id.
+    return (
+      <span role="button" onClick={this.onItemSelect}>
+        {label}
+      </span>
+    );
+  }
+
+  renderWithLabel(label: React.Node): React.Element<typeof LabelWrapper> {
     const { labelPlacement, id } = this.props;
     return (
       <LabelWrapper
         inline
-        label={label}
+        label={this.renderLabel(label)}
         labelAfter={labelPlacement === 'right'}
         htmlFor={id === undefined ? this._checkboxUniqueId : id}
       >
@@ -174,14 +232,14 @@ export default class BaseCheckbox extends React.PureComponent<Props, State> {
     );
   }
 
-  render() {
+  render(): React.Element<'div'> {
     const { className, label, disabled } = this.props;
     const checkboxClassName = classNames('zen-checkbox', className, {
       'zen-checkbox--disabled': disabled,
     });
 
     const contents =
-      label !== undefined
+      label !== undefined && label !== null
         ? this.renderWithLabel(label)
         : this.renderCheckboxItem();
     return <div className={checkboxClassName}>{contents}</div>;

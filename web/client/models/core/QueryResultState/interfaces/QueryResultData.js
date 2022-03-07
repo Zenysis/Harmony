@@ -3,7 +3,7 @@ import Promise from 'bluebird';
 
 import * as Zen from 'lib/Zen';
 import type CustomField from 'models/core/Field/CustomField';
-import type DataFilter from 'models/core/QueryResultSpec/QueryResultFilter/DataFilter';
+import type DataFilterGroup from 'models/core/QueryResultSpec/DataFilterGroup';
 import type QueryResultSpec from 'models/core/QueryResultSpec';
 
 export interface QueryResultData<Self: Zen.AnyModel> {
@@ -15,12 +15,12 @@ export interface QueryResultData<Self: Zen.AnyModel> {
    * Return:
    *   new QueryResultData instance with new calculated data
    */
-  applyCustomFields(customFields: $ReadOnlyArray<CustomField>): Zen.Model<Self>;
+  applyCustomFields(customFields: $ReadOnlyArray<CustomField>): Self;
 
   /**
    * Filter the stored query data using the provided filters.
    */
-  applyFilters(filterMap: Zen.Map<DataFilter>): Zen.Model<Self>;
+  applyFilters(filters: DataFilterGroup): Self;
 
   /**
    * Apply all post-query transformations to the stored queryResult. This
@@ -32,9 +32,13 @@ export interface QueryResultData<Self: Zen.AnyModel> {
    * exported alongside the interface.
    *
    */
-  applyTransformations(
-    queryResultSpec: QueryResultSpec,
-  ): Promise<Zen.Model<Self>>;
+  applyTransformations(queryResultSpec: QueryResultSpec): Promise<Self>;
+
+  /**
+   * Return true if there is no data returned, either due to filtering or no
+   * data available from the backend.
+   */
+  isEmpty(): boolean;
 }
 
 /**
@@ -49,20 +53,22 @@ export interface QueryResultData<Self: Zen.AnyModel> {
  * needed by a QueryResultData instance, it can be applied after these
  * transformations.
  */
-export function defaultApplyTransformations<QueryResultDataModel: Zen.AnyModel>(
-  initialQueryResult: QueryResultData<QueryResultDataModel>,
+export function defaultApplyTransformations<
+  QueryResultDataModel: Zen.AnyModel & QueryResultData<$AllowAny>,
+>(
+  initialQueryResult: QueryResultDataModel,
   queryResultSpec: QueryResultSpec,
-): Promise<Zen.Model<QueryResultDataModel>> {
+): Promise<QueryResultDataModel> {
   const customFields = queryResultSpec.customFields();
-  const filters = queryResultSpec.dataFilters();
+  const dataFilters = queryResultSpec.dataFilters();
 
   let queryResult = initialQueryResult;
-  if (!filters.isEmpty()) {
-    queryResult = queryResult.applyFilters(filters);
-  }
-
   if (customFields.length > 0) {
     queryResult = queryResult.applyCustomFields(customFields);
+  }
+
+  if (!dataFilters.isEmpty()) {
+    queryResult = queryResult.applyFilters(dataFilters);
   }
 
   return Promise.resolve(queryResult);

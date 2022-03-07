@@ -1,44 +1,38 @@
-.zen-switch {
-  .btn {
-    height: 40px;
-    border: 1px solid #202b33;
-    display: inline-block;
-    padding: 10px;
-    position: relative;
-    text-align: center;
-    transition: background 400ms ease, color 600ms ease;
-    background: #fff;
-    color: #202b33;
+.zen-toggle {
+  $toggle-height: 20px;
+  $circle-diameter: 16px;
+
+  background-color: $gray;
+  border-radius: $toggle-height / 2;
+  display: flex;
+  height: $toggle-height;
+  padding: ($toggle-height - $circle-diameter) / 2;
+  width: 35px;
+
+  &:hover {
+    cursor: pointer;
   }
 
-  .glyphicon {
-    padding-right: 10px
+  &--highlight {
+    background-color: $blue-primary-active;
   }
 
-  input[type="radio"].toggle {
-    display: none;
-    & + label{
-      cursor: pointer;
-      min-width: 70px;
-    }
+  &--disabled {
+    justify-content: flex-start;
+  }
 
-    &.toggle-left + label {
-      border-right: 0;
-    }
+  &--enabled {
+    justify-content: flex-end;
+  }
 
-    &.toggle-right + label {
-      margin-left: -5px;
-    }
-
-    &.active-toggle + label {
-      cursor: default;
-      color: #fff;
-      background: #202b33;
-      transition: color 200ms;
-    }
-    &.zen-blue + label {
-      background: #3f73b4 !important;
-    }
+  &__circle {
+    background-color: $white;
+    border-radius: $circle-diameter / 2;
+    height: $circle-diameter;
+    width: $circle-diameter;
   }
 }
 
+.zen-toggle-container {
+  display: flex;
+}

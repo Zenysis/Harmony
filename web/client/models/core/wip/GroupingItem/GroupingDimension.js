@@ -1,29 +1,34 @@
 // @flow
+import Promise from 'bluebird';
+
 import * as Zen from 'lib/Zen';
-import Dimension from 'models/core/wip/Dimension';
+import Dimension, { getFullDimensionName } from 'models/core/wip/Dimension';
 import type { Customizable } from 'types/interfaces/Customizable';
 import type { Serializable } from 'lib/Zen';
-import type { SerializedDimension } from 'models/core/wip/Dimension';
+import type { SerializedDimensionId } from 'models/core/wip/Dimension';
 
 type RequiredValues = {
-  dimension: Dimension,
+  dimension: string,
   name: string,
 };
 
 type DefaultValues = {
-  includeNull: boolean,
-  includeTotal: boolean,
+  +includeAll: boolean,
+  +includeNull: boolean,
+  +includeTotal: boolean,
 };
 
 type SerializedGroupingDimension = {
-  dimension: SerializedDimension,
-  name: string,
+  dimension: string,
+  includeAll: boolean,
   includeNull: boolean,
   includeTotal: boolean,
+  name: string,
 };
 
 export type SerializedGroupingDimensionForQuery = {
-  dimension: SerializedDimension,
+  dimension: string,
+  includeAll: boolean,
   includeNull: boolean,
   includeTotal: boolean,
 };
@@ -33,7 +38,10 @@ class GroupingDimension
   implements
     Serializable<SerializedGroupingDimension>,
     Customizable<GroupingDimension> {
-  static defaultValues = {
+  tag: 'GROUPING_DIMENSION' = 'GROUPING_DIMENSION';
+
+  static defaultValues: DefaultValues = {
+    includeAll: false,
     includeNull: true,
     includeTotal: false,
   };
@@ -41,12 +49,14 @@ class GroupingDimension
   static deserializeAsync(
     values: SerializedGroupingDimension,
   ): Promise<Zen.Model<GroupingDimension>> {
-    return Dimension.deserializeAsync(values.dimension).then(dimension =>
+    const { dimension, includeAll, includeNull, includeTotal, name } = values;
+    return Promise.resolve(
       GroupingDimension.create({
-        dimension,
-        name: values.name,
-        includeNull: values.includeNull,
-        includeTotal: values.includeTotal,
+        includeAll,
+        includeNull,
+        includeTotal,
+        name,
+        dimension: Dimension.deserializeToString(dimension),
       }),
     );
   }
@@ -54,33 +64,63 @@ class GroupingDimension
   static UNSAFE_deserialize(
     values: SerializedGroupingDimension,
   ): Zen.Model<GroupingDimension> {
+    const { dimension, includeAll, includeNull, includeTotal, name } = values;
     return GroupingDimension.create({
-      dimension: Dimension.UNSAFE_deserialize(values.dimension),
-      name: values.name,
-      includeNull: values.includeNull,
-      includeTotal: values.includeTotal,
+      includeAll,
+      includeNull,
+      includeTotal,
+      name,
+      dimension: Dimension.deserializeToString(dimension),
+    });
+  }
+
+  static createFromDimension(
+    dimension: SerializedDimensionId,
+  ): Zen.Model<GroupingDimension> {
+    const dimensionId = Dimension.deserializeToString(dimension);
+    return GroupingDimension.create({
+      dimension: dimensionId,
+      name: getFullDimensionName(dimensionId),
     });
   }
 
   id(): string {
-    return this._.dimension().id();
+    return this._.dimension();
   }
 
   serialize(): SerializedGroupingDimension {
     return {
-      dimension: this._.dimension().serialize(),
-      name: this._.name(),
+      dimension: this._.dimension(),
+      includeAll: this._.includeAll(),
       includeNull: this._.includeNull(),
       includeTotal: this._.includeTotal(),
+      name: this._.name(),
     };
   }
 
   serializeForQuery(): SerializedGroupingDimensionForQuery {
     return {
-      dimension: this._.dimension().serialize(),
+      dimension: this._.dimension(),
+      includeAll: this._.includeAll(),
       includeNull: this._.includeNull(),
       includeTotal: this._.includeTotal(),
     };
+  }
+
+  /**
+   * Determine if this GroupingDimension will produce the same Query
+   * representation as the other GroupingDimension passed in.
+   */
+  isGroupingDimensionQueryEqual(
+    otherDimension: Zen.Model<GroupingDimension>,
+  ): boolean {
+    return (
+      this._ === otherDimension ||
+      (this._.dimension() === otherDimension.dimension() &&
+        this._.includeAll() === otherDimension.includeAll() &&
+        this._.includeNull() === otherDimension.includeNull() &&
+        this._.includeTotal() === otherDimension.includeTotal())
+    );
   }
 
   // NOTE(stephen): A unique Dimension can only be added once in the Group By
@@ -92,4 +132,6 @@ class GroupingDimension
   }
 }
 
-export default ((GroupingDimension: any): Class<Zen.Model<GroupingDimension>>);
+export default ((GroupingDimension: $Cast): Class<
+  Zen.Model<GroupingDimension>,
+>);

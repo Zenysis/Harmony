@@ -1,15 +1,22 @@
 // @flow
 import * as Zen from 'lib/Zen';
-import ResourceTypeRoleMap from 'services/models/ResourceTypeRoleMap';
+import ItemLevelACL from 'services/models/ItemLevelACL';
+import RoleDefinition from 'services/models/RoleDefinition';
 import type { Serializable } from 'lib/Zen';
 
-export const USER_STATUS = {
+export type UserStatusMap = {
   ACTIVE: 'active',
   INACTIVE: 'inactive',
   PENDING: 'pending',
 };
 
-export type UserStatus = 'active' | 'inactive' | 'pending';
+export type UserStatus = $Values<UserStatusMap>;
+
+export const USER_STATUS: UserStatusMap = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+  PENDING: 'pending',
+};
 
 // Model representation that we receive from the backend
 // NOTE(stephen): It seems really weird to have a backend user that can have
@@ -20,95 +27,98 @@ export type UserStatus = 'active' | 'inactive' | 'pending';
 // This will let us avoid issuing multiple calls to /user and can also make it
 // so we have the same user instance instead of two separate ones with half
 // defined properties in each.
-type BackendUser = {
+type SerializedUser = {
+  acls: Array<Zen.Serialized<ItemLevelACL>>,
   $uri: string | void,
   firstName: string,
   lastName: string,
   username: string,
   phoneNumber: string | void,
   active: boolean | void,
-  status: UserStatus | void,
-  roles: { [string]: Zen.Serialized<ResourceTypeRoleMap> } | void,
+  status: UserStatus,
+  roles: Array<Zen.Serialized<RoleDefinition>>,
 };
 
 /**
  * The User model is used by the `DirectoryService` to
  * represent an individual user.
  */
-
 type DefaultValues = {
-  /**
-   * The user's unique username.
-   */
+  /** ACLs associated with this user. */
+  acls: Zen.Array<ItemLevelACL>,
+
+  /** The user's unique username. */
   username: string,
-  /**
-   * The user's first name.
-   */
+
+  /** The user's first name. */
   firstName: string,
-  /**
-   * The user's last name.
-   */
+
+  /** The user's last name. */
   lastName: string,
-  /**
-   * The user's phone number.
-   */
+
+  /** The user's phone number. */
   phoneNumber: string,
-  /**
-   * The roles held by this user.
-   */
-  roles: Zen.Map<ResourceTypeRoleMap>,
-  /**
-   * The user's current status.
-   */
-  status: UserStatus | void,
-  /**
-   * @readonly
-   * The unique uri that can be used to locate this user on the server.
-   */
-  uri: Zen.ReadOnly<string>,
+
+  /** The roles held by this user. */
+  roles: Zen.Array<RoleDefinition>,
+
+  /** The user's current status. */
+  status: UserStatus,
+
+  /** The unique uri that can be used to locate this user on the server. */
+  uri: string,
 };
 
 class User extends Zen.BaseModel<User, {}, DefaultValues>
-  implements Serializable<$Shape<BackendUser>> {
-  static defaultValues = {
+  implements Serializable<$Shape<SerializedUser>> {
+  static defaultValues: DefaultValues = {
+    acls: Zen.Array.create(),
     username: '',
     firstName: '',
     lastName: '',
     phoneNumber: '',
-    roles: Zen.Map.ofType(ResourceTypeRoleMap).create(),
-    status: undefined,
+    roles: Zen.Array.create(),
+    status: USER_STATUS.PENDING,
     uri: '',
   };
 
-  static deserialize(values: BackendUser): Zen.Model<User> {
-    const { firstName, lastName, phoneNumber, username, status } = values;
-    const roles = values.roles || {};
+  static deserialize(values: SerializedUser): Zen.Model<User> {
+    const { acls, firstName, lastName, phoneNumber, username, status } = values;
+    const roles = values.roles || [];
+    const deserializedACLs = acls
+      ? Zen.deserializeToZenArray(ItemLevelACL, acls)
+      : Zen.Array.create();
     return User.create({
+      acls: deserializedACLs,
       firstName,
       lastName,
       phoneNumber,
       username,
       status,
-      roles: Zen.deserializeToZenMap(
-        ResourceTypeRoleMap,
-        roles,
-        resourceType => ({
-          resourceType,
-        }),
-      ),
+      roles: Zen.deserializeToZenArray(RoleDefinition, roles),
       uri: values.$uri,
     });
   }
 
-  serialize(): $Shape<BackendUser> {
+  serialize(): $Shape<SerializedUser> {
     const {
+      acls,
       firstName,
       lastName,
       phoneNumber,
       username,
       status,
+      uri,
     } = this.modelValues();
-    return { firstName, lastName, phoneNumber, username, status };
+    return {
+      firstName,
+      lastName,
+      phoneNumber,
+      username,
+      status,
+      acls: Zen.serializeArray(acls),
+      $uri: uri,
+    };
   }
 
   getUserFullName(): string {
@@ -118,4 +128,4 @@ class User extends Zen.BaseModel<User, {}, DefaultValues>
   }
 }
 
-export default ((User: any): Class<Zen.Model<User>>);
+export default ((User: $Cast): Class<Zen.Model<User>>);

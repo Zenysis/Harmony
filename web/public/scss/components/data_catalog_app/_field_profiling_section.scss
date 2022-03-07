@@ -1,0 +1,50 @@
+.field-profiling-section {
+  margin-top: $space-xxl-px;
+
+  &__card {
+    background-color: $white;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    box-sizing: border-box;
+    height: 270px;
+    margin-top: $space-m-px;
+    padding: $space-l-px;
+    width: 490px;
+
+    &--dq {
+      margin-left: $space-m-px;
+    }
+  }
+
+  &__title {
+    color: $slate-hover;
+    margin-bottom: 8px;
+  }
+
+  &__text {
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  &__trend {
+    border-bottom: 1px solid $gray;
+    padding-bottom: $space-l-px;
+  }
+
+  &__reporting {
+    margin-top: $space-l-px;
+  }
+
+  &__score-badge {
+    height: 164px;
+    margin-right: $space-l-px;
+    width: 240px;
+  }
+
+  &__spinner {
+    align-items: center;
+    display: flex;
+    height: 200px;
+    justify-content: center;
+  }
+}

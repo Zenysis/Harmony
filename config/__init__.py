@@ -4,20 +4,23 @@
 # This allows us to import from config directly.
 # for example: from config.general import NATION_NAME
 # and NOT: from config.et.general import NATION_NAME
-from builtins import object
+import glob
 import importlib
 import os
 import sys
 
 # Initialize the set of valid config modules to be the subdirectories of the
 # config/ directory.
-dirname = os.path.dirname(__file__)
-VALID_MODULES = set(
-    [item for item in os.listdir(dirname) if os.path.isdir(os.path.join(dirname, item))]
+VALID_MODULES = sorted(
+    set(
+        os.path.basename(os.path.dirname(path))
+        for path in glob.glob(os.path.join(os.path.dirname(__file__), '*/general.py'))
+        if '/template/general.py' not in path
+    )
 )
 
 
-class ConfigImporter(object):
+class ConfigImporter:
     '''Captures all config imports and redirect them to the correct site specific
     version.
     '''
@@ -31,7 +34,14 @@ class ConfigImporter(object):
 
         # Store a list of config modules we never want to handle importing for
         self._module_whitelist = set(
-            ['druid_base', 'dashboard_base', 'system', 'instance', 'locales', 'loader']
+            [
+                'druid_base',
+                'system',
+                'instance',
+                'locales',
+                'loader',
+                'settings',
+            ]
         ).union(VALID_MODULES)
 
         self._new_config_module = site_module
@@ -72,4 +82,5 @@ class ConfigImporter(object):
 # reference an explicit config.
 site_module = os.environ.get('ZEN_ENV')
 if site_module:
-    sys.meta_path.append(ConfigImporter(site_module))
+    # TODO(david): Fix type error
+    sys.meta_path.append(ConfigImporter(site_module))  # type: ignore[arg-type]

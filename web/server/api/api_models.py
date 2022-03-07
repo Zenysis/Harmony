@@ -23,8 +23,7 @@ class ModelResourceMixin(object):
 
 
 class PrincipalResource(ModelResourceMixin, ModelResource):
-    '''The base class that all Flask-Potion API models should derive from.
-    '''
+    """The base class that all Flask-Potion API models should derive from."""
 
     class Meta(object):
         manager = principals(SQLAlchemyManager)
@@ -48,16 +47,17 @@ class PrincipalResource(ModelResourceMixin, ModelResource):
         target_model_authorization_attribute = 'resource_id'
 
 
-def list_aqt_resource_types():
-    import web.server.api.aqt.api_models
-    import web.server.api.aqt.query_models
+def list_query_resource_types():
+    # pylint: disable=import-outside-toplevel
+    import web.server.api.query.api_models
+    import web.server.api.query.query_models
 
     output = (
-        web.server.api.aqt.api_models.RESOURCE_TYPES
-        + web.server.api.aqt.query_models.RESOURCE_TYPES
+        web.server.api.query.api_models.RESOURCE_TYPES
+        + web.server.api.query.query_models.RESOURCE_TYPES
     )
 
-    # AQT models are backed by an in-memory resource manager since they
+    # Query models are backed by an in-memory resource manager since they
     # do not use a database at the moment. Initialize those resources before
     # adding their routes.
     for resource_type in output:
@@ -68,6 +68,7 @@ def list_aqt_resource_types():
 
 
 def list_all_resource_types():
+    # pylint: disable=import-outside-toplevel
     import web.server.api.alerts_api_models
     import web.server.api.configuration_api_models
     import web.server.api.dashboard_api_models
@@ -81,6 +82,12 @@ def list_all_resource_types():
     import web.server.api.metadata
     import web.server.api.share_analysis_api_models
     import web.server.api.user_query_session_api_models
+    import web.server.api.feed_api_models
+    import web.server.api.thumbnail_storage_models
+    import web.server.api.dashboard_session_api_models
+    import web.server.api.entity_matching_api_models
+    import web.server.api.pipeline_runs_api_models
+    import web.server.api.data_upload_api_models
 
     # NOTE(all): List ordering matters here
     return (
@@ -97,5 +104,11 @@ def list_all_resource_types():
         + web.server.api.share_analysis_api_models.RESOURCE_TYPES
         + web.server.api.metadata.RESOURCE_TYPES
         + web.server.api.user_query_session_api_models.RESOURCE_TYPES
-        + list_aqt_resource_types()
+        + web.server.api.thumbnail_storage_models.RESOURCE_TYPES
+        + web.server.api.feed_api_models.RESOURCE_TYPES
+        + web.server.api.dashboard_session_api_models.RESOURCE_TYPES
+        + web.server.api.entity_matching_api_models.RESOURCE_TYPES
+        + web.server.api.pipeline_runs_api_models.RESOURCE_TYPES
+        + web.server.api.data_upload_api_models.RESOURCE_TYPES
+        + list_query_resource_types()
     )

@@ -1,5 +1,3 @@
-# Harmony
-
 Harmony is an analytical platform that consists of two parts:
 
 - A frontend for running queries, constructing dashboards, and performing other analytical duties, and
@@ -9,11 +7,11 @@ Data pipelines tend to run regularly and extract data from all sorts of data sys
 
 Users can manage their dashboards and sharing settings:
 
-![](https://static.slab.com/prod/uploads/posts/images/BdH3MMWzBx0wPUMrGGiPZUiS.png)
+![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/eXtJcx3Mclk8ricKEPW9eXSD.png)
 
 And issue their own queries across multiple information systems:
 
-![](https://static.slab.com/prod/uploads/posts/images/tzuemKluLx8BQ1qf0gcUUvPw.png)
+![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/vPBE685C74CiUUVQXzVBOB6b.png)
 
 
 
@@ -36,6 +34,72 @@ A new Druid collection is created every time the pipeline runs.  This ensures th
 You will need to set up a standard Druid database.  Setup is documented [here](https://druid.apache.org/docs/latest/tutorials/index.html).
 
 For more detail, see the Technical Overview.
+
+Create instance with Ubuntu 18.04.4 LTS This will need to have whatever specific certificate/firewalls/security groups you usually use to access a server
+
+ssh into it.
+
+# 
+
+# Update Packages
+
+Next we should update the system packages.
+
+```
+sudo apt-get update # updates available package version list
+sudo apt-get upgrade # update packages
+sudo apt-get autoremove # remove old packages
+sudo do-release-upgrade # update os version
+```
+
+# Install Docker
+
+```
+sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt-get install -y docker-ce
+sudo service docker start
+sudo groupadd docker || true
+sudo gpasswd -a $USER docker
+```
+
+Unfortunately, there is a security flaw when using docker with ufw where docker modifies the iptables configuration setup by ufw - see [here](https://www.techrepublic.com/article/how-to-fix-the-docker-and-ufw-security-flaw/) for more information.
+
+If we are using ufw for our firewall, we should fix this flaw by adding the following line to `/etc/default/docker`.
+
+```
+DOCKER_OPTS="--iptables=false"
+```
+
+We then need to restart docker:
+
+```
+sudo systemctl restart docker
+```
+
+
+Check that all the services are running:
+
+```
+docker ps
+```
+
+
+# EASY DRUID SETUP on UBUNTU:
+
+```
+sudo apt-get install -y docker-compose
+mkdir druid_setup
+cd druid_setup
+wget https://raw.githubusercontent.com/apache/druid/0.22.1/distribution/docker/docker-compose.yml
+wget https://raw.githubusercontent.com/apache/druid/0.22.1/distribution/docker/environment
+docker-compose up -d
+
+```
+
+You should now be able to see the druid router console at http://{SERVER_IP}:8888/
 
 ## Data pipeline architecture
 
@@ -127,7 +191,7 @@ usage: process_csv.py [-h] [--dimensions [DIMENSIONS [DIMENSIONS ...]]]
 
 Here&#39;s an example invocation that transforms DHS API survey data into Zenysis Base Format:
 
-```
+```bash
 #!/bin/bash -eu
 
 source "${PIPELINE_UTILS_DIR}/bash/common.sh"
@@ -146,6 +210,8 @@ source "${PIPELINE_UTILS_DIR}/bash/common.sh"
   --output_indicators="${PIPELINE_TMP_DIR}/indicators.json"
 ```
 
+## Matching across 
+
 ## Indexing data
 
 After you&#39;ve developed processing and transformation steps for each data source, the next step is to index the data in the Druid database.  Harmony will index all data sources in the same database, allowing them to be queried together.
@@ -154,7 +220,7 @@ Harmony provides a helper that sets up the Druid indexing job for you (`db/druid
 
 Here&#39;s an example pipeline invocation that indexes the data outputs of your pipeline:
 
-```
+```bash
 #!/bin/bash -eu
 set -o pipefail
 
@@ -176,13 +242,13 @@ When you run a script or the web server, select a configuration by setting the `
 
 Suppose we had a configuration directory named `usa`.  We can specify that configuration with the following:
 
-```
+```bash
 export ZEN_ENV='usa'
 ```
 
 In our code, top-level config imports will provide the U.S. configuration:
 
-```
+```bash
 >>> from config.ui import FULL_PLATFORM_NAME
 >>> FULL_PLATFORM_NAME
 'US Demo'
@@ -222,10 +288,7 @@ source venv/bin/activate
 
 pip install -r requirements.txt -r requirements-web.txt -r requirements-pipeline.txt -r requirements-dev.txt
 ```
-Run the following command to run necessary database migrations such as configurations et cetera:
-```
-FLASK_APP='web.server.app' ZEN_OFFLINE='1' flask db upgrade
-```
+
 ### Javascript dependencies
 
 This project uses [yarn](https://yarnpkg.com/lang/en/) for Javascript dependency management.  You can install Javascript dependencies via:
@@ -238,25 +301,43 @@ Frontend assets are built with webpack.   Note that there are multiple webpack c
 
 Here&#39;s an example command:
 
-```
+```bash
 NODE_ENV=production webpack -p --config web/webpack.prod.config.js --mode 'production'
 ```
 
 You may have to resolve webpack directly.  For example:
 
-```
+```bash
 NODE_ENV=production ./node_modules/webpack/bin/webpack.js -p --config web/webpack.prod.config.js --mode 'production'
 ```
 
 You can also use the `webpack-dashboard` and `webpack-dev-server` commands to watch for changes and rebuild locally:
 
-```
+```bash
 webpack-dashboard -- webpack-dev-server --config web/webpack.config.js --mode 'development'
 ```
 
 ### A note on production environments
 
 Production environments do not need Python dev dependencies (`requirements-dev.txt`) or Javascript (`yarn`/`node`) dependencies, as long as assets built on the frontend (via `yarn build`) are distributed on the production server.
+
+## Running locally
+
+The platform is built on [Flask](http://flask.palletsprojects.com/en/1.1.x/).  To run a local development server, run:
+
+```bash
+FLASK_ENV=development python ./web/runserver.py
+```
+
+You will also need to set a `ZEN_ENV` environmental variable that corresponds with a config you&#39;d like to load.
+
+## Running in production
+
+We use gunicorn using the `gunicorn_server.py` entrypoint.  You&#39;ll also want to set the `ZEN_ENV` envar to reflect the deployment config you want to load, as well as the `ZEN_PROD` envar to indicate that we should load production assets.  Here&#39;s an example:
+
+```
+ZEN_ENV=us ZEN_PROD=1 ./web/gunicorn_server.py
+```
 
 # PostgreSQL
 
@@ -266,19 +347,17 @@ You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to 
 
 To ensure that you keep data from separate deployments separate, it is recommended that you create a new database for each deployment that you are working on. Unfortunately, we do not have the tooling in place to make this easy for developers to do, so we will start by creating a single database for all depolyments.
 
-Enter the Postgres CLI.  If you've just set up Postgres locally, the command to do this is probably `psql postgres`.
-
-Once you are inside the Postgres CLI, enter the following command to create the Harmony database:
+Once you are inside the Postgres CLI, enter the following command to create the Harmony Database
 
 ```
 CREATE DATABASE harmony;
 ```
 
-Verify you can connect to the database by typing `\c harmony`.  Once you are done, you can type `\q` or enter Ctrl+D to quit.
+Verify you can connect to the database by typing `\c harmony`.  Once you are done, you can type `\q` or enter Ctrl+D to quit.
 
 Here is an example set of SQL commands you can use to bootstrap your database:
 
-```
+```sql
 CREATE USER "power_user" WITH
   LOGIN
   SUPERUSER
@@ -327,92 +406,128 @@ CREATE DATABASE "druid"
 
 By default, Flask will look for the SQLite Database to retrieve user information. You can override the database that Flask uses by setting DATABASE_URL. It is recommended you do this in your environment initialization step. For example, this is what a sample value for DATABASE_URL can look like (you can also place it in your bash_profile file).
 
-On the command line:
-
+```bash
+export DATABASE_URL 'postgresql://test_admin:an4978wauGednmYZ@my.postgres.host/harmony'
 ```
-export DATABASE_URL='postgresql://test_admin:an4978wauGednmYZ@localhost/harmony'
-```
-
-If you are hosting postgres remotely, replace "localhost" with the appropriate hostname.
 
 ## **Seeding the Database**
 
-Once we've created our application database, we need to initialize it with seed data. This section will deal with upgrading the database schema to ensure that it is consistent with the latest version. By default, our application will _not_ start unless the database schema version matches the latest version in the source tree.
+Once we&#39;ve created our application database, we need to initialize it with seed data. This section will deal with upgrading the database schema to ensure that it is consistent with the latest version. By default, our application will _not_ start unless the database schema version matches the latest version in the source tree.
 
-Make sure `DATABASE_URL` is set - you should see it when you run this:
-
-```
+```bash
+# Make sure `DATABASE_URL` is set
 echo "${DATABASE_URL}"
+# We first need to create all the Tables in the Database and set up all constraints, 
+# sequences and other details contained in the Database Schema. If `DATABASE_URL` 
+# is not set, this step will 'upgrade' the hard-coded database.
+scripts/upgrade_database.sh
+
+
+# Once we've upgraded the database and populated the appropriate seed values, we'll
+# need to create a user account so that we can login via the Web UI. 
+scripts/create_user.py -f "Your First Name" -l "Your Last Name" -u "username@zenysis.com" -
 ```
 
-We first need to create all the Tables in the Database and set up all
-constraints, sequences and other details contained in the Database Schema. If
-`DATABASE_URL` is not set, this step will 'upgrade' the hard-coded database.
 
-```
-ZEN_ENV=br scripts/upgrade_database.sh
-```
-
-Once we've upgraded the database and populated the appropriate seed values,
-we'll need to create a user account so that we can login via the Web UI:
-
-```
-ZEN_ENV=br scripts/create_user.py --first_name "Your First Name" --last_name "Your Last Name" --username "username@example.com" --site_admin
-```
-
-Be sure to record the password it generates for you.  You can also specify a password of your own using the `--password` option.
 
 # Druid
 
-Harmony comes pre-configured with a Brazil deployment (configuration directory `config/br`).  This guide will use the Brazil as an example and walk you through how to set up and run the pipeline.
-
-## Application configuration
-
-You will have to set up an [Apache Druid database](https://druid.apache.org/) to host your data.
-
-To point the web server at Druid, set `DRUID_HOST` in `config/XX/druid.py`, where `XX` corresponds to the configuration directory of your deployment.  This can be overridden by the `DRUID_HOST` environmental variable.
-
-In this case, edit `config/br/druid.py` and find the `DRUID_HOST` variable.  Replace it with the URL of your Druid database endpoint.
+To point the web server at Druid, set `DRUID_HOST` in `config/XX/druid.py`, where `XX` corresponds to the configuration directory you created.  This can be overridden by the `DRUID_HOST` environmental variable.
 
 Finally, if you are running multiple deployments, you can set `DEFAULT_DRUID_HOST` in your global settings config to set a default host.
 
-## Preparing data
+# Harmony Products 
 
-Download the sample data here: https://drive.google.com/a/zenysis.com/file/d/19RyMvCH3vygfYT1wffNBGYFYOJXjA1ZF/view?usp=sharing.  This is a mixture of public and simulated data.
+## Homepage
 
-Let's take a look at the data:
+The Homepage is a personalized ‘landing’ page you see when you log into the platform. It is intended to provide you with an overview and easy access to the different parts of the platform you regularly work with.
 
-```
-zless br_demo_data.csv.gz
-```
+From the Homepage, you can easily access official dashboards and other dashboards you or your colleagues have created. For each dashboard, key information such as date of creation, your last date of visit, and number of views is displayed.
 
-Note that it is a well-formed CSV.
+## Analyze
 
-Use the `process_csv.py` module (described above) to convert it to Druid format and ingest it into the database.  See [Druid docs](https://druid.apache.org/docs/latest/ingestion/data-formats.html) on how to ingest CSV and other basic formats.  We plan to add more Harmony-specific guidance on how to create Druid indexing jobs, stay tuned!
+The Analyze page is your primary means to interact with your data. This is where your analysis usually starts. The page allows you to construct basic and advanced queries and visualize the data in flexible ways. It enables you to select the indicators, geographies and reporting periods your analysis requires. The Analyze page also offers you various visualization tools such as bar charts, time (line) graphs, heat tiles and maps you can use to explore and present your data.
 
-## Running locally
+To run a query, you simply go to the Analyze page (click on ‘Analyze’ button in the navigation bar) and select your:
 
-The platform is built on [Flask](http://flask.palletsprojects.com/en/1.1.x/).  To run a local development server, run:
+1. Indicator(s) from the available datasets
+1. Aggregation level(s) (‘Group By’)
+1. Geographic and date range filters (‘Filters’)
 
-```
-FLASK_ENV=development python ./web/runserver.py
-```
+![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/vPBE685C74CiUUVQXzVBOB6b.png)
 
-You will also need to set a `ZEN_ENV` environmental variable that corresponds with a config you&#39;d like to load.
+Once you have made your query selections, you will be able to visualize your data using different visualizations. These include Table, Scorecard, Bar Chart, Time Graph, Map, Heat Tiles and Ranking. The visualization picker will intuitively guide you in selecting a visualization whose requirements are fulfilled. For example, you can only use a “Time Series” visualization if you have selected a time aggregation in your query. All visualizations designed in the “Analyze” tool can then be added to Dashboards.
 
-Harmony ships with a Brazil/"br" config.  You can set `ZEN_ENV=br` to use it:
+In addition, the platform provides useful post-query functionalities for more advanced needs:
 
-```
-ZEN_ENV=br FLASK_ENV=development python ./web/runserver.py
-```
+- Custom calculations: you can create new and more complex indicators, known as “custom calculations”, by mathematically combining existing ones in your query. The calculations tool lets you use both logical and mathematical operations to create these new indicators.
+- Filtering: Filtering results (which is different from filters you used to set the scope of your analysis) will help you to limit the results shown on your visualizations after you run your initial query. By applying different conditions and rules, you can, for example, remove below average results from your visualization.
 
-## Running in production
+![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/CyR_J448UIZssPygvVf9aeEA.png)
 
-We use gunicorn using the `gunicorn_server.py` entrypoint.  You&#39;ll also want to set the `ZEN_ENV` envar to reflect the deployment config you want to load, as well as the `ZEN_PROD` envar to indicate that we should load production assets.  Here&#39;s an example:
+## Dashboards
 
-```
-ZEN_ENV=br ZEN_PROD=1 ./web/gunicorn_server.py
-```
+A dashboard represents a collection of analyses that you wish to save for a variety of purposes, including to give a presentation, make a report or to monitor continuously. Dashboards can store any analysis that you create on Analyze, whether it takes the form of a graph, table or time series.
+
+Dashboards also support different types of content such as text, images, dividers and iFrames. These content types enable the user to craft report-like dashboards and tell a more complex story about their data.
+
+In addition, users can add dashboard-level filters and aggregations. For example, a user can modify the date range, geographical filters and level of aggregation of data within the dashboard directly. In this way, your personal dashboard becomes a dynamic tool which you can use for monitoring key data points across various dimensions and do further exploratory analysis.
+
+![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/AN8QVulnqrp-KCeaDub23oRr.png)
+
+## Alerts
+
+An alert is a query that is constructed around a threshold of interest or a relationship between two indicators to you and your team. When these thresholds are crossed in the data, an alert is automatically triggered in the platform. Instead of retrospectively looking for how many cases of a certain disease were reported in a certain area, you can set up an alert that will proactively trigger an automated notification when a certain number of cases are reported in a given area. This is especially useful for epidemiological and data quality use cases.
+
+![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/4nY_aAz4AD0GjyEJp7jTjTZh.png)
+
+## Data Quality Lab
+
+The objective of Data Quality Lab (DQL) is to help you identify potential reporting and data quality issues for your indicators and provide you with tools to diagnose and investigate these issues. The information and tools in DQL allows you to attempt to diagnose the specific data quality issues the indicator has and the score could be used to assess trends or changes as a result of actions taken. DQL allows diagnostics of all types of indicators, even complex indicators integrated from other systems.
+
+The aim of the Quality Score is to give you an at-a-glance idea of whether or not the user can trust an indicator&#39;s data. The things to be assessed as input to the score are shown in the tabs below, with their denominator representing their weight in the score. These inputs are inspired by the dimensions laid out in WHO&#39;s Data Quality Framework - and we will be adding more tabs to cover more dimensions of data quality over time.
+
+![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/Ka6-hOtKy2Gb1-LBRo-n8-_E.png)
+
+There are two data quality areas being assessed in DQL:
+
+1. Indicator Characteristics: this tab summarizes some basic facts about the indicator that may impact reporting or data quality, as well as explaining how they affect the score. After choosing an indicator, you’ll see cards displaying the indicator’s age, time since the last report, reporting completeness trend and estimated reporting periods. Both age and freshness are counted in terms of the number of estimated reporting periods (i.e. months if it’s a monthly report).
+1. Reporting Completeness: The score is based on the consistency in the number of reports received per reporting period. The more consistent, the better it is for the score. Within this tab, there are investigative tools designed to enable you to identify where reporting completeness issues may be coming from.
+
+## Platform Administration 
+
+The Admin interface is used by administrators of the platform to manage user access and permissions. The interface allows administrators to give or revoke access to users, to create and manage user groups and to edit access and permissions levels for users on the platform.
+
+The Admin option is only available to users with administrative permissions, which can only be granted by another platform administrator.
+
+To access the Admin App, click on the menu button at the top right corner of your screen and then click on ‘Admin.’ This will take you to the Admin page where you will notice four tabs:
+
+- Users: view and manage platform users or invite new users
+- Groups: view and manage platform groups or create new ones
+- Role Management: view and manage platform roles or create new ones
+- Site Configuration: manage platform settings like the default homepage
+
+![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/9SSfiiRI7OYgS9Ks2jTU5CXl.png)
+
+## Data Catalog 
+
+Data Catalog enables Data Managers to manage their indicators and augment them with useful information. Specifically this allows:
+
+- Organizing datasets into a hierarchical structure that is surfaced in the Analyze tool 
+- Provide useful metadata to indicators (e.g. definitions, operations etc.)
+- Create new custom calculations 
+
+In Data Catalog, the Analyze hierarchical selector is organized in the form of a directory table that resembles a ‘file system’. This allows us to navigate and organize categories (folders) and indicators (files) in a familiar format. The indicators themselves are the files in the file system. Each file is its own page called the Indicator Details page. This page contains metadata about each indicator and options to edit that metadata.
+
+![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/aWreLFOT62th7O9mV_pznYCF.png)
+
+## Data Digest
+
+The Data Digest tool is an internal tool that can be used by administrators to manage aspects of the integration pipeline. For example:
+
+- Pipeline overview: this includes information about the most recent pipeline and a summary of location matching. 
+- Data source overview: this includes an overview of the number of data points, indicators, mapped and unmatched location for each data source integrated via the pipeline. 
+- Mapping files and CSV validation: allows users to download the location mapping files for level of the geographic hierarchy, update these offline, and reupload them with new matches. 
 
 # Contributing
 

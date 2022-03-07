@@ -1,7 +1,7 @@
 // @flow
 import * as Zen from 'lib/Zen';
 import type { Serializable } from 'lib/Zen';
-import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/types';
+import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/TestableRule';
 
 type Values = {
   startValue: number,
@@ -13,8 +13,6 @@ type SerializedInValueRangeRule = {
   startValue: number,
   endValue: number,
 };
-
-const TEXT = t('models.core.QueryResultSpec.ValueRule');
 
 /**
  * Test if a value is within a range. The range includes the startValue and
@@ -43,7 +41,7 @@ class InValueRangeRule extends Zen.BaseModel<InValueRangeRule, Values>
 
   getRuleString(): string {
     const { startValue, endValue } = this.modelValues();
-    return `${startValue} <= ${TEXT.values} <= ${endValue}`;
+    return `${startValue} - ${endValue}`;
   }
 
   serialize(): SerializedInValueRangeRule {
@@ -55,4 +53,4 @@ class InValueRangeRule extends Zen.BaseModel<InValueRangeRule, Values>
   }
 }
 
-export default ((InValueRangeRule: any): Class<Zen.Model<InValueRangeRule>>);
+export default ((InValueRangeRule: $Cast): Class<Zen.Model<InValueRangeRule>>);

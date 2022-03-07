@@ -1,11 +1,14 @@
 // @flow
 import * as React from 'react';
 
+import type { StyleObject } from 'types/jsCore';
+
 type Props = {
   displayValue: string | number,
-  height: number,
-  scorecardRank: number,
-  blank: boolean,
+  style: StyleObject | void,
+
+  blank?: boolean,
+  scorecardRank?: number,
 };
 
 function rankToHSL(rank: number): string {
@@ -13,23 +16,26 @@ function rankToHSL(rank: number): string {
   return `hsl(${hue}, 100%, 50%)`;
 }
 
-export default class ScorecardTableCell extends React.PureComponent<Props> {
-  static defaultProps = {
-    blank: false,
-    scorecardRank: -1,
-  };
+function ScorecardTableCell({
+  displayValue,
+  blank = false,
+  scorecardRank = -1,
+  style,
+}): React.Node {
+  let fullStyle = style === undefined ? {} : style;
 
-  render() {
-    const { blank, displayValue, height, scorecardRank } = this.props;
-    const style = {
-      backgroundColor: blank ? undefined : rankToHSL(scorecardRank),
-      height,
-      lineHeight: `${height}px`,
+  if (!blank) {
+    fullStyle = {
+      ...fullStyle,
+      backgroundColor: rankToHSL(scorecardRank),
     };
-    return (
-      <div className="scorecard-table-cell" style={style}>
-        {displayValue}
-      </div>
-    );
   }
+
+  return (
+    <div className="table-visualization__table-cell" style={fullStyle}>
+      {displayValue}
+    </div>
+  );
 }
+
+export default (React.memo(ScorecardTableCell): React.AbstractComponent<Props>);

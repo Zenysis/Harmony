@@ -1,19 +1,17 @@
 // @flow
 import * as Zen from 'lib/Zen';
-import ResourceTypeRoleMap from 'services/models/ResourceTypeRoleMap';
+import ItemLevelACL from 'services/models/ItemLevelACL';
+import RoleDefinition from 'services/models/RoleDefinition';
 import User from 'services/models/User';
 import type { Serializable } from 'lib/Zen';
 
 // Model representation that we receive from the backend
-type BackendSecurityGroup = {
-  $uri: string,
+type SerializedSecurityGroup = {
+  acls: Array<Zen.Serialized<ItemLevelACL>>,
   name: string,
+  roles: Array<Zen.Serialized<RoleDefinition>>,
   users: Array<Zen.Serialized<User>>,
-
-  // TODO(pablo, vedant): is this type correct? BackendResourceTypeRoleMap
-  // includes a `resourceType` key, but in `deserialize` we treat is as if
-  // that key is missing
-  roles: { [string]: Zen.Serialized<ResourceTypeRoleMap> },
+  $uri: string,
 };
 
 /**
@@ -22,58 +20,58 @@ type BackendSecurityGroup = {
  */
 
 type DefaultValues = {
+  acls: Zen.Array<ItemLevelACL>,
   /**
    *  The unique name of the group.
    */
   name: string,
   /**
+   * The roles held by this group
+   */
+  roles: Zen.Array<RoleDefinition>,
+
+  /**
    *  The users in the group
    */
   users: Zen.Array<User>,
-  /**
-   * The roles held by this group
-   */
-  roles: Zen.Map<ResourceTypeRoleMap>,
-  /**
-   * @readonly
-   * The unique uri that can be used to locate this group on the server
-   */
-  uri: Zen.ReadOnly<string>,
+
+  /** The unique uri that can be used to locate this group on the server */
+  uri: string,
 };
 
 class SecurityGroup extends Zen.BaseModel<SecurityGroup, {}, DefaultValues>
-  implements Serializable<$Shape<BackendSecurityGroup>> {
-  static defaultValues = {
+  implements Serializable<SerializedSecurityGroup> {
+  static defaultValues: DefaultValues = {
+    acls: Zen.Array.create(),
     name: '',
+    roles: Zen.Array.create(),
     users: Zen.Array.create(),
-    roles: Zen.Map.create(),
     uri: '',
   };
 
-  static deserialize(values: BackendSecurityGroup): Zen.Model<SecurityGroup> {
-    const users = Zen.Array.create(values.users).map(user =>
-      User.deserialize(user),
-    );
-    const { name, roles } = values;
-
+  static deserialize(
+    values: SerializedSecurityGroup,
+  ): Zen.Model<SecurityGroup> {
+    const { acls, name, roles, users, $uri } = values;
     return SecurityGroup.create({
+      acls: Zen.deserializeToZenArray(ItemLevelACL, acls),
       name,
-      users,
-      roles: Zen.deserializeToZenMap(
-        ResourceTypeRoleMap,
-        roles,
-        resourceType => ({
-          resourceType,
-        }),
-      ),
-      uri: values.$uri,
+      roles: Zen.deserializeToZenArray(RoleDefinition, roles),
+      users: Zen.deserializeToZenArray(User, users),
+      uri: $uri,
     });
   }
 
-  serialize(): $Shape<BackendSecurityGroup> {
-    const { name } = this.modelValues();
-    return { name };
+  serialize(): SerializedSecurityGroup {
+    const { acls, name, roles, users, uri } = this.modelValues();
+    return {
+      name,
+      acls: Zen.serializeArray(acls),
+      roles: Zen.serializeArray(roles),
+      users: Zen.serializeArray(users),
+      $uri: uri,
+    };
   }
 }
 
-export default ((SecurityGroup: any): Class<Zen.Model<SecurityGroup>>);
+export default ((SecurityGroup: $Cast): Class<Zen.Model<SecurityGroup>>);

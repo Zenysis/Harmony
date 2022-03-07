@@ -1,0 +1,45 @@
+.entity-selection-panel {
+  min-width: 200px;
+
+  &__map-button {
+    position: absolute;
+    right: 40px;
+    top: 50px;
+  }
+
+  &__item {
+    border-bottom: 1px solid $gray-5;
+    padding-bottom: $space-s-em;
+    padding-top: $space-s-em;
+
+    &:first-child {
+      padding-top: 0;
+    }
+
+    &:last-child {
+      border: 0;
+      padding-bottom: 0;
+    }
+  }
+}
+
+.entity-legend {
+  // Place the legend at the bottom left of the map.
+  &--bottom-left {
+    left: $space-xs-em;
+    right: initial;
+  }
+
+  // Place the legend at the bottom left of the map but offset above the map
+  // timeline overlay.
+  &--bottom-left-offset {
+    bottom: 85px;
+    left: $space-xs-em;
+    right: initial;
+  }
+
+  // Place the legend at the bottom right of the map.
+  &--bottom-right {
+    right: $space-xs-em;
+  }
+}

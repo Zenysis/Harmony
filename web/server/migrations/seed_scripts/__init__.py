@@ -25,10 +25,7 @@ def reset_table_sequence_id(entity_class, transaction):
             table_name=table_name, id_column=id_column
         )
 
-        # Disabling this warning as we don't want to expose the `execute`
-        # method in our transaction class.
-        # pylint:disable=W0212
-        transaction._session.execute(reset_sequence_id_command)
+        transaction.run_raw().execute(reset_sequence_id_command)
         LOG.info(
             'Successfully staged updated primary key sequence for ' 'table \'%s\'',
             table_name,

@@ -1,19 +1,19 @@
 .legend-container {
   margin-top: 5px;
-  @media (min-width: 800px) { padding: 20px; }
-  @media (max-width: 800px) { padding: 0px; }
   padding-top: 0;
   text-align: center;
-}
-
-.small-mode .legend-container {
-  padding: 0px !important;
+  @media (min-width: 800px) {
+    padding: 20px;
+  }
+  @media (max-width: 800px) {
+    padding: 0px;
+  }
 }
 
 .legend-row {
   display: inline-block;
-  margin-bottom: .5em;
-  margin-right: 1em;
+  margin-right: $space-xs-px;
+  margin-top: $space-xxs-px;
 
   &__text {
     cursor: pointer;
@@ -23,7 +23,7 @@
 
   &__color-block {
     display: inline-block;
-    padding-right: 5px;
+    padding-right: $space-xxs-px;
   }
 
   &--disabled {

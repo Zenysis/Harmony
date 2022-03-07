@@ -1,12 +1,13 @@
 // @flow
 import * as React from 'react';
 
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
 import { SVG_MAP } from 'components/ui/Icon/internal/SVGs';
 import type { IconType } from 'components/ui/Icon/types';
 import type { SVGType } from 'components/ui/Icon/internal/SVGs';
 import type { StyleObject } from 'types/jsCore';
 
-type Props = {|
+type Props = {
   /**
    * A valid glyphicon suffix. You can find all glyphicons here:
    * https://getbootstrap.com/docs/3.3/components/
@@ -20,17 +21,13 @@ type Props = {|
    * such as screen readers. Typically we'd do this when an icon is placed
    * next to its text, making the icon redundant for a screen reader.
    */
-  ariaHidden: boolean,
-  className: string,
-  onClick?: (event: SyntheticMouseEvent<HTMLSpanElement>) => void,
-  style: StyleObject,
-|};
+  ariaHidden?: boolean,
 
-const defaultProps = {
-  ariaHidden: false,
-  className: '',
-  onClick: undefined,
-  style: {},
+  /** The accessibility name for this icon */
+  ariaName?: string,
+  className?: string,
+  onClick?: (event: SyntheticMouseEvent<HTMLSpanElement>) => void,
+  style?: StyleObject,
 };
 
 /**
@@ -41,8 +38,14 @@ const defaultProps = {
  * For SVGs, the type prop is key of `SVG_MAP` in
  * `components/ui/Icon/internal/SVGs/index.jsx`.
  */
-export default function Icon(props: Props) {
-  const { ariaHidden, className, type, style, onClick } = props;
+export default function Icon({
+  type,
+  ariaHidden = false,
+  ariaName = undefined,
+  className = '',
+  onClick = undefined,
+  style = undefined,
+}: Props): React.Node {
   const isSVG = type in SVG_MAP;
   const iconClassName = isSVG
     ? `zen-icon ${className}`
@@ -50,11 +53,13 @@ export default function Icon(props: Props) {
 
   const IconElement = isSVG ? SVG_MAP[((type: $Cast): SVGType)] : 'span';
 
+  const ariaNameToUse = normalizeARIAName(ariaName);
   if (onClick) {
     return (
       <IconElement
         role="button"
         aria-hidden={ariaHidden}
+        aria-label={ariaNameToUse}
         onClick={onClick}
         className={iconClassName}
         style={style}
@@ -65,10 +70,9 @@ export default function Icon(props: Props) {
   return (
     <IconElement
       aria-hidden={ariaHidden}
+      aria-label={ariaNameToUse}
       className={iconClassName}
       style={style}
     />
   );
 }
-
-Icon.defaultProps = defaultProps;

@@ -1,6 +1,7 @@
 // @flow
+import * as Zen from 'lib/Zen';
 import HierarchyItem from 'models/ui/HierarchicalSelector/HierarchyItem';
-import ZenArray from 'util/ZenModel/ZenArray';
+import type { NamedItem } from 'models/ui/HierarchicalSelector/types';
 
 /**
  * The MutableHierarchyItem is used to efficiently build a HierarchyTree without
@@ -10,15 +11,15 @@ import ZenArray from 'util/ZenModel/ZenArray';
  * has been called, you can no longer mutate the MutableHierarchyItem instance.
  * Subsequent calls to `finalize` will return the same immutable instance.
  */
-export default class MutableHierarchyItem {
+export default class MutableHierarchyItem<T: NamedItem> {
   +id: string;
-  +children: Array<MutableHierarchyItem>;
-  +metadata: any;
-  immutableItem: HierarchyItem | void = undefined;
+  +children: Array<MutableHierarchyItem<T>>;
+  +metadata: T;
+  immutableItem: HierarchyItem<T> | void = undefined;
 
   constructor(
     id: string,
-    children: Array<MutableHierarchyItem> = [],
+    children: Array<MutableHierarchyItem<T>> = [],
     metadata: any = undefined,
   ) {
     this.id = id;
@@ -26,7 +27,7 @@ export default class MutableHierarchyItem {
     this.metadata = metadata;
   }
 
-  addChild(child: MutableHierarchyItem): void {
+  addChild(child: MutableHierarchyItem<T>): void {
     if (this.immutableItem !== undefined) {
       throw new Error(
         '[MutableHierarchyItem] Attempting to add child to finalized node.',
@@ -36,16 +37,31 @@ export default class MutableHierarchyItem {
     this.children.push(child);
   }
 
-  finalize(): HierarchyItem {
+  finalize(sortChildren: boolean = false): HierarchyItem<T> {
     if (this.immutableItem === undefined) {
       // Dont set children if none exist.
-      const children = this.children.length > 0
-        ? ZenArray.create(this.children.map(child => child.finalize()))
-        : undefined;
+      const maybeSortedChildren = sortChildren
+        ? this.children.sort((a, b) => {
+            if (a.metadata.tag === b.metadata.tag) {
+              return a.metadata.name().localeCompare(b.metadata.name());
+            }
+            if (a.metadata.tag === 'LINKED_CATEGORY') {
+              return -1;
+            }
+            return 1;
+          })
+        : this.children;
+
+      const finalChildren =
+        maybeSortedChildren.length > 0
+          ? Zen.Array.create(
+              maybeSortedChildren.map(child => child.finalize(sortChildren)),
+            )
+          : undefined;
 
       this.immutableItem = HierarchyItem.create({
         id: this.id,
-        children,
+        children: finalChildren,
         metadata: this.metadata,
       });
     }

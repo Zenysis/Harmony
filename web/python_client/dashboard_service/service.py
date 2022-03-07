@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from future import standard_library
-
-standard_library.install_aliases()
 from urllib.parse import urljoin
 
 from web.python_client.core import ApiService, LOCALHOST_URI
@@ -11,7 +8,8 @@ MAXIMUM_PAGE_SIZE = 1000
 
 
 class DashboardService(ApiService):
-    def __init__(self, session, host=LOCALHOST_URI):
+    def __init__(self, session, host=None):
+        host = host or LOCALHOST_URI
         super(DashboardService, self).__init__(session, host)
         self._dashboard_uri = urljoin(self.base_uri, 'api2/dashboard')
 

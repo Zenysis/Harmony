@@ -1,6 +1,7 @@
 // @flow
+import * as Zen from 'lib/Zen';
 import type HierarchyItem from 'models/ui/HierarchicalSelector/HierarchyItem';
-import type ZenArray from 'util/ZenModel/ZenArray';
+import type { NamedItem } from 'models/ui/HierarchicalSelector/types';
 import type { SearchableNodeView } from 'models/ui/common/GraphSearchResults/types';
 
 /**
@@ -13,29 +14,34 @@ import type { SearchableNodeView } from 'models/ui/common/GraphSearchResults/typ
  */
 class HierarchyItemGraphNodeView
   implements
-    SearchableNodeView<string, string, HierarchyItem, ZenArray<HierarchyItem>> {
+    SearchableNodeView<
+      string,
+      string,
+      HierarchyItem<NamedItem>,
+      Zen.Array<HierarchyItem<NamedItem>>,
+    > {
   forEach(
-    children: ZenArray<HierarchyItem>,
-    func: HierarchyItem => mixed,
+    children: Zen.Array<HierarchyItem<NamedItem>>,
+    func: (HierarchyItem<NamedItem>) => mixed,
   ): void {
     children.forEach(func);
   }
 
-  isLeaf(item: HierarchyItem): boolean {
-    return item.isLeafItem();
+  isLeaf(item: HierarchyItem<NamedItem>): boolean {
+    return item.children() === undefined;
   }
 
-  children(item: HierarchyItem): ?ZenArray<HierarchyItem> {
+  children<T: NamedItem>(item: HierarchyItem<T>): ?Zen.Array<HierarchyItem<T>> {
     return item.children();
   }
 
-  searchableText(item: HierarchyItem): string {
+  searchableText(item: HierarchyItem<NamedItem>): string {
     return item.name();
   }
 
-  value(item: HierarchyItem): string {
+  value(item: HierarchyItem<NamedItem>): string {
     return item.id();
   }
 }
 
-export default new HierarchyItemGraphNodeView();
+export default (new HierarchyItemGraphNodeView(): HierarchyItemGraphNodeView);

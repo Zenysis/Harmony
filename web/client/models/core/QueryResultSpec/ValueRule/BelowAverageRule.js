@@ -2,13 +2,13 @@
 import * as Zen from 'lib/Zen';
 import { getAverage } from 'models/core/QueryResultSpec/ValueRule/rulesUtil';
 import type { Serializable } from 'lib/Zen';
-import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/types';
+import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/TestableRule';
 
 type SerializedBelowAverageRule = {
   type: 'BELOW_AVERAGE',
 };
 
-const TEXT = t('models.core.QueryResultSpec.ValueRule');
+const TEXT_PATH = 'models.core.QueryResultSpec.ValueRule';
 
 /**
  * Test if a value is below the average value of an array of numbers.
@@ -30,7 +30,10 @@ class BelowAverageRule extends Zen.BaseModel<BelowAverageRule, {}>
   }
 
   getRuleString(allValues: $ReadOnlyArray<?number>): string {
-    return `${TEXT.values} < ${getAverage(allValues).toFixed(2)}`;
+    return t('belowAverage', {
+      scope: TEXT_PATH,
+      average: getAverage(allValues).toFixed(2),
+    });
   }
 
   serialize(): SerializedBelowAverageRule {
@@ -40,4 +43,4 @@ class BelowAverageRule extends Zen.BaseModel<BelowAverageRule, {}>
   }
 }
 
-export default ((BelowAverageRule: any): Class<Zen.Model<BelowAverageRule>>);
+export default ((BelowAverageRule: $Cast): Class<Zen.Model<BelowAverageRule>>);

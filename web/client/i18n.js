@@ -1,0 +1,105 @@
+// @flow
+/* eslint-disable */
+import I18N from 'lib/I18N';
+import i18n_components_AdminApp from 'components/AdminApp/i18n';
+import i18n_components_AdvancedQueryApp_LiveResultsView_QueryResultActionButtons from 'components/AdvancedQueryApp/LiveResultsView/QueryResultActionButtons/i18n';
+import i18n_components_AdvancedQueryApp_QueryFormPanel from 'components/AdvancedQueryApp/QueryFormPanel/i18n';
+import i18n_components_AdvancedQueryApp_QueryTabList from 'components/AdvancedQueryApp/QueryTabList/i18n';
+import i18n_components_AlertsApp from 'components/AlertsApp/i18n';
+import i18n_components_DashboardBuilderApp_DashboardContainer_CommonSettingsPanel_BasicElementsSection from 'components/DashboardBuilderApp/DashboardContainer/CommonSettingsPanel/BasicElementsSection/i18n';
+import i18n_components_DashboardBuilderApp_DashboardContainer_CommonSettingsPanel_CommonFilterSettings_DashboardFilterSelector from 'components/DashboardBuilderApp/DashboardContainer/CommonSettingsPanel/CommonFilterSettings/DashboardFilterSelector/i18n';
+import i18n_components_DashboardBuilderApp_DashboardContainer_CommonSettingsPanel_CommonGroupingSettings_DashboardGroupBySelector from 'components/DashboardBuilderApp/DashboardContainer/CommonSettingsPanel/CommonGroupingSettings/DashboardGroupBySelector/i18n';
+import i18n_components_DashboardBuilderApp_DashboardContainer_CommonSettingsPanel_LayoutSection from 'components/DashboardBuilderApp/DashboardContainer/CommonSettingsPanel/LayoutSection/i18n';
+import i18n_components_DashboardBuilderApp_DashboardContainer_CommonSettingsPanel_common from 'components/DashboardBuilderApp/DashboardContainer/CommonSettingsPanel/common/i18n';
+import i18n_components_DashboardBuilderApp_DashboardContainer_DashboardGrid_FullscreenTile_FooterBar from 'components/DashboardBuilderApp/DashboardContainer/DashboardGrid/FullscreenTile/FooterBar/i18n';
+import i18n_components_DashboardBuilderApp_DashboardContainer_DashboardGrid_GridBackground from 'components/DashboardBuilderApp/DashboardContainer/DashboardGrid/GridBackground/i18n';
+import i18n_components_DashboardBuilderApp_DashboardContainer_DashboardGrid_TileContainer from 'components/DashboardBuilderApp/DashboardContainer/DashboardGrid/TileContainer/i18n';
+import i18n_components_DashboardBuilderApp_DashboardHeader_DashboardControls from 'components/DashboardBuilderApp/DashboardHeader/DashboardControls/i18n';
+import i18n_components_DashboardBuilderApp_hooks from 'components/DashboardBuilderApp/hooks/i18n';
+import i18n_components_DataCatalogApp_DirectoryPage_BreadcrumbPath from 'components/DataCatalogApp/DirectoryPage/BreadcrumbPath/i18n';
+import i18n_components_DataCatalogApp_DirectoryPage_DirectoryTableContainer_ContainerHeader from 'components/DataCatalogApp/DirectoryPage/DirectoryTableContainer/ContainerHeader/i18n';
+import i18n_components_DataCatalogApp_DirectoryPage_DirectoryTableContainer_DirectoryTable from 'components/DataCatalogApp/DirectoryPage/DirectoryTableContainer/DirectoryTable/i18n';
+import i18n_components_DataCatalogApp_FieldDetailsPage_FieldCalculationSection from 'components/DataCatalogApp/FieldDetailsPage/FieldCalculationSection/i18n';
+import i18n_components_DataCatalogApp_FieldDetailsPage_FieldDetailsSection from 'components/DataCatalogApp/FieldDetailsPage/FieldDetailsSection/i18n';
+import i18n_components_DataCatalogApp_FieldDetailsPage_FieldTitleSection from 'components/DataCatalogApp/FieldDetailsPage/FieldTitleSection/i18n';
+import i18n_components_DataCatalogApp_common from 'components/DataCatalogApp/common/i18n';
+import i18n_components_DataDigestApp from 'components/DataDigestApp/i18n';
+import i18n_components_FieldSetupApp from 'components/FieldSetupApp/i18n';
+import i18n_components_Navbar from 'components/Navbar/i18n';
+import i18n_components_Overview from 'components/Overview/i18n';
+import i18n_components_common from 'components/common/i18n';
+import i18n_components_ui_DatePicker_internal from 'components/ui/DatePicker/internal/i18n';
+import i18n_components_ui_ProgressModal from 'components/ui/ProgressModal/i18n';
+import i18n_components_ui_UploadInput from 'components/ui/UploadInput/i18n';
+import i18n_components_ui_visualizations_Table_internal from 'components/ui/visualizations/Table/internal/i18n';
+import i18n_components_visualizations_BarGraph_BarGraphControlsBlock from 'components/visualizations/BarGraph/BarGraphControlsBlock/i18n';
+import i18n_components_visualizations_Histogram_HistogramControlsBlock from 'components/visualizations/Histogram/HistogramControlsBlock/i18n';
+import i18n_components_visualizations_MapViz_MapControlsBlock from 'components/visualizations/MapViz/MapControlsBlock/i18n';
+import i18n_components_visualizations_MapViz_QueryResultLayer_MapTimeline from 'components/visualizations/MapViz/QueryResultLayer/MapTimeline/i18n';
+import i18n_components_visualizations_PieChart from 'components/visualizations/PieChart/i18n';
+import i18n_components_visualizations_Table_TableThemesSettingsTab from 'components/visualizations/Table/TableThemesSettingsTab/i18n';
+import i18n_components_visualizations_common from 'components/visualizations/common/i18n';
+import i18n_models_core_DataCatalog from 'models/core/DataCatalog/i18n';
+import i18n_models_visualizations_Table_TableSettings_TableTheme_DefaultThemes from 'models/visualizations/Table/TableSettings/TableTheme/DefaultThemes/i18n';
+import i18n_services_AuthorizationService from 'services/AuthorizationService/i18n';
+import type { TranslationDictionary } from 'lib/I18N';
+/**
+ * DO NOT:
+ * 1. DO NOT touch the `en` object. AT ALL. This is entirely auto-generated from
+ * our code. Do not change the string values. Do not add new keys.
+ * 2. DO NOT add new locales manually. These are handled by our internal tools.
+ *
+ * DO:
+ * 1. Update any non-`en` translations. Do not change their keys though.
+ * 2. Add new non-`en` translations. But make sure their keys match their
+ * English counterpart.
+ */
+
+const translations: TranslationDictionary = {
+  en: {},
+};
+
+I18N.mergeSupplementalTranslations(translations, [
+  i18n_components_AdminApp,
+  i18n_components_AdvancedQueryApp_LiveResultsView_QueryResultActionButtons,
+  i18n_components_AdvancedQueryApp_QueryFormPanel,
+  i18n_components_AdvancedQueryApp_QueryTabList,
+  i18n_components_AlertsApp,
+  i18n_components_DashboardBuilderApp_DashboardContainer_CommonSettingsPanel_BasicElementsSection,
+  i18n_components_DashboardBuilderApp_DashboardContainer_CommonSettingsPanel_CommonFilterSettings_DashboardFilterSelector,
+  i18n_components_DashboardBuilderApp_DashboardContainer_CommonSettingsPanel_CommonGroupingSettings_DashboardGroupBySelector,
+  i18n_components_DashboardBuilderApp_DashboardContainer_CommonSettingsPanel_LayoutSection,
+  i18n_components_DashboardBuilderApp_DashboardContainer_CommonSettingsPanel_common,
+  i18n_components_DashboardBuilderApp_DashboardContainer_DashboardGrid_FullscreenTile_FooterBar,
+  i18n_components_DashboardBuilderApp_DashboardContainer_DashboardGrid_GridBackground,
+  i18n_components_DashboardBuilderApp_DashboardContainer_DashboardGrid_TileContainer,
+  i18n_components_DashboardBuilderApp_DashboardHeader_DashboardControls,
+  i18n_components_DashboardBuilderApp_hooks,
+  i18n_components_DataCatalogApp_DirectoryPage_BreadcrumbPath,
+  i18n_components_DataCatalogApp_DirectoryPage_DirectoryTableContainer_ContainerHeader,
+  i18n_components_DataCatalogApp_DirectoryPage_DirectoryTableContainer_DirectoryTable,
+  i18n_components_DataCatalogApp_FieldDetailsPage_FieldCalculationSection,
+  i18n_components_DataCatalogApp_FieldDetailsPage_FieldDetailsSection,
+  i18n_components_DataCatalogApp_FieldDetailsPage_FieldTitleSection,
+  i18n_components_DataCatalogApp_common,
+  i18n_components_DataDigestApp,
+  i18n_components_FieldSetupApp,
+  i18n_components_Navbar,
+  i18n_components_Overview,
+  i18n_components_common,
+  i18n_components_ui_DatePicker_internal,
+  i18n_components_ui_ProgressModal,
+  i18n_components_ui_UploadInput,
+  i18n_components_ui_visualizations_Table_internal,
+  i18n_components_visualizations_BarGraph_BarGraphControlsBlock,
+  i18n_components_visualizations_Histogram_HistogramControlsBlock,
+  i18n_components_visualizations_MapViz_MapControlsBlock,
+  i18n_components_visualizations_MapViz_QueryResultLayer_MapTimeline,
+  i18n_components_visualizations_PieChart,
+  i18n_components_visualizations_Table_TableThemesSettingsTab,
+  i18n_components_visualizations_common,
+  i18n_models_core_DataCatalog,
+  i18n_models_visualizations_Table_TableSettings_TableTheme_DefaultThemes,
+  i18n_services_AuthorizationService,
+]);
+export default translations;

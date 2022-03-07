@@ -1,7 +1,7 @@
-// flow-typed signature: 252bf823333d3878d65e0b1eb8e744de
-// flow-typed version: 8840f4cb4b/react-color_v2.x.x/flow_>=v0.56.x
+// flow-typed signature: 894f3b1365c9be6233fea8986db04c5f
+// flow-typed version: c55c288299/react-color_v2.x.x/flow_>=v0.104.x
 
-declare module "react-color" {
+declare module 'react-color' {
   import type { ComponentType, Component } from 'react';
   declare export type HexColor = string;
 
@@ -9,21 +9,21 @@ declare module "react-color" {
     h: number,
     s: number,
     l: number,
-    a?: number
+    a?: number,
   |};
 
   declare export type HSVColor = {|
     h: number,
     s: number,
     v: number,
-    a?: number
+    a?: number,
   |};
 
   declare export type RGBColor = {|
     r: number,
     g: number,
     b: number,
-    a?: number
+    a?: number,
   |};
 
   declare export type Color = HexColor | HSLColor | HSVColor | RGBColor;
@@ -32,7 +32,7 @@ declare module "react-color" {
     hex: HexColor,
     hsl: HSLColor,
     hsv: HSVColor,
-    rgb: RGBColor
+    rgb: RGBColor,
   |};
 
   declare export type ColorChangeHandler = (color: ColorResult) => void;
@@ -40,30 +40,34 @@ declare module "react-color" {
   declare export type ColorPickerProps = {|
     color?: Color,
     onChange?: ColorChangeHandler,
-    onChangeComplete?: ColorChangeHandler
+    onChangeComplete?: ColorChangeHandler,
   |};
 
   declare export type AlphaPickerProps = {|
     ...ColorPickerProps,
     width?: string,
     height?: string,
-    direction?: "horizontal" | "vertical",
+    direction?: 'horizontal' | 'vertical',
     renderers?: Object,
-    pointer?: ComponentType<any>
+    pointer?: ComponentType<any>,
   |};
 
   declare export type BlockPickerProps = {|
     ...ColorPickerProps,
     width?: string,
     colors?: Array<string>,
-    triangle?: "hide" | "top",
-    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void
+    triangle?: 'hide' | 'top',
+    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void,
   |};
 
   declare export type ChromePickerProps = {|
     ...ColorPickerProps,
+    className?: string,
+    defaultView?: 'hex' | 'hsl' | 'rgb',
     disableAlpha?: boolean,
-    renderers?: Object
+    renderers?: Object,
+    width?: number | string,
+    styles?: { ... },
   |};
 
   declare export type CirclePickerProps = {|
@@ -72,40 +76,40 @@ declare module "react-color" {
     colors?: Array<string>,
     circleSize?: number,
     circleSpacing?: number,
-    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void
+    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void,
   |};
 
   declare export type CompactPickerProps = {|
     ...ColorPickerProps,
     colors?: Array<string>,
-    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void
+    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void,
   |};
 
   declare export type GithubPickerProps = {|
     ...ColorPickerProps,
     width?: string,
     colors?: Array<string>,
-    triangle?: "hide" | "top-left" | "top-right",
-    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void
+    triangle?: 'hide' | 'top-left' | 'top-right',
+    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void,
   |};
 
   declare export type HuePickerProps = {|
     ...ColorPickerProps,
     width?: string,
     height?: string,
-    direction?: "horizontal" | "vertical",
-    pointer?: ComponentType<any>
+    direction?: 'horizontal' | 'vertical',
+    pointer?: ComponentType<any>,
   |};
 
   declare export type MaterialPickerProps = {|
-    ...ColorPickerProps
+    ...ColorPickerProps,
   |};
 
   declare export type PhotoshopPickerProps = {|
     ...ColorPickerProps,
     header?: string,
     onAccept?: () => void,
-    onCancel?: () => void
+    onCancel?: () => void,
   |};
 
   declare export type SketchPickerProps = {|
@@ -114,12 +118,12 @@ declare module "react-color" {
     presetColors?: Array<string | {| color: string, title: string |}>,
     width?: number,
     renderers?: Object,
-    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void
+    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void,
   |};
 
   declare export type SliderPickerProps = {|
     ...ColorPickerProps,
-    pointer?: ComponentType<any>
+    pointer?: ComponentType<any>,
   |};
 
   declare export type SwatchesPickerProps = {|
@@ -127,19 +131,19 @@ declare module "react-color" {
     width?: number,
     height?: number,
     colors?: Array<Array<string>>,
-    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void
+    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void,
   |};
 
   declare export type TwitterPickerProps = {|
     ...ColorPickerProps,
     width?: string,
     colors?: Array<string>,
-    triangle?: "hide" | "top-left" | "top-right",
-    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void
+    triangle?: 'hide' | 'top-left' | 'top-right',
+    onSwatchHover?: (color: Color, event: SyntheticMouseEvent<*>) => void,
   |};
 
   declare export type ColorWrapChangeHandler = (
-    color: Color | ColorResult
+    color: Color | ColorResult,
   ) => void;
 
   declare export type InjectedColorProps = {
@@ -149,7 +153,8 @@ declare module "react-color" {
     rgb: RGBColor,
     oldHue: number,
     onChange?: ColorWrapChangeHandler,
-    source: string
+    source: string,
+    ...
   };
 
   declare export var AlphaPicker: Class<Component<AlphaPickerProps>>;
@@ -166,32 +171,35 @@ declare module "react-color" {
   declare export var SwatchesPicker: Class<Component<SwatchesPickerProps>>;
   declare export var TwitterPicker: Class<Component<TwitterPickerProps>>;
 
-  declare export function CustomPicker<Props: {}>(
-    Component: ComponentType<InjectedColorProps & Props>
-  ): ComponentType<Props>;
+  declare export function CustomPicker<
+    Props: InjectedColorProps,
+    Comp: ComponentType<Props>,
+  >(
+    Component: Comp,
+  ): ComponentType<$Diff<React$ElementConfig<Comp>, InjectedColorProps>>;
 }
 
-declare module "react-color/lib/components/common" {
+declare module 'react-color/lib/components/common' {
   import type { ComponentType, Component } from 'react';
   import type {
     HexColor,
     RGBColor,
     HSLColor,
     HSVColor,
-    ColorChangeHandler
-  } from "react-color";
+    ColorChangeHandler,
+  } from 'react-color';
 
   declare type PartialColorResult = {|
     hex?: HexColor,
     hsl?: HSLColor,
     hsv?: HSVColor,
-    rgb?: RGBColor
+    rgb?: RGBColor,
   |};
 
   declare export type AlphaProps = {|
     ...PartialColorResult,
     pointer?: ComponentType<any>,
-    onChange?: ColorChangeHandler
+    onChange?: ColorChangeHandler,
   |};
 
   declare export type EditableInputProps = {|
@@ -201,27 +209,27 @@ declare module "react-color/lib/components/common" {
     style?: {|
       input?: Object,
       label?: Object,
-      wrap?: Object
-    |}
+      wrap?: Object,
+    |},
   |};
 
   declare export type HueProps = {|
     ...PartialColorResult,
     pointer?: ComponentType<any>,
     onChange?: ColorChangeHandler,
-    direction?: "horizontal" | "vertical"
+    direction?: 'horizontal' | 'vertical',
   |};
 
   declare export type SaturationProps = {|
     ...PartialColorResult,
     pointer?: ComponentType<any>,
-    onChange?: ColorChangeHandler
+    onChange?: ColorChangeHandler,
   |};
 
   declare export type CheckboardProps = {|
     size?: number,
     white?: string,
-    grey?: string
+    grey?: string,
   |};
 
   declare export var Alpha: Class<Component<AlphaProps>>;

@@ -1,28 +1,28 @@
-{% extends 'layout.html' %}
+{% extends 'layout.html' %} {% set body_class="dashboard" %} {% block content %}
+<!-- React app -->
+<div id="app"></div>
+{% endblock %} {% block scripts %} {% include 'query_app_vendor_scripts.html' %}
+{# Load all the possible visualization scripts TODO(stephen, vinh): Improve
+LibraryLazyLoader to only issue one query per script instead of N if they are
+all loaded at the same time #}
+<script src="{{config.VENDOR_SCRIPT_PATH}}/plotly-1.22.0.js"></script>
+<script src="{{ bundle_resource_url('dashboardBuilder.bundle.js') }}"></script>
 
-{% set body_class="dashboard" %}
-
-{% block content %}
-  <!-- React app -->
-  <div id="app"></div>
-{% endblock %}
-
-{% block scripts %}
-  {% include 'query_app_vendor_scripts.html' %}
-
-  {# Load all the possible visualization scripts
-     TODO(stephen, vinh): Improve LibraryLazyLoader to only issue one query
-     per script instead of N if they are all loaded at the same time #}
-  <script src="{{config.VENDOR_SCRIPT_PATH}}/plotly-1.22.0.js"></script>
-  <script src="{{config.VENDOR_SCRIPT_PATH}}/mapbox-3.0.1.js"></script>
-  <script src="{{ bundle_resource_url('gridDashboard.bundle.js') }}"></script>
-{% endblock %}
-
-{% block tracking_event %}
+{#- HACK(stephen): When a screenshot request is happening, proactively load the
+map JS so that it can be eagerly loaded and doesn't need to wait for a map tile
+to render #}
+{% if is_screenshot_request %}
+<script src="{{ bundle_resource_url('asyncMapChunk.bundle.js') }}"></script>
+{% endif %}
+{% endblock %} {% block tracking_event %}
 <script>
-analytics.track('Dashboard view', {
-  type: 'grid',
-  nonInteraction: 1
-});
+  {% if not is_screenshot_request %}
+    analytics.track('Dashboard view', {
+      author: '{{dashboard.dashboardAuthor}}',
+      isOfficial: {% if dashboard.isOfficial %}true{% else %}false{% endif %},
+      type: 'grid',
+      nonInteraction: 1,
+    });
+  {% endif %}
 </script>
 {% endblock %}

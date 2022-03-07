@@ -2,7 +2,7 @@
 import * as Zen from 'lib/Zen';
 import DefaultRole from 'services/models/Role/DefaultRole';
 import { areStringsEqualIgnoreCase } from 'util/stringUtil';
-import type { ResourceType } from 'services/AuthorizationService';
+import type { ResourceType } from 'services/AuthorizationService/types';
 import type { Serializable } from 'lib/Zen';
 
 type BackendDefaultRole = {
@@ -12,6 +12,7 @@ type BackendDefaultRole = {
 
 type BackendDefaultIdentityRoleMap = {
   [roleName: string]: BackendDefaultRole,
+  ...,
 };
 
 type Values = {
@@ -29,11 +30,11 @@ type Values = {
 
 type DefaultValues = {
   /**
-   * @readonly
    * The name of the specific `AuthorizationResource` that this role map
    * corresponds to.
    */
-  resourceName: Zen.ReadOnly<string>,
+  resourceName: string,
+
   /**
    * The mapping of `roleName` to individual roles that all users hold on the
    * the given `AuthorizationResource` by default.
@@ -44,7 +45,7 @@ type DefaultValues = {
 class DefaultIdentityRoleMap
   extends Zen.BaseModel<DefaultIdentityRoleMap, {}, DefaultValues>
   implements Serializable<BackendDefaultIdentityRoleMap> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     resourceName: '',
     roles: Zen.Map.create(),
   };
@@ -91,7 +92,7 @@ class DefaultIdentityRoleMap
   }
 
   /**
-   * Adds `role` to the role map.
+   * Adds `role` to the role map. Updates role if one with the same name exists
    *
    * @param {DefaultRole} role The role object to add
    *
@@ -150,7 +151,8 @@ class DefaultIdentityRoleMap
   }
 
   /**
-   * Returns whether or not `role` exists in the current instance.
+   * Returns whether or not `role` exists in the current instance. All field
+   * values must match.
    *
    * @param {DefaultRole} role The `role` to look for.
    *
@@ -180,6 +182,6 @@ class DefaultIdentityRoleMap
   }
 }
 
-export default ((DefaultIdentityRoleMap: any): Class<
+export default ((DefaultIdentityRoleMap: $Cast): Class<
   Zen.Model<DefaultIdentityRoleMap>,
 >);

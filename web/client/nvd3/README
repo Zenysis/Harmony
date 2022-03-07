@@ -1,1 +1,0 @@
-This directory contains modifications to builtin NVD3 charts. Right now, it's easier to maintain these modifications within our source tree instead of forking NVD3 and directly modifying their files.

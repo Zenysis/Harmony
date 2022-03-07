@@ -2,7 +2,7 @@
 import type {
   D3HierarchyNode,
   HierarchyNode,
-} from 'components/visualizations/ExpandoTree/types';
+} from 'models/visualizations/ExpandoTree/types';
 
 // NOTE(stephen): Sunburst uses the same data structures as ExpandoTree with
 // some tweaks.

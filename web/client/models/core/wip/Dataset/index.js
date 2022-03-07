@@ -5,15 +5,15 @@ import TimeInterval from 'models/core/wip/DateTime/TimeInterval';
 import type { JSONRef } from 'services/types/api';
 
 type RequiredValues = {
-  id: Zen.ReadOnly<string>,
-  name: Zen.ReadOnly<string>,
+  id: string,
+  name: string,
 };
 
 type DefaultValues = {
-  description: Zen.ReadOnly<string>,
+  +description: string,
 
   /** Optional list of time intervals this Dataset contains data for */
-  validIntervals: $ReadOnlyArray<TimeInterval>,
+  +validIntervals: $ReadOnlyArray<TimeInterval>,
 };
 
 type SerializedDataset = JSONRef;
@@ -24,7 +24,7 @@ type SerializedDataset = JSONRef;
  * a set of rows in the database.
  */
 class Dataset extends Zen.BaseModel<Dataset, RequiredValues, DefaultValues> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     description: '',
     validIntervals: [],
   };
@@ -32,11 +32,11 @@ class Dataset extends Zen.BaseModel<Dataset, RequiredValues, DefaultValues> {
   static deserializeAsync(
     values: SerializedDataset,
   ): Promise<Zen.Model<Dataset>> {
-    return DatasetService.get(DatasetService.convertURIToID(values.$ref));
+    return DatasetService.forceGet(DatasetService.convertURIToID(values.$ref));
   }
 
   static UNSAFE_deserialize(values: SerializedDataset): Zen.Model<Dataset> {
-    return DatasetService.UNSAFE_get(
+    return DatasetService.UNSAFE_forceGet(
       DatasetService.convertURIToID(values.$ref),
     );
   }
@@ -48,4 +48,4 @@ class Dataset extends Zen.BaseModel<Dataset, RequiredValues, DefaultValues> {
   }
 }
 
-export default ((Dataset: any): Class<Zen.Model<Dataset>>);
+export default ((Dataset: $Cast): Class<Zen.Model<Dataset>>);

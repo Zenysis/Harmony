@@ -1,27 +1,26 @@
 .settings-dropdown-menu {
-  top: 100%;
-  z-index: 1000;
-  display: none;
-  right: 0;
-  min-width: 260px;
-  padding: 5px 0;
-  margin: 2px 0 0;
-  list-style: none;
-  font-size: 13px;
-  text-align: left;
+  background-clip: padding-box;
   background-color: #fff;
-  border: 1px solid #ccc;
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 2px;
   -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-  background-clip: padding-box;
+  display: none;
+  font-size: 13px;
+  list-style: none;
+  margin: 2px 0 0;
+  min-width: 260px;
+  padding: 5px 0;
+  right: 0;
+  text-align: left;
+  top: 100%;
+  z-index: 1000;
 }
 
 .settings-dropdown-menu-item {
+  color: #555;
   font-size: 16px;
   padding: 10px 10px;
-  color: #555;
 }
 
 .settings-dropdown-menu-item:hover {
@@ -30,12 +29,12 @@
 }
 
 .settings-dropdown {
-  font-size: 13px;
   background: transparent;
+  border: none;
+  color: white;
+  font-size: 13px;
   height: 100%;
   width: 100px;
-  color: white;
-  border: none;
 }
 
 .dropdown-control {
@@ -53,8 +52,8 @@
   }
 
   .settings-dropdown-menu {
-    position: absolute;
     left: -150px;
+    position: absolute;
   }
 }
 
@@ -66,58 +65,130 @@
 
   .small-settings {
     background: #22262e;
-    width: 100%;
     height: 33px !important;
     padding: 100;
+    width: 100%;
   }
 
   .settings-dropdown-menu {
-    width: 100%;
-    position: relative;
     left: 0px;
+    position: relative;
+    width: 100%;
   }
 }
 
 .language-dropdown-item {
-  list-style: none;
   color: #333;
+  list-style: none;
 }
 
 .color-control {
   &__color-block {
     align-items: center;
-    background-color: $white;
-    border: 1px solid $gray-5;
-    border-radius: 6px;
-    cursor: pointer;
     display: flex;
-    height: $spacing-l;
-    padding: $spacing-s;
     width: $spacing-xl;
 
-    &:active {
-      // NOTE(stephen): Matching bootstrap dropdown active color to make the
-      // color control consistent with dropdowns on the page.
-      background-color: #e6e6e6;
-    }
-
+    // NOTE(stephen): Most of the styles are applied to the color-block so that
+    // we don't have to provide separate click handlers or behaviors on top of
+    // the core ui component.
     .zen-color-block {
-      flex: 1;
+      align-items: center;
+      background-color: $white;
+      border: 1px solid $gray-light-active;
+      border-radius: 5px;
+      color: $slate;
+      cursor: pointer;
+      display: flex;
+      height: $spacing-l;
+      padding-left: $spacing-s;
+      width: $spacing-xl;
 
       &__icon {
-        // NOTE(stephen): Matching border color of dropdown.
-        border: 1px solid #ccc;
+        border: 1px solid $gray-light-active;
         border-radius: 50%;
       }
 
-      &__color-picker {
-        left: -$spacing-s;
-        top: 25px;
+      // NOTE(stephen): Matching Dropdown color scheme so this control looks
+      // nice next to dropdowns.
+      &:hover {
+        background-color: $white-hover;
+        border: 1px solid $gray;
+      }
+
+      &:active {
+        background-color: $white-active;
+        border: 1px solid $gray;
       }
     }
   }
 
   &__caret {
+    left: -18px;
     margin: 0;
+    pointer-events: none;
+    position: relative;
+  }
+}
+
+.color-value-rules-block {
+  align-items: center;
+  border: 1px solid $gray;
+  border-radius: 5px;
+  display: flex;
+  height: 40px;
+
+  &__border {
+    background-color: $white;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    height: 24px;
+    padding: 1px;
+    width: 24px;
+  }
+
+  &__divider {
+    border-left: 1px solid $gray;
+    height: 40px;
+  }
+}
+
+.transformed-text-block {
+  height: 300px;
+  padding: 0px;
+
+  &__text-btn {
+    color: $blue-primary-active;
+    :hover {
+      color: $blue-primary-hover;
+    }
+  }
+
+  &__textarea {
+    resize: none;
+  }
+
+  &__apply-button {
+    border-radius: 0px 0px 5px 5px;
+    bottom: 0px;
+    color: $white;
+    position: absolute;
+    text-transform: uppercase;
+  }
+
+  &__tag {
+    background-image: linear-gradient(to right, $white, $white);
+    border: 1px solid $gray;
+    color: $slate;
+    display: flex;
+    height: 30px;
+    justify-content: center;
+    margin-right: 0;
+
+    &--content {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 }

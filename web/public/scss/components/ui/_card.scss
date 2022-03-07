@@ -9,8 +9,8 @@
   }
 
   &__heading {
-    font-weight: bold;
     border-bottom: 1px solid #dcdcdc;
+    font-weight: bold;
 
     &--offwhite {
       background-color: $offwhite-card-header;
@@ -22,8 +22,18 @@
       color: $dark-gray-3;
     }
 
-    &--purple {
-      background-color: $light-zenysis-purple-3;
+    &--red {
+      background-color: $error-color;
+      color: $white;
+    }
+
+    &--green {
+      background-color: $success-color;
+      color: $white;
+    }
+
+    &--orange {
+      background-color: $warning-color;
       color: $white;
     }
   }

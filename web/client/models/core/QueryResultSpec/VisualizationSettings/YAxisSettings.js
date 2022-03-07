@@ -4,33 +4,34 @@ import XAxisSettings from 'models/core/QueryResultSpec/VisualizationSettings/XAx
 import type { DefaultXAxisValues } from 'models/core/QueryResultSpec/VisualizationSettings/XAxisSettings';
 import type { Serializable } from 'lib/Zen';
 
-type DefaultValues = $Merge<
-  DefaultXAxisValues,
-  {
-    rangeFrom: number | void,
-    rangeTo: number | void,
-  },
->;
+type DefaultValues = {
+  ...DefaultXAxisValues,
+  rangeFrom: number | void,
+  rangeTo: number | void,
+};
 
-type SerializedYAxis = $Merge<
-  Zen.Serialized<XAxisSettings>,
-  {
-    rangeFrom?: number,
-    rangeTo?: number,
-  },
->;
+export type SerializedYAxis = {
+  ...Zen.Serialized<XAxisSettings>,
+  rangeFrom?: number,
+  rangeTo?: number,
+};
 
 class YAxisSettings extends Zen.BaseModel<YAxisSettings, {}, DefaultValues>
   implements Serializable<SerializedYAxis> {
-  static defaultValues = {
-    ...XAxisSettings.defaultValues,
+  static defaultValues: DefaultValues = {
+    additionalAxisTitleDistance: '0px',
+    labelsFontColor: 'black',
+    labelsFontFamily: 'Arial',
+    labelsFontSize: '13px',
     rangeFrom: undefined,
     rangeTo: undefined,
+    title: '',
+    titleFontColor: 'black',
+    titleFontFamily: 'Arial',
+    titleFontSize: '13px',
   };
 
-  static deserialize(
-    modelValues?: SerializedYAxis = {},
-  ): Zen.Model<YAxisSettings> {
+  static deserialize(modelValues: SerializedYAxis): Zen.Model<YAxisSettings> {
     return YAxisSettings.create({ ...modelValues });
   }
 
@@ -39,4 +40,4 @@ class YAxisSettings extends Zen.BaseModel<YAxisSettings, {}, DefaultValues>
   }
 }
 
-export default ((YAxisSettings: any): Class<Zen.Model<YAxisSettings>>);
+export default ((YAxisSettings: $Cast): Class<Zen.Model<YAxisSettings>>);

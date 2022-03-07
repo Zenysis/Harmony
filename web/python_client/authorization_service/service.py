@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from future import standard_library
-
-standard_library.install_aliases()
 from urllib.parse import urljoin
 
 from web.python_client.core import ApiService, LOCALHOST_URI

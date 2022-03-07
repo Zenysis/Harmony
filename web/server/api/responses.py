@@ -1,9 +1,5 @@
 '''A module for generating responses to API requests
 '''
-
-from future import standard_library
-
-standard_library.install_aliases()
 from http.client import BAD_REQUEST
 from werkzeug import exceptions
 

@@ -1,0 +1,72 @@
+.pie-chart-drilldown {
+  display: flex;
+  height: 100%;
+  width: 100%;
+
+  &__wrapper {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  &__charts {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    min-height: 100%;
+    min-width: 100%;
+  }
+
+  // In single-chart mode, we are not drilling down into the data and should
+  // rearrange the legend and chart for a cleaner layout.
+  &--single-chart {
+    flex-direction: column-reverse;
+  }
+}
+
+.pie-chart-drilldown-legend {
+  min-height: 20px;
+  overflow: auto;
+
+  &--horizontal {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: $spacing-s;
+    max-height: 100px;
+
+    .pie-chart-drilldown-legend__legend-row {
+      padding-right: $spacing-s;
+    }
+  }
+
+  &__legend-row {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    font-size: 13px;
+
+    &--disabled {
+      opacity: 0.25;
+    }
+
+    &--selected {
+      font-weight: bold;
+    }
+  }
+
+  &__legend-color {
+    border-radius: 100px;
+    flex-shrink: 0;
+    height: $space-s-px;
+    margin-right: $spacing-xs;
+    width: $space-s-px;
+  }
+
+  &__charts {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+  }
+}

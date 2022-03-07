@@ -90,11 +90,14 @@ TABLE_COLUMNS_DISPLAY_MAP = {}
 ############################################################################
 # Map UI
 
+# Two letter ISO country code
+COUNTRY_CODE = 'br'
+
 # Center of map view.
 MAP_DEFAULT_LATLNG = [-14.2350, -51.9253]
 
 # Default zoom level.
-MAP_DEFAULT_ZOOM = 6
+MAP_DEFAULT_ZOOM = 4
 
 # GeoJson Tile Overlay
 MAP_GEOJSON_LOCATION = 'https://d2ke70b3fbr0dr.cloudfront.net/brazil_20190807.geojson'
@@ -105,12 +108,22 @@ GEO_DATA_URL = ''
 GEO_DATA_DIMENSIONS = ''
 # List of keys to be displayed.
 GEO_DATA_DISPLAY = []
+# The key to use to display a value in the map labels (for entity markers only).
+# This will change if we decide to show multiple values per entity.
+GEO_DATA_LABEL_KEY = ''
+
+# A model that represents settings associated with our GIS tool. This stores
+# information such as dataset URLs, names of datasets, keys to filter on, etc.
+GIS_APP_SETTINGS = None
+
+# List of geo dimensions that can be shown on the dql map viz
+DQL_MAP_DIMENSIONS = ['StateName']
 
 # Mapbox Admin url boundaries.
 MAP_MAPBOX_ADMIN_URLS = {}
 
 # Mapbox access token.
-MAPBOX_ACCESS_TOKEN = ''
+MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiaWFudyIsImEiOiJjaWY4dnNkeTIwOWMzczlseHVxZDJqNTM1In0.XIkCSEq_oLlAiXT5FfABFw'
 
 ############################################################################
 # Misc
@@ -125,3 +138,9 @@ ENABLE_DATA_QUALITY_LAB = True
 
 # Session timeout in seconds
 SESSION_TIMEOUT = 1800
+
+# Up to nine custom colors for the deployment
+CUSTOM_COLORS = []
+
+# Whether this is a "Harmony" deployment. If true, will disable some features.
+IS_HARMONY = False

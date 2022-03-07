@@ -6,29 +6,35 @@ import BreadcrumbItem from 'components/ui/Breadcrumb/BreadcrumbItem';
 import BreadcrumbItemWrapper from 'components/ui/Breadcrumb/BreadcrumbItemWrapper';
 import { uniqueId } from 'util/util';
 
-type Props<T> = {|
-  children: React.ChildrenArray<React.Element<Class<BreadcrumbItem<T>>>>,
-
+type DefaultProps<T> = {
   /**
    * Gets called when the user clicks on a breadcrumb item.
    * @param {T} value The clicked breadcrumb item's value
    * @param {SyntheticEvent.div} event The click event
    */
-  onItemClick: (value: T, event: SyntheticEvent<HTMLDivElement>) => void,
+  onItemClick:
+    | ((value: T, event: SyntheticEvent<HTMLDivElement>) => void)
+    | void,
 
   className: string,
-|};
+};
+
+type Props<T> = {
+  ...DefaultProps<T>,
+  children: React.ChildrenArray<React.Element<Class<BreadcrumbItem<T>>>>,
+};
 
 /**
  * A Breadcrumb component used to display BreadcrumbItem components in
  * succession.
  */
 export default class Breadcrumb<T> extends React.PureComponent<Props<T>> {
-  static defaultProps = {
+  static defaultProps: DefaultProps<T> = {
     className: '',
+    onItemClick: undefined,
   };
 
-  render() {
+  render(): React.Element<'div'> {
     const { children, onItemClick } = this.props;
     const items = React.Children.map(children, breadcrumbItem => (
       // If the user supplied the breadcrumbItem with a key then we'll use that.

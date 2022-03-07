@@ -1,18 +1,20 @@
-
 # This aggregation computes the exact unique count for a given dimension.
 # This aggregator is DANGEROUS and should almost never be used. There are many
 # choices made here around object safety and performance based on the assumption
 # that this aggregation type will be used very rarely.
 # Talk to @stephen if you need to use it.
 from copy import deepcopy
+from typing import TYPE_CHECKING
 
 from pydruid.utils.aggregators import count, filtered as filtered_aggregator, longsum
 from pydruid.utils.filters import Filter
 
 from db.druid.aggregations.query_modifying_aggregation import QueryModifyingAggregation
 from db.druid.calculations.base_calculation import BaseCalculation
-from db.druid.query_builder import GroupByQueryBuilder
 from db.druid.util import EmptyFilter
+
+if TYPE_CHECKING:
+    from db.druid.query_builder import GroupByQueryBuilder
 
 # Strip off any filters around the aggregation and return just
 # the base aggregation
@@ -72,11 +74,7 @@ class ExactUniqueCountAggregation(QueryModifyingAggregation):
 
     # To compute exact unique count, we must convert a groupby query into a
     # nested groupby query.
-    def modify_query(self, query):
-        if not isinstance(query, GroupByQueryBuilder):
-            print('***Invalid query type for this calculation: %s' % type(query))
-            return
-
+    def modify_query(self, query: 'GroupByQueryBuilder'):
         # Build the inner groupby query and use it as the datasource for
         # the original query
         query.datasource = self.build_inner_groupby(query)
@@ -97,9 +95,10 @@ class ExactUniqueCountAggregation(QueryModifyingAggregation):
     # ExactUniqueCountAggregation is encountered during a query, it can be
     # merged into this one to produce a new aggregation to use.
     def merge_compatible_aggregation(self, aggregation):
-        assert isinstance(aggregation, ExactUniqueCountAggregation), (
-            'Cannot add additional modifying aggregation. Invalid type: %s'
-            % (type(aggregation))
+        assert isinstance(
+            aggregation, ExactUniqueCountAggregation
+        ), 'Cannot add additional modifying aggregation. Invalid type: %s' % (
+            type(aggregation)
         )
         assert aggregation.dimension == self.dimension, (
             'Cannot add additional modifying aggregations. Uniqueness '

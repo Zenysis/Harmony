@@ -1,0 +1,101 @@
+.gd-dashboard-grid {
+  display: grid;
+  position: relative;
+
+  &__grid-layout {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  &__resize-handle {
+    // TODO(nina): There seems to be a bug where the resize handle is
+    // appearing when hovering over the tile, but it is below the specific
+    // tile being displayed (text, query item, etc). Setting the z index
+    // here makes it visible, but we need to investigate why it is happening
+    // in the first place. The first caught case is with GIS tiles, which
+    // has its own z-indexes within its tile. This could be a cause.
+    cursor: se-resize;
+    display: flex;
+    position: absolute;
+    visibility: hidden;
+    z-index: 1;
+  }
+
+  .react-grid-item:hover {
+    &.react-resizable {
+      .gd-dashboard-grid__resize-handle {
+        visibility: visible;
+      }
+    }
+
+    &.react-resizable-hide {
+      .gd-dashboard-grid__resize-handle {
+        visibility: hidden;
+      }
+    }
+  }
+
+  // When a grid item is being resized or dragged, make it opaque so that the
+  // user can see where their action will line up on the dashboard grid.
+  .react-grid-item {
+    &.react-draggable.react-draggable-dragging,
+    &.react-resizable.resizing {
+      opacity: 0.2;
+    }
+
+    // React grid layout has a default red shadow when dragging, we want it to
+    // be blue
+    &.react-grid-placeholder {
+      background: #0f6fff !important;
+    }
+  }
+
+  &__tile-wrapper { 
+    cursor: initial;
+
+    // Using the react grid layout resize handles because rgl translates them
+    // to the correct locations and can listen to the drag events easily without
+    // any configuration from us. However, our tile outlines will draw the
+    // handles that the user will see (even though those handles aren't actually
+    // hooked up to react-grid-layout).
+    .react-resizable-handle {
+      height: 8px;
+      margin: -4px -4px;
+
+      // Set an opacity of 0 so that the element is not visible but it can still
+      // be interacted with (when it is shown).
+      opacity: 0;
+      transform: none !important;
+      visibility: hidden;
+      width: 8px;
+      // HACK(moriah): make it so that the enitre edge for the resizable handles
+      // are selectable to be dragged.
+      &-e, &-w {
+        top: 0 !important;
+        height: 100%;
+      }
+      &-s {
+        left: 0 !important;
+        width: 100%;
+      }
+    }
+
+    &--editing-tile {
+      opacity: .4;
+    }
+
+    &--selected {
+      // We need to specifty a z-index here so that the menu and drag buttons
+      // which overflow out of the tile-wrapper don't get
+      // hidden behind other elements, and the tile outlines.
+      z-index: 5;
+      .react-resizable-handle {
+        visibility: visible;
+      }
+    }
+
+    &--resizing {
+      opacity: 0.2;
+    }
+  }
+}

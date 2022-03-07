@@ -2,10 +2,10 @@
 import * as Zen from 'lib/Zen';
 import {
   getQuantile,
-  twoDecimalPlaces,
+  roundValue,
 } from 'models/core/QueryResultSpec/ValueRule/rulesUtil';
 import type { Serializable } from 'lib/Zen';
-import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/types';
+import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/TestableRule';
 
 type Values = {
   percentile: number,
@@ -18,7 +18,8 @@ type SerializedInQuantileRule = {
   n: number,
 };
 
-const TEXT = t('models.core.QueryResultSpec.ValueRule');
+const TEXT_PATH = 'models.core.QueryResultSpec.ValueRule';
+const TEXT = t(TEXT_PATH);
 
 /**
  * Test if a value is in the n-th quantile of an array, where each quantile is
@@ -73,21 +74,23 @@ class InQuantileRule extends Zen.BaseModel<InQuantileRule, Values>
     return val > startOfQuantile && val <= endOfQuantile;
   }
 
+  /**
+   * Return a string to describe this rule. Formatted as the quantile the rule
+   * includes (eg. "third quartile") and the range of the quantile. The start
+   * value (except for the first quantile) is exclusive.
+   */
+  // TODO(sophie): modify range so that both start and end are inclusive
   getRuleString(allValues: $ReadOnlyArray<?number>): string {
     const { n, percentile } = this.modelValues();
     const [startOfQuantile, endOfQuantile] = this._getQuantileRange(allValues);
-    const startVal = twoDecimalPlaces(startOfQuantile);
-    const endVal = twoDecimalPlaces(endOfQuantile);
-    if (n * percentile === 1) {
-      // last quantile
-      return `${TEXT.values} > ${startVal}`;
-    }
-
-    if (n === 1) {
-      return `${TEXT.values} <= ${endVal}`;
-    }
-
-    return `${startVal} < ${TEXT.values} <= ${endVal}`;
+    const startVal = roundValue(startOfQuantile);
+    const endVal = roundValue(endOfQuantile);
+    const quantile = t('quantileOfData', {
+      scope: TEXT_PATH,
+      ordinal: TEXT.ordinals[String(n)],
+      quantile: TEXT.quantiles[String(Math.round(1 / percentile))],
+    });
+    return `${quantile} (${n !== 1 ? '> ' : ''}${startVal} - ${endVal})`;
   }
 
   serialize(): SerializedInQuantileRule {
@@ -100,4 +103,4 @@ class InQuantileRule extends Zen.BaseModel<InQuantileRule, Values>
   }
 }
 
-export default ((InQuantileRule: any): Class<Zen.Model<InQuantileRule>>);
+export default ((InQuantileRule: $Cast): Class<Zen.Model<InQuantileRule>>);

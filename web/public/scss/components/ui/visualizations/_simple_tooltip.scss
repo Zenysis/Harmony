@@ -1,0 +1,62 @@
+.viz-simple-tooltip {
+  display: flex;
+  flex-direction: column;
+
+  // Disable pointer events so that a "hover end" event is not triggered if the
+  // popup shows up where the user's mouse is.
+  pointer-events: none;
+
+  // Apply the original popover styling to just the content since we need to
+  // draw the tip separately.
+  &__table {
+    @extend .zen-popover--empty-container;
+  }
+
+  &__tip {
+    align-self: center;
+    border: 6px solid transparent;
+    border-bottom: none;
+    border-top: 4px solid $white;
+    height: 0;
+    width: 0;
+  }
+}
+
+.viz-tooltip-table {
+  max-width: 450px;
+  padding: $space-xs-em;
+
+  &__row {
+    align-items: center;
+    display: flex;
+    font-size: $font-m;
+  }
+
+  &__row-label {
+    color: $slate-hover;
+    flex: 1;
+    margin-right: $space-xs-em;
+  }
+
+  &__row-value {
+    font-weight: 700;
+    text-align: right;
+  }
+
+  &__title-block {
+    border-bottom: 1px solid $gray-active;
+    margin-bottom: $space-xs-em;
+    min-width: 150px;
+    padding-bottom: $space-xxs-em;
+    text-align: center;
+  }
+
+  &__title {
+    font-size: $font-l;
+    font-weight: 700;
+  }
+
+  &__subtitle {
+    font-size: $font-m;
+  }
+}

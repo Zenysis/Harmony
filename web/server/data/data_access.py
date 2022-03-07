@@ -262,6 +262,13 @@ def find_one_by_fields(entity_class, case_sensitive, search_fields, session=None
     return query.first()
 
 
+def find_distinct_field_values(instrumented_attr, session=None):
+    '''Gets all distinct values for a field of a given class.
+    '''
+    session = session or get_db_adapter().session
+    return [val[0] for val in session.query(instrumented_attr).distinct().all()]
+
+
 class Transaction(object):
     '''A simple wrapper around `session` that makes it easy to auto-commit
     or rollback a transaction based on configurable behaviour.
@@ -315,7 +322,7 @@ class Transaction(object):
         '''
         return find_by_id(entity_class, entity_id, id_column, self._session)
 
-    def find_all_by_fields(self, entity_class, search_fields):
+    def find_all_by_fields(self, entity_class, search_fields: dict):
         '''Tries to find all entities by multiple fields (given in search_fields)
 
         Parameters
@@ -340,6 +347,25 @@ class Transaction(object):
             An enumeration of instances of `entity_class` if they exist or an empty list.
         '''
         return find_all_by_fields(entity_class, search_fields, self._session)
+
+    def find_all(self, entity_class):
+        '''Find all entities
+
+        Parameters
+        ----------
+        entity_class: models.base.Model
+            The SQLAlchemy Model Class.
+
+        Returns
+        -------
+        iter
+            An enumeration of instances of `entity_class` if they exist or an empty list.
+        '''
+        session = self._session or get_db_adapter().session
+        return session.query(entity_class).all()
+
+    def find_distinct_field_values(self, instrumented_attr):
+        return find_distinct_field_values(instrumented_attr, self._session)
 
     def find_one_by_fields(self, entity_class, case_sensitive, search_fields):
         '''Tries to find an entity by multiple fields (given in search_fields)
@@ -408,6 +434,9 @@ class Transaction(object):
             The deleted entity.
         '''
         return delete_entity(self._session, item)
+
+    def run_raw(self):
+        return self._session
 
     @classmethod
     def _default_should_commit(

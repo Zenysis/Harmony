@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+{% set body_class="condensed-navbar"%}
+
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ bundle_resource_url('dataDigest.bundle.js') }}"></script>
+{% endblock %}
+
+{% block tracking_event %}
+<script>
+analytics.track('Data digest view', { nonInteraction: 1 });
+</script>
+{% endblock %}

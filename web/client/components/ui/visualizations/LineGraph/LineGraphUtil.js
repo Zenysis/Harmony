@@ -1,20 +1,22 @@
 // @flow
 import moment from 'moment';
 import { extent, max } from 'd3-array';
-import { scaleLinear, scaleTime, scaleOrdinal } from '@vx/scale';
+import { scaleLinear, scaleUtc, scaleOrdinal } from '@vx/scale';
 
 import type {
   DataPoint,
   VerticalAxisStartPoint,
 } from 'components/ui/visualizations/LineGraph/types';
 
-export function createDateFormatter(dateFormat: string) {
-  return (date: string | Date) => moment(date).format(dateFormat);
+export function createDateFormatter(
+  dateFormat: string,
+): (string | Date) => string {
+  return (date: string | Date) => moment.utc(date).format(dateFormat);
 }
 
-export const extractDate = (d: DataPoint): Date => d.date;
+export const extractDate = (d: { date: Date, ... }): Date => d.date;
 
-export const extractValue = (d: DataPoint): number => d.value;
+export const extractValue = (d: { value: number, ... }): number => d.value;
 
 const clampMonth = (month: number): number => Math.max(0, Math.min(month, 11));
 
@@ -46,23 +48,30 @@ function offsetDateExtentByMonth(
  * @param {number} offset The fraction to consider while offsetting the
  * minimum and maximum values
  */
-export function createOffsetFunction(offset: number) {
+export function createOffsetFunction(
+  offset: number,
+): (number, number | string) => number {
   return (valueToOffset: number, index: number | string): number => {
     const isMinValue = Number(index) === 0;
-    if (isMinValue) {
+    const isPositive = valueToOffset >= 0;
+    if ((isMinValue && isPositive) || (!isMinValue && !isPositive)) {
       return valueToOffset * (1 - offset);
     }
     return valueToOffset * (1 + offset);
   };
 }
 
-export function computeXScale(data: $ReadOnlyArray<DataPoint>, width: number) {
+export function computeXScale(
+  data: $ReadOnlyArray<DataPoint>,
+  width: number,
+): $FlowTODO {
   const dateExtent = extent(data, extractDate);
   const offsetExtent = offsetDateExtentByMonth(dateExtent);
-  const xScale = scaleTime({
+  const xScale = scaleUtc({
     range: [0, width],
     domain: offsetExtent,
   });
+
   return xScale;
 }
 
@@ -70,7 +79,7 @@ export function computeYScale(
   data: $ReadOnlyArray<DataPoint>,
   height: number,
   verticalAxisStartPoint: VerticalAxisStartPoint = 'zero',
-) {
+): $FlowTODO {
   let valueExtent;
   const minMaxOffset = 0.2;
   const offsetValue = createOffsetFunction(minMaxOffset);
@@ -98,7 +107,7 @@ export function computeYScale(
 export function computeColorScale(
   domain: $ReadOnlyArray<string>,
   range: $ReadOnlyArray<string>,
-) {
+): $FlowTODO {
   return scaleOrdinal({
     domain,
     range,

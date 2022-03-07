@@ -1,0 +1,56 @@
+steps:
+  # Download previous builds in parallel.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pipeline-pull'
+    entrypoint: 'bash'
+    args: [
+        '-c',
+        'docker pull gcr.io/$PROJECT_ID/pipeline:$BRANCH_NAME || exit 0',
+      ]
+    waitFor: ['-']
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pipeline-base-pull'
+    entrypoint: 'bash'
+    args: [
+        '-c',
+        'docker pull gcr.io/$PROJECT_ID/pipeline-base:$BRANCH_NAME || exit 0',
+      ]
+    waitFor: ['-']
+
+  # Build the pipeline-base first.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pipeline-base-build'
+    args: [
+        'build',
+        '-t',
+        'gcr.io/$PROJECT_ID/pipeline-base:$BRANCH_NAME',
+        '-f',
+        'docker/pipeline/pipeline-base',
+        '--cache-from',
+        'gcr.io/$PROJECT_ID/pipeline-base:$BRANCH_NAME',
+        '.',
+      ]
+    waitFor: ['pipeline-base-pull']
+
+  # After pipeline-base is finished building, we can build the output pipeline
+  # container.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pipeline-build'
+    args: [
+        'build',
+        '-t',
+        'gcr.io/$PROJECT_ID/pipeline:$BRANCH_NAME',
+        '-f',
+        'docker/pipeline/pipeline',
+        '--build-arg',
+        'TAG=$BRANCH_NAME',
+        '--cache-from',
+        'gcr.io/$PROJECT_ID/pipeline:$BRANCH_NAME',
+        '.',
+      ]
+    waitFor: ['pipeline-base-build', 'pipeline-pull']
+images: [
+    'gcr.io/$PROJECT_ID/pipeline:$BRANCH_NAME',
+    'gcr.io/$PROJECT_ID/pipeline-base:$BRANCH_NAME',
+  ]
+timeout: 1200s

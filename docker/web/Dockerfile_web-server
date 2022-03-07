@@ -5,6 +5,13 @@ ENV INSTALL_PATH /server
 RUN mkdir -p ${INSTALL_PATH}
 WORKDIR ${INSTALL_PATH}
 
+RUN \
+  export DEBIAN_FRONTEND=noninteractive && \
+  apt-get update && \
+  apt-get install --no-install-recommends -y lz4 && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt requirements.txt
 COPY requirements-web.txt requirements-web.txt
 
@@ -36,6 +43,7 @@ COPY data data
 COPY db db
 COPY log log
 COPY models models
+COPY graphql graphql
 COPY util util
 COPY web/*.py web/
 COPY web/server web/server

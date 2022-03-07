@@ -65,7 +65,7 @@ def _build_from_node(node):
     # Variables encountered are considered to be druid data fields
     if node_type == 'Name':
         return Field(node.id)
-    if node_type == 'Num':
+    if node_type in ('Num', 'Constant'):
         return Const(node.n)
     if node_type == 'BinOp':
         node_op_type = type(node.op).__name__
@@ -118,6 +118,21 @@ def build_expression_post_aggregator(formula_str):
     return ExpressionPostAggregator(formula_str)
 
 
+def test_expression_formula_valid(formula_str: str) -> bool:
+    '''Test to see if the formula string provided is a valid formula that can be parsed
+    and evaluated by Druid as a post aggregator.
+    '''
+    if not formula_str:
+        return False
+
+    try:
+        root = _parse_formula(formula_str)
+        _ = _build_from_node(root)
+    except (FormulaError, UnsupportedNodeError):
+        return False
+    return True
+
+
 def walk_post_aggregator(post_aggregator, callback):
     '''Recursively operate on all post aggregations stored inside the provided
     post aggregator.
@@ -155,14 +170,21 @@ def _rename_post_aggregator(suffix, post_aggregator):
     if field_name:
         post_aggregator['fieldName'] = '%s%s' % (field_name, suffix)
 
+    # JS post aggregators can reference multiple fields.
+    if post_aggregator['type'] == 'javascript':
+        post_aggregator['fieldNames'] = [
+            '%s%s' % (field_name, suffix)
+            for field_name in post_aggregator['fieldNames']
+        ]
+
     # Expression post aggregators are special and can contain field references
     # directly in the formula referenced.
     if post_aggregator['type'] == 'expression':
         formula = post_aggregator['expression']
-        post_aggregator['expression'] = _add_suffix_to_expression(formula, suffix)
+        post_aggregator['expression'] = add_suffix_to_expression(formula, suffix)
 
 
-def _add_suffix_to_expression(expression, suffix):
+def add_suffix_to_expression(expression, suffix):
     '''Add the suffix to all fields referenced by the expression and return the
     updated expression.
     '''

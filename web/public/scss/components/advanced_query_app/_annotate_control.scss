@@ -1,0 +1,37 @@
+.literally {
+  height: 100%;
+}
+
+.annotate-canvas {
+  height: 80%;
+  width: 100%;
+}
+
+.annotation-container {
+  height: 100%;
+  width: 100%;
+}
+
+.annotation-container > button {
+  margin-right: 7px;
+}
+
+.annotation-container-inner {
+  height: 100%;
+  margin-bottom: 25px;
+  margin-top: 35px;
+}
+
+// Any elements that need to change styles when being exported should handle
+// that here.
+body.html2canvas {
+  // Any elements that should be hidden during exporting should include this
+  // class.
+  // NOTE(stephen): Choosing visibility: hidden here so that the positioning of
+  // elements on the screen is identical in the screenshot vs the original. This
+  // is different from the `data-html2canvas-ignore` element tag provided by
+  // html2canvas which fully excludes the element from rendering.
+  .hide-on-export {
+    visibility: hidden;
+  }
+}

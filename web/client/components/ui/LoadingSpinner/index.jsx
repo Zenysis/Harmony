@@ -1,48 +1,56 @@
 // @flow
 import * as React from 'react';
 
-type Props = {|
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
+import type { StyleObject } from 'types/jsCore';
+
+type Props = {
+  /** The aria label for the loading spinner */
+  ariaName?: string,
+
   /** Extra class name to attach to the loading spinner */
-  className: string,
+  className?: string,
 
   /** The color of the spinner */
-  color: string,
+  color?: string,
 
   /** Determines if the spinner is shown. */
-  loading: boolean,
+  loading?: boolean,
 
   /** Diameter (in pixels) of the spinner */
-  size: number,
-|};
+  size?: number,
 
-// TODO(pablo): refactor into a functional component with React.memo once we
-// upgrade to React 16.8
+  /** Extra styles to attach to the loading spinner */
+  style?: StyleObject | void,
+};
+
+const TEXT = t('ui.LoadingSpinner');
+
 /**
- * A simple loading spinner to be used when waiting for data to load e.g. in the
- * hierarchical selector component.
+ * A simple loading spinner to be used when waiting for data to load.
  */
-export default class LoadingSpinner extends React.PureComponent<Props> {
-  static defaultProps = {
-    className: '',
-    color: '#293742', // Equivalent to $dark-grey-3
-    loading: true,
-    size: 20,
+function LoadingSpinner({
+  ariaName = TEXT.loading,
+  className = '',
+  color = '#293742', // Equivalent to $dark-gray-3
+  loading = true,
+  size = 20,
+  style = undefined,
+}: Props): React.Element<'div'> | null {
+  const styles = {
+    borderColor: color,
+    height: size,
+    width: size,
+    ...style,
   };
 
-  render(): React.Node {
-    const { size, color, className } = this.props;
-    const styles = {
-      borderColor: color,
-      height: size,
-      width: size,
-    };
-
-    return (
-      this.props.loading && (
-        <div className={`zen-loading-spinner ${className}`}>
-          <div style={styles} className="zen-loading-spinner__contents" />
-        </div>
-      )
-    );
-  }
+  return loading ? (
+    <div
+      aria-label={normalizeARIAName(ariaName)}
+      style={styles}
+      className={`zen-loading-spinner ${className}`}
+    />
+  ) : null;
 }
+
+export default (React.memo(LoadingSpinner): React.AbstractComponent<Props>);

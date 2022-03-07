@@ -1,0 +1,26 @@
+.gd-draggable-tile-pill-tag {
+  @extend .gd-query-section__filter-tag;
+  border: 1px solid $gray;
+  cursor: grab;
+  //TODO(kalyani): add draggable functionality
+  margin:0;
+  width: 100%;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &__content-container {
+    align-items: center;
+    display: flex;
+    position: relative;
+  }
+
+  &__icon {
+    @extend .query-item-tag__icon;
+  }
+
+  &__text {
+    @extend .query-item-tag__text;
+  }
+}

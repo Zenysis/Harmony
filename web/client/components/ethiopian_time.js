@@ -1,5 +1,6 @@
+// @flow
 // List of names of Ethiopian months.
-export const ETHIOPIAN_MONTHS = [
+export const ETHIOPIAN_MONTHS: $ReadOnlyArray<string> = [
   t('query_form.select_date.ethiopian_months.full.month_1'),
   t('query_form.select_date.ethiopian_months.full.month_2'),
   t('query_form.select_date.ethiopian_months.full.month_3'),
@@ -15,7 +16,7 @@ export const ETHIOPIAN_MONTHS = [
   t('query_form.select_date.ethiopian_months.full.month_13'),
 ];
 
-export const ETHIOPIAN_MONTHS_SHORT = [
+export const ETHIOPIAN_MONTHS_SHORT: $ReadOnlyArray<string> = [
   t('query_form.select_date.ethiopian_months.short.month_1'),
   t('query_form.select_date.ethiopian_months.short.month_2'),
   t('query_form.select_date.ethiopian_months.short.month_3'),

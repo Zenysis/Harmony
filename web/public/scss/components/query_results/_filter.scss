@@ -1,81 +1,51 @@
-.slice-container .control-label {
-  padding-top: 0;
+.query-result-filter-modal {
+  &__delete-icon {
+    color: $error-color;
+    &:hover {
+      color: $error-color-hover;
+    }
+
+    &:active {
+      color: $error-color-active;
+    }
+  }
+
+  // TODO(pablo): remove this once the Well component no longer relies on
+  // bootstrap
+  .well {
+    margin-bottom: 0;
+  }
 }
 
-.slice-container .checkbox {
-  margin-bottom: 10px;
-}
-
-/* Filter slice header */
-.filter-body > .zen-modal__body {
-	overflow: visible;
-}
-
+// TODO(pablo): all these classes below are used in NewUserButton which makes
+// no sense and should be refactored or removed
 .filter-slice-modal {
-	height: 100%;
+  height: 100%;
 }
 
 .filter-slice-modal .zen-color-block > .zen-color-block__color-picker {
-  right: -90px;
   position: absolute;
+  right: -90px;
   top: -150px;
   z-index: 100;
 }
 
 .filter-slice-modal-header > h3,
 .filter-slice-modal-header > h4 {
-	padding: 5px 0px 10px 0px;
-	font-weight: lighter;
-	margin: 0;
+  font-weight: lighter;
+  margin: 0;
+  padding: 5px 0px 10px 0px;
 }
 
 .filter-slice-modal-header > h3 {
-	font-size: 35px;
+  font-size: 35px;
 }
 .filter-slice-modal-header > h4 {
-	margin-top: -15px;
-	font-size: 16px;
+  font-size: 16px;
+  margin-top: -15px;
 }
 
 .filter-slice-modal-header > .btn-close-modal {
-	top: -1px;
-	color: #384B59;
-}
-
-.modal-form-field-label {
-	font-size: 16px;
-}
-
-.modal-input-header {
-	font-weight: lighter;
-	font-size: 15px;
-}
-
-.filter-arrow {
-	color: #c3c3c3;
-	float: left;
-	padding-left: 10px;
-	@include transform(rotate(135deg));
-}
-
-.filter-color-ranges {
-	margin-top: 12px;
-}
-
-.filter-glyphicons {
-	line-height: 2;
-	padding: 4px;
-}
-
-.filter-glyphicons > button > i {
-	color: #8a8686;
-}
-
-.filter-glyphicons > button {
-	padding: 0px;
-}
-
-.modal-contents > .well {
-	padding: 7px;
-	background-color: rgb(235, 235, 235);
+  color: #384b59;
+  top: -1px;
 }

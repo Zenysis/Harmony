@@ -2,10 +2,10 @@
 import * as Zen from 'lib/Zen';
 import Role from 'services/models/Role';
 import { areStringsEqualIgnoreCase } from 'util/stringUtil';
-import type { ResourceType } from 'services/AuthorizationService';
+import type { ResourceType } from 'services/AuthorizationService/types';
 import type { Serializable } from 'lib/Zen';
 
-type BackendIdentityRoleMap = { [string]: Array<string> };
+type BackendIdentityRoleMap = { [string]: $ReadOnlyArray<string>, ... };
 
 type SerializedIdentityRoleMap = {
   backendRoleMap: BackendIdentityRoleMap,
@@ -22,11 +22,11 @@ const EMPTY_ZEN_ARRAY: Zen.Array<Role> = Zen.Array.create();
  */
 type DefaultValues = {
   /**
-   * @readonly
    * The name of the specific `AuthorizationResource` that this role map
    * corresponds to.
    */
-  resourceName: Zen.ReadOnly<string>,
+  resourceName: string,
+
   /**
    * The mapping of `identityName` to individual roles that individual
    * `identities` hold on the the given `AuthorizationResource` by default.
@@ -36,7 +36,7 @@ type DefaultValues = {
 
 class IdentityRoleMap extends Zen.BaseModel<IdentityRoleMap, {}, DefaultValues>
   implements Serializable<BackendIdentityRoleMap> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     resourceName: '',
     roles: Zen.Map.create(),
   };
@@ -48,7 +48,7 @@ class IdentityRoleMap extends Zen.BaseModel<IdentityRoleMap, {}, DefaultValues>
   }: SerializedIdentityRoleMap): Zen.Model<IdentityRoleMap> {
     const roles: Zen.Map<Zen.Array<Role>> = Object.keys(backendRoleMap).reduce(
       (newRoles: Zen.Map<Zen.Array<Role>>, identityName: string) => {
-        const roleNames: Array<string> = backendRoleMap[identityName];
+        const roleNames: $ReadOnlyArray<string> = backendRoleMap[identityName];
         const identityRoles: Zen.Array<Role> = Zen.Array.create(
           roleNames.map(roleName =>
             Role.create({
@@ -75,9 +75,9 @@ class IdentityRoleMap extends Zen.BaseModel<IdentityRoleMap, {}, DefaultValues>
       .keys()
       .forEach((identityName: string) => {
         const roles: Zen.Array<Role> = this._.roles().forceGet(identityName);
-        const roleNames: Array<string> = roles
+        const roleNames: $ReadOnlyArray<string> = roles
           .map((role: Role) => role.roleName())
-          .toArray();
+          .arrayView();
         output[identityName] = roleNames;
       });
     return output;
@@ -194,4 +194,4 @@ class IdentityRoleMap extends Zen.BaseModel<IdentityRoleMap, {}, DefaultValues>
   }
 }
 
-export default ((IdentityRoleMap: any): Class<Zen.Model<IdentityRoleMap>>);
+export default ((IdentityRoleMap: $Cast): Class<Zen.Model<IdentityRoleMap>>);

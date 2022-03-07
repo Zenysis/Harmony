@@ -1,0 +1,71 @@
+.ui-alert {
+  background-color: white;
+
+  &--card {
+    border-radius: 3px;
+    box-shadow: rgba(67, 90, 111, 0.3) 0px 0px 1px,
+      rgba(67, 90, 111, 0.47) 0px 2px 4px -2px;
+  }
+
+  &__block {
+    align-items: center;
+    border: 1px solid $white-active;
+    border-left: none;
+    column-gap: $space-xs-px;
+    display: grid;
+    grid-column: 2;
+    grid-template-columns: auto 1fr auto;
+    padding: $space-s-px $space-m-px;
+
+    &--card {
+      border: none;
+    }
+
+    &--no-trim {
+      border-left: initial;
+    }
+  }
+
+  &__icon {
+    height: 14px;
+    width: 14px;
+  }
+
+  &__title {
+    color: $slate-hover;
+    font-size: $font-m;
+    font-weight: 600;
+    grid-column: 2;
+  }
+
+  &__content {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  &__content-text {
+    color: lighten($slate-hover, 30%);
+    font-size: $font-m;
+  }
+
+  &__remove-button {
+    align-items: center;
+    border-radius: 50%;
+    color: $gray-active;
+    display: flex;
+    font-size: 10px;
+    grid-column: 3;
+    height: 18px;
+    justify-content: center;
+    text-align: center;
+    width: 18px;
+
+    &:hover {
+      background-color: $gray-light-hover;
+    }
+  }
+
+  &__remove-button-icon {
+    top: 0;
+  }
+}

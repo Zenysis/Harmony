@@ -1,0 +1,26 @@
+.analytical-section {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(232, 240, 255, 0.65),
+    white 90%
+  );
+
+  &__hr {
+    margin: $space-s-px 0;
+  }
+
+  &__info {
+    font-size: $font-s;
+  }
+
+  &__stat {
+    font-size: $font-l;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  &__stat-description {
+    font-size: $font-s;
+    text-align: center;
+  }
+}

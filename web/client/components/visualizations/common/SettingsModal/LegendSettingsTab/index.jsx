@@ -2,12 +2,12 @@
 import * as React from 'react';
 
 import Checkbox from 'components/ui/Checkbox';
+import ColorControl from 'components/visualizations/common/controls/ColorControl';
 import Control from 'components/visualizations/common/controls/Control';
-import ControlsGroup from 'components/visualizations/common/controls/ControlsGroup';
-import FontColorControl from 'components/visualizations/common/controls/FontColorControl';
 import FontFamilyControl from 'components/visualizations/common/controls/FontFamilyControl';
 import FontSizeControl from 'components/visualizations/common/controls/FontSizeControl';
-import RadioGroup from 'components/common/RadioGroup';
+import Group from 'components/ui/Group';
+import RadioGroup from 'components/ui/RadioGroup';
 import SettingsBlock from 'components/common/visualizationSettings/SettingsPage/SettingsBlock';
 import SettingsPage from 'components/common/visualizationSettings/SettingsPage';
 import autobind from 'decorators/autobind';
@@ -20,29 +20,22 @@ const TEXT = t('visualizations.common.SettingsModal.LegendSettingsTab');
 const ENABLE_OVERLAP_LEGEND = false;
 const ENABLE_LEGEND_PLACEMENT = false;
 
-export type LegendSettingsEvents = {
+type Props = {
   onLegendSettingsChange: (settingType: string, value: any) => void,
-};
-
-type Props = LegendSettingsEvents & {
   settings: LegendSettings,
 };
 
 export default class LegendSettingsTab extends React.PureComponent<Props> {
-  static eventNames: Array<$Keys<LegendSettingsEvents>> = [
-    'onLegendSettingsChange',
-  ];
-
   // on either a radio or checkbox click
   @autobind
   onCheckableItemClick(value: any, name: string) {
     this.props.onLegendSettingsChange(name, value);
   }
 
-  renderShowLegendControl() {
+  renderShowLegendControl(): React.Node {
     const label = TEXT.showLegend;
     return (
-      <Control label={label} colsWrapper={12} colsLabel={3} colsControl={9}>
+      <Control label={label}>
         <Checkbox
           name="showLegend"
           onChange={this.onCheckableItemClick}
@@ -52,13 +45,13 @@ export default class LegendSettingsTab extends React.PureComponent<Props> {
     );
   }
 
-  renderOverlapLegendControl() {
+  renderOverlapLegendControl(): React.Node {
     if (!ENABLE_OVERLAP_LEGEND) {
       return null;
     }
     const label = TEXT.overlapLegendWithChart;
     return (
-      <Control label={label} colsWrapper={5} colsLabel={9} colsControl={3}>
+      <Control label={label}>
         <Checkbox
           name="overlapLegendWithChart"
           onChange={this.onCheckableItemClick}
@@ -68,9 +61,9 @@ export default class LegendSettingsTab extends React.PureComponent<Props> {
     );
   }
 
-  renderFontControls() {
+  renderFontControls(): React.Node {
     return (
-      <span>
+      <Group.Vertical spacing="l">
         <FontSizeControl
           controlKey="legendFontSize"
           onValueChange={this.props.onLegendSettingsChange}
@@ -78,35 +71,34 @@ export default class LegendSettingsTab extends React.PureComponent<Props> {
           label={TEXT.legendFontSize}
           minFontSize={10}
           maxFontSize={24}
-          colsLabel={3}
-          colsControl={9}
           buttonMinWidth={115}
+          labelClassName="wrap-label-text"
         />
-        <FontColorControl
+        <ColorControl
           controlKey="legendFontColor"
+          enableNoColor={false}
           value={this.props.settings.legendFontColor()}
           onValueChange={this.props.onLegendSettingsChange}
-          label={TEXT.legendFontSize}
-          buttonMinWidth={115}
+          label={TEXT.legendFontColor}
         />
         <FontFamilyControl
           controlKey="legendFontFamily"
           value={this.props.settings.legendFontFamily()}
           onValueChange={this.props.onLegendSettingsChange}
-          label={TEXT.legendFontSize}
+          label={TEXT.legendFont}
           buttonMinWidth={115}
         />
-      </span>
+      </Group.Vertical>
     );
   }
 
-  renderLegendPlacement() {
+  renderLegendPlacement(): React.Node {
     if (!ENABLE_LEGEND_PLACEMENT) {
       return null;
     }
 
     return (
-      <Control label={TEXT.legendPlacement} colsLabel={3} colsControl={9}>
+      <Control label={TEXT.legendPlacement}>
         <RadioGroup
           name="legendPlacement"
           onChange={this.onCheckableItemClick}
@@ -118,20 +110,18 @@ export default class LegendSettingsTab extends React.PureComponent<Props> {
     );
   }
 
-  renderControls() {
+  renderControls(): React.Node {
     return (
-      <React.Fragment>
-        <ControlsGroup>
-          {this.renderShowLegendControl()}
-          {this.renderOverlapLegendControl()}
-        </ControlsGroup>
-        <ControlsGroup>{this.renderFontControls()}</ControlsGroup>
-        <ControlsGroup>{this.renderLegendPlacement()}</ControlsGroup>
-      </React.Fragment>
+      <Group.Vertical spacing="l">
+        {this.renderShowLegendControl()}
+        {this.renderOverlapLegendControl()}
+        {this.renderFontControls()}
+        {this.renderLegendPlacement()}
+      </Group.Vertical>
     );
   }
 
-  render() {
+  render(): React.Node {
     const { title } = TEXT;
     return (
       <SettingsPage className="legend-settings-tab">

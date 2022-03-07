@@ -4,22 +4,53 @@ import Moment from 'models/core/wip/DateTime/Moment';
 type DataExtractor<Row, T> = (row: Row) => T;
 type Comparator<Row> = (Row, Row) => number;
 
+/**
+ * Compares two values only based on whether or not they are null/undefined.
+ */
+function nullComparator(a: ?mixed, b: ?mixed): number {
+  if (a == null && b != null) {
+    return -1;
+  }
+  if (a != null && b == null) {
+    return 1;
+  }
+  return 0;
+}
+
 // a collection of helper functions to easily sort different types
 // All sort functions default to being an ascending order sort.
 const TableSortUtil = {
-  string<Row>(dataExtractorFn: DataExtractor<Row, string>): Comparator<Row> {
-    return (row1: Row, row2: Row) =>
-      dataExtractorFn(row1).localeCompare(dataExtractorFn(row2));
+  string<Row>(dataExtractorFn: DataExtractor<Row, ?string>): Comparator<Row> {
+    return (row1: Row, row2: Row) => {
+      const v1 = dataExtractorFn(row1);
+      const v2 = dataExtractorFn(row2);
+      if (v1 != null && v2 != null) {
+        return v1.localeCompare(v2);
+      }
+      return nullComparator(v1, v2);
+    };
   },
 
-  number<Row>(dataExtractorFn: DataExtractor<Row, number>): Comparator<Row> {
-    return (row1: Row, row2: Row) =>
-      dataExtractorFn(row1) - dataExtractorFn(row2);
+  number<Row>(dataExtractorFn: DataExtractor<Row, ?number>): Comparator<Row> {
+    return (row1: Row, row2: Row) => {
+      const v1 = dataExtractorFn(row1);
+      const v2 = dataExtractorFn(row2);
+      if (v1 != null && v2 != null) {
+        return v1 - v2;
+      }
+      return nullComparator(v1, v2);
+    };
   },
 
-  boolean<Row>(dataExtractorFn: DataExtractor<Row, boolean>): Comparator<Row> {
-    return (row1: Row, row2: Row) =>
-      Number(dataExtractorFn(row1)) - Number(dataExtractorFn(row2));
+  boolean<Row>(dataExtractorFn: DataExtractor<Row, ?boolean>): Comparator<Row> {
+    return (row1: Row, row2: Row) => {
+      const v1 = dataExtractorFn(row1);
+      const v2 = dataExtractorFn(row2);
+      if (v1 != null && v2 != null) {
+        return Number(v1) - Number(v2);
+      }
+      return nullComparator(v1, v2);
+    };
   },
 
   moment<Row>(
@@ -49,6 +80,19 @@ const TableSortUtil = {
         return -1;
       }
       return 0;
+    };
+  },
+
+  // Sort value pairs (a, b) such that if the a values are equal, then the b values are evaluated
+  tuple<Row>(
+    comparator1: Comparator<Row>,
+    comparator2: Comparator<Row>,
+  ): Comparator<Row> {
+    return (row1: Row, row2: Row) => {
+      const firstComparision = comparator1(row1, row2);
+      return firstComparision !== 0
+        ? firstComparision
+        : comparator2(row1, row2);
     };
   },
 };

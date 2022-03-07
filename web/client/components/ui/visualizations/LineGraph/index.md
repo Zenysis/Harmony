@@ -1,75 +1,95 @@
 The Line graph implementation
 
-<style>
-  .inline {
-    display: inline-block;
-  }
-
-  .radio-item {
-    margin-left: 10px;
-  }
-</style>
-
 ```jsx
+import LabelWrapper from 'components/ui/LabelWrapper';
 import LineGraphTheme from 'components/ui/visualizations/LineGraph/models/LineGraphTheme';
-import RadioGroup, { RadioItem } from 'components/common/RadioGroup';
+import Group from 'components/ui/Group';
+import InputText from 'components/ui/InputText';
+import RadioGroup from 'components/ui/RadioGroup';
 import { createSampleData } from 'components/ui/visualizations/LineGraph/mocks';
 
 const groupCount = 2;
 const numberOfDataPoints = 30;
-const initialData = createSampleData(groupCount,numberOfDataPoints);
 
-initialState = {
-  data: initialData,
-  lineGraphCount: groupCount,
-  theme: 'dark'
-};
+const [data, setData] = React.useState(
+  createSampleData(groupCount, numberOfDataPoints),
+);
+const [goalLineValue, setGoalLineValue] = React.useState('');
+const [lineGraphCount, setLineGraphCount] = React.useState(groupCount);
+const [theme, setTheme] = React.useState('light');
 
-function onDataPointClick(dataPoint){
+
+function onDataPointClick(dataPoint) {
   alert(JSON.stringify(dataPoint));
-  console.log(dataPoint)
+  console.log(dataPoint);
 }
 
-function onThemeChange(theme){
-  setState({ theme })
+function onGoalLineValueChange(value) {
+  const parsedValue = value === '' ? undefined : Number(value);
+  const goalLineValue = !Number.isNaN(parsedValue) ? parsedValue : undefined;
+  setGoalLineValue(goalLineValue);
 }
 
-function onLineGraphCountChange(lineGraphCount){
+function onLineGraphCountChange(lineGraphCount) {
   if (Number(lineGraphCount) && lineGraphCount > 0) {
-    setState({ lineGraphCount, data: createSampleData(lineGraphCount) })
-  }else{
-    setState({ lineGraphCount })
+    setLineGraphCount(lineGraphCount);
+    setData(createSampleData(lineGraphCount));
+  } else {
+    setLineGraphCount(lineGraphCount);
   }
 }
 
+const goalLines = goalLineValue
+  ? [
+      {
+        axis: 'y1Axis',
+        fontColor: 'black',
+        fontSize: 14,
+        id: 'some id',
+        label: 'My Goal Line Label',
+        lineStyle: 'solid',
+        lineThickness: 1,
+        value: goalLineValue,
+      },
+    ]
+  : [];
+
 <div>
-  <LabelWrapper label="Line Graph Count" inline className="inline">
-    <InputText
-      type="number"
-      onChange={onLineGraphCountChange}
-      value={String(state.lineGraphCount)}
-    />
-  </LabelWrapper>
-  <RadioGroup
-    onChange={onThemeChange}
-    name="line-graph-theme-radio-group"
-    value={state.theme}
-    className="inline"
-    id="line-graph"
-  >
-    <RadioItem value="dark" className="inline radio-item">
-      Dark Theme
-    </RadioItem>
-    <RadioItem value="light" className="inline radio-item">
-      Light Theme
-    </RadioItem>
-  </RadioGroup>
+  <Group.Horizontal>
+    <LabelWrapper label="Line Graph Count" inline>
+      <InputText
+        type="number"
+        onChange={onLineGraphCountChange}
+        value={String(lineGraphCount)}
+      />
+    </LabelWrapper>
+    <LabelWrapper label="Goal Line Value" inline>
+      <InputText
+        type="number"
+        onChange={onGoalLineValueChange}
+        value={String(goalLineValue)}
+      />
+    </LabelWrapper>
+    <RadioGroup
+      onChange={setTheme}
+      name="line-graph-theme-radio-group"
+      value={theme}
+    >
+      <RadioGroup.Item value="light">
+        Light Theme
+      </RadioGroup.Item>
+      <RadioGroup.Item value="dark">
+        Dark Theme
+      </RadioGroup.Item>
+    </RadioGroup>
+  </Group.Horizontal>
   <LineGraph
-    data={state.data}
-    width={900}
+    data={data}
+    goalLines={goalLines}
     height={600}
     onDataPointClick={onDataPointClick}
-    theme={LineGraphTheme.THEMES[state.theme]}
+    theme={LineGraphTheme.Themes[theme]}
+    width={900}
   />
-</div>
+</div>;
 ```

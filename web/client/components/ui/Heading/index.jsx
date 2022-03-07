@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import classNames from 'classnames';
 
 import InfoTooltip from 'components/ui/InfoTooltip';
 import type { StyleObject } from 'types/jsCore';
@@ -16,18 +17,32 @@ const SIZES: SizesMap = {
   SMALL: 'small',
 };
 
-type Props = {|
+type Props = {
   children: React.Node,
   size: 'large' | 'medium' | 'small',
 
   className: string,
-  style: StyleObject,
+
+  /**
+   * Adds an info icon next to the heading, and shows a tooltip when you hover
+   * over it
+   */
   infoTooltip?: string,
-|};
+  style?: StyleObject,
+
+  /** Adds an underline to the heading */
+  underlined?: boolean,
+
+  /**
+   * Render the heading with white text (useful for when against a dark
+   * background
+   */
+  whiteText?: boolean,
+};
 
 const defaultProps = {
   className: '',
-  style: {},
+  style: undefined,
   infoTooltip: undefined,
 };
 
@@ -38,8 +53,15 @@ const defaultProps = {
  * more succinctly by using `<Heading.Large>` or `<Heading.Small>` components.
  * This approach is encouraged because it is easier to read.
  */
-export default function Heading(props: Props) {
-  const { className, children, size, style, infoTooltip } = props;
+export default function Heading({
+  children,
+  size,
+  className = '',
+  infoTooltip = undefined,
+  style = undefined,
+  underlined = false,
+  whiteText = false,
+}: Props): React.Node {
   const contents = (
     <React.Fragment>
       {children}
@@ -47,7 +69,14 @@ export default function Heading(props: Props) {
     </React.Fragment>
   );
 
-  const headingClassName = `u-heading-${size} ${className}`;
+  const headingClassName = classNames(className, {
+    'u-heading-large': size === 'large',
+    'u-heading-medium': size === 'medium',
+    'u-heading-small': size === 'small',
+    'u-heading--underlined': underlined,
+    'u-heading--white': whiteText,
+  });
+
   const commonProps = {
     style,
     className: headingClassName,
@@ -70,12 +99,12 @@ Heading.Sizes = SIZES;
 
 Heading.Large = (
   props: $Diff<React.ElementConfig<typeof Heading>, { size: mixed }>,
-) => <Heading size={SIZES.LARGE} {...props} />;
+): React.Element<typeof Heading> => <Heading size={SIZES.LARGE} {...props} />;
 
 Heading.Medium = (
   props: $Diff<React.ElementConfig<typeof Heading>, { size: mixed }>,
-) => <Heading size={SIZES.MEDIUM} {...props} />;
+): React.Element<typeof Heading> => <Heading size={SIZES.MEDIUM} {...props} />;
 
 Heading.Small = (
   props: $Diff<React.ElementConfig<typeof Heading>, { size: mixed }>,
-) => <Heading size={SIZES.SMALL} {...props} />;
+): React.Element<typeof Heading> => <Heading size={SIZES.SMALL} {...props} />;

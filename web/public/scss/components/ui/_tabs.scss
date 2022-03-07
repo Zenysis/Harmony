@@ -1,12 +1,16 @@
 .zen-tabs {
+  &__header-row {
+    display: flex;
+  }
+
   &__title {
     display: inline-block;
     margin-right: 30px;
   }
 
-  &__contents-container {
-    padding-bottom: 30px;
-    padding-top: 30px;
+  &__right-content {
+    margin-left: auto;
+    margin-top: auto;
   }
 }
 
@@ -37,15 +41,35 @@
       font-weight: 400;
       text-transform: none;
     }
+
+    &--disabled {
+      color: $gray;
+      &:hover {
+        border-bottom: none;
+        color: $gray-hover;
+      }
+    }
+  }
+
+  &--disabled {
+    cursor: not-allowed;
   }
 }
 
 .zen-tab-content-wrapper {
+  padding-bottom: 30px;
+  padding-top: 30px;
+
+  &--no-padding {
+    padding: 0;
+  }
+
   &--active {
     display: block;
   }
 
   &--hidden {
     display: none;
+    opacity: 0;
   }
 }

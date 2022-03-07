@@ -1,0 +1,75 @@
+$zen-popover-z-index: 10000;
+
+.zen-popover-container {
+  background-color: transparent;
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: $zen-popover-z-index;
+}
+
+.zen-popover-overlay {
+  background-color: transparent;
+  bottom: 0;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: -1;
+}
+
+.zen-popover-anchor {
+  display: inline-table;
+}
+
+// Create a box that will be used as the intersection measurer. Place the bottom
+// right corner of this box next to the anchor element so that the browser
+// treats any overflow as acceptable and doesn't draw scroll bars. If the box is
+// positioned from the top left, then the browser might add scrollbars depending
+// on where the popover is placed.
+// NOTE(david): To debug any issues with intersetion observers, it can be useful
+// to add background-color: red; opacity: 0.1; to this class to see where the
+// observers are placed.
+.zen-popover-intersection-measurer {
+  bottom: 0;
+  height: 100vh;
+  pointer-events: none;
+  right: 0;
+  width: 100vw;
+
+  &--absolute {
+    position: absolute;
+  }
+
+  &--fixed {
+    position: fixed;
+  }
+}
+
+.zen-popover-intersection-measurer-wrapper-div {
+  bottom: 0;
+  position: absolute;
+  right: 0;
+}
+
+.zen-popover {
+  font-size: 15px;
+  z-index: $zen-popover-z-index;
+
+  &--default-container,
+  &--empty-container {
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 3px 5px 15px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  &--default-container {
+    padding: 1em;
+  }
+
+  &--empty-container {
+    padding: 0;
+  }
+}

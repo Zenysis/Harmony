@@ -29,22 +29,15 @@ const TREE = HierarchyItem.createRoot().children(
 );
 
 const EMPTY_TREE = HierarchyItem.createRoot();
-
-initialState = {
-  selectedItem: undefined,
-};
-
-function onChange(selectedItem) {
-  setState({ selectedItem });
-}
+const [selectedItem, setSelectedItem] = React.useState(undefined);
 
 <React.Fragment>
   <HierarchicalSelectorDropdown
     defaultDropdownText={'Select Item'}
     enableSearch
     hierarchyRoot={TREE}
-    onItemSelected={onChange}
-    selectedItem={state.selectedItem}
+    onItemSelected={setSelectedItem}
+    selectedItem={selectedItem}
   />
 </React.Fragment>
 ```

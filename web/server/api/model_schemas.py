@@ -14,10 +14,13 @@ from models.alchemy.permission import (
     Role,
     RESOURCE_TYPES,
 )
-from models.alchemy.user import User, UserRoles, DefaultRoles
+from models.alchemy.user import User, UserRoles
 from models.alchemy.history import HistoryRecord
+from models.alchemy.dashboard import DashboardReportSchedule, ScheduleCadenceEnum
 from models.alchemy.security_group import Group, GroupRoles
 from web.server.util.util import as_dictionary, EMAIL_PATTERN
+
+SCHEDULE_PERIODS = {cadence.name for cadence in ScheduleCadenceEnum}
 
 
 def user_role_as_dictionary(user_role, camelcase_keys=False):
@@ -58,20 +61,13 @@ def user_role_as_dictionary(user_role, camelcase_keys=False):
     output = as_dictionary(
         user_role.role, keys=role_fields, name_overrides=role_field_overrides
     )
-    resource_type_data = as_dictionary(
-        user_role.role.resource_type,
-        keys=resource_type_fields,
-        name_overrides=resource_type_field_overrides,
-    )
     resource_data = as_dictionary(
         user_role.resource,
         keys=resource_fields,
         name_overrides=resource_field_overrides,
     )
 
-    output.update(resource_type_data)
     output.update(resource_data)
-    output[resource_type_key] = output[resource_type_key].name
     return output
 
 
@@ -97,52 +93,15 @@ def group_role_as_dictionary(group_role, camelcase_keys=False):
     return user_role_as_dictionary(group_role, camelcase_keys)
 
 
-def default_role_as_dictionary(default_role, camelcase_keys=False):
-    '''Converts an instance of `DefaultRoles` to a dictionary object that matches the schema defined
-    in `DEFAULT_ROLES_SCHEMA`.
-
-    Parameters
-    ----------
-    default_role : `web.server.api.user_models.DefaultRoles`
-        The `DefaultRole` instance that will be converted to a dictionary.
-
-    camelcase_keys: bool (optional)
-        Indicates whether or not the resulting object should have camel-cased string
-        keys (i.e. have the output keys changed from 'snake_case' to 'camelCase')
-
-    Returns
-    -------
-    dict
-        The dictionary representation of `default_role`.
-
-    '''
-    apply_to_unregistered_field = DefaultRoles.apply_to_unregistered.name
-    default_role_fields = [apply_to_unregistered_field]
-    default_role_field_overrides = {
-        apply_to_unregistered_field: 'applyToUnregistered'
-        if camelcase_keys
-        else 'apply_to_unregistered'
-    }
-
-    output = as_dictionary(
-        default_role,
-        keys=default_role_fields,
-        name_overrides=default_role_field_overrides,
-    )
-    output.update(user_role_as_dictionary(default_role, camelcase_keys))
-    return output
-
-
 _TYPE_TO_CONVERTER = {
     UserRoles: user_role_as_dictionary,
     GroupRoles: group_role_as_dictionary,
-    DefaultRoles: default_role_as_dictionary,
 }
 
 
 def role_list_as_map(roles):
-    '''Converts an enumeration of `UserRoles`, `GroupRoles`, or `DefaultRoles`
-    to a dictionary object that matches the schema defined in `ROLE_MAP_SCHEMA`.
+    '''Converts an enumeration of `UserRoles`, `GroupRoles` to a dictionary
+    object that matches the schema defined in `ROLE_MAP_SCHEMA`.
 
     Parameters
     ----------
@@ -157,6 +116,9 @@ def role_list_as_map(roles):
     '''
     output = {}
 
+    # TODO(toshi): Fix this, and decide whether is makes sense to also send
+    # group IDs
+    return output
     for role in roles:
         converter_method = _TYPE_TO_CONVERTER[type(role)]
         role_entity = converter_method(role)
@@ -186,12 +148,49 @@ def role_list_as_map(roles):
     return output
 
 
+# The fields of the `Resource` model.
+RESOURCE_FIELDS = fields.Object(
+    properties={
+        '$uri': fields.String(description='Resource URI'),
+        'label': fields.String(description='Resource label'),
+        'name': fields.String(description='Resource slug name'),
+        'resourceType': fields.String(description='Resource type name'),
+    },
+    description='Field properties for a resource.',
+)
+
+
+# The fields of the `ResourceRole` model.
+RESOURCE_ROLE_FIELDS = fields.Object(
+    properties={
+        '$uri': fields.String(description='Resource role uri'),
+        'name': fields.String(description='Resource role name.'),
+        'resourceType': fields.String(description='Resource role type'),
+    }
+)
+
+
+# The schema of an acl model, i.e. GroupAcl, UserAcl.
+ACL_SCHEMA = fields.Object(
+    properties={
+        '$uri': fields.String(),
+        'resource': RESOURCE_FIELDS,
+        'resourceRole': RESOURCE_ROLE_FIELDS,
+    },
+    description='An individual entry of an acl model. Returns a mapping of '
+    'resource and resource role.',
+)
+
+
 '''The schema of the `Permission` model.
 '''
 PERMISSION_SCHEMA = alchemy_fields.InlineModel(
     {
-        'id': fields.Integer(minimum=1, description='The ID of the permission.'),
+        'id': fields.Integer(
+            minimum=1, description='The ID of the permission.', nullable=True
+        ),
         'permission': fields.String(description='The type of permission.'),
+        'resource_type_id': fields.Integer(),
     },
     title='Permission',
     description='An individual role permission.',
@@ -307,7 +306,7 @@ ROLE_MAP_SCHEMA = fields.Object(
 # need to expose the exact structure. Instead we offer a nice JSONified version of it for
 # easy consumption on the client side. Clients are able to change Roles that a User/Group is
 # a member of via the APIs and as such, don't need to interact with
-# `UserRoles`/`GroupRoles`/`DefaultRoles` directly.
+# `UserRoles`/`GroupRoles` directly.
 '''The schema for the `UserRoles` model.
 '''
 USER_ROLES_SCHEMA = fields.Custom(
@@ -334,31 +333,6 @@ USER_ROLES_SCHEMA = fields.Custom(
 '''The schema for the `GroupRoles` model.
 '''
 GROUP_ROLES_SCHEMA = USER_ROLES_SCHEMA
-DEFAULT_ROLES_SCHEMA = fields.Custom(
-    fields.Object(
-        {
-            'roleName': fields.String(io='r', description='The name of the role.'),
-            'resourceName': fields.String(
-                io='r',
-                description='The resource that the role is tied to. If null, this role is applicable '
-                'sitewide on all resources of the specified type.',
-                nullable=True,
-            ),
-            'resourceType': fields.String(
-                io='r', description='The type of resource the role is associated with.'
-            ),
-            'applyToUnregistered': fields.Boolean(
-                io='r',
-                description='Indicates whether or not this role only applies to registered users. If '
-                'set to `false` it only applies to registered users. If set to `true`, it '
-                'applies to unregistered/anonymous users as well as long as public access '
-                'is enabled.',
-            ),
-        }
-    ),
-    converter=None,
-    formatter=lambda user_role: default_role_as_dictionary(user_role, True),
-)
 
 USERNAME_SCHEMA = fields.Email(
     description='The e-mail address/username that the user uses to sign-in.',
@@ -421,15 +395,16 @@ CONCISE_GROUP_SCHEMA = alchemy_fields.InlineModel(
 )
 
 ''' A regex pattern that only allows alphanumeric characters, dashes, underscores
-and spaces.
+spaces, and select special characters (e.g. apostrophes, periods). Ideal for regex
+validation of names.
 '''
-ALPHANUMERIC_AND_DELIMITER = r'(^[a-zA-Z0-9]+[a-zA-Z0-9-_ ]*[a-zA-Z0-9]+)$'
+ALPHANUMERIC_AND_DELIMITER = r"(^[a-zA-Z0-9]+[a-zA-Z0-9-_.' ]*[a-zA-Z0-9]+)$"
 
 INTERNATIONALIZED_ALPHANUMERIC_AND_DELIMITER = (
-    r'(^[A-zÀ-ÿ0-9]+[A-zÀ-ÿ0-9-_ ]*[A-zÀ-ÿ0-9]*)$'
+    r"(^[A-zÀ-ÿ0-9]+[A-zÀ-ÿ0-9-_.' ]*[A-zÀ-ÿ0-9]*)$"
 )
 INTERNATIONALIZED_ALPHANUMERIC_AND_DELIMITER_OR_EMPTY = (
-    r'(^([A-zÀ-ÿ0-9]+[A-zÀ-ÿ0-9-_ ]*[A-zÀ-ÿ0-9]*))|(\s*)$'
+    r"(^([A-zÀ-ÿ0-9]+[A-zÀ-ÿ0-9-_.' ]*[A-zÀ-ÿ0-9]*))|(\s*)$"
 )
 
 HISTORY_CHANGE_FIELDS = {
@@ -490,3 +465,44 @@ SHARE_ANALYSIS_EMAIL_SCHEMA = {
         description='Flag for sending preview email', attribute='is_preview'
     ),
 }
+
+DASHBOARD_REPORT_SCHEDULE_PROPERTIES = {
+    'id': fields.Integer(nullable=True),
+    'cadence': fields.Custom(
+        fields.String(enum=SCHEDULE_PERIODS), formatter=lambda cadence: cadence.name
+    ),
+    'dayOffset': fields.Custom(
+        fields.String(nullable=True), formatter=str, attribute='day_offset'
+    ),
+    'timeOfDay': fields.String(attribute='time_of_day'),
+    'month': fields.String(nullable=True),
+    'recipients': fields.Array(fields.String(), min_items=0),
+    'subject': fields.String(),
+    'message': fields.String(),
+    'shouldAttachPdf': fields.Boolean(attribute='should_attach_pdf', default=False),
+    'useSingleEmailThread': fields.Boolean(
+        attribute='use_single_email_thread', default=False, nullable=True
+    ),
+    'useRecipientQueryPolicy': fields.Boolean(
+        attribute='use_recipient_query_policy', default=True, nullable=True
+    ),
+    'shouldEmbedImage': fields.Boolean(attribute='should_embed_image', default=False),
+    'ownerUsername': fields.String(nullable=True, attribute='owner_username'),
+    'ownerName': fields.String(nullable=True, attribute='owner_name'),
+    'recipientUserGroups': fields.Array(
+        alchemy_fields.InlineModel(
+            {'name': fields.String(description='The name of the group.')}, model=Group
+        ),
+        attribute='user_groups',
+    ),
+}
+
+DASHBOARD_REPORT_SCHEDULE = fields.Object(
+    properties=DASHBOARD_REPORT_SCHEDULE_PROPERTIES
+)
+
+DASHBOARD_SCHEDULED_REPORTS = fields.Array(
+    alchemy_fields.InlineModel(
+        DASHBOARD_REPORT_SCHEDULE_PROPERTIES, model=DashboardReportSchedule
+    )
+)

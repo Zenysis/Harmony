@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from builtins import str
 from builtins import object
 from enum import Enum
@@ -11,9 +12,14 @@ from models.alchemy.base import Base
 from models.alchemy.permission import Role
 
 
+if TYPE_CHECKING:
+    from models.alchemy.dashboard import Dashboard
+    from models.alchemy.permission import Resource, ResourceRole
+    from models.alchemy.security_group import Group
+
+
 class UserStatusEnum(Enum):
-    '''An enumeration of possible statuses that a user can be associated with.
-    '''
+    '''An enumeration of possible statuses that a user can be associated with.'''
 
     # Indicates that the user has registered for an account on the site and is able to sign in.
     ACTIVE = 1
@@ -92,8 +98,7 @@ class UserMixin(object):
 # attributes that denote columns in a SQLAlchemy field.
 # pylint:disable=E1101
 class User(Base, UserMixin):
-    '''A class that represents an individual user on the site.
-    '''
+    '''A class that represents an individual user on the site.'''
 
     __tablename__ = 'user'
 
@@ -116,29 +121,41 @@ class User(Base, UserMixin):
 
     # Relationships
     dashboards = relationship('Dashboard', viewonly=True)
-    roles = relationship('UserRoles', viewonly=True)
+    roles = relationship(
+        'Role',
+        secondary='user_roles',
+        backref=backref('users', lazy='dynamic'),
+        viewonly=False,
+    )
+    acls = relationship('UserAcl', cascade="delete", viewonly=True)
     groups = relationship(
         'Group',
         secondary='security_group_users',
-        backref=backref('security_group_users_backref', lazy='dynamic'),
-        viewonly=True,
+        backref=backref('users', lazy='dynamic'),
+        viewonly=False,
     )
     status = relationship('UserStatus', viewonly=True)
     created = sa.Column(
         sa.DateTime(), nullable=True, default=sa.func.current_timestamp()
     )
 
-    # TODO(vedant) - Remove this method once the Flask Template also uses the new RBAC model.
     def is_superuser(self):
         admin_role = Role.query.filter(Role.name == 'admin').first()
         if admin_role:
-            return any(r.role_id == admin_role.id for r in self.roles)
+            return any(r.id == admin_role.id for r in self.get_all_roles())
         return False
+
+    def get_all_roles(self):
+        group_roles = [role for group in self.groups for role in group.roles]
+        return self.roles + group_roles
+
+    # pylint: disable=E0309
+    def __hash__(self) -> int:
+        return self.id
 
 
 class UserRoles(Base):
-    '''A class that represents a mapping between a `User` and a `Role`.
-    '''
+    '''A class that represents a mapping between a `User` and a `Role`.'''
 
     __tablename__ = 'user_roles'
 
@@ -153,46 +170,48 @@ class UserRoles(Base):
         sa.ForeignKey('role.id', ondelete='CASCADE', name='valid_role'),
         nullable=False,
     )
-    resource_id = sa.Column(
-        sa.Integer(),
-        sa.ForeignKey('resource.id', ondelete='CASCADE', name='valid_resource'),
-        nullable=True,
-    )
-    resource = relationship('Resource', viewonly=True)
-    role = relationship('Role', viewonly=True)
-    user = relationship('User', viewonly=True)
+    role = relationship('Role', viewonly=False)
+    user = relationship('User', viewonly=False)
 
 
-class DefaultRoles(Base):
-    '''A class that represents a mapping between a `User` and a `Role`. It can optionally also
-    apply to an 'Anonymous User' (a user that is unauthenticated).
+class UserAcl(Base):
+    '''A class that represents a mapping between a `User`, `Resource`, and
+    `ResourceRole`
     '''
 
-    __tablename__ = 'default_roles'
+    __tablename__ = 'user_acl'
 
     id = sa.Column(sa.Integer(), primary_key=True)
-    role_id = sa.Column(
+    user_id = sa.Column(
         sa.Integer(),
-        sa.ForeignKey('role.id', ondelete='CASCADE', name='valid_role'),
+        sa.ForeignKey('user.id', ondelete='CASCADE', name='valid_user'),
         nullable=False,
     )
     resource_id = sa.Column(
         sa.Integer(),
         sa.ForeignKey('resource.id', ondelete='CASCADE', name='valid_resource'),
-        nullable=True,
+        nullable=False,
     )
-    apply_to_unregistered = sa.Column(
-        sa.Boolean(), nullable=False, server_default='false'
+    resource_role_id = sa.Column(
+        sa.Integer(),
+        sa.ForeignKey(
+            'resource_role.id', ondelete='CASCADE', name='valid_resource_role'
+        ),
+        nullable=False,
     )
+
     resource = relationship('Resource', viewonly=True)
-    role = relationship('Role', viewonly=True)
+    resource_role = relationship('ResourceRole', viewonly=True)
+    user = relationship('User', viewonly=True)
 
 
 class UserStatus(Base):
     __tablename__ = 'user_status'
 
     id = sa.Column(sa.Integer, primary_key=True)
-    status = sa.Column(sa.Enum(UserStatusEnum), nullable=False, unique=True)
+    status = sa.Column(
+        sa.Enum(UserStatusEnum, name='user_status_enum'), nullable=False, unique=True
+    )
 
 
 class UserPreferences(Base):

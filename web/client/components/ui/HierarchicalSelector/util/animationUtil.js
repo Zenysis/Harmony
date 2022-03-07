@@ -2,7 +2,7 @@
 /* eslint-disable max-len */
 // Performant animated width based on:
 // https://developers.google.com/web/updates/2017/03/performant-expand-and-collapse
-import { range } from 'util/util';
+import { range } from 'util/arrayUtil';
 
 export const DURATION = 400;
 export const ANIMATION_STEPS: $ReadOnlyArray<number> = range(0, 101);
@@ -13,7 +13,9 @@ export const ANIMATION_STEPS: $ReadOnlyArray<number> = range(0, 101);
 const ANIMATION_SCALES: {
   [from: number]: {
     [to: number]: [$ReadOnlyArray<number>, $ReadOnlyArray<number>],
+    ...,
   },
+  ...,
 } = {};
 
 // Easing method for pretty animations.

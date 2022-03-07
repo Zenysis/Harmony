@@ -1,0 +1,40 @@
+.code-block {
+  background-color: $gray-light-active;
+  border-radius: 5px;
+  padding: $space-xs-px;
+}
+
+.data-digest {
+  padding-left: 8em;
+  padding-right: 8em;
+  padding-top: 30px;
+
+  .zen-table__cell {
+    padding-bottom: $space-xs-px !important;
+    padding-top: $space-xs-px !important;
+  }
+}
+
+.dd-big-number {
+  &__value {
+    font-size: 64px;
+  }
+}
+
+.dd-no-datapoints-alert {
+  font-weight: $bold;
+}
+
+.dd-table-container {
+  @include zen-elevation-1;
+  background: $white;
+
+  &__table {
+    padding: 10px;
+  }
+}
+
+.mapping-info-button {
+  color: $blue-primary;
+  text-decoration: underline;
+}

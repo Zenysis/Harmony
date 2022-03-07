@@ -1,30 +1,29 @@
 // @flow
 import * as React from 'react';
 
-import Modes from 'components/common/visualizationSettings/Modes';
 import SettingsBlock from 'components/common/visualizationSettings/SettingsPage/SettingsBlock';
 import SettingsPage from 'components/common/visualizationSettings/SettingsPage';
 import TitleBlock from 'components/common/visualizationSettings/TitleBlock';
-import type { TitleEvents } from 'components/common/visualizationSettings/TitleBlock';
+import type { EnabledGeneralSettingsConfig } from 'components/visualizations/common/SettingsModal/GeneralSettingsTab/defaults';
 
-export type GeneralSettingsEvents = TitleEvents;
+type DefaultProps = {
+  controlsBlock: React.MixedElement | null,
+};
 
-type Props = React.ElementProps<typeof TitleBlock> & {
-  controlsBlock: React.Element<any>,
+type Props = {
+  ...DefaultProps,
+  ...React.ElementConfig<typeof TitleBlock>,
+  enabledSettings: EnabledGeneralSettingsConfig,
 };
 
 const TEXT = t('visualizations.common.SettingsModal.GeneralSettingsTab');
 
 export default class GeneralSettingsTab extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     controlsBlock: null,
   };
 
-  static eventNames: Array<$Keys<GeneralSettingsEvents>> = [
-    'onTitleSettingsChange',
-  ];
-
-  maybeRenderDisplayOptionsSection() {
+  maybeRenderDisplayOptionsSection(): React.Node {
     const { controlsBlock } = this.props;
     if (controlsBlock) {
       return (
@@ -40,21 +39,26 @@ export default class GeneralSettingsTab extends React.PureComponent<Props> {
     return null;
   }
 
-  renderTitleSection() {
+  maybeRenderTitleSection(): React.Node {
+    const { enabledSettings } = this.props;
+
+    if (!enabledSettings.titleSettings) {
+      return null;
+    }
+
     return (
       <TitleBlock
         titleSettings={this.props.titleSettings}
         onTitleSettingsChange={this.props.onTitleSettingsChange}
-        mode={Modes.EXPANDED}
       />
     );
   }
 
-  render() {
+  render(): React.Node {
     return (
       <SettingsPage className="general-settings-tab">
         {this.maybeRenderDisplayOptionsSection()}
-        {this.renderTitleSection()}
+        {this.maybeRenderTitleSection()}
       </SettingsPage>
     );
   }

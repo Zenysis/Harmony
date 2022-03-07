@@ -1,7 +1,6 @@
 // @flow
 import * as React from 'react';
 
-import Control from 'components/visualizations/common/controls/Control';
 import DropdownControl, {
   Option,
 } from 'components/visualizations/common/controls/DropdownControl';
@@ -15,34 +14,36 @@ import type { VisualizationControlProps } from 'components/visualizations/common
 const TXT_LABEL = t('query_result.controls.sort_label');
 const TXT_COMMON = t('query_result.common');
 
-type Props = VisualizationControlProps<string> & {
-  includeAlphabetical: boolean,
-  labelForAlphabeticalOption: string,
+type Props = {
+  ...VisualizationControlProps<string>,
+  buttonMinWidth?: number,
+  includeAlphabetical?: boolean,
+  labelForAlphabeticalOption?: string,
 };
 
-const defaultProps = {
-  ...Control.defaultColumnCounts,
-  includeAlphabetical: false,
-  labelForAlphabeticalOption: TXT_COMMON.alphabetical,
-};
-
-export default function SortOrderControl(props: Props) {
-  const {
-    includeAlphabetical,
-    labelForAlphabeticalOption,
-    ...passThroughControlProps
-  } = props;
+export default function SortOrderControl({
+  controlKey,
+  onValueChange,
+  value,
+  buttonMinWidth = undefined,
+  includeAlphabetical = false,
+  labelForAlphabeticalOption = TXT_COMMON.alphabetical,
+}: Props): React.Node {
   const alphabeticalOption = includeAlphabetical ? (
     <Option value={SORT_ALPHABETICAL}>{labelForAlphabeticalOption}</Option>
   ) : null;
 
   return (
-    <DropdownControl label={TXT_LABEL} {...passThroughControlProps}>
+    <DropdownControl
+      controlKey={controlKey}
+      value={value}
+      onValueChange={onValueChange}
+      label={TXT_LABEL}
+      buttonMinWidth={buttonMinWidth}
+    >
       <Option value={SORT_ASCENDING}>{TXT_COMMON.ascending}</Option>
       <Option value={SORT_DESCENDING}>{TXT_COMMON.descending}</Option>
       {alphabeticalOption}
     </DropdownControl>
   );
 }
-
-SortOrderControl.defaultProps = defaultProps;

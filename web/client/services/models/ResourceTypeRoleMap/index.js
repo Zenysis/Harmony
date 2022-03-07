@@ -1,14 +1,15 @@
 // @flow
+/* eslint-disable no-use-before-define */
 import * as Zen from 'lib/Zen';
 import Role from 'services/models/Role';
 import { areStringsEqualIgnoreCase } from 'util/stringUtil';
-import type { ResourceType } from 'services/AuthorizationService';
+import type { ResourceType } from 'services/AuthorizationService/types';
 import type { Serializable } from 'lib/Zen';
 
 // Model representation that we receive from the backend
-type BackendResourceTypeRoleMap = {
-  resources: { [string]: Array<string> },
-  sitewideRoles: Array<string>,
+type SerializedResourceTypeRoleMap = {
+  resources: { [string]: $ReadOnlyArray<string>, ... },
+  sitewideRoles: $ReadOnlyArray<string>,
 };
 
 const EMPTY_ZEN_ARRAY = Zen.Array.create();
@@ -23,6 +24,19 @@ export function deleteRoleFromList(
   );
 }
 
+interface MapUtil {
+  hasRole(role: Role, map: Zen.Map<Zen.Model<ResourceTypeRoleMap>>): boolean;
+  addRole(
+    role: Role,
+    map: Zen.Map<Zen.Model<ResourceTypeRoleMap>>,
+  ): Zen.Map<Zen.Model<ResourceTypeRoleMap>>;
+  deleteRole(
+    role: Role,
+    map: Zen.Map<Zen.Model<ResourceTypeRoleMap>>,
+  ): Zen.Map<Zen.Model<ResourceTypeRoleMap>>;
+  flatten(map: Zen.Map<Zen.Model<ResourceTypeRoleMap>>): Array<Role>;
+}
+
 /**
  * A model that maps resources of a specific type to roles that a user/security
  * group may hold on them in addition to representing all the sitewide roles
@@ -33,7 +47,7 @@ type RequiredValues = {
   /**
    * The resource type associated with this role map.
    */
-  resourceType: Zen.ReadOnly<ResourceType>,
+  resourceType: ResourceType,
 };
 
 type DefaultValues = {
@@ -51,14 +65,14 @@ type DefaultValues = {
 
 class ResourceTypeRoleMap
   extends Zen.BaseModel<ResourceTypeRoleMap, RequiredValues, DefaultValues>
-  implements Serializable<BackendResourceTypeRoleMap> {
-  static defaultValues = {
+  implements Serializable<SerializedResourceTypeRoleMap> {
+  static defaultValues: DefaultValues = {
     resources: Zen.Map.create(),
     sitewideRoles: Zen.Array.create(),
   };
 
   static deserialize(
-    { resources = {}, sitewideRoles = [] }: BackendResourceTypeRoleMap,
+    { resources = {}, sitewideRoles = [] }: SerializedResourceTypeRoleMap,
     extraConfig: { resourceType: ResourceType },
   ): Zen.Model<ResourceTypeRoleMap> {
     const immutableSitewideRoles = Zen.Array.create(sitewideRoles);
@@ -79,7 +93,7 @@ class ResourceTypeRoleMap
    * ResourceTypeRoleMaps that map a resourceType to a ResourceTypeRoleMap. This
    * type of mapping is used in a SecurityGroup or User.
    */
-  static MapUtil = {
+  static MapUtil: MapUtil = {
     /**
      * Returns whether or not `role` exists in the given `map`.
      * @param {Role} role The `role` to look for.
@@ -152,20 +166,25 @@ class ResourceTypeRoleMap
      */
     flatten(map: Zen.Map<Zen.Model<ResourceTypeRoleMap>>): Array<Role> {
       return map.reduce(
-        (rows, resourceRoleMap) => rows.concat(resourceRoleMap.flatten()),
+        (rows, resourceRoleMap, resourceType) =>
+          rows.concat(
+            resourceRoleMap
+              .resourceType(Zen.cast<ResourceType>(resourceType))
+              .flatten(),
+          ),
         [],
       );
     },
   };
 
-  serialize(): BackendResourceTypeRoleMap {
+  serialize(): SerializedResourceTypeRoleMap {
     const resources = {};
     this._.resources().forEach((value, key) => {
-      resources[key] = value.toArray();
+      resources[key] = value.arrayView();
     });
     return {
       resources,
-      sitewideRoles: this._.sitewideRoles().toArray(),
+      sitewideRoles: this._.sitewideRoles().arrayView(),
     };
   }
 
@@ -243,8 +262,6 @@ class ResourceTypeRoleMap
    */
   flatten(): Array<Role> {
     const rows = [];
-
-    // $ZenModelReadOnlyIssue
     const resourceType: ResourceType = this._.resourceType();
     this._.sitewideRoles().forEach(roleName => {
       const sitewideRole = Role.create({
@@ -281,6 +298,6 @@ class ResourceTypeRoleMap
   }
 }
 
-export default ((ResourceTypeRoleMap: any): Class<
+export default ((ResourceTypeRoleMap: $Cast): Class<
   Zen.Model<ResourceTypeRoleMap>,
 >);

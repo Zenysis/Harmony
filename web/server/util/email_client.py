@@ -1,16 +1,19 @@
 '''Email client module
 '''
-from builtins import object
-from abc import ABCMeta, abstractmethod
-import requests
-import related
+from abc import ABC, abstractmethod
 
+import related
+import requests
+
+from log import LOG
+from web.server.environment import IS_TEST
 from web.server.errors import NotificationError
-from future.utils import with_metaclass
+
+TECHNICAL_SUPPORT_EMAIL = 'technical-support@zenysis.com'
 
 
 @related.immutable
-class EmailMessage(object):
+class EmailMessage:
     '''Mailgun message
     '''
 
@@ -20,9 +23,9 @@ class EmailMessage(object):
     to_addr = related.StringField()
     cc = related.SetField(str, required=False)
     bcc = related.SetField(str, required=False)
-    attachments = related.SetField(tuple, required=False)
+    attachments = related.SequenceField(tuple, required=False)
 
-    tag = related.StringField(required=False)
+    tags = related.SequenceField(str, required=False)
     sender = related.StringField(required=False)
 
     def add_cc(self, mail_addr):
@@ -35,7 +38,7 @@ class EmailMessage(object):
         return related.to_json(self)
 
 
-class EmailClient(with_metaclass(ABCMeta, object)):
+class EmailClient(ABC):
     '''Abstract class that represents an email client.
     '''
 
@@ -66,9 +69,14 @@ class MailgunClient(EmailClient):
         NotificationError
             - If there is a failure when sending a message
         '''
+        # HACK(solo): Don't use yahoo emails as senders
+        sender = mail_msg.sender
+        if sender:
+            if 'yahoo' in sender:
+                sender = TECHNICAL_SUPPORT_EMAIL
 
         data = {
-            'from': mail_msg.sender if mail_msg.sender else self.sender,
+            'from': sender if sender else self.sender,
             'to': mail_msg.to_addr,
             'subject': mail_msg.subject,
             'text': mail_msg.body,
@@ -79,9 +87,13 @@ class MailgunClient(EmailClient):
             data['bcc'] = mail_msg.bcc
         if mail_msg.html:
             data['html'] = mail_msg.html
-        if mail_msg.tag:
-            # Add tag to allow unsubscribing from emails with this tag
-            data['o:tag'] = mail_msg.tag
+        if mail_msg.tags:
+            # Add tag to allow unsubscribing from emails with this tags
+            data['o:tag'] = mail_msg.tags
+
+        if IS_TEST:
+            LOG.info(f'Not actually sending email: {data}')
+            return
 
         request_params = {
             'url': self.api_url,

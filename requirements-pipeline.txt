@@ -1,21 +1,30 @@
 xlrd>=1.0.0
 pyshp
 shapely
-pyproj==1.9.6
+pyproj
 contextlib2
 lxml ; platform_python_implementation != 'PyPy'
-savReaderWriter
+savReaderWriter ; platform_python_implementation != 'PyPy'
 oauthlib
 requests_oauthlib
 fuzzywuzzy
-pystan>=2.18.1.0 ; platform_python_implementation != 'PyPy'
+jellyfish==0.7.2
 isoweek
-unidecode
-zeep==3.4.0
+unidecode==1.1.1
+zeep==3.4.0 ; platform_python_implementation != 'PyPy'
+scikit-learn>=0.21.3 ; platform_python_implementation != 'PyPy'
+scipy>=1.2.1 ; platform_python_implementation != 'PyPy'
+typing_extensions==3.10.0.2
 
-# NOTE(stephen): Workaround for latest version of pymssql (2.1.4) which
-# impromperly specifies its library requirements. This causes an issue where a
-# Cython dependency is required but not automatically installed. When this
-# happens it causes the rest of the requirements file to not be installed.
-# TODO(stephen): When pymssql 2.1.5 is released, remove this.
--e git+https://github.com/pymssql/pymssql.git@fda5fd38f30eaeeb40a911235692144493d69864#egg=pymssql
+
+# NOTE(stephen): Temporarily disabling pystan and fbprophet pipeline
+# dependencies until they are actually used since they slow down the build and
+# are very large.
+# pystan>=2.19.1.1 ; platform_python_implementation != 'PyPy'
+# fbprophet>=0.6 ; platform_python_implementation != 'PyPy'
+
+# NOTE(stephen): Pymssql is *discontinued*. This is how we used to install the
+# dependency. No new projects should use pymssql, and Alliance India is the only
+# one that currently does. This is disabled for now since it does not support
+# Python 3.8 and is difficult to install.
+# -e git+https://github.com/pymssql/pymssql.git@fda5fd38f30eaeeb40a911235692144493d69864#egg=pymssql

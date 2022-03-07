@@ -1,0 +1,33 @@
+.gd-query-panel-tab-config-item {
+  border-bottom: 1px solid $gray;
+
+  &__detail {
+    display: flex;
+  }
+
+  &__description {
+    flex-grow: 1;
+  }
+
+  &__grouping {
+    margin-top: $space-l-px;
+  }
+
+  &__list {
+    margin-left: $space-xl-px;
+
+    &--item {
+      border-bottom: 1px solid $gray;
+      padding-bottom: 9px;
+    }
+  }
+
+  .zen-dropdown__menu {
+    margin-left: 16px;
+  }
+
+  &__info-text {
+    color: #757578;
+    font-size: 14px;
+  }
+}

@@ -4,15 +4,12 @@ import classNames from 'classnames';
 
 import Intents from 'components/ui/LegacyIntents';
 import autobind from 'decorators/autobind';
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
 import type { Intent } from 'components/ui/LegacyIntents';
 import type { StyleObject } from 'types/jsCore';
 
-export type ButtonClickEvent = SyntheticEvent<HTMLButtonElement>;
-export type ButtonClickHandler = (event: ButtonClickEvent) => void;
-
-type Props = {|
-  children: React.Node,
-
+type DefaultProps = {
+  ariaName?: string,
   className: string,
   dataContent?: string,
   disabled: boolean,
@@ -21,8 +18,8 @@ type Props = {|
    * Gets called when the button is clicked.
    * @param {SyntheticEvent.button} event The click event
    */
-  onClick?: ButtonClickHandler,
-  style: StyleObject,
+  onClick?: (SyntheticMouseEvent<HTMLButtonElement>) => void,
+  style?: StyleObject,
 
   /**
    * The intent should be specified with the Intents object in
@@ -31,7 +28,14 @@ type Props = {|
   // TODO(pablo): rename this from "type" to "intent". "type" means something
   // different for buttons (e.g. "submit", "reset", "button")
   type: Intent,
-|};
+
+  testId?: string,
+};
+
+type Props = {
+  ...DefaultProps,
+  children: React.Node,
+};
 
 /**
  * **This component is deprecated.**
@@ -44,19 +48,21 @@ type Props = {|
  * @deprecated
  */
 export default class LegacyButton extends React.PureComponent<Props> {
-  static Intents = Intents;
+  static Intents: typeof Intents = Intents;
 
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
+    ariaName: undefined,
     className: '',
     dataContent: undefined,
     disabled: false,
     onClick: undefined,
-    style: {},
+    style: undefined,
     type: Intents.DEFAULT,
+    testId: undefined,
   };
 
   @autobind
-  onClick(event: ButtonClickEvent) {
+  onClick(event: SyntheticMouseEvent<HTMLButtonElement>) {
     const { disabled, onClick } = this.props;
     if (disabled) {
       return;
@@ -66,19 +72,32 @@ export default class LegacyButton extends React.PureComponent<Props> {
     }
   }
 
-  render() {
-    const { type, dataContent, disabled, children, style } = this.props;
+  render(): React.Element<'button'> {
+    const {
+      ariaName,
+      type,
+      dataContent,
+      disabled,
+      children,
+      style,
+      testId,
+    } = this.props;
     const className = classNames(`btn btn-${type}`, this.props.className, {
       disabled,
     });
 
+    // if no ARIA Name was specified, use the button contents if it's a string
+    const ariaNameToUse =
+      ariaName || (typeof children === 'string' ? children : undefined);
     return (
       <button
+        aria-label={normalizeARIAName(ariaNameToUse)}
         className={className}
         type="button"
         onClick={this.onClick}
         style={style}
         data-content={dataContent}
+        data-testid={testId}
       >
         {children}
       </button>

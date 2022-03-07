@@ -24,18 +24,21 @@ pipeline {
   options {
     timeout(time: 6, unit: 'HOURS')
   }
+  triggers {
+    cron('H 3 * * *')
+  }
   parameters {
     booleanParam(name: 'RUN_GENERATE', defaultValue: false,
                  description: 'Run the generate pipeline')
-    booleanParam(name: 'RUN_PROCESS', defaultValue: true,
+    booleanParam(name: 'RUN_PROCESS', defaultValue: false,
                  description: 'Run the process pipeline')
-    booleanParam(name: 'RUN_INDEX', defaultValue: true,
+    booleanParam(name: 'RUN_INDEX', defaultValue: false,
                  description: 'Run the index pipeline')
-    booleanParam(name: 'RUN_VALIDATE', defaultValue: false,
+    booleanParam(name: 'RUN_VALIDATE', defaultValue: true,
                  description: 'Run the validate pipeline')
     booleanParam(name: 'RESTART_STAGING', defaultValue: false,
                  description: 'Restart staging after pipeline completes')
-    booleanParam(name: 'RESTART_PROD', defaultValue: true,
+    booleanParam(name: 'RESTART_PROD', defaultValue: false,
                  description: 'Restart prod after pipeline completes')
     string(name: 'PIPELINE_BRANCH', defaultValue: 'master',
            description: 'Branch to run the pipeline from')
@@ -106,7 +109,7 @@ FixShebangs
       steps {
         script {
           runFabricPipelineCommand(
-            'process', env.PIPELINE_DEPLOYMENT_NAME, 'office-pipeline-index',
+            'process', env.PIPELINE_DEPLOYMENT_NAME, 'aws-pipeline',
             params.PIPELINE_BRANCH)
         }
       }
@@ -121,7 +124,7 @@ FixShebangs
       steps {
         script {
           runFabricPipelineCommand(
-            'index', env.PIPELINE_DEPLOYMENT_NAME, 'office-pipeline-index',
+            'index', env.PIPELINE_DEPLOYMENT_NAME, 'aws-pipeline',
             params.PIPELINE_BRANCH)
         }
       }
@@ -136,7 +139,7 @@ FixShebangs
       steps {
         script {
           runFabricPipelineCommand(
-            'validate', env.PIPELINE_DEPLOYMENT_NAME, 'office-pipeline-index',
+            'validate', env.PIPELINE_DEPLOYMENT_NAME, 'aws-pipeline',
             params.PIPELINE_BRANCH)
         }
       }

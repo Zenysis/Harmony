@@ -1,0 +1,20 @@
+.query-item-tag {
+  display: block;
+  margin-right: 0;
+
+  .zen-tag__content {
+    align-items: center;
+    display: flex;
+  }
+
+  &__text {
+    flex: 1;
+    // NOTE(david)If an tag contains a single word longer than the width allowed
+    // for the text then it is acceptable to wrap in the middle of that word.
+    overflow-wrap: anywhere;
+  }
+
+  &__icon {
+    margin-right: 0.4em;
+  }
+}

@@ -1,23 +1,38 @@
 import global_config
+
 from config.druid_base import FIELD_NAME
-from config.br.aggregation import DIMENSIONS, GEO_FIELD_ORDERING, GEO_TO_LATLNG_FIELD
-from config.br.datatypes import BaseBrRow
+from config.br.aggregation import DIMENSIONS, DIMENSION_ID_MAP, GEO_TO_LATLNG_FIELD
+from config.br.datatypes import BaseRowType
 
 
-def get_dimensions_list():
-    ret = [BaseBrRow.DATE_FIELD, BaseBrRow.SOURCE_FIELD, FIELD_NAME]
+def build_druid_dimensions():
+    '''Build the list of dimensions that will exist in Druid after indexing data. This
+    includes all user-visible dimensions (from config.aggregation) and all
+    internal dimensions (like lat/lon).
+    '''
+    dimension_set = set(
+        [
+            BaseRowType.DATE_FIELD,
+            BaseRowType.SOURCE_FIELD,
+            FIELD_NAME,
+            *DIMENSIONS,
+            *DIMENSION_ID_MAP.values(),
+        ]
+    )
+    for lat_lon_fields in GEO_TO_LATLNG_FIELD.values():
+        dimension_set.update(lat_lon_fields)
 
-    ret.extend(GEO_FIELD_ORDERING)
-
-    for latlng_fields in list(GEO_TO_LATLNG_FIELD.values()):
-        if latlng_fields:
-            ret.extend(latlng_fields)
-    ret.extend(DIMENSIONS)
-
-    return list(set(ret))
+    # Return the dimensions in sorted order so that the representation is always
+    # stable.
+    return sorted(dimension_set)
 
 
-DIMENSIONS = get_dimensions_list()
+# The list of dimensions that will exist in Druid after indexing.
+DIMENSIONS = build_druid_dimensions()
+
+# The list of dimensions that will never need to be filtered on in a Druid query and can
+# be stored in a more optimal way during indexing.
+UNFILTERABLE_DIMENSIONS = [d for pieces in GEO_TO_LATLNG_FIELD.values() for d in pieces]
 
 # Extra metrics to compute during druid indexing
 EXTRA_METRICS = []

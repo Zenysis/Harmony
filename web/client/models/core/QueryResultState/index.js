@@ -3,15 +3,16 @@ import Promise from 'bluebird';
 
 import * as Zen from 'lib/Zen';
 import type QueryResultSpec from 'models/core/QueryResultSpec';
+import type QuerySelections from 'models/core/wip/QuerySelections';
 import type { QueryEngine } from 'models/core/QueryResultState/interfaces/QueryEngine';
 import type { QueryResultData } from 'models/core/QueryResultState/interfaces/QueryResultData';
 
 // Callback method type to determine if a new query should be issued based on
 // the new query Selections and QueryResultSpec received.
-type NewQueryTest<Selections> = (
-  newSelections: Selections,
+type NewQueryTest = (
+  newSelections: QuerySelections,
   newResultSpec: QueryResultSpec,
-  prevSelections: Selections | void,
+  prevSelections: QuerySelections | void,
   prevResultSpec: QueryResultSpec | void,
 ) => boolean;
 
@@ -22,27 +23,19 @@ type ApplyTransformationsTest = (
   prevResultSpec: QueryResultSpec | void,
 ) => boolean;
 
-type QRDType<T> = $Call<<M>(Class<M>) => M, T>;
-
-type SerializedQueryResult<ModelClass> = Zen.Serialized<QRDType<ModelClass>>;
-
-type InternalValues<Selections, ModelClass> = {|
-  +QueryResultDataModel: ModelClass,
-  +queryEngine: QueryEngine<Selections, SerializedQueryResult<ModelClass>>,
-  +queryResult: QRDType<ModelClass>,
+type InternalValues<Model, DeserializableDataModelClass> = {
+  +queryEngine: QueryEngine<Zen.Serialized<Model>>,
+  +queryResult: Model,
+  +QueryResultDataModelClass: DeserializableDataModelClass,
   +queryResultSpec: QueryResultSpec | void,
-  +querySelections: Selections | void,
+  +querySelections: QuerySelections | void,
   +shouldRebuildQueryResult: ApplyTransformationsTest,
-  +shouldRunNewQuery: NewQueryTest<Selections>,
-|};
+  +shouldRunNewQuery: NewQueryTest,
+};
 
 // QueryResultData cannot have required values at this time. It needs to be
 // able to be created with a call to `.create({})`.
 type ZenModelNoRequiredValues = Zen.BaseModel<any, {}, any, any>;
-
-type QueryResultDataClass = Zen.DeserializableModel<
-  ZenModelNoRequiredValues & QueryResultData<any> & Zen.Serializable<any, any>,
->;
 
 /**
  * QueryResultState provides a convenient encapsulation of all operations needed
@@ -52,7 +45,6 @@ type QueryResultDataClass = Zen.DeserializableModel<
  * A QueryResultState instance should be created by providing certain default
  * values:
  * const MyQueryResultState: QueryResultState<
- *   QuerySelections,
  *   Class<MyQueryResultData>,
  * > = QueryResultState.createInitialState(
  *   MyQueryEngine,
@@ -98,20 +90,25 @@ type QueryResultDataClass = Zen.DeserializableModel<
  *
  */
 export default class QueryResultState<
-  Selections,
-  ModelClass: QueryResultDataClass,
+  QueryResultDataModel: ZenModelNoRequiredValues & QueryResultData<$AllowAny>,
+  // NOTE(pablo): this type is not filled in by the user, it is computed by
+  // default. This is important to keep here because it enforces that the
+  // QueryResultDataModel type must be a valid deserializable model
+  DeserializableDataModelClass: Zen.DeserializableModel<QueryResultDataModel> = Zen.DeserializableModel<QueryResultDataModel>,
 > {
   static createInitialState(
-    queryEngine: QueryEngine<Selections, SerializedQueryResult<ModelClass>>,
-    QueryResultDataModel: ModelClass,
+    queryEngine: QueryEngine<Zen.Serialized<QueryResultDataModel>>,
+    QueryResultDataModelClass: Zen.DeserializableModel<QueryResultDataModel>,
     shouldRebuildQueryResult: ApplyTransformationsTest,
-    shouldRunNewQuery: NewQueryTest<Selections>,
-  ): this {
+    shouldRunNewQuery: NewQueryTest,
+  ): QueryResultState<QueryResultDataModel> {
     // NOTE(stephen): Need to explicitly specify the type here since Flow is
     // having issues refining the result of `.create`.
-    const queryResult: QRDType<ModelClass> = QueryResultDataModel.create({});
-    return new this({
-      QueryResultDataModel,
+    const queryResult: QueryResultDataModel = QueryResultDataModelClass.create(
+      {},
+    );
+    return new QueryResultState({
+      QueryResultDataModelClass,
       queryEngine,
       queryResult,
       shouldRebuildQueryResult,
@@ -121,12 +118,13 @@ export default class QueryResultState<
     });
   }
 
-  +_values: InternalValues<Selections, ModelClass>;
-  +_untransformedQueryResult: QRDType<ModelClass>;
+  +_values: InternalValues<QueryResultDataModel, DeserializableDataModelClass>;
+
+  +_untransformedQueryResult: QueryResultDataModel;
 
   constructor(
-    values: InternalValues<Selections, ModelClass>,
-    untransformedQueryResult: QRDType<ModelClass> | void = undefined,
+    values: InternalValues<QueryResultDataModel, DeserializableDataModelClass>,
+    untransformedQueryResult?: QueryResultDataModel,
   ) {
     this._values = values;
     this._untransformedQueryResult =
@@ -141,7 +139,7 @@ export default class QueryResultState<
    * current queryResult.
    */
   shouldRunNewQuery(
-    newSelections: Selections,
+    newSelections: QuerySelections,
     newResultSpec: QueryResultSpec,
   ): boolean {
     return this._values.shouldRunNewQuery(
@@ -169,12 +167,12 @@ export default class QueryResultState<
    * new queryResult.
    */
   runQuery(
-    querySelections: Selections,
+    querySelections: QuerySelections,
     queryResultSpec: QueryResultSpec,
-  ): Promise<this> {
+  ): Promise<QueryResultState<QueryResultDataModel>> {
     return this._values.queryEngine
-      .run(querySelections, queryResultSpec)
-      .then((rawQueryResult: SerializedQueryResult<ModelClass>) => {
+      .run(querySelections)
+      .then((rawQueryResult: Zen.Serialized<QueryResultDataModel>) => {
         // If the query failed to return results, clear the current state.
         if (rawQueryResult === undefined) {
           return this.clear();
@@ -197,12 +195,12 @@ export default class QueryResultState<
    */
   applyQueryResultTransformations(
     queryResultSpec: QueryResultSpec,
-  ): Promise<this> {
+  ): Promise<QueryResultState<QueryResultDataModel>> {
     return this._untransformedQueryResult
       .applyTransformations(queryResultSpec)
       .then(
         queryResult =>
-          new this.constructor(
+          new QueryResultState(
             {
               ...this._values,
               queryResult,
@@ -218,39 +216,39 @@ export default class QueryResultState<
    * QueryResultSpec, and SerializedQueryResult returned by the QueryEngine.
    */
   reset(
-    querySelections: Selections,
+    querySelections: QuerySelections,
     queryResultSpec: QueryResultSpec,
-    rawQueryResult: SerializedQueryResult<ModelClass>,
-  ): this {
+    rawQueryResult: Zen.Serialized<QueryResultDataModel>,
+  ): QueryResultState<QueryResultDataModel> {
     const queryResult = this.buildQueryResult(rawQueryResult);
     const values = {
       ...this._values,
       queryResult,
-      querySelections,
       queryResultSpec,
+      querySelections,
     };
-    return new this.constructor(values);
+    return new QueryResultState(values);
   }
 
   /**
    * Create a new QueryResultState instance in an empty state with no
    * queryResult, querySelections, or queryResultSpec set.
    */
-  clear(): this {
+  clear(): QueryResultState<QueryResultDataModel> {
     const queryResult = this.buildQueryResult();
     const values = {
       ...this._values,
       queryResult,
-      querySelections: undefined,
       queryResultSpec: undefined,
+      querySelections: undefined,
     };
-    return new this.constructor(values);
+    return new QueryResultState(values);
   }
 
   /**
    * Access the current queryResult with all transformations applied.
    */
-  queryResult(): QRDType<ModelClass> {
+  queryResult(): QueryResultDataModel {
     return this._values.queryResult;
   }
 
@@ -258,20 +256,20 @@ export default class QueryResultState<
    * Update the query engine used by the state.
    */
   updateQueryEngine(
-    queryEngine: QueryEngine<Selections, SerializedQueryResult<ModelClass>>,
-  ): this {
+    queryEngine: QueryEngine<Zen.Serialized<QueryResultDataModel>>,
+  ): QueryResultState<QueryResultDataModel> {
     const values = {
       ...this.clear()._values,
       queryEngine,
     };
-    return new this.constructor(values);
+    return new QueryResultState(values);
   }
 
   buildQueryResult(
-    rawQueryResult: SerializedQueryResult<ModelClass> | void = undefined,
-  ): QRDType<ModelClass> {
+    rawQueryResult: Zen.Serialized<QueryResultDataModel> | void = undefined,
+  ): QueryResultDataModel {
     const values = rawQueryResult !== undefined ? rawQueryResult : {};
-    return this._values.QueryResultDataModel.deserialize(values);
+    return this._values.QueryResultDataModelClass.deserialize(values);
   }
 
   /**
@@ -281,11 +279,13 @@ export default class QueryResultState<
    * updated. When this method is called, it is assumed the queryResult supplied
    * is the *transformed* version.
    */
-  deprecatedUpdateQueryResult(queryResult: QRDType<ModelClass>): this {
+  deprecatedUpdateQueryResult(
+    queryResult: QueryResultDataModel,
+  ): QueryResultState<QueryResultDataModel> {
     const values = {
       ...this._values,
       queryResult,
     };
-    return new this.constructor(values, this._untransformedQueryResult);
+    return new QueryResultState(values, this._untransformedQueryResult);
   }
 }

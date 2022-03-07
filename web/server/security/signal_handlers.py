@@ -2,7 +2,6 @@ from builtins import str
 from logging import LoggerAdapter
 from uuid import uuid4
 
-import global_config
 from flask import g, request, request_started
 from flask.sessions import SecureCookieSessionInterface
 from flask_login import user_loaded_from_header
@@ -20,22 +19,23 @@ from flask_principal import (
 from werkzeug.exceptions import BadRequest
 
 from log import LOG
-from models.alchemy.permission import ResourceTypeEnum
-from models.alchemy.query_policy import QueryPolicy
+from models.alchemy.dashboard import Dashboard
+from models.alchemy.permission import ResourceTypeEnum, SitewideResourceAcl
 from models.alchemy.user import User
-from web.server.configuration.settings import get_configuration, PUBLIC_ACCESS_KEY
 from web.server.data.data_access import Transaction
+from web.server.errors.errors import JWTTokenError
 from web.server.routes.views.authentication import try_authenticate_user
 from web.server.routes.views.authorization import AuthorizedOperation
-from web.server.routes.views.default_users import list_default_roles
 from web.server.routes.views.query_policy import construct_query_need_from_policy
-from web.server.security.access_keys import KeyManager
+from web.server.security.permissions import (
+    SuperUserPermission,
+    is_public_dashboard_user,
+)
 from web.server.util.util import get_user_string, get_remote_ip_address
 
 
 class CookielessSessionInterface(SecureCookieSessionInterface):
-    '''Prevent the setting of a session-cookie for API requests.
-    '''
+    '''Prevent the setting of a session-cookie for API requests.'''
 
     def save_session(self, *args, **kwargs):
         if g.get('login_via_header'):
@@ -107,23 +107,23 @@ def on_identity_loaded(sender, identity):
     if cached_permissions:
         identity.provides = cached_permissions
     else:
-        # Add specific permission claims to the identity object
-        # (e.g.) 'edit_resource' on the 'jsc' dashboard
-        for permission in enumerate_permissions(current_user):
-            identity.provides.add(permission)
+        with Transaction() as transaction:
+            # Add specific permission claims to the identity object
+            # (e.g.) 'edit_resource' on the 'jsc' dashboard
+            for permission in enumerate_permissions(current_user, transaction):
+                identity.provides.add(permission)
 
-        # cache the user permissions added to the identity provider
-        if not isinstance(identity, AnonymousIdentity):
-            cache.set(
-                current_user.username,
-                identity.provides,
-                timeout=sender.config['CACHE_TIMEOUT_SECONDS'],
-            )
+            # cache the user permissions added to the identity provider
+            if not isinstance(identity, AnonymousIdentity):
+                cache.set(
+                    current_user.username,
+                    identity.provides,
+                    timeout=sender.config['CACHE_TIMEOUT_SECONDS'],
+                )
 
     g.request_logger.debug(
-        'Identity for User \'%s\' was loaded. ' 'Permissions are: \'%s\'',
+        'Identity for User \'%s\' was loaded.',
         get_user_string(current_user),
-        identity.provides,
     )
 
 
@@ -138,11 +138,6 @@ def install_default_user_permissions(identity):
     # Always allow the user to view their profile
     identity.provides.add(ItemNeed('view_resource', identity.user.id, 'user'))
 
-    # HACK(vedant) - Fixed as part of a short term solution for T2113
-    # The long term solution is to define default permissions or a default user group that all new
-    # users should be added to.
-    identity.provides.add(ItemNeed('create_resource', None, 'dashboard'))
-
     # Continuation of Work for T2148 but now allowing RO-access to all Potion APIs
     identity.provides.add(ItemNeed('view_resource', None, 'user'))
     identity.provides.add(ItemNeed('view_resource', None, 'group'))
@@ -150,16 +145,25 @@ def install_default_user_permissions(identity):
     identity.provides.add(ItemNeed('view_resource', None, 'resource'))
     identity.provides.add(ItemNeed('view_resource', None, 'configuration'))
 
+    # For case management
+    identity.provides.add(ItemNeed('view_resource', None, 'case_event'))
+    identity.provides.add(ItemNeed('view_resource', None, 'case_status_type'))
+    identity.provides.add(ItemNeed('view_resource', None, 'external_alert_type'))
+    identity.provides.add(ItemNeed('view_resource', None, 'case_type'))
+    identity.provides.add(ItemNeed('view_resource', None, 'case'))
 
-def enumerate_permissions(user):
-    '''For a given user, generates an enumeration of all the permissions that they have.
-    '''
 
-    user_authenticated = user.is_authenticated
-    public_access_enabled = get_configuration(PUBLIC_ACCESS_KEY)
+def enumerate_permissions(user, transaction):
+    '''For a given user, generates an enumeration of all the permissions that they have.'''
+    # Public access case
+    if is_public_dashboard_user():
+        for need in _build_sitewide_needs(transaction, False):
+            yield need
+        return
 
-    # We should only assign permissions to an anonymous user if public access is enabled
-    if not user_authenticated and not public_access_enabled:
+    # If the user is unauthenticated, then do not attempt to look up any additional permissions
+    # as they do not have any in the system.
+    if not user.is_authenticated:
         return
 
     # TODO(vedant) - These will need to be cached at some point. They are constructed for each
@@ -168,84 +172,104 @@ def enumerate_permissions(user):
     # really dumb cache and just store these in a dictionary in-memory in the current application
     # context.
 
-    # List any `public` permissions regardless of whether the current user is
-    # authenticated or not.
-    default_roles = list_default_roles()
-    for default_role in default_roles:
-        apply_to_unregistered = default_role.apply_to_unregistered
-
-        # This particular role ONLY applies to registered users. If the user is
-        # unauthenticated, then we will not grant them the role.
-        if not user_authenticated and not apply_to_unregistered:
-            continue
-
-        yield RoleNeed(default_role.role.name)
-        for permission in default_role.role.permissions:
-            resource = default_role.resource
-            yield permission.build_permission(resource)
-
-            resource_specific_needs = _build_resource_specific_needs(
-                default_role.role.resource_type, permission, resource
-            )
-            for need in resource_specific_needs:
-                yield need
-
-    # If the user is unauthenticated, then do not attempt to look up any additional permissions
-    # as they do not have any in the system.
-    if not user_authenticated:
-        return
+    # Build out sitewide ACLs
+    for need in _build_sitewide_needs(transaction, True):
+        yield need
 
     # Look through all roles that the user directly possesses
-    for user_role in user.roles:
-        # Add any user role claims to the identity object
-        # (e.g.) The superuser role
-        yield RoleNeed(user_role.role.name)
-        permissions = user_role.role.permissions
-        for permission in permissions:
-            resource = user_role.resource
-            yield permission.build_permission(resource)
+    for need in _build_role_needs(user.roles):
+        yield need
 
-            resource_specific_needs = _build_resource_specific_needs(
-                user_role.role.resource_type, permission, resource
-            )
-            for need in resource_specific_needs:
-                yield need
+    # Go through User ACLs
+    for user_acl in user.acls:
+        for need in _build_acl_needs(
+            user_acl.resource_role.permissions, user_acl.resource
+        ):
+            yield need
 
     # Look through all roles that are possessed by the groups that the user is a member of
     for group in user.groups:
-        for group_role in group.roles:
-            yield RoleNeed(group_role.role.name)
-            permissions = group_role.role.permissions
-            for permission in permissions:
-                resource = group_role.resource
-                yield permission.build_permission(resource)
+        for need in _build_role_needs(group.roles):
+            yield need
 
-                resource_specific_needs = _build_resource_specific_needs(
-                    group_role.role.resource_type, permission, resource
-                )
-                for need in resource_specific_needs:
-                    yield need
+        # Go through Group ACLs
+        for group_acl in group.acls:
+            for need in _build_acl_needs(
+                group_acl.resource_role.permissions, group_acl.resource
+            ):
+                yield need
 
 
-def _build_resource_specific_needs(resource_type, permission, resource):
-    '''Yields any authorization needs that are specifically related to an individual authorization
-    resource or authorization resource type.
+def _build_sitewide_needs(transaction, is_registered):
+    '''Builds Needs from SitewideResourceAcl, depending if the user is registered or
+    not. Yields one Need per permission defined in the ResourceRole.
     '''
-    # $CycloneIdaiHack(vedant)
+    all_sitewide_acls = transaction.find_all_by_fields(SitewideResourceAcl, {}) or []
+    for sitewide_acl in all_sitewide_acls:
+        resource_role = (
+            sitewide_acl.registered_resource_role
+            if is_registered
+            else sitewide_acl.unregistered_resource_role
+        )
+        if not resource_role:
+            continue
+        for need in _build_acl_needs(resource_role.permissions, sitewide_acl.resource):
+            yield need
+
+
+def _build_acl_needs(permissions, resource):
+    '''Builds Needs for a particular resource and a list of permissions.'''
+    for permission in permissions:
+        resource_type = resource.resource_type
+        yield ItemNeed(
+            permission.permission, resource.id, resource_type.name.name.lower()
+        )
+        resource_specific_needs = _maybe_build_alert_needs(
+            resource_type, permission, resource
+        )
+
+        for need in resource_specific_needs:
+            yield need
+
+
+def _build_role_needs(roles):
+    '''Builds Needs for a `Role` object.'''
+    for role in roles:
+        # Special case specifically for site admin role
+        if role.name == 'admin':
+            yield RoleNeed(role.name)
+            continue
+
+        # Add any query policies associated with the role.
+        for query_policy in role.query_policies:
+            yield construct_query_need_from_policy(query_policy)
+
+        permissions = role.permissions
+        for permission in permissions:
+            resource_type = permission.resource_type.name.name.lower()
+            yield ItemNeed(permission.permission, None, resource_type)
+
+            # We need to translate 'alert' to 'alert_definitions'
+            if resource_type == 'alert':
+                yield ItemNeed(permission.permission, None, 'alert_definitions')
+
+        dashboard_resource_role = role.dashboard_resource_role
+        if dashboard_resource_role:
+            dashboard_resource_type = ResourceTypeEnum.DASHBOARD.name.lower()
+            for permission in dashboard_resource_role.permissions:
+                yield ItemNeed(permission.permission, None, dashboard_resource_type)
+
+        alert_resource_role = role.alert_resource_role
+        if alert_resource_role:
+            alert_resource_type = ResourceTypeEnum.ALERT.name.lower()
+            for permission in alert_resource_role.permissions:
+                yield ItemNeed(permission.permission, None, 'alert_definitions')
+
+
+def _maybe_build_alert_needs(resource_type, permission, resource):
     if resource_type.name == ResourceTypeEnum.ALERT:
         resource_id = resource.id if resource else None
         yield ItemNeed(permission.permission, resource_id, 'alert_definitions')
-
-    if not resource:
-        return
-
-    if resource.resource_type.name == ResourceTypeEnum.QUERY_POLICY:
-        with Transaction() as transaction:
-            query_policy_entity = transaction.find_by_id(
-                QueryPolicy, resource.id, 'resource_id'
-            )
-            query_need = construct_query_need_from_policy(query_policy_entity)
-            yield query_need
 
 
 def install_identity_loader(principals):
@@ -293,24 +317,29 @@ def install_login_manager_signal_handlers(app, login_manager):
     def login_from_request(request_object=None):
         request_object = request_object or request
 
-        access_key = request.cookies.get('accessKey')
-        if access_key:
-            LOG.info('Received access key in cookie: %s' % access_key)
-            if KeyManager.is_valid_key(access_key):
-                LOG.info('Accessing %s with renderbot access key', request.path)
-                bot = User.query.filter_by(
-                    username=global_config.RENDERBOT_EMAIL
-                ).first()
-                return bot
-            else:
-                LOG.warn('Received invalid access key')
+        token = request.cookies.get('accessKey')
+        if token:
+            LOG.info('Received access token in cookie: %s', token)
+            try:
+                payload = app.jwt_manager.decode_token(token)
+                auth_email = payload['email']
+                LOG.info('Accessing %s with %s access token', request.path, auth_email)
+                # pylint:disable=no-member
+                with Transaction() as transaction:
+                    authenticating_user = transaction.find_one_by_fields(
+                        User, False, {'username': auth_email}
+                    )
+                    return authenticating_user
+            except JWTTokenError as error:
+                LOG.error('%s: %s', error.message, error.status_code)
+                return None
 
         try:
             username = request.headers.get('X-Username')
             password = request.headers.get('X-Password')
 
             if not (username and password):
-                LOG.debug('Username or Password not provided via Login Headers. ')
+                # User and password are not provided via login headers
                 return None
 
             LOG.debug('Attempting to authenticate user: \'%s\'.', username)

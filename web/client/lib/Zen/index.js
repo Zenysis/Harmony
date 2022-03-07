@@ -1,40 +1,46 @@
 // @flow
-import ZenArray from 'util/ZenModel/ZenArray';
-import ZenMap from 'util/ZenModel/ZenMap';
-import ZenModel, {
-  hasChanged,
-  hasChangedDeep,
-  statefulCompute,
-} from 'lib/Zen/ZenModel';
+import ZenArray from 'lib/Zen/ZenArray';
+import ZenMap from 'lib/Zen/ZenMap';
+import ZenModel from 'lib/Zen/ZenModel';
 import ZenModelUtil from 'lib/Zen/ZenModel/ZenModelUtil';
 import cast from 'lib/Zen/util/cast';
 import {
-  deserialize,
   deserializeArray,
+  deserializeAsyncArray,
   deserializeToZenArray,
   deserializeMap,
   deserializeToZenMap,
   serializeArray,
   serializeMap,
 } from 'lib/Zen/util/serializationUtil';
+import {
+  hasChanged,
+  hasChangedDeep,
+  statefulCompute,
+} from 'lib/Zen/ZenModel/coreHelpers';
 import type {
-  AllValues,
   AnyModel,
   ComputeDerivedValueFn,
   CreationValues,
+  DerivedConfig,
   Model,
-  ModelValueKeys,
-  ReadOnly,
   ShouldRecomputeFn,
   StatefulComputeDerivedValueFn,
 } from 'lib/Zen/ZenModel';
 import type {
-  DeserializableClass,
+  Deserializable,
   DeserializableModel,
   DeserializationConfig,
   Serializable,
   Serialized,
 } from 'lib/Zen/util/serializationUtil';
+import type {
+  ModelValues,
+  ModelValueKeys,
+  SettableValues,
+  SettableValueKeys,
+  SettableValueType,
+} from 'lib/Zen/ZenModel/coreHelpers';
 
 /**
  * This is a collection of all our exports for the Zen library.
@@ -52,7 +58,6 @@ import type {
  *   - Zen.cast<T>
  *
  * Serialize/Deserialize Functions:
- *   - Zen.deserialize
  *   - Zen.deserializeArray
  *   - Zen.deserializeToZenArray
  *   - Zen.deserializeMap
@@ -62,19 +67,23 @@ import type {
  *
  * Utility types:
  *   - Zen.AnyModel
+ *   - Zen.DeserializationConfig<M>
+ *   - Zen.DeserializableModel<M>
  *   - Zen.Model<M>
  *   - Zen.ModelValues<M>
  *   - Zen.ModelValueKeys<M>
  *   - Zen.ComputeDerivedValueFn<V, M>
- *   - Zen.ReadOnly<T>
+ *   - Zen.SettableValues<T>
+ *   - Zen.SettableValueKeys<T>
+ *   - Zen.SettableValueType<T>
  *   - Zen.ShouldRecomputeFn<M>
  *   - Zen.StatefulComputeDerivedValueFn<V, M>
  *   - Zen.Serialized<M>
- *   - Zen.DeserializationConfig<M>
  *
  * Interfaces:
  *   (due to Flow's parser, interfaces must be imported separately and cannot
  *   be used with the `Zen.` namespace)
+ *   - Deserializable<SerializedModel, DeserializationConfig>
  *   - Serializable<SerializedModel, DeserializationConfig>
  *
  * @version 1.0.0
@@ -89,26 +98,29 @@ export const ModelUtil = ZenModelUtil;
 // helper types and interfaces
 export type {
   AnyModel,
-  DeserializableClass,
+  DerivedConfig,
+  Deserializable,
   DeserializableModel,
   DeserializationConfig,
   Model,
+  ModelValues,
   ModelValueKeys,
   ComputeDerivedValueFn,
   CreationValues,
-  ReadOnly,
   Serializable,
   Serialized,
+  SettableValues,
+  SettableValueKeys,
+  SettableValueType,
   ShouldRecomputeFn,
   StatefulComputeDerivedValueFn,
 };
-export type ModelValues<M: AnyModel> = AllValues<M>;
 
 // helper functions
 export {
   cast,
-  deserialize,
   deserializeArray,
+  deserializeAsyncArray,
   deserializeToZenArray,
   deserializeMap,
   deserializeToZenMap,
@@ -129,7 +141,6 @@ const DefaultZenExport = {
 
   // functions
   cast,
-  deserialize,
   deserializeArray,
   deserializeToZenArray,
   deserializeMap,

@@ -1,11 +1,11 @@
 // @flow
 import * as Zen from 'lib/Zen';
 import QueryFilterUtil from 'models/core/wip/QueryFilter/QueryFilterUtil';
-import type { Serializable } from 'lib/Zen';
 import type {
   QueryFilter,
   SerializedQueryFilter,
 } from 'models/core/wip/QueryFilter/types';
+import type { Serializable } from 'lib/Zen';
 
 type Values = {
   filter: QueryFilter,
@@ -58,6 +58,6 @@ class AverageCalculation extends Zen.BaseModel<AverageCalculation, Values>
   }
 }
 
-export default ((AverageCalculation: any): Class<
+export default ((AverageCalculation: $Cast): Class<
   Zen.Model<AverageCalculation>,
 >);

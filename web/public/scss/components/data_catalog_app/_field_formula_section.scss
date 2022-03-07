@@ -1,0 +1,31 @@
+.field-formula-section {
+  margin-top: $space-xxl-px;
+
+  &__formula-block {
+    background: $white;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    display: flex;
+    margin-top: $space-s-px;
+  }
+
+  &__formula-text {
+    background-color: $white-hover;
+    margin: $space-l-px;
+  }
+
+  &__cohort-display {
+    background-color: $white-hover;
+    margin: $space-l-px;
+    padding: 0 $space-l-px $space-l-px $space-l-px;
+    width: 100%;
+  }
+
+  &__heading {
+    display: flex;
+  }
+
+  &__edit-button {
+    margin-left: auto;
+  }
+}

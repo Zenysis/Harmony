@@ -68,7 +68,11 @@
   }
 
   &--primary-solid {
-    @include solid-tag($blue-primary, $blue-primary-hover, $blue-primary-active);
+    @include solid-tag(
+      $blue-primary,
+      $blue-primary-hover,
+      $blue-primary-active
+    );
   }
 
   &--danger-solid {
@@ -76,11 +80,19 @@
   }
 
   &--success-solid {
-    @include solid-tag($success-color, $success-color-hover, $success-color-active);
+    @include solid-tag(
+      $success-color,
+      $success-color-hover,
+      $success-color-active
+    );
   }
 
   &--warning-solid {
-    @include solid-tag($warning-color, $warning-color-hover, $warning-color-active);
+    @include solid-tag(
+      $warning-color,
+      $warning-color-hover,
+      $warning-color-active
+    );
   }
 
   &--info-solid {
@@ -103,12 +115,12 @@
     font-weight: 700;
   }
 
-  &--clickable{
+  &--clickable {
     touch-action: none;
     user-select: none;
   }
 
-  &__content-container{
+  &__content-container {
     align-items: center;
     display: flex;
     position: relative;
@@ -136,6 +148,15 @@
     &:hover {
       text-shadow: 0 0 1px #ffffff;
     }
+  }
+
+  &__remove-btn {
+    height: 20px;
+    width: 20px;
+  }
+
+  &__remove-btn-wrapper {
+    display: flex;
   }
 
   .zen-icon:last-child {

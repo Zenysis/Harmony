@@ -1,7 +1,7 @@
 // @flow
 import * as Zen from 'lib/Zen';
 import type { Serializable } from 'lib/Zen';
-import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/types';
+import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/TestableRule';
 
 type SerializedEqualToZeroRule = {
   type: 'EQUAL_TO_ZERO',
@@ -35,4 +35,4 @@ class EqualToZeroRule extends Zen.BaseModel<EqualToZeroRule, {}>
   }
 }
 
-export default ((EqualToZeroRule: any): Class<Zen.Model<EqualToZeroRule>>);
+export default ((EqualToZeroRule: $Cast): Class<Zen.Model<EqualToZeroRule>>);

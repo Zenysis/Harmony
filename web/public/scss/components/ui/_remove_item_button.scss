@@ -1,0 +1,32 @@
+.remove-item-button {
+  align-self: flex-end;
+  border-radius: 5px;
+
+  &:hover {
+    background-color: rgba($error-color-hover, 0.4);
+  }
+
+  &:active {
+    background-color: rgba($error-color-hover, 0.6);
+  }
+
+  .zen-info-tooltip {
+    align-items: center;
+    display: flex;
+    font-size: $font-xl;
+    height: 35px;
+    justify-content: center;
+    margin-left: 0;
+    width: 35px;
+
+    &:hover {
+      color: $error-color;
+    }
+
+    // The trash icon is really annoying and has spacing on the left hand side
+    // of it.
+    .zen-icon {
+      left: -1.5px;
+    }
+  }
+}

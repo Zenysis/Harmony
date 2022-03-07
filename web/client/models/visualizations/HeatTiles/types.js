@@ -7,7 +7,8 @@ export type RawTimestamp = string;
 export type DataPoint = {
   +key: string,
   +timestamp: RawTimestamp,
-  +[string]: number,
+  +dimensions: { +[dimensionName: string]: string | null, ... },
+  +[string]: number | null,
 };
 
 export type TotalsValue = {

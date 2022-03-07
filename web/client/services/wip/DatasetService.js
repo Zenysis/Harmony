@@ -15,14 +15,13 @@ import type { URI, URIConverter } from 'services/types/api';
  */
 class DatasetService extends CachedMapService<Dataset> implements URIConverter {
   apiVersion: APIVersion = API_VERSION.V2;
-  endpoint: string = 'wip/datasets';
+  endpoint: string = 'query/datasets';
   _httpService: HTTPService;
   constructor(httpService: HTTPService) {
     super();
     this._httpService = httpService;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   buildCache(
     resolve: ResolveFn<Dataset>,
     reject: RejectFn,
@@ -52,4 +51,4 @@ class DatasetService extends CachedMapService<Dataset> implements URIConverter {
   }
 }
 
-export default new DatasetService(APIService);
+export default (new DatasetService(APIService): DatasetService);

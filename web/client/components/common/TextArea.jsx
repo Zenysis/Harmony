@@ -1,104 +1,78 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import TextareaAutosize from 'react-autosize-textarea';
+// @flow
+import * as React from 'react';
+import TextareaAutosize from 'react-textarea-autosize';
 import classNames from 'classnames';
 
-import ZenPropTypes from 'util/ZenPropTypes';
-import { omit } from 'util/util';
+import autobind from 'decorators/autobind';
+import type { StyleObject } from 'types/jsCore';
 
-const propTypes = {
-  className: PropTypes.string,
-  initialValue: ZenPropTypes.all([
-    // use initialValue if component is uncontrolled
-    PropTypes.string,
-    ZenPropTypes.xor('value'),
-  ]),
-  isManuallyResizable: PropTypes.bool,
-  onChange: PropTypes.func, // f(value: string, event: object)
-  onResize: PropTypes.func, // f()
-  // if set, will override maxHeight property in style prop
-  maxHeight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  // if set, will override minHeight property in style prop
-  minHeight: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  maxRows: PropTypes.number,
-  rows: PropTypes.number,
-  style: PropTypes.object,
-  value: PropTypes.string, // if using as a controlled component
+type DefaultProps = {
+  className: string | void,
+  maxHeight: string | number | void,
+  maxRows: number | void,
+  minHeight: string | number | void,
+  rows: number,
+  style: StyleObject | void,
+
+  placeholder?: string,
 };
 
-const defaultProps = {
-  className: null,
-  minHeight: undefined,
-  initialValue: undefined,
-  isManuallyResizable: false,
-  onChange: undefined,
-  onResize: undefined,
-  maxHeight: undefined,
-  maxRows: undefined,
-  rows: 1,
-  style: {},
-  value: undefined,
+type Props = {
+  ...DefaultProps,
+  onChange: (value: string) => void,
+  value: string,
 };
 
-export default class TextArea extends React.Component {
-  constructor(props) {
-    super(props);
-    const { value, initialValue } = this.props;
-    this._isControlledComponent = value !== undefined;
-    if (!this._isControlledComponent) {
-      this.state = { value: initialValue };
-    }
+export default class TextArea extends React.Component<Props> {
+  static defaultProps: DefaultProps = {
+    className: undefined,
+    maxHeight: undefined,
+    maxRows: undefined,
+    minHeight: undefined,
+    placeholder: '',
+    rows: 1,
+    style: undefined,
+  };
 
-    this.onChange = this.onChange.bind(this);
-  }
-
-  getValue() {
-    return this._isControlledComponent ? this.props.value : this.state.value;
-  }
-
-  getStyle() {
+  getStyle(): StyleObject {
     const { minHeight, maxHeight, style } = this.props;
-    return {
+    const oldMinHeight = style ? style.minHeight : undefined;
+    const oldMaxHeight = style ? style.maxHeight : undefined;
+    const styleObject = {
       ...style,
-      minHeight: minHeight !== undefined ? minHeight : style.minHeight,
-      maxHeight: maxHeight !== undefined ? maxHeight : style.maxHeight,
-      resize: !this.props.isManuallyResizable ? 'none' : style.resize,
+      minHeight: minHeight !== undefined ? minHeight : oldMinHeight,
+      maxHeight: maxHeight !== undefined ? maxHeight : oldMaxHeight,
     };
+
+    return styleObject;
   }
 
-  onChange(event) {
-    if (!this._isControlledComponent) {
-      this.setState({ value: event.target.value });
-    }
+  @autobind
+  onChange(event: Event) {
+    const { target } = event;
 
-    if (this.props.onChange) {
-      this.props.onChange(event.target.value, event);
+    if (target instanceof HTMLTextAreaElement) {
+      this.props.onChange(target.value);
     }
   }
 
-  render() {
+  render(): React.Node {
+    const { maxRows, rows, value, placeholder } = this.props;
     const className = classNames(
       'zen-textarea form-control',
       this.props.className,
     );
 
-    // Allowing passThrough props here so the user can still specify other
-    // common DOM attributes (like style, onBlur, onFocus, etc.)
-    const passThroughProps = omit(this.props, propTypes);
     return (
       <TextareaAutosize
         className={className}
-        value={this.getValue()}
+        value={value}
         onChange={this.onChange}
-        onResize={this.props.onResize}
-        maxRows={this.props.maxRows}
-        rows={this.props.rows}
+        maxRows={maxRows}
+        rows={rows}
         style={this.getStyle()}
-        {...passThroughProps}
+        placeholder={placeholder}
       />
     );
   }
 }
-
-TextArea.propTypes = propTypes;
-TextArea.defaultProps = defaultProps;

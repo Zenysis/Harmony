@@ -1,7 +1,7 @@
-from web.server.query.visualizations.base import BaseVisualization
+from web.server.query.visualizations.base import QueryBase
 
 
-class Table(BaseVisualization):
+class TableVisualization(QueryBase):
     ''' Class to process the pandas dataframe returned from a druid query into the format needed
     for the table and scorecard visualization.
     '''
@@ -9,20 +9,16 @@ class Table(BaseVisualization):
     def build_response(self, df):
         '''Output data stored as a list of rows.
         '''
-        # If the granularity set is not "all", then we should include the
-        # timestamp column so the table can display it.
-        columns = []
-        if self.granularity != 'all':
-            columns.append('timestamp')
-        columns.extend(self.dimensions + self.numeric_fields)
+        output_dimensions = self.grouping_order()
+        columns = [*output_dimensions]
+        numeric_fields = []
+        for field in self.request.fields:
+            numeric_fields.append(field.id)
+            columns.append(field.id)
 
         # Convert the dataframe rows into a list of dictionaries.
         data = []
         if not df.empty:
             data = df[columns].to_dict('records')
 
-        return {
-            'data': data,
-            'dimensions': self.dimensions,
-            'fields': self.numeric_fields,
-        }
+        return {'data': data, 'dimensions': output_dimensions, 'fields': numeric_fields}

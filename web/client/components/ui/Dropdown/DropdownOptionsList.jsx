@@ -5,9 +5,10 @@ import Option from 'components/ui/Dropdown/Option';
 import OptionWrapper from 'components/ui/Dropdown/internal/OptionWrapper';
 import OptionsGroup from 'components/ui/Dropdown/OptionsGroup';
 import OptionsGroupWrapper from 'components/ui/Dropdown/internal/OptionsGroupWrapper';
+import autobind from 'decorators/autobind';
 import { uniqueId } from 'util/util';
 import type GraphSearchResults from 'models/ui/common/GraphSearchResults';
-import type { DropdownChildType } from 'components/ui/Dropdown';
+import type { DropdownChildType } from 'components/ui/Dropdown/types';
 
 const TEXT = t('ui.Dropdown');
 
@@ -15,7 +16,15 @@ type DropdownChildTypeWrapper<T> =
   | React.Element<Class<OptionWrapper<T>>>
   | React.Element<Class<OptionsGroupWrapper<T>>>;
 
+type DefaultProps<T> = {
+  enableSelectAll: boolean,
+  preOptionsContent: React.Node,
+  pinnedValues: $ReadOnlyArray<T>,
+};
+
 type Props<T> = {
+  ...DefaultProps<T>,
+
   // if all children including option children of groups are selected
   allChildrenSelected: boolean,
   children: React.ChildrenArray<?DropdownChildType<T>>,
@@ -32,11 +41,10 @@ type Props<T> = {
   ) => void,
   searchResults: GraphSearchResults<string, T>,
   searchText: string,
+
+  /** Used to determine which values should be shown as selected. */
   selectedValues: $ReadOnlyArray<T>,
   useSearch: boolean,
-
-  enableSelectAll: boolean,
-  selectedOptions: $ReadOnlyArray<React.Element<Class<Option<T>>>>,
 };
 
 function makeUnselectableOption(
@@ -77,30 +85,80 @@ function _getKey<T>(
     keyType === 'string' || keyType === 'number' ? String(value) : uniqueId();
   return isSelectedOption ? `${key}_selected` : key;
 }
-
+/**
+ * @visibleName Dropdown.OptionsList
+ */
 export default class DropdownOptionsList<T> extends React.PureComponent<
   Props<T>,
 > {
-  static defaultProps = {
+  static defaultProps: DefaultProps<T> = {
     enableSelectAll: false,
-    selectedOptions: [],
+    pinnedValues: [],
+    preOptionsContent: null,
   };
+
+  @autobind
+  pinnedOptionFilter(option: DropdownChildType<T>): boolean {
+    const { pinnedValues } = this.props;
+    if (option.type !== Option) {
+      // Don't pin options groups
+      return false;
+    }
+
+    const castOption: React.Element<Class<Option<T>>> = (option: $Cast);
+    const { value } = castOption.props;
+    return pinnedValues.includes(value);
+  }
+
+  @autobind
+  unpinnedOptionFilter(option: DropdownChildType<T>): boolean {
+    return !this.pinnedOptionFilter(option);
+  }
 
   isOptionsGroupOpen(groupVal: string): boolean {
     return this.props.openGroups.has(groupVal);
   }
 
-  maybeRenderSelectedOptions(): $ReadOnlyArray<?DropdownChildTypeWrapper<T>> {
-    const { selectedOptions } = this.props;
-    if (selectedOptions.length === 0) {
-      return [];
+  maybeRenderNoOptionsContent(): ?React.Element<Class<OptionWrapper<T>>> {
+    const { children, noOptionsContent } = this.props;
+
+    if (React.Children.toArray(children).length === 0) {
+      return this.renderSingleOption(
+        makeUnselectableOption(noOptionsContent),
+        0,
+        true,
+      );
     }
 
-    return this.renderOptions(
-      [
-        ...selectedOptions,
-        makeUnselectableOption('', 'zen-dropdown__dividing-line'),
-      ],
+    return null;
+  }
+
+  maybeRenderEmptySearchResultsContent(): ?React.Element<
+    Class<OptionWrapper<T>>,
+  > {
+    const { searchResults, searchText, useSearch } = this.props;
+
+    if (useSearch && searchText !== '' && searchResults.hasNoMatches()) {
+      return this.renderSingleOption(
+        makeUnselectableOption(
+          t('ui.Dropdown.emptySearchResults', { searchText }),
+        ),
+        0,
+        true,
+      );
+    }
+
+    return null;
+  }
+
+  maybeRenderPreOptionsContent(): ?React.Element<Class<OptionWrapper<T>>> {
+    const { preOptionsContent } = this.props;
+    if (preOptionsContent === null) {
+      return null;
+    }
+
+    return this.renderSingleOption(
+      makeUnselectableOption(preOptionsContent),
       0,
       true,
     );
@@ -122,27 +180,24 @@ export default class DropdownOptionsList<T> extends React.PureComponent<
     }
 
     const option = (
-      <Option
-        key="__selectAll__"
-        value="__selectAll__"
-        className="zen-dropdown__select-all-option"
-      >
+      <Option key="__selectAll__" value="__selectAll__">
         {TEXT.selectAll}
       </Option>
     );
-    const { unselectable, wrapperClassName } = option.props;
     const isActive = displayCurrentSelection && allChildrenSelected;
 
     return (
       <OptionWrapper
         key={_getKey(option)}
-        className={wrapperClassName}
+        ariaName={TEXT.selectAll}
+        contentClassName="zen-dropdown__select-all-option"
         depth={0}
         isActive={isActive}
         marginPerLevel={marginPerLevel}
         multiselect={multiselect}
         onSelect={onOptionClick}
-        unselectable={unselectable}
+        unselectable={false}
+        testId={_getKey(option).toString()}
       >
         {option}
       </OptionWrapper>
@@ -153,7 +208,7 @@ export default class DropdownOptionsList<T> extends React.PureComponent<
     option: React.Element<Class<Option<T>>>,
     depth: number,
     forceRender: boolean,
-  ): ?React.Element<Class<OptionWrapper<T>>> {
+  ): React.Element<Class<OptionWrapper<T>>> | null {
     const {
       displayCurrentSelection,
       marginPerLevel,
@@ -162,7 +217,17 @@ export default class DropdownOptionsList<T> extends React.PureComponent<
       selectedValues,
       searchResults,
     } = this.props;
-    const { unselectable, value, wrapperClassName } = option.props;
+    const {
+      unselectable,
+      value,
+      wrapperClassName,
+      className,
+      ariaName,
+      maxOptionCharacterCount,
+      searchableText,
+      style,
+    } = option.props;
+
     if (
       forceRender ||
       unselectable ||
@@ -170,18 +235,26 @@ export default class DropdownOptionsList<T> extends React.PureComponent<
     ) {
       const isActive =
         displayCurrentSelection && selectedValues.includes(value);
-
       return (
-        // $FlowSuppressError - flow doesn't realize this is of valid type
         <OptionWrapper
           key={_getKey(option)}
-          className={wrapperClassName}
+          ariaName={ariaName}
+          wrapperClassName={wrapperClassName}
+          contentClassName={className}
           depth={depth}
           isActive={isActive}
           marginPerLevel={marginPerLevel}
           multiselect={multiselect}
           onSelect={onOptionClick}
           unselectable={unselectable}
+          style={style}
+          title={
+            maxOptionCharacterCount !== undefined &&
+            searchableText.length > maxOptionCharacterCount
+              ? searchableText
+              : undefined
+          }
+          testId={_getKey(option).toString()}
         >
           {option}
         </OptionWrapper>
@@ -196,14 +269,16 @@ export default class DropdownOptionsList<T> extends React.PureComponent<
     forceRender: boolean,
   ): $ReadOnlyArray<?DropdownChildTypeWrapper<T>> {
     const { marginPerLevel, searchResults, onOptionsGroupClick } = this.props;
-    const { id, wrapperClassName } = optGroup.props;
+    const { id, ariaName, wrapperClassName, className } = optGroup.props;
     const items = [];
     if (forceRender || searchResults.someParentOrChildMatchesValue(id)) {
       items.push(
         <OptionsGroupWrapper
           key={_getKey(optGroup)}
+          ariaName={ariaName}
           onSelect={onOptionsGroupClick}
-          className={wrapperClassName}
+          wrapperClassName={wrapperClassName}
+          contentClassName={className}
           isOpen={this.isOptionsGroupOpen(id)}
           depth={depth}
           marginPerLevel={marginPerLevel}
@@ -231,7 +306,6 @@ export default class DropdownOptionsList<T> extends React.PureComponent<
       }
     }
 
-    // $FlowSuppressError - flow doesn't realize this array is of valid type
     return items;
   }
 
@@ -248,6 +322,7 @@ export default class DropdownOptionsList<T> extends React.PureComponent<
     childrenArray: $ReadOnlyArray<?DropdownChildType<T>>,
     depth: number,
     renderEverything: boolean,
+    filter: (option: DropdownChildType<T>) => boolean = () => true,
   ): $ReadOnlyArray<?DropdownChildTypeWrapper<T>> {
     const { searchText } = this.props;
     const options = [];
@@ -261,48 +336,44 @@ export default class DropdownOptionsList<T> extends React.PureComponent<
       const forceRender =
         renderEverything || disableSearch || searchText === '';
 
-      if (option.type === Option) {
-        const castOption: React.Element<Class<Option<T>>> = (option: any);
-        options.push(this.renderSingleOption(castOption, depth, forceRender));
-      } else if (option.type === OptionsGroup) {
-        const castOptGroup: React.Element<
-          Class<OptionsGroup<T>>,
-        > = (option: any);
-        const items = this.renderOptionsGroup(castOptGroup, depth, forceRender);
-        options.push(...items);
+      if (filter(option)) {
+        if (option.type === Option) {
+          const castOption: React.Element<Class<Option<T>>> = (option: $Cast);
+          options.push(this.renderSingleOption(castOption, depth, forceRender));
+        } else if (option.type === OptionsGroup) {
+          const castOptGroup: React.Element<
+            Class<OptionsGroup<T>>,
+          > = (option: $Cast);
+          const items = this.renderOptionsGroup(
+            castOptGroup,
+            depth,
+            forceRender,
+          );
+          options.push(...items);
+        }
       }
     });
 
     return options;
   }
 
-  render() {
-    const {
-      children,
-      noOptionsContent,
-      searchResults,
-      searchText,
-      useSearch,
-    } = this.props;
+  render(): React.Element<'ul'> {
+    const { children, useSearch } = this.props;
     const items = React.Children.toArray(children);
-    if (items.length === 0) {
-      items.push(makeUnselectableOption(noOptionsContent));
-    }
-
-    if (useSearch && searchText !== '' && searchResults.hasNoMatches()) {
-      items.push(
-        makeUnselectableOption(
-          t('ui.Dropdown.emptySearchResults', { searchText }),
-        ),
-      );
-    }
 
     const options = [
       this.maybeRenderSelectAll(),
-      this.maybeRenderSelectedOptions(),
-      this.renderOptions(items, 0, !useSearch),
+      this.maybeRenderNoOptionsContent(),
+      this.maybeRenderEmptySearchResultsContent(),
+      this.maybeRenderPreOptionsContent(),
+      this.renderOptions(items, 0, !useSearch, this.pinnedOptionFilter),
+      this.renderOptions(items, 0, !useSearch, this.unpinnedOptionFilter),
     ];
 
-    return <ul className="zen-dropdown__option-list">{options}</ul>;
+    return (
+      <ul role="listbox" className="zen-dropdown__option-list">
+        {options}
+      </ul>
+    );
   }
 }

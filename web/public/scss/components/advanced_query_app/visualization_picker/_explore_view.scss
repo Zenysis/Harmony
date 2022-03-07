@@ -1,0 +1,175 @@
+$aqt-explore-view-padding: 30px;
+.visualization-picker-explore-view {
+  background-color: white;
+  height: 100%;
+  padding-top: $visualization-picker-control-bar-height;
+  // NOTE(stephen): Using fixed position here to ensure that the explore view
+  // shows up properly in MS Edge. z-index layering was not working properly,
+  // since the parent of the explore view did not originally have a position
+  // (i.e. it was position: sticky). This caused z-index to not be calculated
+  // correctly for children. Using a fixed position here allows the explore view
+  // to take up the full height of its grand parent (i.e. the query result
+  // scaled container) since that element has a `transform` applied that pulls
+  // it out of the normal document flow. If that changes, this will likely
+  // break.
+  position: fixed;
+  top: 0;
+  width: 100%;
+
+  &__reqs-panel {
+    border-right: 1px solid $gray-light-active;
+    display: inline-block;
+    height: 100%;
+    padding-left: $aqt-explore-view-padding;
+    padding-right: $aqt-explore-view-padding;
+    text-align: center;
+    vertical-align: top;
+    width: 30%;
+  }
+
+  &__options-panel {
+    display: inline-block;
+    height: 100%;
+    overflow-y: auto;
+    padding: $aqt-explore-view-padding;
+    width: 70%;
+  }
+
+  &__group-header {
+    flex-basis: 100%;
+  }
+}
+
+.aqt-explore-view-reqs-summary {
+  border-bottom: 2px solid $gray;
+  padding: $aqt-explore-view-padding $spacing-s;
+
+  &__icon {
+    font-size: 32px;
+    margin-bottom: $spacing-m;
+
+    // Clear the normal margins applied by zen-icon.
+    margin-right: 0;
+  }
+
+  &__summary-text {
+    &--bold {
+      font-weight: $bold;
+    }
+  }
+}
+
+.aqt-explore-view-reqs-details {
+  padding-bottom: $aqt-explore-view-padding;
+  padding-top: $aqt-explore-view-padding;
+  text-align: left;
+
+  &__header {
+    margin-bottom: $spacing-m;
+  }
+
+  &__viz-name {
+    font-weight: bold;
+    text-transform: capitalize;
+  }
+}
+
+.aqt-explore-view-viz-option {
+  $icon-container-padding: 11px;
+  display: inline-block;
+  margin-bottom: $space-m-px;
+  margin-right: $space-m-px;
+  width: 86px;
+
+  &__icon-container {
+    background-color: $gray-light;
+    height: 86px;
+    margin-bottom: $space-xxs-px;
+    padding: $icon-container-padding;
+
+    &--hovered {
+      background-color: $gray-light-hover;
+    }
+
+    &--locked {
+      @include box-shadow(
+        0 1px 2px 0 rgba(35, 36, 37, 0.5),
+        0 0 0 0 rgba(0, 0, 0, 0.5)
+      );
+      background-color: $gray-light-active;
+      border: solid 2px $slate;
+      border-radius: 5px;
+
+      // reduce padding by 2px to account for the border we just added
+      padding: calc(#{$icon-container-padding} - 2px);
+    }
+  }
+
+  &__label {
+    color: $gray;
+    text-align: center;
+
+    &--locked,
+    &--hovered {
+      color: $slate;
+    }
+  }
+}
+
+.visualization-picker-reqs-criteria {
+  align-items: center;
+  display: flex;
+
+  &__tag {
+    display: inline-block;
+    padding-bottom: $spacing-xs;
+    padding-top: $spacing-xs;
+
+    &--no-icon {
+      min-width: 100px;
+      text-align: center;
+
+      .zen-icon {
+        display: none;
+      }
+    }
+  }
+
+  &__criteria-text {
+    margin-right: $spacing-s;
+  }
+
+  &__criteria-icon {
+    margin-right: 12px;
+
+    &--satisfied {
+      position: relative;
+      top: -1px;
+    }
+
+    &--failed {
+      color: $error-color;
+    }
+  }
+
+  &--field-requirement {
+    .visualization-picker-reqs-criteria__tag {
+      @extend .aqt-customizable-indicator-tag;
+    }
+  }
+
+  &__not-string {
+    margin: 0 $space-xxs-px;
+    text-decoration: underline;
+
+    &--failed {
+      color: red;
+    }
+  }
+
+  &--grouping-requirement {
+    .visualization-picker-reqs-criteria__tag {
+      @extend .aqt-customizable-grouping-tag;
+    }
+  }
+}

@@ -45,4 +45,4 @@ class FieldFilter extends Zen.BaseModel<FieldFilter, Values>
   }
 }
 
-export default ((FieldFilter: any): Class<Zen.Model<FieldFilter>>);
+export default ((FieldFilter: $Cast): Class<Zen.Model<FieldFilter>>);

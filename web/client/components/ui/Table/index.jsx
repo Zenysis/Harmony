@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import invariant from 'invariant';
 
 import InputText from 'components/ui/InputText';
+import LoadingSpinner from 'components/ui/LoadingSpinner';
 import PageSelector from 'components/ui/PageSelector';
 import TableCell from 'components/ui/Table/TableCell';
 import TableHeaderCell from 'components/ui/Table/internal/TableHeaderCell';
@@ -19,57 +20,25 @@ const TEXT = t('ui.Table');
 
 export type SortDirection = 'ASC' | 'DESC';
 
-export type TableHeader<RowData> = $ReadOnly<{
-  id: string,
-  centerHeader?: boolean,
-  displayContent?: React.Node,
-  headerClassName?: string,
-  searchable?: (row: RowData) => ?string,
-  secondarySortKeys?: $ReadOnlyArray<string>,
-  sortFn?: (row1: RowData, row2: RowData) => number,
-  style?: StyleObject,
-}>;
+export type TableHeader<RowData> = {
+  +id: string,
+  +centerHeader?: boolean,
+  +displayContent?: React.Node,
+  +headerClassName?: string,
+  +searchable?: (row: RowData) => ?string,
+  +secondarySortKeys?: $ReadOnlyArray<string>,
+  +sortFn?: (row1: RowData, row2: RowData) => number,
+  +style?: StyleObject,
+  +zenTestId?: string,
+};
 
 // used internally in the Table component to track the sort selection
-type SortInfo = $ReadOnly<{
-  headerId: string,
-  direction: SortDirection,
-}>;
+type SortInfo = {
+  +headerId: string,
+  +direction: SortDirection,
+};
 
-type Props<RowData> = {|
-  /**
-   * An array of data elements. Each data element is used to render a row, and
-   * can be of any type.
-   */
-  data: $ReadOnlyArray<RowData>,
-
-  /**
-   * An array of TableHeader objects to represent each column in the table.
-   *
-   * - `id: string` Unique id of this column
-   * - `centerHeader?: boolean` If the header content should be centered
-   * - `displayContent?: React.Node` The column's header. Will default to `id`
-   *   if no displayContent is given
-   * - `headerClassName?: string` The class name to apply on the header cell
-   * - `searchable?: (row: T) => ?string` A function that returns a searchable
-   *   string for this column.
-   * - `secondarySortKeys?: $ReadOnlyArray<string>` An array of column ids that
-   *   will be used as secondary sorts when there is a tie
-   * - `sortFn?: (row1: T, row2: T) => number` Comparator function to sort this
-   *   column. The sort function must be in **ascending** order. Use the helper
-   *   functions `Table.Sort.string | number | moment` to make this easy
-   * - `style?: StyleObject` Any styles to apply to the header cell
-   */
-  headers: $ReadOnlyArray<TableHeader<RowData>>,
-
-  /**
-   * Render function that takes a row's data and returns a row. A row must be
-   * of type `Table.Row`.
-   * @param {T} rowData the row data
-   * @returns {Table.Row}
-   */
-  renderRow: (rowData: RowData) => React.Element<typeof TableRow> | null,
-
+type DefaultProps<RowData> = {
   /**
    * `<Table>` uses `table-layout: fixed` by default because it is more
    * efficient, predictable, and responsive. Setting this to `true` will change
@@ -101,6 +70,8 @@ type Props<RowData> = {|
    */
   initialColumnSortOrder: SortDirection,
 
+  isEditable: boolean,
+
   /** Allow highlighting rows as you hover over them */
   isHoverable: boolean,
 
@@ -128,6 +99,18 @@ type Props<RowData> = {|
   /** Text to display when a search returns no rows */
   noSearchResultsText: string,
 
+  /** Cell classname for when there are no results (no data or no search results) */
+  noResultsClassName: string,
+
+  /**
+   * Optional render prop to render any action buttons below the table and to
+   * the left of the pagination controls.
+   */
+  renderActionButtons?: () => React.Node,
+
+  /** Optional prop to specify that rows are loading. */
+  rowsLoading: boolean,
+
   /**
    * Text to search for in the table. This makes the search input controlled
    * by the parent. If this is not set, but some columns have a `searchable`
@@ -136,12 +119,58 @@ type Props<RowData> = {|
    */
   searchText?: string,
   showHeaders: boolean,
-|};
+};
 
-type State = {
+type Props<RowData> = {
+  ...DefaultProps<RowData>,
+
+  /**
+   * An array of data elements. Each data element is used to render a row, and
+   * can be of any type.
+   */
+  data: $ReadOnlyArray<RowData>,
+
+  /**
+   * An array of TableHeader objects to represent each column in the table.
+   *
+   * - `id: string` Unique id of this column
+   * - `centerHeader?: boolean` If the header content should be centered
+   * - `displayContent?: React.Node` The column's header. Will default to `id`
+   *   if no displayContent is given
+   * - `exportLabel?: string` this label is used as the column name when generating the excel document
+   * - `headerClassName?: string` The class name to apply on the header cell
+   * - `searchable?: (row: T) => ?string` A function that returns a searchable
+   *   string for this column.
+   * - `secondarySortKeys?: $ReadOnlyArray<string>` An array of column ids that
+   *   will be used as secondary sorts when there is a tie
+   * - `sortFn?: (row1: T, row2: T) => number` Comparator function to sort this
+   *   column. The sort function must be in **ascending** order. Use the helper
+   *   functions `Table.Sort.string | number | moment` to make this easy
+   * - `style?: StyleObject` Any styles to apply to the header cell
+   */
+  headers: $ReadOnlyArray<TableHeader<RowData>>,
+
+  /**
+   * Render function that takes a row's data and returns a row. A row must be
+   * of type `Table.Row`.
+   * @param {T} rowData the row data
+   * @param {boolean} isEditMode indicates if the row is in edit mode and to
+   * render the row edit view
+   * @returns {Table.Row}
+   */
+  renderRow: (
+    rowData: RowData,
+    isEditMode: boolean,
+  ) => React.Element<typeof TableRow> | null,
+};
+
+type State<RowData> = {
   currentPage: number,
+  currentEditRow: number | void,
   searchText: string,
   sortInfo: SortInfo | void,
+  prevHeaders: $ReadOnlyArray<TableHeader<RowData>> | void,
+  prevSearchTextPropValue: string | void,
 };
 
 type SortDirectionMap = {
@@ -170,30 +199,74 @@ const SORT_DIRECTIONS: SortDirectionMap = {
  */
 export default class Table<RowData> extends React.Component<
   Props<RowData>,
-  State,
+  State<RowData>,
 > {
-  static defaultProps = {
+  static defaultProps: DefaultProps<RowData> = {
     adjustWidthsToContent: false,
     className: '',
     getSearchKeywords: undefined,
     initialColumnToSort: undefined,
     initialColumnSortOrder: 'ASC',
+    isEditable: false,
     isHoverable: true,
     noDataText: TEXT.noData,
     noSearchResultsText: TEXT.noResults,
+    noResultsClassName: '',
     onRowClick: undefined,
     pageSize: undefined,
+    rowsLoading: false,
     searchText: undefined,
     showHeaders: true,
   };
 
-  static Sort = TableSortUtil;
-  static SortDirections = SORT_DIRECTIONS;
-  static Cell = TableCell;
-  static Row = TableRow;
+  static Sort: typeof TableSortUtil = TableSortUtil;
+  static SortDirections: typeof SORT_DIRECTIONS = SORT_DIRECTIONS;
+  static Cell: typeof TableCell = TableCell;
+  static Row: typeof TableRow = TableRow;
 
-  state = {
+  static getDerivedStateFromProps(
+    props: Props<RowData>,
+    state: State<RowData>,
+  ): State<RowData> {
+    if (state.prevHeaders && state.prevHeaders !== props.headers) {
+      // if the headers change, reset the sortInfo and currentPage
+      return {
+        ...state,
+        currentPage: 1,
+        sortInfo:
+          props.initialColumnToSort !== undefined
+            ? {
+                headerId: props.initialColumnToSort,
+                direction: props.initialColumnSortOrder,
+              }
+            : undefined,
+        prevHeaders: props.headers,
+        prevSearchTextPropValue: props.searchText,
+      };
+    }
+
+    if (state.prevSearchTextPropValue !== props.searchText) {
+      // if the search text changes, reset the currentPage
+      return {
+        ...state,
+        currentPage: 1,
+        prevHeaders: props.headers,
+        prevSearchTextPropValue: props.searchText,
+      };
+    }
+
+    return {
+      ...state,
+      prevHeaders: props.headers,
+      prevSearchTextPropValue: props.searchText,
+    };
+  }
+
+  state: State<RowData> = {
     currentPage: 1,
+    currentEditRow: undefined,
+    prevHeaders: undefined,
+    prevSearchTextPropValue: undefined,
     searchText: '',
     sortInfo:
       this.props.initialColumnToSort !== undefined
@@ -253,7 +326,7 @@ export default class Table<RowData> extends React.Component<
   // create a mapping of header id => TableHeader object
   buildHeadersMap(
     headers: $ReadOnlyArray<TableHeader<RowData>>,
-  ): { [string]: TableHeader<RowData> } {
+  ): { [string]: TableHeader<RowData>, ... } {
     const map = {};
     headers.forEach(headerObj => {
       map[headerObj.id] = headerObj;
@@ -261,7 +334,7 @@ export default class Table<RowData> extends React.Component<
     return map;
   }
 
-  getHeadersMap(): { [string]: TableHeader<RowData> } {
+  getHeadersMap(): { [string]: TableHeader<RowData>, ... } {
     return this.buildHeadersMap(this.props.headers);
   }
 
@@ -385,13 +458,18 @@ export default class Table<RowData> extends React.Component<
   }
 
   @autobind
+  setEditRow(currentEditRow: number | void) {
+    this.setState({ currentEditRow });
+  }
+
+  @autobind
   onPageChange(currentPage: number) {
     this.setState({ currentPage });
   }
 
   @autobind
   onSearchChange(searchText: string) {
-    this.setState({ searchText });
+    this.setState({ searchText, currentPage: 1 });
   }
 
   @autobind
@@ -416,26 +494,28 @@ export default class Table<RowData> extends React.Component<
     });
   }
 
-  maybeRenderPageSelector() {
-    const { pageSize } = this.props;
+  maybeRenderTableActionsSelector(): React.Node {
+    const { pageSize, renderActionButtons } = this.props;
     const { currentPage } = this.state;
     if (pageSize !== undefined) {
       return (
-        <div className="zen-table-page-selector-container">
-          <PageSelector
-            className="zen-table-page-selector"
-            currentPage={currentPage}
-            pageSize={pageSize}
-            onPageChange={this.onPageChange}
-            resultCount={this.getFinalRowData().length}
-          />
+        <div className="zen-table-action-selector-container">
+          {renderActionButtons !== undefined && renderActionButtons()}
+          {pageSize !== undefined && (
+            <PageSelector
+              currentPage={currentPage}
+              pageSize={pageSize}
+              onPageChange={this.onPageChange}
+              resultCount={this.getFinalRowData().length}
+            />
+          )}
         </div>
       );
     }
     return null;
   }
 
-  maybeRenderSearchBox() {
+  maybeRenderSearchBox(): React.Node {
     if (this.isSearchable() && this.isSearchInternallyManaged()) {
       return (
         <div className="zen-table-search-container">
@@ -452,8 +532,8 @@ export default class Table<RowData> extends React.Component<
     return null;
   }
 
-  maybeRenderTableHeader() {
-    const { showHeaders, headers } = this.props;
+  maybeRenderTableHeader(): React.Node {
+    const { showHeaders, headers, isEditable } = this.props;
     const { sortInfo } = this.state;
 
     // Allows user the option to not display headers
@@ -469,6 +549,7 @@ export default class Table<RowData> extends React.Component<
         headerClassName,
         sortFn,
         style,
+        zenTestId,
       } = header;
       const headerContent =
         displayContent === undefined || displayContent === null
@@ -486,38 +567,61 @@ export default class Table<RowData> extends React.Component<
           onHeaderClick={this.onHeaderClick}
           sortDirection={sortDirection}
           style={style}
+          zenTestId={zenTestId}
         >
           {headerContent}
         </TableHeaderCell>
       );
     });
 
+    // We add an additional header entry here for editable tables.
     return (
       <thead className="zen-table__header">
-        <tr>{headerCells}</tr>
+        <tr>
+          {headerCells}
+          {isEditable && <th> </th>}
+        </tr>
       </thead>
     );
   }
 
-  renderRows() {
+  renderRows(): React.Node {
     const {
       headers,
+      isEditable,
       pageSize,
       onRowClick,
       noSearchResultsText,
       noDataText,
+      noResultsClassName,
       renderRow,
+      rowsLoading,
     } = this.props;
-    const { currentPage } = this.state;
+    const { currentPage, currentEditRow } = this.state;
     const searchText = this.getSearchText();
     const rowData = this.getFinalRowData();
+
+    if (rowsLoading) {
+      return (
+        <tr className="zen-table__row">
+          <TableCell
+            colSpan={headers.length}
+            className="zen-table__loading-spinner"
+          >
+            <LoadingSpinner />
+          </TableCell>
+        </tr>
+      );
+    }
 
     if (searchText !== '' && rowData.length === 0) {
       // Search query did not return any results, so add an 'empty' row that
       // indicates this
       return (
         <tr className="zen-table__row">
-          <TableCell colSpan={headers.length}>{noSearchResultsText}</TableCell>
+          <TableCell colSpan={headers.length} className={noResultsClassName}>
+            {noSearchResultsText}
+          </TableCell>
         </tr>
       );
     }
@@ -526,7 +630,9 @@ export default class Table<RowData> extends React.Component<
       // Not currently searching, but we also have no data
       return (
         <tr className="zen-table__row">
-          <TableCell colSpan={headers.length}>{noDataText}</TableCell>
+          <TableCell colSpan={headers.length} className={noResultsClassName}>
+            {noDataText}
+          </TableCell>
         </tr>
       );
     }
@@ -549,10 +655,25 @@ export default class Table<RowData> extends React.Component<
     // Convert the final row data to actual rows now
     return finalData.map<React.Element<typeof TableRowWrapper> | null>(
       (row, idx) => {
-        const rowElement = renderRow(row);
+        const rowElement = renderRow(row, isEditable && idx === currentEditRow);
         if (rowElement !== undefined && rowElement !== null) {
-          const { className, isSelected, disableClick, id } = rowElement.props;
-          const key = rowElement.key || (id || uniqueId());
+          const rowElementProps = rowElement.props;
+          const { className, isSelected, disableClick, id } = rowElementProps;
+          const key = rowElement.key || id || uniqueId();
+          const onEditCancel = rowElementProps.onEditCancel || undefined;
+          const onEditSave = rowElementProps.onEditSave || undefined;
+          const enableRowEdit = rowElementProps.enableEdit || undefined;
+          // rowEditMode can either be undefined, true, or false. When undefined,
+          // we know there is no selected row to edit and thus we display the edit
+          // pen for all edit rows. When rowEditMode is false, either another row
+          // is being edited, or the edit functionality is disabled. For any of
+          // the two conditions, we will hide the edit actions. Lastly, if
+          // rowEditMode is true, we know that the current row is being edited
+          // and we display the edit actions.
+          const rowEditMode =
+            isEditable && enableRowEdit && currentEditRow === undefined
+              ? undefined
+              : idx === currentEditRow;
           return (
             <TableRowWrapper
               key={key}
@@ -561,7 +682,12 @@ export default class Table<RowData> extends React.Component<
               onClick={onRowClick}
               disableClick={disableClick}
               className={className}
+              isEditMode={rowEditMode}
               isSelected={isSelected}
+              isTableEditable={isEditable}
+              onEditCancel={onEditCancel}
+              onEditSave={onEditSave}
+              setEditRow={this.setEditRow}
             >
               {rowElement}
             </TableRowWrapper>
@@ -572,7 +698,7 @@ export default class Table<RowData> extends React.Component<
     );
   }
 
-  renderTable() {
+  renderTable(): React.Element<'table'> {
     const { adjustWidthsToContent, isHoverable } = this.props;
     const className = classNames('zen-table', {
       'zen-table--is-hoverable': isHoverable,
@@ -587,11 +713,11 @@ export default class Table<RowData> extends React.Component<
     );
   }
 
-  renderTableBody() {
+  renderTableBody(): React.Element<'tbody'> {
     return <tbody>{this.renderRows()}</tbody>;
   }
 
-  render() {
+  render(): React.Element<'div'> {
     const { className, showHeaders } = this.props;
     const containerClassName = classNames(`zen-table-container ${className}`, {
       'zen-table-container--no-headers': !showHeaders,
@@ -600,7 +726,7 @@ export default class Table<RowData> extends React.Component<
       <div className={containerClassName}>
         {this.maybeRenderSearchBox()}
         {this.renderTable()}
-        {this.maybeRenderPageSelector()}
+        {this.maybeRenderTableActionsSelector()}
       </div>
     );
   }

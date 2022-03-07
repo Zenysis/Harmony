@@ -1,0 +1,31 @@
+.zen-group {
+  &--horizontal {
+    > .zen-group-item {
+      display: inline-block;
+    }
+
+    > .zen-group-item--flex {
+      display: flex;
+    }
+  }
+
+  &--flex {
+    display: flex;
+    flex-direction: row;
+  }
+
+  &--flex-vertical {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.zen-group-item {
+  &--flex {
+    display: flex;
+  }
+
+  &--inline-block {
+    display: inline-block;
+  }
+}

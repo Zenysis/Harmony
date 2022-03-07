@@ -2,47 +2,33 @@
 import * as React from 'react';
 
 import Dropdown from 'components/ui/Dropdown';
-import memoizeOne from 'decorators/memoizeOne';
+import I18N from 'lib/I18N';
+import { ENABLED_DATA_CATALOG_APP } from 'components/DataCatalogApp/flags';
 import {
   asDropdownOption,
   asButton,
+  isMobileBrowser,
   localizeUrl,
   onLinkClicked,
-  isMobileBrowser,
 } from 'components/Navbar/util';
 import type { DropdownOptionEventHandler } from 'components/Navbar/util';
 
-const DATA_UPLOAD_URL = '/upload-data';
-
 export type Locale = {
+  /** The country flag e.g 🇺🇬 */
+  flag: string,
+
   /** The locale name, e.g. 'en', 'am' */
   id: string,
 
   /** The Locale name e.g English */
   label: string,
 
-  /** The country flag e.g 🇺🇬 */
-  flag: string,
-
   /** The localized url  */
   url: string,
 };
 
-type Props = {|
-  /** Boolean value to determine whether a user is authenticated or not */
-  isAuthenticated: boolean,
-
-  /** Boolean value to determine whether a user is an admin or not */
-  isAdmin: boolean,
-
-  /** Boolean value to determine whether to show locales or not  */
-  showLocales: boolean,
-
-  /** Supported languages and their details */
-  locales: $ReadOnlyArray<Locale>,
-
-  /** Its children. */
-  children:
+type Props = {
+  children?:
     | ((
         options: React.ChildrenArray<
           React.Element<Class<Dropdown.Option<DropdownOptionEventHandler>>>,
@@ -50,44 +36,43 @@ type Props = {|
       ) => React.Element<Class<Dropdown<DropdownOptionEventHandler>>>)
     | React.Node,
 
-  /** Boolean value to determine whether to return links as drop down options */
-  linksAsDropdownOptions: boolean,
-|};
+  /** Boolean value to determine whether a user is an admin or not */
+  isAdmin?: boolean,
 
-const OPTIONS = {
-  NATIONAL_DASHBOARD: 'national-dashboard',
-  DATA_STATUS: 'data-status',
-  CHANGELOG: 'changelog',
-  ADMIN: 'admin',
-  SIGN_OUT: 'sign-out',
-  SIGN_IN: 'sign-in',
-  AQT: 'advanced-query',
+  /** Boolean value to determine whether a user is authenticated or not */
+  isAuthenticated: boolean,
+
+  /** Boolean value to determine whether to return links as drop down options */
+  linksAsDropdownOptions?: boolean,
+
+  /** Supported languages and their details */
+  locales?: $ReadOnlyArray<Locale>,
+
+  /** Boolean value to determine whether to show Data Upload link */
+  showDataUpload: boolean,
+
+  /** Boolean value to determine whether to show locales or not  */
+  showLocales?: boolean,
 };
 
-const TEXT = t('Navbar.NavigationDropdown');
-
-const HEADWAY_URL: string = 'https://headwayapp.co/zenysis-changes';
-
-// TODO(stephen): Use the memoizeOne decorator all over the place here.
-export default class MoreLinks extends React.PureComponent<Props> {
-  static defaultProps = {
-    children: null,
-    isAdmin: false,
-    showLocales: false,
-    locales: [],
-    linksAsDropdownOptions: true,
-  };
-
-  @memoizeOne
-  maybeRenderAdminOption(isAdmin: boolean): React.Node {
-    if (!isAdmin || isMobileBrowser()) {
+export default function MoreLinks({
+  isAuthenticated,
+  children = null,
+  isAdmin = false,
+  showDataUpload = false,
+  showLocales = false,
+  locales = [],
+  linksAsDropdownOptions = true,
+}: Props): React.Node {
+  const maybeRenderAdminOption = React.useMemo(() => {
+    if (!isAdmin) {
       return null;
     }
     const onAdminLinkClick = e =>
       onLinkClicked(localizeUrl('/admin'), e, 'Admin navigation link clicked');
-    const text = TEXT[OPTIONS.ADMIN];
+    const text = I18N.text('Admin');
 
-    if (this.props.linksAsDropdownOptions) {
+    if (linksAsDropdownOptions) {
       return asDropdownOption(
         onAdminLinkClick,
         text,
@@ -96,67 +81,35 @@ export default class MoreLinks extends React.PureComponent<Props> {
     }
 
     return asButton(onAdminLinkClick, text);
-  }
+  }, [isAdmin, linksAsDropdownOptions]);
 
-  @memoizeOne
-  maybeRenderLocaleOptions(
-    showLocales: boolean,
-    locales: $ReadOnlyArray<Locale>,
-  ): React.Node {
+  const maybeRenderLocaleOptions = React.useMemo(() => {
     if (!showLocales) {
       return null;
     }
 
-    return locales.map(
-      (locale: Locale): React.Node => {
-        const onLocaleLinkClick = e =>
-          onLinkClicked(
-            locale.url,
-            e,
-            `Locale ${locale.id} navigation link clicked`,
-          );
-        const text = `${TEXT.useLocale} ${locale.label}`;
+    return locales.map((locale: Locale): React.Node => {
+      const onLocaleLinkClick = e =>
+        onLinkClicked(
+          locale.url,
+          e,
+          `Locale ${locale.id} navigation link clicked`,
+        );
 
-        if (this.props.linksAsDropdownOptions) {
-          return asDropdownOption(
-            onLocaleLinkClick,
-            '',
-            `flag flag-${locale.flag}`,
-            <span>{text}</span>,
-          );
-        }
-        return asButton(onLocaleLinkClick, text);
-      },
-    );
-  }
+      const text = I18N.text('Use %(language)s', { language: locale.label });
+      if (linksAsDropdownOptions) {
+        return asDropdownOption(
+          onLocaleLinkClick,
+          '',
+          `flag flag-${locale.flag}`,
+          <span>{text}</span>,
+        );
+      }
+      return asButton(onLocaleLinkClick, text);
+    });
+  }, [linksAsDropdownOptions, locales, showLocales]);
 
-  @memoizeOne
-  maybeRenderAdvancedQueryToolOption(enableAQT: boolean): React.Node {
-    if (!enableAQT || isMobileBrowser()) {
-      return null;
-    }
-    const onAQTLinkClick = e =>
-      onLinkClicked(
-        localizeUrl(`/${OPTIONS.AQT}`),
-        e,
-        `${OPTIONS.AQT} navigation link clicked`,
-      );
-    const text = TEXT[OPTIONS.AQT];
-
-    if (this.props.linksAsDropdownOptions) {
-      return asDropdownOption(
-        onAQTLinkClick,
-        text,
-        'glyphicon glyphicon-stats',
-
-        /* TODO (dennis) Remove the beta flag once AQT becomes stable */
-        <sup style={{ color: 'red' }}>&nbsp;beta</sup>,
-      );
-    }
-    return asButton(onAQTLinkClick, text);
-  }
-
-  maybeRenderUserManualLink(): React.Node {
+  const maybeRenderUserManualLink = React.useMemo(() => {
     const { userManualUrl } = window.__JSON_FROM_BACKEND.ui;
     if (!userManualUrl) {
       return null;
@@ -165,8 +118,8 @@ export default class MoreLinks extends React.PureComponent<Props> {
       onLinkClicked(userManualUrl, e, 'User manual accessed', {
         nonInteraction: 1,
       });
-    const text = TEXT.userManual;
-    if (this.props.linksAsDropdownOptions) {
+    const text = I18N.text('User Manual');
+    if (linksAsDropdownOptions) {
       return asDropdownOption(
         onUserManualLinkClick,
         text,
@@ -174,9 +127,9 @@ export default class MoreLinks extends React.PureComponent<Props> {
       );
     }
     return asButton(onUserManualLinkClick, text);
-  }
+  }, [linksAsDropdownOptions]);
 
-  maybeRenderDataUploadLink(): React.Node {
+  const maybeRenderRawDataUploadLink = React.useMemo(() => {
     const { dataUploadAppOptions } = window.__JSON_FROM_BACKEND;
     if (
       dataUploadAppOptions === undefined ||
@@ -187,10 +140,10 @@ export default class MoreLinks extends React.PureComponent<Props> {
     }
 
     const onDataUploadLinkClick = e =>
-      onLinkClicked(localizeUrl(DATA_UPLOAD_URL), e);
-    const text = TEXT.dataUpload;
+      onLinkClicked(localizeUrl('/upload-data'), e);
+    const text = I18N.text('Upload Data');
 
-    if (this.props.linksAsDropdownOptions) {
+    if (linksAsDropdownOptions) {
       return asDropdownOption(
         onDataUploadLinkClick,
         text,
@@ -199,30 +152,10 @@ export default class MoreLinks extends React.PureComponent<Props> {
     }
 
     return asButton(onDataUploadLinkClick, text);
-  }
+  }, [linksAsDropdownOptions]);
 
-  maybeRenderChangelog(): React.Node {
-    if (!window.__JSON_FROM_BACKEND.user.isAdmin) {
-      return null;
-    }
-
-    const onChangelogLinkClick = e =>
-      onLinkClicked(HEADWAY_URL, e, undefined, undefined, true);
-    const text = TEXT.zenysisUpdates;
-
-    if (this.props.linksAsDropdownOptions) {
-      return asDropdownOption(
-        onChangelogLinkClick,
-        text,
-        'glyphicon glyphicon-gift',
-      );
-    }
-    return asButton(onChangelogLinkClick, text);
-  }
-
-  @memoizeOne
-  maybeRenderDataStatusOption(): React.Node {
-    if (isMobileBrowser()) {
+  const maybeRenderDataStatusOption = React.useMemo(() => {
+    if (!isAdmin) {
       return null;
     }
     const onDataStatusLinkClick = e =>
@@ -231,9 +164,9 @@ export default class MoreLinks extends React.PureComponent<Props> {
         e,
         'Data status navigation link clicked',
       );
-    const text = TEXT[OPTIONS.DATA_STATUS];
+    const text = I18N.text('Data Status');
 
-    if (this.props.linksAsDropdownOptions) {
+    if (linksAsDropdownOptions) {
       return asDropdownOption(
         onDataStatusLinkClick,
         text,
@@ -241,65 +174,90 @@ export default class MoreLinks extends React.PureComponent<Props> {
       );
     }
     return asButton(onDataStatusLinkClick, text);
-  }
+  }, [isAdmin, linksAsDropdownOptions]);
 
-  @memoizeOne
-  renderSignOutOption(logoutUrl: string, username: string): React.Node {
-    const onSignOutLinkClick = e =>
-      onLinkClicked(logoutUrl, e, 'User logged out', { username });
-    const text = TEXT[OPTIONS.SIGN_OUT];
-    if (this.props.linksAsDropdownOptions) {
+  const maybeRenderGeoMapperOption = () => {
+    return null;
+  };
+
+  const maybeRenderDataUploadOption = () => {
+    return null;
+  };
+
+  const maybeRenderDataCatalogOption = React.useMemo(() => {
+    // TODO(yitian): Add another permission check here. Can be admin only or
+    // permission specific to data managers.
+    if (!ENABLED_DATA_CATALOG_APP) {
+      return null;
+    }
+    const onDataCatalogLinkClick = e =>
+      onLinkClicked(
+        localizeUrl('/data-catalog'),
+        e,
+        'Data catalog navigation link clicked',
+      );
+    const text = I18N.text('Data Catalog');
+    if (linksAsDropdownOptions) {
       return asDropdownOption(
-        onSignOutLinkClick,
+        onDataCatalogLinkClick,
         text,
-        'glyphicon glyphicon-log-out',
+        'glyphicon glyphicon-folder-close',
       );
     }
-    return asButton(onSignOutLinkClick, text);
-  }
+    return asButton(onDataCatalogLinkClick, text);
+  }, [linksAsDropdownOptions]);
 
-  renderAuthenticatedOptions(): React.Node {
-    const { isAdmin, showLocales, locales } = this.props;
-    const { enableEtSidebarExtras } = window.__JSON_FROM_BACKEND.ui;
+  const renderSignOutOption = React.useCallback(
+    (logoutUrl: string, username: string) => {
+      const onSignOutLinkClick = e =>
+        onLinkClicked(logoutUrl, e, 'User logged out', { username });
+      const text = I18N.text('Sign out');
+      if (linksAsDropdownOptions) {
+        return asDropdownOption(
+          onSignOutLinkClick,
+          text,
+          'glyphicon glyphicon-log-out',
+        );
+      }
+      return asButton(onSignOutLinkClick, text);
+    },
+    [linksAsDropdownOptions],
+  );
+
+  const renderAuthenticatedOptions = () => {
     const { logoutUrl, username } = window.__JSON_FROM_BACKEND.user;
     return [
-      this.maybeRenderAdminOption(isAdmin),
-      this.maybeRenderChangelog(),
-      this.maybeRenderUserManualLink(),
-      this.maybeRenderAdvancedQueryToolOption(true),
-      this.maybeRenderDataStatusOption(),
-      this.maybeRenderDataUploadLink(),
-      this.maybeRenderLocaleOptions(showLocales, locales),
-      this.renderSignOutOption(logoutUrl, username),
+      maybeRenderAdminOption,
+      maybeRenderDataCatalogOption,
+      maybeRenderUserManualLink,
+      maybeRenderDataStatusOption,
+      maybeRenderDataUploadOption,
+      maybeRenderLocaleOptions,
+      maybeRenderGeoMapperOption,
+      maybeRenderRawDataUploadLink,
+      renderSignOutOption(logoutUrl, username),
     ];
+  };
+
+  const renderNonAuthenticatedOptions = React.useCallback(
+    (loginUrl: string) => {
+      const wrapper = linksAsDropdownOptions ? asDropdownOption : asButton;
+      return wrapper(e => onLinkClicked(loginUrl, e), I18N.text('Sign in'));
+    },
+    [linksAsDropdownOptions],
+  );
+
+  const { loginUrl } = window.__JSON_FROM_BACKEND.user;
+  const options = isAuthenticated
+    ? renderAuthenticatedOptions()
+    : renderNonAuthenticatedOptions(loginUrl);
+
+  if (!children || !linksAsDropdownOptions || typeof children !== 'function') {
+    return options;
   }
 
-  @memoizeOne
-  renderNonAuthenticatedOptions(loginUrl: string): React.Node {
-    const wrapper = this.props.linksAsDropdownOptions
-      ? asDropdownOption
-      : asButton;
-    return wrapper(e => onLinkClicked(loginUrl, e), TEXT[OPTIONS.SIGN_IN]);
-  }
-
-  render() {
-    const { children, isAuthenticated, linksAsDropdownOptions } = this.props;
-    const { loginUrl } = window.__JSON_FROM_BACKEND.user;
-    const options = isAuthenticated
-      ? this.renderAuthenticatedOptions()
-      : this.renderNonAuthenticatedOptions(loginUrl);
-
-    if (
-      !children ||
-      !linksAsDropdownOptions ||
-      typeof children !== 'function'
-    ) {
-      return options;
-    }
-
-    // if the links are dropdowns options, we need to pass them to a function
-    // that can render them in a dropdown
-    // TODO(pablo): refactor this to not use `any`
-    return children((options: any));
-  }
+  // if the links are dropdowns options, we need to pass them to a function
+  // that can render them in a dropdown
+  // $FlowFixMe[incompatible-call]
+  return children(options);
 }

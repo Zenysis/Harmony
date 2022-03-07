@@ -1,0 +1,330 @@
+// General SettingsModal styles across all tabs
+.settings-modal {
+  .form-control {
+    height: inherit;
+  }
+
+  label {
+    white-space: nowrap;
+  }
+
+  // TODO(david): Investigate if we can remove this class altogether now that
+  // labels are on a separate line.
+  .wrap-label-text {
+    line-height: 1;
+    white-space: normal;
+  }
+
+  &__control-label {
+    color: $slate-hover;
+    font-size: 14px;
+  }
+
+  &__controls-group {
+    border: 1px solid $gray;
+    border-radius: 5px;
+    width: 552px;
+  }
+}
+
+.settings-modal-checkbox-control {
+  &__label {
+    cursor: pointer;
+  }
+
+  &--inline {
+    align-items: center;
+    display: flex;
+  }
+}
+
+.goal-lines-section {
+  &__title-section {
+    display: flex;
+  }
+
+  &__box {
+    border: 1px solid $aqt-gray-4;
+    border-radius: 7px;
+    display: flex;
+    flex: 1;
+    font-size: $font-m;
+    margin-bottom: 10px;
+    padding: 15px;
+  }
+
+  &__icon-wrapper {
+    align-self: flex-start;
+    border-radius: 5px;
+    margin-left: $spacing-xs;
+    margin-top: -2px;
+
+    // Overriding outer tooltip container style to add a box behind the icon and
+    // unify the box and icon hover states.
+    .zen-info-tooltip {
+      align-items: center;
+      display: flex;
+      font-size: $font-l;
+      justify-content: center;
+      margin-left: 0;
+      padding: $spacing-xs $spacing-xs 5px $spacing-xs;
+
+      &:hover {
+        color: $blue-primary;
+      }
+    }
+
+    &:active {
+      background-color: rgba($blue-primary-active, 0.6);
+    }
+
+    &:hover {
+      background-color: rgba($blue-primary-hover, 0.4);
+    }
+  }
+
+  &__control {
+    padding-right: $space-xs-px;
+  }
+
+  &__contents {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__row {
+    display: flex;
+
+    .remove-item-button {
+      align-self: center;
+      margin-left: 5px;
+    }
+  }
+}
+
+// AxesSettingsTab styles
+.axes-settings-tab {
+  .y-axis-sub-section {
+    position: relative;
+  }
+
+  label {
+    line-height: normal;
+    white-space: inherit;
+  }
+}
+
+.series-settings-tab {
+  &__settings-table-container {
+    border-bottom: 2px solid $slate;
+  }
+}
+
+// SeriesSettingsTab styles
+.series-settings-tab-header-row {
+  border-bottom: 2px solid $slate;
+  padding: $space-xs-em 0;
+}
+
+.series-settings-tab-header-row,
+.series-settings-tab-series-row {
+  &__cell {
+    font-size: 15px;
+    text-align: center;
+  }
+
+  &__color {
+    vertical-align: middle;
+    width: 30px;
+  }
+
+  &__colorActions {
+    width: 110px;
+  }
+
+  &__dataLabelFormat {
+    width: 100px;
+  }
+
+  &__dataLabelFontSize {
+    width: 60px;
+  }
+
+  &__isVisible {
+    width: 25px;
+  }
+
+  &__order {
+    padding-left: $space-xxs-px;
+    width: 25px;
+  }
+
+  &__seriesLabel {
+    flex: 1;
+    text-align: start;
+  }
+
+  &__showSeriesValue {
+    width: 50px;
+  }
+
+  &__yAxis {
+    width: 75px;
+  }
+
+  &__nullValueDisplay {
+    width: 100px;
+  }
+
+  &__barLabelPosition {
+    width: 75px;
+  }
+
+  &__visualDisplayShape {
+    width: 65px;
+  }
+}
+
+.series-settings-tab-series-row {
+  background: $white;
+  border-bottom: 1px solid $gray;
+  padding: $space-s-em 0;
+
+  &--last-row {
+    border-bottom: none;
+  }
+
+  &__add-color-icon {
+    color: $blue-primary;
+
+    &:hover {
+      color: $blue-primary-hover;
+    }
+  }
+
+  // Styling for up/down ordering carets
+  &__order {
+    .series-order-carets {
+      display: table;
+      margin: 0 auto;
+
+      .zen-caret {
+        color: lighten($black, 75%);
+        cursor: pointer;
+        line-height: 20px;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: $gray;
+        }
+
+        &.caret-down {
+          margin-top: -6px;
+          position: relative;
+          top: -1px;
+        }
+
+        &.disabled {
+          color: lighten(lighten($black, 75%), 15%);
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  &__isVisible {
+    .zen-checkbox--disabled {
+      color: $gray;
+    }
+  }
+
+  &__nullValueDisplay {
+    .zen-checkbox {
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  &__showSeriesValue {
+    .zen-checkbox {
+      display: table;
+      margin: 0 auto;
+    }
+  }
+
+  // Styling for color picker
+  &__color {
+    .zen-color-block__icon {
+      margin-top: 2px;
+    }
+  }
+
+  // Styling for y-axis dropdown
+  &__yAxis {
+    .zen-dropdown {
+      display: table;
+      margin: 0 auto;
+    }
+  }
+
+  &__visual-display-shape-icon {
+    vertical-align: middle;
+  }
+}
+
+.series-settings-color-rule-row {
+  border-bottom: 1px solid $gray;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__delete-icon {
+    color: $error-color;
+
+    &:hover {
+      color: $error-color-hover;
+    }
+
+    &:active {
+      color: $error-color-active;
+    }
+  }
+
+  &__title {
+    margin-bottom: $space-xs-px;
+    text-transform: capitalize;
+  }
+}
+
+// LegendSettingsTab styles
+.legend-settings-tab {
+  .legend-controls {
+    margin-top: 10px;
+  }
+}
+
+.data-actions-container {
+  &__create-btn {
+    margin-left: auto;
+  }
+  &__divider {
+    border-bottom: 1px solid $black;
+  }
+}
+
+.data-action-rules-dropdown {
+  &__add-color-icon {
+    color: $blue-primary;
+    &:hover {
+      color: $blue-primary-hover;
+    }
+    &--disabled {
+      color: $gray;
+      &:hover {
+        color: $gray;
+      }
+    }
+  }
+}

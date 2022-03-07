@@ -7,9 +7,8 @@
   font-size: 15px;
   font-weight: 400;
   height: 35px;
-  margin: 0 0.4em 0 0;
   padding: 7px 11px 8px 11px;
-  transition: border-color .15s ease-in-out;
+  transition: border-color 0.15s ease-in-out;
 
   // NOTE(pablo): the width is intentionally set to 100% so that the input
   // stretches to fill the entire width of its container. Please do not change
@@ -31,8 +30,9 @@
     font-size: 14px;
   }
 
-  &:invalid {
-    border: 1px solid #d60000;
+  &:invalid,
+  &--invalid {
+    border: 1px solid #d60000 !important;
   }
 
   &[disabled] {
@@ -51,6 +51,11 @@
   position: relative;
   width: 100%;
 
+  &--show-invalid-msg {
+    // make space for the error message underneath the input
+    margin-bottom: 17px;
+  }
+
   &__icon {
     color: $slate;
     font-size: 15px;
@@ -58,5 +63,11 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
+  }
+
+  &__invalid-msg {
+    color: $error-color;
+    font-size: 12px;
+    position: absolute;
   }
 }

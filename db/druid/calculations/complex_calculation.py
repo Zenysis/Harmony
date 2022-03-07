@@ -107,15 +107,11 @@ class ComplexCalculation(BaseCalculation):
     def create_from_calculation(
         cls, calculation, new_id=None, original_id=None, query_filter=None
     ):
-        # Only need to apply a suffix if the calculation is being modified by a
-        # query filter.
-        suffix = ''
-        if query_filter:
-            suffix = new_id
-            if new_id.startswith(original_id):
-                suffix = new_id.replace(original_id, '')
-            if not suffix.startswith('_'):
-                suffix = '_%s' % suffix
+        suffix = new_id
+        if new_id.startswith(original_id):
+            suffix = new_id.replace(original_id, '')
+        if suffix and not suffix.startswith('_'):
+            suffix = '_%s' % suffix
 
         output = cls(
             aggregations=calculation.aggregations,

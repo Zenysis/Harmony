@@ -1,0 +1,36 @@
+.cohort-group-block {
+  &__segments {
+    padding: $space-m-px $space-l-px;
+  }
+
+  &__additional-segment-operation {
+    color: $slate-hover;
+    font-weight: 400;
+  }
+}
+
+.cohort-group-title {
+  align-items: center;
+  border-bottom: 1px solid $gray-light-active;
+  display: flex;
+  padding: $space-m-px $space-l-px;
+
+  &__actions {
+    display: flex;
+  }
+
+  &__group-summary {
+    flex: 1;
+    font-size: 16px;
+  }
+
+  &__group-summary-joiner-text {
+    color: $slate-hover;
+  }
+}
+
+.additional-segments-condition {
+  &__suffix {
+    color: $slate-hover;
+  }
+}

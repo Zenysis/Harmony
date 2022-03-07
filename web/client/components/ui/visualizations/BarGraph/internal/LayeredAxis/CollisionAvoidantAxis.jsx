@@ -1,7 +1,5 @@
 // @flow
 import * as React from 'react';
-import { Line as LineOriginal } from '@vx/shape';
-import { Point } from '@vx/point';
 import { getStringWidth } from '@vx/text';
 
 import memoizeOne from 'decorators/memoizeOne';
@@ -20,11 +18,25 @@ type AxisValueFormatter = (
 type TickLabelPropsCreator = (
   layerValue: LayerValue,
   layerDimensions: $ReadOnlyArray<DimensionID>,
-) => $Shape<{ fontWeight: 'bold' | number }>;
+) => { fontWeight?: 'bold' | number, cursor?: string };
 
-type BandScale = any;
+type BandScale = $FlowTODO;
+
+type DefaultProps = {
+  hideOverlapping: boolean,
+
+  /**
+   * The maximum number of rows of text that can be used to avoid colliding
+   * labels.
+   */
+  maxRows: number,
+  minTickLength: number,
+  onHeightUpdate: (height: number, layerIdx: number) => void,
+  tickOuterPadding: number,
+};
 
 type Props = {
+  ...DefaultProps,
   axisValueFormatter: AxisValueFormatter,
   fontSize: number,
 
@@ -44,30 +56,67 @@ type Props = {
   tickLabelProps: TickLabelPropsCreator,
   scale: BandScale,
   width: number,
-
-  hideOverlapping: boolean,
-
-  /**
-   * The maximum number of rows of text that can be used to avoid colliding
-   * labels.
-   */
-  maxRows: number,
-  minTickLength: number,
-  onHeightUpdate: (height: number, layerIdx: number) => void,
-  tickOuterPadding: number,
 };
 
 type TickData = {
   layerValue: LayerValue,
   textLabel: string,
-  textProps: { [string]: string | number },
+  textProps: {
+    fill?: string,
+    fontSize?: number,
+    fontWeight?: string | number,
+    cursor?: string,
+  },
   xCenter: number,
 };
 
-const Line = React.memo<any>(LineOriginal);
+const DIAGONAL_ANGLE = 45;
+
+// Props determining how to position the text based on the angle the user has
+// chosen.
+function buildTextAnglePositionProps(
+  angle: 'diagonal' | 'horizontal' | 'vertical',
+  tickLength: number,
+  xCenter: number,
+): {
+  dominantBaseline: string,
+  textAnchor: string,
+  x: number,
+  y: number,
+  transform?: string,
+} {
+  if (angle === 'diagonal') {
+    const y = tickLength + 4;
+    return {
+      dominantBaseline: 'middle',
+      textAnchor: 'start',
+      transform: `rotate(${DIAGONAL_ANGLE}, ${xCenter}, ${y})`,
+      x: xCenter,
+      y,
+    };
+  }
+
+  if (angle === 'vertical') {
+    return {
+      dominantBaseline: 'central',
+      textAnchor: 'end',
+      transform: `rotate(-90, 0, 0)`,
+      x: -4,
+      y: xCenter,
+    };
+  }
+
+  // Default case is the `horizontal` angle.
+  return {
+    dominantBaseline: 'hanging',
+    textAnchor: 'middle',
+    x: xCenter,
+    y: tickLength + 4,
+  };
+}
 
 export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     hideOverlapping: false,
     maxRows: 3,
     minTickLength: 8,
@@ -75,7 +124,7 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
     tickOuterPadding: 2,
   };
 
-  _ref: $RefObject<'g'> = React.createRef();
+  _ref: $ElementRefObject<'g'> = React.createRef();
 
   componentDidMount() {
     const { layerID, onHeightUpdate } = this.props;
@@ -100,7 +149,7 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
   @memoizeOne
   updateHeight(
     rowCount: number,
-    ref: React.ElementRef<'g'> | null,
+    ref: ?React.ElementRef<'g'>,
     layerID: number,
     onHeightUpdate: (height: number, layerID: number) => void,
   ) {
@@ -108,7 +157,7 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
       return;
     }
 
-    // $FlowIssue - Flow does not understand SVG elements.
+    // $FlowIssue[prop-missing] - Does not understand SVG elements.
     onHeightUpdate(ref.getBBox().height, layerID);
   }
 
@@ -136,7 +185,6 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
         textProps: {
           fill: textColor,
           fontSize,
-          textAnchor: 'middle',
           ...tickLabelProps(layerValue, layerDimensions),
         },
         xCenter,
@@ -183,6 +231,7 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
     fontSize: number,
     maxRows: number,
     hideOverlapping: boolean,
+    angle: 'diagonal' | 'horizontal' | 'vertical',
   ): [$ReadOnlyArray<[number, boolean]>, number] {
     if (tickData.length === 0 || maxRows < 1) {
       return [[], 0];
@@ -200,9 +249,24 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
         let bestRowIdx = 0;
         let smallestOverlap;
         let willOverlap = false;
-        const textWidth = getStringWidth(textLabel, textProps);
-        const tickStart = xCenter - textWidth / 2;
-        const tickEnd = xCenter + textWidth / 2;
+
+        // getStringWidth expects a string for fontSize not a number
+        const textStyle = textProps?.fontSize
+          ? { ...textProps, fontSize: `${textProps.fontSize}px` }
+          : textProps;
+
+        // Compute the horizontal size this label will take up. In non-rotated
+        // mode, this will be equal to the width of the label. In rotated mode,
+        // this will be the height of the label.
+        // HACK(stephen): In limited testing, it seems like the text height is
+        // close to the font size + 3 or 4 pixels. This is a bit hand-wavey for
+        // the `diagonal` use case, but it works pretty well after testing.
+        const labelSize =
+          angle === 'horizontal'
+            ? getStringWidth(textLabel, textStyle)
+            : fontSize + 3;
+        const tickStart = xCenter - labelSize / 2;
+        const tickEnd = xCenter + labelSize / 2;
         maxTextPositions.some((position, rowIdx) => {
           const curEnd = position[1];
           const paddedTickStart = tickStart - tickOuterPadding;
@@ -245,6 +309,13 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
         if (!(hideOverlapping && willOverlap)) {
           maxTextPositions[bestRowIdx] = [tickStart, tickEnd];
           rowCount = Math.max(rowCount, bestRowIdx + 1);
+
+          // HACK(stephen): We want to trigger a recalculation of the height of
+          // the axis level during rotated mode. By passing the text length, we
+          // can force a height update when the largest axis label changes.
+          if (angle !== 'horizontal') {
+            rowCount = Math.max(rowCount, textLabel.length);
+          }
         }
 
         return [minTickLength + bestRowIdx * fontSize * 1.8, willOverlap];
@@ -257,6 +328,7 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
     const {
       fontSize,
       hideOverlapping,
+      layerData,
       maxRows,
       minTickLength,
       tickOuterPadding,
@@ -268,44 +340,49 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
       fontSize,
       maxRows,
       hideOverlapping,
+      layerData.angle,
     );
   }
 
-  renderTick(tickData: TickData, tickLength: number) {
+  renderTick(
+    tickData: TickData,
+    tickLength: number,
+  ): [void | React.Element<'line'>, React.Element<'text'>] {
     const { layerData, onAxisValueClick, tickColor } = this.props;
+    const { angle, layerDimensions } = layerData;
     const { layerValue, textLabel, textProps, xCenter } = tickData;
     const { key } = layerValue;
-    const tickMarkStart = new Point({ x: xCenter, y: 0 });
-    const tickMarkEnd = new Point({
-      x: xCenter,
-      y: tickLength,
-    });
-    const onClick = () =>
-      onAxisValueClick(layerValue, layerData.layerDimensions);
 
-    const tick = (
-      <g key={`${key}--tick`} onClick={onClick}>
-        <Line from={tickMarkStart} to={tickMarkEnd} stroke={tickColor} />
-      </g>
-    );
+    let tick;
+    if (tickLength > 0) {
+      tick = (
+        <line
+          key={`${key}--tick`}
+          stroke={tickColor}
+          x1={xCenter}
+          x2={xCenter}
+          y1={0}
+          y2={tickLength}
+        />
+      );
+    }
 
     const text = (
-      <g key={`${key}--text`} onClick={onClick}>
-        <text
-          className="ui-collision-avoidant-axis__tick-text"
-          dominantBaseline="hanging"
-          x={xCenter}
-          y={tickLength + 4}
-          {...textProps}
-        >
-          {textLabel}
-        </text>
-      </g>
+      <text
+        className="ui-collision-avoidant-axis__tick-text"
+        key={`${key}--text`}
+        onClick={() => onAxisValueClick(layerValue, layerDimensions)}
+        {...buildTextAnglePositionProps(angle, tickLength, xCenter)}
+        {...textProps}
+      >
+        {textLabel}
+      </text>
     );
+
     return [tick, text];
   }
 
-  renderTicks() {
+  renderTextWithTicks(): React.Node {
     const { hideOverlapping, width } = this.props;
     const tickMarks = [];
     const tickText = [];
@@ -321,15 +398,19 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
         return;
       }
       const [tick, text] = this.renderTick(tickData, tickLength);
-      tickMarks.push(tick);
+      if (tick) {
+        tickMarks.push(tick);
+      }
       tickText.push(text);
     });
 
     return (
       <React.Fragment>
-        <g className="ui-collision-avoidant-axis__tick-mark-layer">
-          {tickMarks}
-        </g>
+        {tickMarks.length > 0 && (
+          <g className="ui-collision-avoidant-axis__tick-mark-layer">
+            {tickMarks}
+          </g>
+        )}
         <g className="ui-collision-avoidant-axis__tick-text-layer">
           {tickText}
         </g>
@@ -337,10 +418,10 @@ export default class CollisionAvoidantAxis extends React.PureComponent<Props> {
     );
   }
 
-  render() {
+  render(): React.Element<'g'> {
     return (
       <g className="ui-collision-avoidant-axis" ref={this._ref}>
-        {this.renderTicks()}
+        {this.renderTextWithTicks()}
       </g>
     );
   }

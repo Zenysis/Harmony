@@ -2,12 +2,15 @@
 '''
 
 from builtins import object
+from flask import g
 from flask_potion.contrib.principals import PrincipalMixin
 from flask_potion.contrib.principals.needs import HybridItemNeed
 from flask_potion.contrib.principals.permission import HybridPermission
 from flask_potion.manager import RelationalManager
-from flask_principal import ItemNeed, Permission, RoleNeed, UserNeed
+from flask_principal import AnonymousIdentity, ItemNeed, Permission, RoleNeed
 from werkzeug.utils import cached_property
+
+from web.server.configuration.settings import get_configuration, PUBLIC_ACCESS_KEY
 
 # TODO(vedant): We have to nuke this. This is a terrible idea.
 # The id of the root site as defined in the database
@@ -27,7 +30,7 @@ SUPERUSER_NEED = RoleNeed(SUPERUSER_ROLENAME)
 # this need across ALL authorization checks. This should not be necessary
 # for ANY role except for the Site Administrator (superuser) role as all other
 # permisisons can be granted on an individual basis.
-DEFAULT_WHITELIST = set([SUPERUSER_NEED])
+DEFAULT_WHITELIST = {SUPERUSER_NEED}
 
 PERMISSION_DEFAULTS = (
     # These are the permissions modelled in our system.
@@ -180,8 +183,7 @@ class QueryPermission(WhitelistedPermission):
 
 
 class QueryNeed(object):
-    '''A need that defines access to queryable data in Druid.
-    '''
+    '''A need that defines access to queryable data in Druid.'''
 
     def __init__(self, dimension_filters):
         '''Creates a new instance of QueryNeed.
@@ -486,8 +488,6 @@ class ZenysisPrincipalMixin(PrincipalMixin):
                 needs = set()
             permissions[method] = WhitelistedHybridPermission(needs)
 
-        # $CycloneIdaiHack(vedant)
-
         # TODO(vedant) - We should just completely write our own PrincipalMixin
         # This is a workaround needed because the Default PrincipalMixin doesn't
         # correctly propagate the `view_resource` permissions to the built-in
@@ -575,3 +575,12 @@ def generate_sitewide_needs(needs):
             sitewide_needs.add(ItemNeed(permission, None, resource_type))
 
     return sitewide_needs
+
+
+def is_public_dashboard_user():
+    '''Returns a boolean representing whether the current user is an
+    unregistered dashboard user.
+    '''
+    return get_configuration(PUBLIC_ACCESS_KEY) and isinstance(
+        g.identity, AnonymousIdentity
+    )

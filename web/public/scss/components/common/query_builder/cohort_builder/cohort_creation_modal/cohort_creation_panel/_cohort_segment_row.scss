@@ -1,0 +1,149 @@
+@mixin cohort-tag {
+  background: none;
+  border-bottom: 1px dashed $blue-dark;
+  color: $blue-dark;
+  font-size: 14px;
+  padding-left: 0;
+  padding-right: 0;
+
+  &:hover {
+    border-bottom: 1px solid $blue-dark;
+  }
+
+  &:active {
+    border-bottom: 1px solid $blue-dark-active;
+    color: $blue-dark-active;
+
+    &::after {
+      background-color: transparent !important;
+    }
+  }
+}
+
+$cohort-gray: #757578;
+
+.cohort-segment-row {
+  display: flex;
+
+  &__add-filter-button {
+    align-self: flex-end;
+    height: 35px;
+  }
+
+  &__row-name-block {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    padding-right: $spacing-m;
+  }
+
+  &__row-border {
+    background-color: $gray-hover;
+    flex: 1;
+    width: 2px;
+  }
+
+  &__row-name {
+    color: $gray-hover;
+  }
+
+  &__row-option-block {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+.segment-option-block {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: 20px 0fr;
+  margin-right: $space-s-px;
+
+  &__prefix {
+    align-self: center;
+    color: $cohort-gray;
+    font-size: 14px;
+    grid-row-start: 2;
+    margin-right: $space-s-px;
+  }
+
+  &__title {
+    grid-column-start: 2;
+  }
+
+  &__option {
+    grid-column-start: 2;
+    grid-row-start: 2;
+  }
+}
+
+.segment-option-title {
+  color: $cohort-gray;
+  display: flex;
+  font-size: 12px;
+
+  &__action {
+    color: $blue-dark;
+    margin-left: $spacing-xs;
+    margin-right: $spacing-xs;
+  }
+}
+
+.indicator-option {
+  &__tag {
+    @include cohort-tag();
+  }
+
+  &__title {
+    color: $slate;
+  }
+
+  &__tooltip-popover {
+    display: block;
+    max-width: 400px;
+  }
+}
+
+.time-interval-option {
+  &__tag {
+    @include cohort-tag();
+  }
+}
+
+.filter-option {
+  &__compact-filter {
+    align-self: flex-end;
+    grid-template-rows: $spacing-s 0fr;
+  }
+}
+
+.filter-option-item {
+  &__tag {
+    @include cohort-tag();
+  }
+}
+
+.new-filter-option {
+  &__tag {
+    @include cohort-tag();
+  }
+}
+
+.numeric-filter-customization-module {
+  background-color: $white;
+  border-radius: 5px;
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.25), 2px 2px 4px rgba(0, 0, 0, 0.25);
+  width: 348px;
+
+  &__and-pill {
+    background-color: $gray-light;
+    border-radius: 5px;
+    padding: $space-xs-px $space-m-px $space-xs-px $space-m-px;
+    text-transform: uppercase;
+  }
+
+  &__apply-btn {
+    background-color: $blue-primary;
+    height: 37px;
+  }
+}

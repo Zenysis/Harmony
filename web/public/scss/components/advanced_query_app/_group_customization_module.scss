@@ -1,0 +1,13 @@
+.group-customization-module {
+  &__all-option,
+  &__total-option {
+    align-items: center;
+    display: flex;
+
+    // HACK(stephen): Tweak the style of the info tooltip directly because the
+    // component does not allow customization and has bad defaults.
+    .zen-info-tooltip {
+      display: flex;
+    }
+  }
+}

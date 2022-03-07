@@ -1,0 +1,32 @@
+// @flow
+
+/* eslint-disable */
+import type { TranslationDictionary } from 'lib/I18N';
+/**
+ * DO NOT:
+ * 1. DO NOT touch the `en` object. AT ALL. This is entirely auto-generated from
+ * our code. Do not change the string values. Do not add new keys.
+ * 2. DO NOT add new locales manually. These are handled by our internal tools.
+ *
+ * DO:
+ * 1. Update any non-`en` translations. Do not change their keys though.
+ * 2. Add new non-`en` translations. But make sure their keys match their
+ * English counterpart.
+ */
+
+const translations: TranslationDictionary = {
+  en: {
+    year: 'year',
+    years: 'years',
+    'Get year to date of the same period %(numYearsInput)s %(pluralizedYear)s ago':
+      'Get year to date of the same period %(numYearsInput)s %(pluralizedYear)s ago',
+    'Number of years to look back': 'Number of years to look back',
+  },
+  am: {},
+  fr: {},
+  pt: {
+    year: 'ano',
+    years: 'anos',
+  },
+};
+export default translations;

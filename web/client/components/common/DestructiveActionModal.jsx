@@ -19,20 +19,7 @@ type BaseModalProps = $Diff<
   },
 >;
 
-type Props = BaseModalProps & {
-  // The warning text that will be displayed to the user advising them not
-  // to proceed with an action unless they understand the consequences.
-  warningText: string,
-
-  // The callback that is invoked when the destructive action is affirmatively
-  // acknowledged by the user.
-  onActionAcknowledged: () => void,
-
-  // The callback that is invoked when the destructive action is not
-  // acknowledged by the user. This will also be triggered if the user closes
-  // the modal.
-  onActionCancelled: () => void,
-
+type DefaultProps = {
   // The text that the user has to type into the modal to acknowledge that
   // they want to proceed with the request.
   acknowledgeText: string,
@@ -45,6 +32,29 @@ type Props = BaseModalProps & {
 
   // The text that will be shown on the `proceed` button.
   proceedText: string,
+
+  showPrimaryButton: boolean,
+  showSecondaryButton: boolean,
+  showCloseButton: boolean,
+  title: string,
+};
+
+type Props = {
+  ...BaseModalProps,
+  ...DefaultProps,
+
+  // The warning text that will be displayed to the user advising them not
+  // to proceed with an action unless they understand the consequences.
+  warningText: string,
+
+  // The callback that is invoked when the destructive action is affirmatively
+  // acknowledged by the user.
+  onActionAcknowledged: () => void,
+
+  // The callback that is invoked when the destructive action is not
+  // acknowledged by the user. This will also be triggered if the user closes
+  // the modal.
+  onActionCancelled: () => void,
 };
 
 type State = {
@@ -68,7 +78,7 @@ export default class DestructiveActionModal extends React.PureComponent<
   Props,
   State,
 > {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     acknowledgeText: TEXT.understand_text,
     cancelText: TEXT.cancel_text,
     initialInputValue: '',
@@ -78,6 +88,8 @@ export default class DestructiveActionModal extends React.PureComponent<
     showCloseButton: false,
     title: TEXT.title,
   };
+
+  state: State;
 
   constructor(props: Props) {
     super(props);
@@ -90,7 +102,7 @@ export default class DestructiveActionModal extends React.PureComponent<
   }
 
   @memoizeOne
-  computeInstructionText(acknowledgeText: string) {
+  computeInstructionText(acknowledgeText: string): string {
     return t('common.destructive_action_modal.instruction_format', {
       understand_text: acknowledgeText,
     });
@@ -113,7 +125,7 @@ export default class DestructiveActionModal extends React.PureComponent<
     this.setState({ actionAcknowledged: false });
   }
 
-  renderWarningControl() {
+  renderWarningControl(): React.Node {
     return (
       <div className="destructive-modal-body">
         <AlertMessage type={ALERT_TYPE.ERROR}>
@@ -125,12 +137,13 @@ export default class DestructiveActionModal extends React.PureComponent<
         <InputText.Uncontrolled
           initialValue={this.props.initialInputValue}
           onChange={this.onTextEntered}
+          testId="destructive-action-confirmation"
         />
       </div>
     );
   }
 
-  renderActionButtons() {
+  renderActionButtons(): React.Node {
     return (
       <div className="destructive-modal-actions row">
         <div className="col-md-6">
@@ -143,35 +156,47 @@ export default class DestructiveActionModal extends React.PureComponent<
     );
   }
 
-  renderProceedButton() {
+  renderProceedButton(): React.Node {
     return (
       <LegacyButton
         disabled={!this.state.actionAcknowledged}
         type={Intents.WARNING}
         onClick={this.onActionAcknowledged}
+        testId="destructive-action-confirm"
       >
         {TEXT.proceed_text}
       </LegacyButton>
     );
   }
 
-  renderCancelButton() {
+  renderCancelButton(): React.Node {
     return (
       <LegacyButton
         type={Intents.SUCCESS}
         onClick={this.props.onActionCancelled}
+        testId="destructive-action-cancel"
       >
         {TEXT.cancel_text}
       </LegacyButton>
     );
   }
 
-  render() {
+  render(): React.Element<typeof BaseModal> {
+    const {
+      acknowledgeText,
+      cancelText,
+      initialInputValue,
+      onActionAcknowledged,
+      onActionCancelled,
+      proceedText,
+      warningText,
+      ...passThroughProps
+    } = this.props;
     return (
       <BaseModal
-        {...this.props}
         customFooter={this.renderActionButtons()}
-        onRequestClose={this.props.onActionCancelled}
+        onRequestClose={onActionCancelled}
+        {...passThroughProps}
       >
         {this.renderWarningControl()}
       </BaseModal>

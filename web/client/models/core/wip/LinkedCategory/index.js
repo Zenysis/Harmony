@@ -1,20 +1,22 @@
 // @flow
 import * as Zen from 'lib/Zen';
+// No way to avoid this circular dependency unfortunately.
+// eslint-disable-next-line import/no-cycle
 import CategoryService from 'services/wip/CategoryService';
+import { uniqueId } from 'util/util';
+import type { Customizable } from 'types/interfaces/Customizable';
 import type { JSONRef } from 'services/types/api';
 
-const TEXT = t('select_filter.labels');
-
 type RequiredValues = {
-  id: Zen.ReadOnly<string>,
-  name: Zen.ReadOnly<string>,
+  id: string,
+  name: string,
 };
 
 type DefaultValues = {
-  description: Zen.ReadOnly<string>,
+  +description: string,
 
   // eslint-disable-next-line no-use-before-define
-  parent: Zen.ReadOnly<Zen.Model<LinkedCategory> | void>,
+  +parent: Zen.Model<LinkedCategory> | void,
 };
 
 type SerializedLinkedCategory = JSONRef;
@@ -30,40 +32,36 @@ type SerializedLinkedCategory = JSONRef;
  * tree, you can traverse upwards using the `parent` property to find the levels
  * this category applies to.
  */
-class LinkedCategory extends Zen.BaseModel<
-  LinkedCategory,
-  RequiredValues,
-  DefaultValues,
-> {
-  static defaultValues = {
+class LinkedCategory
+  extends Zen.BaseModel<LinkedCategory, RequiredValues, DefaultValues>
+  implements Customizable<LinkedCategory> {
+  tag: 'LINKED_CATEGORY' = 'LINKED_CATEGORY';
+  static defaultValues: DefaultValues = {
     description: '',
     parent: undefined,
   };
 
-  static fromObject(
-    rawLinkedCategory: RequiredValues,
-    parent?: Zen.Model<LinkedCategory>,
-  ): Zen.Model<LinkedCategory> {
-    const { id, name } = rawLinkedCategory;
-
-    // This allows for some categories to have translated names,
-    // and for some categories to have overwritten/unique names.
-    const translatedName = name !== '' ? name : TEXT[id] || id;
-    return LinkedCategory.create({ id, name: translatedName, parent });
-  }
-
   static deserializeAsync(
     values: SerializedLinkedCategory,
   ): Promise<Zen.Model<LinkedCategory>> {
-    return CategoryService.get(CategoryService.convertURIToID(values.$ref));
+    return CategoryService.forceGet(
+      CategoryService.convertURIToID(values.$ref),
+    );
   }
 
   static UNSAFE_deserialize(
     values: SerializedLinkedCategory,
   ): Zen.Model<LinkedCategory> {
-    return CategoryService.UNSAFE_get(
+    return CategoryService.UNSAFE_forceGet(
       CategoryService.convertURIToID(values.$ref),
     );
+  }
+
+  customize(): Zen.Model<LinkedCategory> {
+    return LinkedCategory.create({
+      ...this.modelValues(),
+      id: `${this._.id()}__${uniqueId()}`,
+    });
   }
 
   serialize(): SerializedLinkedCategory {
@@ -73,4 +71,4 @@ class LinkedCategory extends Zen.BaseModel<
   }
 }
 
-export default ((LinkedCategory: any): Class<Zen.Model<LinkedCategory>>);
+export default ((LinkedCategory: $Cast): Class<Zen.Model<LinkedCategory>>);

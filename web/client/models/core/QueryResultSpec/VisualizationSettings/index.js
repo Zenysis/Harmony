@@ -3,34 +3,39 @@ import * as Zen from 'lib/Zen';
 import AxesSettings from 'models/core/QueryResultSpec/VisualizationSettings/AxesSettings';
 import LegendSettings from 'models/core/QueryResultSpec/VisualizationSettings/LegendSettings';
 import SeriesSettings from 'models/core/QueryResultSpec/VisualizationSettings/SeriesSettings';
+import ViewSpecificSettingsUtil from 'models/visualizations/common/ViewSpecificSettingsUtil';
+import getSettingRequirements from 'models/core/QueryResultSpec/VisualizationSettings/getSettingRequirements';
+import type QueryResultGrouping from 'models/core/QueryResultSpec/QueryResultGrouping';
 import type { ResultViewType } from 'components/QueryResult/viewTypes';
 import type { Serializable } from 'lib/Zen';
+import type {
+  SerializedViewSpecificSettingsUnion,
+  ViewSpecificSettingsUnion,
+} from 'models/visualizations/common/types';
 
 type RequiredValues = {
   seriesSettings: SeriesSettings,
+  viewSpecificSettings: ViewSpecificSettingsUnion,
   viewType: ResultViewType,
 };
 
 type DefaultValues = {
   axesSettings: AxesSettings | void,
   legendSettings: LegendSettings | void,
-  viewSpecificSettings: {
-    // TODO(pablo): create a VisualizationControls model for each viz
-    [viewType: ResultViewType]: { [string]: mixed },
-  } | void,
 };
 
 type SerializedVisualizationSettings = {
   seriesSettings: Zen.Serialized<SeriesSettings>,
   axesSettings?: Zen.Serialized<AxesSettings>,
   legendSettings?: Zen.Serialized<LegendSettings>,
-  viewSpecificSettings?: {},
+  viewSpecificSettings: SerializedViewSpecificSettingsUnion,
 };
 
 export type ViewTypeConfig = {
   // TODO(stephen, pablo): Rename this to fieldIds to be consistent.
   fields: $ReadOnlyArray<string>,
   groupingDimension: string,
+  groupings: Zen.Array<QueryResultGrouping>,
   smallMode: boolean,
 };
 
@@ -46,10 +51,9 @@ export type ViewTypeConfig = {
 class VisualizationSettings
   extends Zen.BaseModel<VisualizationSettings, RequiredValues, DefaultValues>
   implements Serializable<SerializedVisualizationSettings> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     axesSettings: undefined,
     legendSettings: undefined,
-    viewSpecificSettings: undefined,
   };
 
   static deserialize(
@@ -64,28 +68,40 @@ class VisualizationSettings
     } = values;
     const { viewType } = extraConfig;
 
+    const { needsAxesSettings, needsLegendSettings } = getSettingRequirements(
+      viewType,
+    );
     return VisualizationSettings.create({
       viewType,
-      viewSpecificSettings,
+      viewSpecificSettings: ViewSpecificSettingsUtil.deserialize(
+        viewType,
+        viewSpecificSettings,
+      ),
       seriesSettings: SeriesSettings.deserialize(seriesSettings),
-      axesSettings: axesSettings
-        ? AxesSettings.deserialize(axesSettings)
-        : undefined,
-      legendSettings: legendSettings
-        ? LegendSettings.deserialize(legendSettings)
-        : undefined,
+      axesSettings:
+        needsAxesSettings && axesSettings
+          ? AxesSettings.deserialize(axesSettings)
+          : undefined,
+      legendSettings:
+        needsLegendSettings && legendSettings
+          ? LegendSettings.deserialize(legendSettings)
+          : undefined,
     });
   }
 
   updateVisualizationControlValue(
-    controlKey: string,
+    controlKey: any,
     value: any,
   ): Zen.Model<VisualizationSettings> {
-    const newControls = {
-      ...this._.viewSpecificSettings(),
-      [controlKey]: value,
-    };
-    return this._.viewSpecificSettings(newControls);
+    const viewSpecificSettings = this._.viewSpecificSettings();
+    if (viewSpecificSettings) {
+      const newViewSpecificSettings = viewSpecificSettings.set(
+        controlKey,
+        value,
+      );
+      return this._.viewSpecificSettings(newViewSpecificSettings);
+    }
+    return this._;
   }
 
   serialize(): SerializedVisualizationSettings {
@@ -94,16 +110,28 @@ class VisualizationSettings
       legendSettings,
       seriesSettings,
       viewSpecificSettings,
+      viewType,
     } = this.modelValues();
+
+    const { needsAxesSettings, needsLegendSettings } = getSettingRequirements(
+      viewType,
+    );
+
     return {
-      viewSpecificSettings,
-      axesSettings: axesSettings ? axesSettings.serialize() : undefined,
-      legendSettings: legendSettings ? legendSettings.serialize() : undefined,
+      viewSpecificSettings: viewSpecificSettings.serialize(),
+      axesSettings:
+        needsAxesSettings && axesSettings
+          ? axesSettings.serialize()
+          : undefined,
+      legendSettings:
+        needsLegendSettings && legendSettings
+          ? legendSettings.serialize()
+          : undefined,
       seriesSettings: seriesSettings.serialize(),
     };
   }
 }
 
-export default ((VisualizationSettings: any): Class<
+export default ((VisualizationSettings: $Cast): Class<
   Zen.Model<VisualizationSettings>,
 >);

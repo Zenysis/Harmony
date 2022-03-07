@@ -6,9 +6,25 @@ import { DRAG_SIGNAL } from 'components/ui/DraggableItem';
 import { autobind } from 'decorators';
 import type { DragEventSignal } from 'components/ui/DraggableItem';
 
-type Props<T> = {
+type DefaultProps<T> = {
   /** The diameter (in px)  of the range selector circles */
   circleDiameter: number,
+
+  /** Optional className */
+  className: string,
+
+  /** The width of the range line in px */
+  lineThickness: number,
+
+  /** Used to fromat the select values for display */
+  valueFormatter: T => string | number,
+
+  /** Width of the slider in pixels */
+  width: number,
+};
+
+type Props<T> = {
+  ...DefaultProps<T>,
 
   /** The initially selected start of the range */
   initialStart: T,
@@ -16,20 +32,11 @@ type Props<T> = {
   /** The initially selected end of the range */
   initialEnd: T,
 
-  /** The width of the range line in px */
-  lineThickness: number,
-
   /** This is called whenever a drag event ends with the new selected range */
   onRangeChange: (start: T, end: T) => void,
 
   /** An array of possible range values */
   values: $ReadOnlyArray<T>,
-
-  /** Used to fromat the select values for display */
-  valueFormatter: T => string | number,
-
-  /** Width of the slider in pixels */
-  width: number,
 };
 
 type RangeValueKey = 'start' | 'end';
@@ -39,8 +46,11 @@ type State<T> = {
   end: T,
 };
 
-function defaultValueFormatter(value: string | number): string | number {
-  return value;
+function defaultValueFormatter(value: mixed): string | number {
+  if (typeof value === 'string' || typeof value === 'number') {
+    return value;
+  }
+  return '';
 }
 
 /**
@@ -51,8 +61,9 @@ export default class RangeSlider<T> extends React.PureComponent<
   Props<T>,
   State<T>,
 > {
-  static defaultProps = {
+  static defaultProps: DefaultProps<T> = {
     circleDiameter: 16,
+    className: '',
     lineThickness: 2,
     valueFormatter: defaultValueFormatter,
     width: 400,
@@ -113,17 +124,24 @@ export default class RangeSlider<T> extends React.PureComponent<
   onDrag(rangeValueKey: RangeValueKey, newPosition: number): DragEventSignal {
     this.setState(prevState => {
       const newValue = this.getNewValue(prevState[rangeValueKey], newPosition);
-      return { [rangeValueKey]: newValue };
+      if (rangeValueKey === 'start') {
+        return { start: newValue };
+      }
+      return { end: newValue };
     });
 
     return DRAG_SIGNAL.RESET;
   }
 
-  onDragStartRangeCircle = (newPosition: number) =>
+  @autobind
+  onDragStartRangeCircle(newPosition: number) {
     this.onDrag('start', newPosition);
+  }
 
-  onDragEndRangeCircle = (newPosition: number) =>
+  @autobind
+  onDragEndRangeCircle(newPosition: number) {
     this.onDrag('end', newPosition);
+  }
 
   @autobind
   onDragEnd(): DragEventSignal {
@@ -133,9 +151,10 @@ export default class RangeSlider<T> extends React.PureComponent<
     return DRAG_SIGNAL.RESET;
   }
 
-  render() {
+  render(): React.Element<'div'> {
     const {
       circleDiameter,
+      className,
       lineThickness,
       valueFormatter,
       values,
@@ -171,7 +190,7 @@ export default class RangeSlider<T> extends React.PureComponent<
 
     return (
       <div
-        className="range-slider"
+        className={`range-slider ${className}`}
         style={{ width: width + 2 * circleDiameter }}
       >
         <div

@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+{% set body_class="condensed-navbar data-catalog-app-body"%}
+
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ bundle_resource_url('dataCatalog.bundle.js') }}"></script>
+{% endblock %}
+
+{% block tracking_event %}
+<script>
+  analytics.track('Data catalog view', { nonInteraction: 1 });
+</script>
+{% endblock %}

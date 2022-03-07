@@ -1,1 +1,1 @@
-from .model import Group, GroupRoles, GroupUsers
+from .model import Group, GroupRoles, GroupUsers, GroupAcl

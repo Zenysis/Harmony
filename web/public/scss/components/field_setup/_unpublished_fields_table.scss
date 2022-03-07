@@ -1,0 +1,183 @@
+// This is the primary table structure definition for the unpublished fields
+// table.
+$unpublished-field-table-border: 1px solid $gray;
+$unpublished-table-width: 1600px;
+
+.fs-unpublished-fields-table-container {
+  &__header-bar {
+    background-color: $site-background;
+
+    // Sticky header row
+    // Safari version 13 is the first version that supports `position: sticky`.
+    // Previous versions require the webkit prefix.
+    position: sticky;
+    /* stylelint-disable-next-line declaration-block-no-duplicate-properties */
+    position: -webkit-sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  &__subheader {
+    align-items: center;
+    display: flex;
+    padding-bottom: $space-m-px;
+    padding-top: $space-m-px;
+  }
+
+  &__table-header-wrapper {
+    border: $unpublished-field-table-border;
+    border-radius: 5px 5px 0 0;
+    overflow-x: hidden;
+  }
+}
+
+.fs-unpublished-fields-table-wrapper {
+  background-color: $white;
+  border-bottom: $unpublished-field-table-border;
+  border-left: $unpublished-field-table-border;
+  border-radius: 0 0 5px 5px;
+  border-right: $unpublished-field-table-border;
+  overflow-x: auto;
+}
+
+.fs-unpublished-fields-table-rows {
+  // Subtract the width of the left/right borders.
+  min-width: $unpublished-table-width - 2px;
+
+  &__header-row {
+    background-color: $white;
+    display: grid;
+    grid-template-columns: 300px 4fr 4fr 5fr 5fr 5fr 5fr;
+    // Subtract the width of the left/right borders.
+    min-width: $unpublished-table-width - 2px;
+
+    &:hover {
+      .fs-unpublished-fields-table-rows__header-checkbox {
+        visibility: visible;
+      }
+    }
+
+    // For all row column cells, align items and add a border. Last header cell
+    // needs to round the top left border.
+    & > * {
+      align-items: flex-start;
+      display: flex;
+      padding: $row-padding;
+
+      &:first-of-type {
+        background-color: $white;
+        border-radius: 5px 0px 0px 0px;
+        border-right: $unpublished-field-table-border;
+        box-shadow: 1px 0px 1px rgba(9, 30, 66, 0.09),
+          2px 0px 4px rgba(9, 30, 66, 0.18);
+        left: 0;
+        position: sticky;
+        /* stylelint-disable-next-line declaration-block-no-duplicate-properties */
+        position: -webkit-sticky;
+        z-index: 1;
+      }
+    }
+  }
+
+  & > * {
+    &:first-of-type {
+      border-top: none;
+    }
+  }
+
+  &__row {
+    border-top: $unpublished-field-table-border;
+    display: grid;
+    grid-template-columns: 300px 4fr 4fr 5fr 5fr 5fr 5fr;
+
+    &:hover, &--selected {
+      background-color: $white-hover;
+
+      .fs-field-row__checkbox {
+        visibility: visible;
+      }
+    }
+
+    // For all row column cells, align items and add a border.
+    & > * {
+      align-items: flex-start;
+      display: flex;
+      padding: $row-padding;
+
+      &:first-of-type {
+        background-color: $white;
+        border-right: $unpublished-field-table-border;
+        box-shadow: 1px 0px 1px rgba(9, 30, 66, 0.09),
+          2px 0px 4px rgba(9, 30, 66, 0.18);
+        left: 0;
+        position: sticky;
+        /* stylelint-disable-next-line declaration-block-no-duplicate-properties */
+        position: -webkit-sticky;
+        z-index: 1;
+      }
+    }
+  }
+
+  &__header-checkbox {
+    padding-right: $space-s-px;
+    &--unchecked {
+      visibility: hidden;
+    }
+  }
+
+  &__header-column-cell {
+    border-right: $unpublished-field-table-border;
+    box-shadow: 2px 0px 4px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.fs-field-row {
+  &__checkbox {
+    padding-right: $space-s-px;
+    visibility: hidden;
+  }
+
+  &__id-block {
+    overflow: hidden;
+  }
+
+  &__id-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__id-popover {
+    @extend .zen-tooltip__popover;
+    max-width: 300px;
+    overflow-wrap: break-word;
+  }
+}
+
+.fs-editable-calculation {
+  flex: 1 1 auto;
+}
+
+.fs-category-input {
+  &__main-button {
+    @extend .zen-dropdown-button__main-btn;
+    @extend .zen-dropdown-button__main-btn--default;
+  }
+
+  &__caret {
+    align-items: center;
+    display: flex;
+    padding-left: $space-xs-px;
+  }
+}
+
+.fs-calculation-input {
+  .indicator-section-row {
+    align-items: center;
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+  }
+
+  .indicator-section-row__title {
+    padding-right: $space-xs-px;
+  }
+}

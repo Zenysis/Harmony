@@ -1,13 +1,11 @@
-from builtins import object
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 
 from web.server.errors import NotificationError
-from future.utils import with_metaclass
 
 
-class SMSClient(with_metaclass(ABCMeta, object)):
+class SMSClient(ABC):
     ''' Abstract sms client class'''
 
     @abstractmethod
@@ -27,4 +25,4 @@ class TwilioClient(SMSClient):
             )
             return message_response
         except TwilioRestException as e:
-            raise NotificationError(status_code=400, message=e.msg)
+            raise NotificationError(status_code=400, message=e.msg) from e

@@ -1,4 +1,4 @@
-FROM node:12
+FROM node:14
 
 # Separate directories for storing build files so that the post-build results
 # can be easily copied out.

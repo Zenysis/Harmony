@@ -1,21 +1,15 @@
-import json
 import time
-
-import redis
 
 from log import LOG
 from util.credentials.generate import generate_secure_password, ALPHANUMERIC_CHARSET
 from web.server.environment import IS_PRODUCTION
+from web.server.redis.client import RedisClient
 
 # Length of access key string
 KEY_LENGTH = 32
 
 # Access keys expire after this many seconds
-KEY_LIFETIME_SEC = 30
-
-# Redis for storing access keys on prod
-if IS_PRODUCTION:
-    REDIS = redis.Redis(host='redis')
+KEY_LIFETIME_SEC = 60
 
 
 class AccessKeys(object):
@@ -39,12 +33,12 @@ class AccessKeys(object):
         expiration = int(time.time()) + expiration_sec
         self.access_keys[key] = expiration
         if IS_PRODUCTION:
-            REDIS.set(get_redis_key(key), 1, ex=expiration_sec)
+            RedisClient.instance().set(get_redis_key(key), 1, ex=expiration_sec)
         return key
 
     def is_valid_key(self, key):
         if IS_PRODUCTION:
-            if REDIS.get(get_redis_key(key)):
+            if RedisClient.instance().get(get_redis_key(key)):
                 return True
             LOG.debug('AccessKeys: redis does not contain key %s', key)
         elif key in self.access_keys:

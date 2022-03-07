@@ -1,0 +1,179 @@
+$gis-form-panel-width: 336px;
+
+.gis-app {
+  background-color: $site-background;
+  color: $aqt-base-font-color;
+  display: flex;
+  width: 100%;
+
+  &__form-panel {
+    @extend .advanced-query-app__main-column;
+    @extend .aqt-query-form-panel;
+    flex: 0 0 $gis-form-panel-width;
+    height: calc(100vh - #{$navbar-height});
+    padding: 0px;
+  }
+
+  &__map-view {
+    height: initial;
+    width: 100%;
+  }
+}
+
+.gis-settings-panel {
+  max-width: 700px;
+  min-width: 300px;
+
+  &__title {
+    color: $slate-hover;
+    font-weight: bold;
+  }
+
+  // Overriding CSS
+  .zen-color-block__icon {
+    border: 1px solid $gray-light-active;
+  }
+
+  // Overriding CSS
+  .zen-color-block {
+    align-items: center;
+    background-color: $white;
+    border: 1px solid $gray-light-active;
+    border-radius: 5px;
+    color: $slate;
+    cursor: pointer;
+    display: flex;
+    height: 32px;
+    padding-left: 8px;
+    width: inherit;
+  }
+
+  // Overriding CSS
+  .color-control__color-block {
+    align-items: center;
+    // HACK(nina): Need to align these dropdowns with the rest in the settings
+    // panel
+    margin-right: -8px;
+  }
+}
+
+.gis-map-content {
+  height: 100%;
+  position: absolute;
+  width: 100%;
+  z-index: 2;
+}
+
+.gis-map-overlays-container {
+  bottom: $space-xs-em;
+  left: $space-xs-em;
+  position: absolute;
+}
+
+.gis-map-overlays {
+  // NOTE(nina): We currently use this to override the CSS and restyle the
+  // button according to the GIS design. Eventually, when the buttons are
+  // refactored, when want to rename this as an element of gis-app
+  // HACK(nina): We have to do a weird position calculation like this because
+  // this button is rendered in a different hierarchy from the others
+  .background-layer-button__map-button {
+    bottom: $space-xs-em;
+    left: calc(#{$space-xxl-em} + #{$space-xl-em});
+    top: initial;
+  }
+
+  .gis-geocoder {
+    position: absolute;
+    right: $space-xs-em;
+    top: $space-xs-em;
+    width: 400px;
+
+    // Prevents the text from displaying behind the 'x' button
+    .zen-input-text {
+      overflow: hidden;
+      padding-right: 30px;
+      text-overflow: ellipsis;
+    }
+
+    &__remove {
+      margin-right: 0;
+      position: absolute;
+      right: $space-s-em;
+      top: $space-s-em;
+    }
+  }
+
+  &__settings-panel-button {
+    bottom: $space-xs-em;
+    left: $space-xxl-em;
+    position: absolute;
+  }
+
+  &__zoom-control {
+    bottom: $space-xs-em;
+    left: $space-xs-em;
+    position: absolute;
+  }
+}
+
+.gis-legend-container {
+  position: absolute;
+
+  &--top-left {
+    left: $space-xs-em;
+    top: $space-xs-em;
+  }
+
+  &--top-right {
+    right: $space-xs-em;
+    // HACK(sophie): offset the legend so that it isn't covered by the search
+    // bar
+    // NOTE(nina): We are converting the legend to use only em units. This
+    // might not need to change, as the search bar is not defined in em units.
+    // However, if the spacing becomes an issue at different resolutions,
+    // then we can return to this property.
+    top: 45px;
+  }
+
+  &--bottom-left {
+    bottom: $space-xs-em;
+    left: $space-xs-em;
+  }
+
+  &--bottom-right {
+    bottom: $space-xs-em;
+    right: $space-xs-em;
+  }
+}
+
+// NOTE(nina): The purpose of this class is to override some of the styling
+// baked into the reusable legend component used to render our legend. There's
+// no need now, but it would be nice in the future to modify SimpleLegend
+// instead to accomodate top left/top right/bottom right/bottom left
+// positioning. I think there is a hack for the AQT's version of service
+// mapping that addresses the same need. Since we're deprecating that tool
+// soon, I elect to leave that as a hack, and pull this in as a task once
+// we allow users to select legend placement in GIS (which is a future goal)
+.gis-layer-legend {
+  bottom: auto;
+  min-width: 21em;
+  position: inherit;
+  right: auto;
+}
+
+.geocoder-results-popover {
+  width: 400px;
+
+  &__feature {
+    background-color: $site-background;
+
+    &:hover {
+      background-color: $gray-light-active;
+    }
+  }
+
+  &__feature-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

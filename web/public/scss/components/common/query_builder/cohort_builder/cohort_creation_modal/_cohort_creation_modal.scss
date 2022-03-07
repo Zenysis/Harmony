@@ -1,0 +1,63 @@
+.cohort-creation-modal {
+  .zen-modal__body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  &__main-section {
+    display: flex;
+    overflow: hidden;
+  }
+}
+
+.ca-cohort-summary-bar {
+  align-items: center;
+  background-color: #f4f4f4;
+  border-bottom: 1px solid #b3bcbd;
+  display: flex;
+  padding: $space-m-px $space-l-px;
+
+  &__text {
+    color: $slate-hover;
+  }
+}
+
+.ca-cohort-formula {
+  &__parenthesis {
+    font-size: 18px;
+  }
+}
+
+.ca-set-operation-pill {
+  background-color: $gray;
+  border-radius: 5px;
+  color: $white;
+  font-size: 12px;
+  padding: $space-xxs-px $space-s-px;
+  text-transform: uppercase;
+}
+
+.ca-cohort-group-pill {
+  background-color: $gray-light;
+  border: 1px solid $gray;
+  border-radius: 5px;
+  font-size: 14px;
+  padding: $space-xs-px $space-s-px;
+}
+
+.ca-summary-number-pill {
+  background-color: #0e6027;
+  border-radius: 5px;
+  color: $white;
+  display: inline-block;
+  font-size: 14px;
+  padding: $space-xs-px $space-s-px;
+}
+
+.ca-add-item-button {
+  display: flex;
+  height: 20px;
+  width: 20px;
+}

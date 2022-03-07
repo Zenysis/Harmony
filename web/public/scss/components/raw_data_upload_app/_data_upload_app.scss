@@ -1,0 +1,42 @@
+.upload-app {
+  padding: 3em;
+
+  &__main-instructions {
+    font-size: 20px;
+  }
+}
+
+.data-upload-dropdown-container {
+  font-size: 14px;
+  margin-top: $spacing-m;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.upload-button {
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.btn-file {
+  overflow: hidden;
+  position: relative;
+}
+
+.btn-file input[type='file'] {
+  background: white;
+  cursor: inherit;
+  display: block;
+  filter: alpha(opacity=0);
+  font-size: 100px;
+  min-height: 100%;
+  min-width: 100%;
+  opacity: 0;
+  outline: none;
+  position: absolute;
+  right: 0;
+  text-align: right;
+  top: 0;
+}

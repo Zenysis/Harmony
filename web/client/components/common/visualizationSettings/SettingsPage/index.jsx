@@ -1,24 +1,26 @@
 // @flow
 import * as React from 'react';
 
-type Props = {
-  children: React.Node,
-
+type DefaultProps = {
   className: string,
 };
 
+type Props = {
+  ...DefaultProps,
+  children: React.Node,
+};
+
+// TODO(pablo): change this to a functional component
 /**
  * The SettingsPage component is used for grouping all the pieces of a
  * specific setting together.
  */
 export default class SettingsPage extends React.PureComponent<Props> {
-  static defaultProps = {
-    title: '',
+  static defaultProps: DefaultProps = {
     className: '',
-    helpText: '',
   };
 
-  render() {
+  render(): React.Node {
     const { children, className } = this.props;
     return (
       <div className={`settings-page ${className}`}>

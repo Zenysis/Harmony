@@ -7,6 +7,7 @@ from flask import current_app
 
 from db.druid.query_builder import GroupByQueryBuilder
 from util.file.unicode_csv import UnicodeDictWriter
+from web.server.util.indicators import get_indicator_by_id, get_indicator_groups
 
 ISO_DATETIME_FORMAT = '%Y-%m-%d'
 
@@ -19,12 +20,14 @@ class FieldSummary(object):
         count=0,
         start_date=None,
         end_date=None,
+        formula=None,
         human_readable_formula=None,
     ):
         self.field_id = field_id
         self.count = count
         self.start_date = start_date
         self.end_date = end_date
+        self.formula = formula
         self.human_readable_formula = human_readable_formula
 
     def to_json(self):
@@ -39,6 +42,7 @@ class FieldSummary(object):
                 self.end_date.strftime(ISO_DATETIME_FORMAT) if self.end_date else None
             ),
             'count': self.count,
+            'formula': self.formula,
             'humanReadableFormulaHtml': self.human_readable_formula,
         }
 
@@ -47,20 +51,17 @@ class FieldSummary(object):
 
 
 class FieldsApi(object):
-    def __init__(
-        self,
-        calculated_indicator_formulas,
-        indicator_id_lookup,
-        indicator_group_definitions,
-        row_count_lookup,
-    ):
-        self.calculated_indicator_formulas = calculated_indicator_formulas
-        self.indicator_id_lookup = indicator_id_lookup
-        self.indicator_group_definitions = indicator_group_definitions
+    def __init__(self, row_count_lookup):
+        self.indicator_group_definitions = get_indicator_groups()
         self.row_count_lookup = row_count_lookup
 
+    def get_indicator_formula(self, field_id):
+        indicator = get_indicator_by_id(field_id, {'formula'})
+        formula = indicator.get('formula') if indicator else None
+        return formula
+
     def get_human_readable_formula_html(self, field_id):
-        formula = self.calculated_indicator_formulas.get(field_id)
+        formula = self.get_indicator_formula(field_id)
         if not formula:
             return None
         matches = re.findall(r'\w+', formula)
@@ -77,7 +78,7 @@ class FieldsApi(object):
             .replace('*', ' * ')
         )
         for constit_field_id in set(matches):
-            ind = self.indicator_id_lookup.get(constit_field_id)
+            ind = get_indicator_by_id(constit_field_id)
             if ind:
                 ret = ret.replace(constit_field_id, '<span>%s</span>' % ind['text'])
         return ret
@@ -117,6 +118,7 @@ class FieldsApi(object):
             total_count,
             time_boundary['min'],
             time_boundary['max'],
+            formula=self.get_indicator_formula(field_id),
             human_readable_formula=human_readable_formula,
         )
 

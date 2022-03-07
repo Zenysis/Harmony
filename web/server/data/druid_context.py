@@ -25,10 +25,7 @@ class DruidApplicationContext(object):
         current_datasource,
     ):
         assert isinstance(druid_metadata, AbstractDruidMetadata)
-        # NOTE(vedant) - This is because 'druid_port_configuration' is passed
-        # as a Singleton. Otherwise we would HAVE to execute a type check like
-        # we do with 'current_datasource'
-        assert issubclass(druid_port_configuration, BaseDruidConfig)
+        assert isinstance(druid_port_configuration, BaseDruidConfig)
         assert isinstance(dimension_values_lookup, DimensionValuesLookup)
         assert isinstance(data_time_boundary, DataTimeBoundary)
         assert isinstance(data_status_information, SourceStatus)

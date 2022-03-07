@@ -16,3 +16,6 @@
   <script src="{{ bundle_resource_url('alerts.bundle.js') }}"></script>
 {% endblock %}
 
+{% block tracking_event %}
+<script>analytics.track('Alerts view', {nonInteraction: 1});</script>
+{% endblock %}

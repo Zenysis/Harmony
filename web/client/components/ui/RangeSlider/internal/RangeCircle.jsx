@@ -33,7 +33,7 @@ export default class RangeCircle extends React.PureComponent<Props> {
     return this.props.onDragEnd();
   }
 
-  render() {
+  render(): React.Element<'div'> {
     const {
       circleDiameter,
       displayedValue,
@@ -44,15 +44,16 @@ export default class RangeCircle extends React.PureComponent<Props> {
 
     const dragBounds = {
       bottom: 0,
-      left: leftBound,
+      left: leftBound + circleDiameter / 2,
       right: rightBound,
       top: 0,
     };
 
     return (
       <div
+        className="range-slider__container"
         style={{
-          transform: `translate(${position}px, 0)`,
+          transform: `translate(${position - circleDiameter / 2}px, 0)`,
         }}
       >
         <DraggableItem

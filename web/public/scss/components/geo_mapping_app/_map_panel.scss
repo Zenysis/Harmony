@@ -1,0 +1,260 @@
+$gis-gray: #757578;
+
+.gis-form-panel {
+  // Set height so that the bottom of the panel doesn't get covered by the
+  // export button (height = 58px, then we subtract 24px for the padding).
+  height: calc(100vh - 43px - 34px);
+  overflow: auto;
+  padding: $space-l-px;
+
+  &__border {
+    border-bottom: 1px solid $gray-light-active;
+  }
+
+  &__title {
+    color: $slate;
+    font-weight: bold;
+  }
+
+  &__section-title {
+    color: $gis-gray;
+    font-weight: bold;
+    margin-bottom: $space-xs-px;
+  }
+
+  // NOTE(nina): The purpose of this element is to override the CSS of the
+  // dropdown button. This is because the selection flow is not complex
+  // enough (or yet) to warrant using the hierarchical selector instead
+  &__select-layers-button {
+    .zen-caret {
+      display: none;
+    }
+
+    .zen-dropdown-button__button-content {
+      color: $white;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .zen-dropdown-button__main-btn--default {
+      background-color: $blue-primary;
+      border: none;
+      border-radius: 0px;
+    }
+  }
+
+  &__number-bullet {
+    border: solid 1px $gray-hover;
+    border-radius: 5px;
+    color: $gray;
+    padding: 0px $space-xxs-px;
+  }
+}
+
+.gis-layer-card-container {
+  align-items: center;
+  display: flex;
+  margin-bottom: $space-m-px;
+  // HACK(nina): We want the drag handle to ignore the margins of the panel
+  margin-left: -15px;
+}
+
+.gis-layer-card-drag-handle {
+  opacity: 0;
+}
+
+.gis-layer-card-container:hover .gis-layer-card-drag-handle {
+  opacity: 1;
+}
+
+.gis-layer-card-container:hover .gis-layer-card {
+  border: 1px solid $blue-primary;
+}
+
+.gis-layer-card {
+  border: 1px solid $gray-light-active;
+  border-radius: 5px;
+  flex: 1;
+  padding: $space-m-px $space-s-px;
+
+  &:hover {
+    border: 1px solid $blue-primary;
+    cursor: pointer;
+  }
+
+  &__filter-tag-container {
+    display: flex;
+  }
+
+  &__filter-tag {
+    background-color: $white;
+    // Overriding zen-tag hover CSS, which has background-image set
+    background-image: linear-gradient($white, $white);
+    border: 1px solid $gray;
+    color: $slate;
+    flex: 1;
+    margin: 0px;
+
+    // Overriding zen-tag hover CSS
+    &--disabled,
+    &--disabled:hover {
+      background-color: $gray-light;
+      color: $gray;
+      cursor: not-allowed;
+
+      // Overriding CSS
+      &.zen-tag--clickable {
+        &:after {
+          background-color: $gray-light;
+
+          &:hover {
+            background-color: $gray-light;
+          }
+
+          &:active {
+            background-color: $gray-light;
+          }
+        }
+      }
+    }
+
+    &:hover {
+      // Overriding zen-tag hover CSS, which has background-image set
+      background-image: linear-gradient(
+        to right,
+        $gray-light-active,
+        $gray-light-active
+      );
+    }
+  }
+
+  .zen-dropdown,
+  .zen-dropdown-button {
+    width: 100%;
+  }
+
+  &__subtitle {
+    color: $gray;
+  }
+
+  &__header-disabled {
+    color: $gray-active;
+  }
+
+  &__selector {
+    align-items: baseline;
+    border: 1px solid $gray-light-active;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    padding: $space-xxs-px;
+
+    &:hover {
+      // NOTE(nina): Specify color to match color in AQT according to carlo
+      background-color: #ebf1f5;
+    }
+
+    &--disabled,
+    &--disabled:hover {
+      background-color: $gray-light;
+      color: $gray;
+      cursor: not-allowed;
+    }
+  }
+
+  &__disabled,
+  &__disabled:hover {
+    background-color: $gray-light;
+    border: 1px solid $gray-light-active;
+    color: $gray-active;
+    cursor: not-allowed;
+  }
+
+  &__icon-button {
+    color: $slate;
+  }
+
+  &__icon-button:hover {
+    color: $slate-hover;
+  }
+
+  &__filter-icon,
+  &__group-by-icon {
+    height: 20px;
+    width: 20px;
+
+    &--disabled {
+      color: $gray;
+    }
+  }
+
+  &__geo-grouping-dropdown-disabled {
+    // Overriding CSS
+    .zen-dropdown-button__main-btn--default {
+      background-color: $gray-light;
+      color: $gray-active;
+      cursor: not-allowed;
+
+      &:hover {
+        border: 1px solid $gray-light-active;
+      }
+    }
+  }
+}
+
+.gis-edit-layer-title {
+  align-items: center;
+  background: $gray-light-hover;
+  color: $gis-gray;
+  display: flex;
+  justify-content: space-between;
+  padding: $space-s-px $space-l-px;
+  position: absolute;
+  width: $gis-form-panel-width;
+  z-index: 1;
+
+  // Overriding CSS
+  .u-heading-small {
+    color: $gis-gray;
+  }
+}
+
+.gis-edit-layer-style-controls {
+  &__chart-type-icon {
+    height: $space-xl-px;
+    width: $space-xl-px;
+
+    &:hover {
+      border: solid 2px $blue-primary;
+      border-radius: 8px;
+    }
+
+    &--active {
+      border: solid 2px $blue-primary;
+      border-radius: 8px;
+    }
+
+    &--disabled {
+      &:hover {
+        border: none;
+      }
+    }
+  }
+}
+
+.map-label-controls-item {
+  color: $gis-gray;
+}
+
+.gis-export-button-container {
+  align-items: center;
+  background: $gray-light-hover;
+  bottom: 0px;
+  display: flex;
+  flex-direction: row-reverse;
+  height: 58px;
+  padding-right: $space-xs-em;
+  position: absolute;
+  width: $gis-form-panel-width;
+  z-index: 1;
+}

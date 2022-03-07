@@ -1,17 +1,11 @@
-from config.template.datatypes import HIERARCHICAL_DIMENSIONS
+from config.template.aggregation import DIMENSIONS
 
-# Geography filter dimensions are required. They are hierarchical, ordered from
-# biggest to smallest.
-_GEOGRAPHY_FILTER_DIMENSIONS = ['_all'] + HIERARCHICAL_DIMENSIONS
+# List of dimensions that will display in the filter dropdown and be filterable.
+FILTER_DIMENSIONS = [
+    *DIMENSIONS,
+    'source',
+]
 
-FRONTEND_CACHED_FILTER_DIMENSIONS = _GEOGRAPHY_FILTER_DIMENSIONS
-
-# Map from filter ID to an ordered list of dimensions that will display in the
-# filter dropdown.
-FILTER_DIMENSIONS = {'geography': _GEOGRAPHY_FILTER_DIMENSIONS}
-
-# Configuration of filters for public portal.
-PUBLIC_FILTER_DIMENSIONS = {}
-
-# Dimensions that we are able to restrict querying on
+# Dimensions that we are able to restrict querying on. As a baseline, this should be
+# filled with source, and the least granular (largest geo) value
 AUTHORIZABLE_DIMENSIONS = set()

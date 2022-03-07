@@ -1,0 +1,109 @@
+FROM ubuntu:latest
+
+# Force bash to be the default shell.
+SHELL ["/bin/bash", "-c"]
+
+# Install dependencies.
+# NOTE(stephen): Many of these are only needed for the initial setup of the venv
+# and likely could be uninstalled when the venv setup is completed.
+RUN \
+  export DEBIAN_FRONTEND=noninteractive && \
+  apt-get update && \
+  apt-get install --no-install-recommends -y \
+    build-essential \
+    curl \
+    dtach \
+    freetds-bin \
+    freetds-dev \
+    git \
+    jq \
+    libffi-dev \
+    libgeos-dev \
+    libssl-dev \
+    lz4 \
+    lzop \
+    pigz \
+    python3 \
+    python3-dev \
+    python3-levenshtein \
+    python3-lxml \
+    python3-venv \
+    pypy3 \
+    pypy3-dev \
+    unzip \
+    wget && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* && \
+  curl \
+    -o /usr/local/bin/mc \
+    https://dl.min.io/client/mc/release/linux-amd64/mc && \
+  chmod 755 /usr/local/bin/mc
+
+# Add the ubuntu user as the default user for the pipeline.
+# NOTE(stephen): Right now, we are not giving ubuntu user root permissions.
+RUN \
+  addgroup --gid 1000 ubuntu && \
+  adduser --disabled-password --gid 1000 --uid 1000 --gecos '' ubuntu
+
+# Create the directory that will store the repo and give ubuntu ownership of it.
+RUN \
+  mkdir /zenysis && \
+  chown ubuntu:ubuntu /zenysis
+
+USER ubuntu
+
+WORKDIR /zenysis
+
+# Make the directory look like a git repo so that `git` commands work. Also
+# initialize minio config directory.
+RUN \
+  mkdir -p .git/{objects,refs} && \
+  echo 'ref: refs/heads/master' > .git/HEAD && \
+  mc ls > /dev/null
+
+# Install pipeline python requirements.
+COPY requirements.txt requirements.txt
+COPY requirements-pipeline.txt requirements-pipeline.txt
+
+# Setup virtual environments.
+# TODO(stephen): It might be useful to parallelize this.
+RUN \
+  echo 'Setting up python3 venv' && \
+  python3 -m venv venv && \
+  source venv/bin/activate && \
+  pip install --upgrade pip setuptools wheel && \
+  echo 'Installing requirements.txt' && \
+  pip install -r requirements.txt && \
+  echo 'Installing requirements-pipeline.txt' && \
+  pip install -r requirements-pipeline.txt && \
+  deactivate && \
+  echo 'Finished setting up python3 venv' && \
+  echo 'Setting up pypy3 venv' && \
+  pypy3 -m venv venv_pypy3 && \
+  source venv_pypy3/bin/activate && \
+  pip install --upgrade pip setuptools wheel && \
+  echo 'Installing requirements.txt' && \
+  pip install -r requirements.txt && \
+  echo 'Installing requirements-pipeline.txt' && \
+  pip install -r requirements-pipeline.txt && \
+  deactivate && \
+  echo 'Finished setting up pypy3 venv' && \
+  rm -r /home/ubuntu/.cache
+
+# HACK(stephen): Manually installing these dependencies for now while the
+# pipeline server is still in active development and exploration. Eventually
+# these should be moved into the requirements-pipeline.txt file.
+RUN \
+  source venv/bin/activate && \
+  pip install dask distributed prefect
+
+# Remove testing directories that are inexplicably *always installed* by pip.
+# There appears to be no way to prevent that from happening. Also remove pyc
+# files since they should be generated inside the container.
+RUN \
+  rm -rf venv/lib/*/site-packages/*/tests && \
+  rm -rf venv/lib/*/site-packages/*/*/tests && \
+  rm -rf venv_pypy3/site-packages/*/tests && \
+  rm -rf venv_pypy3/site-packages/*/*/tests && \
+  find venv/lib/python3.8/site-packages -name '*.pyc' -delete && \
+  find venv_pypy3/site-packages -name '*.pyc' -delete

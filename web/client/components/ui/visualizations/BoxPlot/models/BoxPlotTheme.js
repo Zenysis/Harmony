@@ -1,13 +1,16 @@
 // @flow
 import * as Zen from 'lib/Zen';
 
-type Values = {
-  id: Zen.ReadOnly<string>,
+const TEXT = t('ui.visualizations.BoxPlot.models.BoxPlotTheme');
+
+type RequiredValues = {
+  id: string,
   axisLabelColor: string,
   axisLineColor: string,
   backgroundColor: string,
   boxPlotLinesColor: string,
   boxPlotFillColor: string,
+  name: string,
   outliersFillColor: string,
   outliersStrokeColor: string,
   violinPatternsFillColor: string,
@@ -16,14 +19,15 @@ type Values = {
   violinFillColor: string,
 };
 
-class BoxPlotTheme extends Zen.BaseModel<BoxPlotTheme, Values> {
-  static DarkTheme = BoxPlotTheme.create({
+class BoxPlotTheme extends Zen.BaseModel<BoxPlotTheme, RequiredValues> {
+  static DarkTheme: Zen.Model<BoxPlotTheme> = BoxPlotTheme.create({
     id: 'dark',
     axisLabelColor: 'white',
     axisLineColor: 'white',
     backgroundColor: '#27273f',
     boxPlotLinesColor: 'white',
     boxPlotFillColor: '#888e91',
+    name: TEXT.dark,
     outliersFillColor: '#888e91',
     outliersStrokeColor: 'white',
     violinPatternsFillColor: 'rgba(0,0,0,0.5)',
@@ -32,28 +36,26 @@ class BoxPlotTheme extends Zen.BaseModel<BoxPlotTheme, Values> {
     violinFillColor: '#27273f',
   });
 
-  static LightTheme = BoxPlotTheme.create({
+  static LightTheme: Zen.Model<BoxPlotTheme> = BoxPlotTheme.create({
     id: 'light',
-    axisLabelColor: 'rgb(72,47,235)',
-    axisLineColor: 'rgb(72,47,235)',
-    backgroundColor: '#fbfbfc',
-    boxPlotLinesColor: 'rgb(72,47,235,0.8)',
-    boxPlotFillColor: 'rgb(72,47,235,0.4)',
-    outliersFillColor: 'rgb(72,47,235,0.4)',
-    outliersStrokeColor: 'rgb(72,47,235,0.8)',
-    violinPatternsFillColor: 'rgb(72,47,235,0.8)',
-    violinPatternsStrokeColor: 'rgb(72,47,235,0.8)',
-    violinPlotStrokeColor: 'rgb(72,47,235,0.8)',
-    violinFillColor: '#fbfbfc',
+    axisLabelColor: 'rgba(0,0,0,0.7)',
+    axisLineColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'white',
+    boxPlotLinesColor: 'rgba(39,39,63,0.8)',
+    boxPlotFillColor: 'rgba(39,39,63,0.4)',
+    name: TEXT.light,
+    outliersFillColor: 'rgba(39,39,63,0.4)',
+    outliersStrokeColor: 'rgba(39,39,63,0.8)',
+    violinPatternsFillColor: 'rgba(72,47,235,0.8)',
+    violinPatternsStrokeColor: 'rgba(72,47,235,0.8)',
+    violinPlotStrokeColor: 'rgba(72,47,235,0.8)',
+    violinFillColor: 'white',
   });
 
-  static THEMES = {
-    // $ZenModelReadOnlyIssue
+  static Themes: { +[string]: Zen.Model<BoxPlotTheme> } = {
     [BoxPlotTheme.DarkTheme.id()]: BoxPlotTheme.DarkTheme,
-
-    // $ZenModelReadOnlyIssue
     [BoxPlotTheme.LightTheme.id()]: BoxPlotTheme.LightTheme,
   };
 }
 
-export default ((BoxPlotTheme: any): Class<Zen.Model<BoxPlotTheme>>);
+export default ((BoxPlotTheme: $Cast): Class<Zen.Model<BoxPlotTheme>>);

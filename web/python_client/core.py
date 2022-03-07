@@ -1,15 +1,13 @@
-from future import standard_library
-
-standard_library.install_aliases()
-from builtins import object
 import http.client
 import json
+
 from urllib.parse import urljoin
 
 import requests
 from werkzeug import exceptions
 
-API_VERSION = '2019-06-03'
+# NOTE(toshi): Really used for Alerts
+API_VERSION = '2020-07-20'
 
 # NOTE(toshi): http added or else urljoin does not work well
 LOCALHOST_URI = 'http://127.0.0.1:5000'
@@ -21,7 +19,7 @@ TOTAL_COUNT_HEADER = 'X-Total-Count'
 USERNAME_HEADER = 'X-Username'
 
 
-class AuthenticatedSession(object):
+class AuthenticatedSession:
     def __init__(self, username, password):
         self.additional_headers = {USERNAME_HEADER: username, PASSWORD_HEADER: password}
         self.session = requests.Session()
@@ -50,7 +48,7 @@ def get_fields_suffix(fields, conjunction='&'):
     return '%swhere=%s' % (conjunction, fields_dict_to_string(fields))
 
 
-class ApiService(object):
+class ApiService:
     CODE_TO_EXCEPTION_MAP = {
         http.client.BAD_REQUEST: exceptions.BadRequest,
         http.client.UNAUTHORIZED: exceptions.Unauthorized,

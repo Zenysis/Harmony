@@ -1,0 +1,30 @@
+.zen-radio-group {
+  &--vertical {
+    .zen-radio-item {
+      display: block;
+      margin-bottom: $space-xs-px;
+    }
+  }
+
+  &--horizontal {
+    .zen-radio-item {
+      display: inline-block;
+      margin-right: $space-m-px;
+    }
+  }
+}
+
+.zen-radio-item {
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 400;
+
+  &--disabled {
+    color: $gray;
+    cursor: not-allowed;
+  }
+
+  &__input {
+    margin-right: $space-xs-px;
+  }
+}

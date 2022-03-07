@@ -1,0 +1,39 @@
+@mixin full-width-line {
+  left: 0;
+  width: calc(100% + 8px);
+  z-index: 1;
+}
+
+.gd-page-break-marker {
+  &:hover {
+    .gd-page-break-marker__label {
+      background-color: #dfe1e6;
+      border-radius: 100px;
+    }
+
+    .gd-page-break-marker__line {
+      @include full-width-line();
+    }
+  }
+
+  &__line {
+    border-bottom: 2px solid rgba(9, 30, 66, 0.18);
+    left: 100%;
+    position: absolute;
+    width: 8px;
+
+    &--full-width {
+      @include full-width-line();
+    }
+  }
+
+  &__label {
+    color: #8993a4;
+    font-size: 12px;
+    left: calc(100% + 8px);
+    margin-top: -12px;
+    padding: $space-xxs-px;
+    position: absolute;
+    white-space: nowrap;
+  }
+}

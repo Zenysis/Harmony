@@ -1,17 +1,22 @@
 // @flow
 import * as React from 'react';
 
-import Heading from 'components/ui/Heading';
+import ControlledTabs from 'components/ui/Tabs/ControlledTabs';
 import Tab from 'components/ui/Tabs/Tab';
-import TabContent from 'components/ui/Tabs/internal/TabContent';
-import TabHeader from 'components/ui/Tabs/internal/TabHeader';
 import autobind from 'decorators/autobind';
-import memoizeOne from 'decorators/memoizeOne';
 import { noop } from 'util/util';
 
-type Props = {|
-  children: React.ChildrenArray<?React.Element<typeof Tab>>,
+type DefaultProps = {
   className: string,
+
+  /** Class to be applied to the tab contents */
+  contentsClassName: string,
+
+  /** Class to be applied to the div wrapping the tab headers */
+  headerRowClassName: string,
+
+  /** Optional prop to render a custom element to the right of the tab header */
+  headerRowRightContent?: React.Node,
 
   /** The name of the first tab to show. Defaults to the first tab. */
   initialTab?: string, // defaults to first tab
@@ -20,18 +25,47 @@ type Props = {|
   onTabChange: (selectedTabName: string) => void,
 
   /**
+   * Optional prop to render a custom tab header.
+   * @param {string} name The tab header's unique name
+   * @param {Function} onClick The callback you must call somewhere in your
+   * custom tab header to make it clickable
+   * @param {boolean} isActive If the tab is currently active
+   * @param {number} tabIndex The tab's index in the array of tabs
+   * @param {boolean} disabled If the current tab is disabled
+   * @param {string} testId  Can be used as a `data-testid` attribute on the
+   * header. This is only needed for webdriver tests.
+   */
+  renderHeader?: (
+    name: string,
+    onClick: () => void,
+    isActive: boolean,
+    tabIndex: number,
+    disabled?: boolean,
+    testId?: string,
+  ) => React.Node,
+
+  // TODO(abby): enforce spacing variables for tabHeaderSpacing
+  /**
    * The spacing between each tab heading. Any valid padding value is allowed
    * here, so you can either pass a percentage width as a string, or an exact
    * pixel width as a number.
    */
   tabHeaderSpacing: string | number,
 
+  /** The size of the heading to use in the tab headers */
+  tabHeadingSize: 'small' | 'medium' | 'large',
+
   /** The title to render next to the tab header */
   title: string,
 
   /** An optional tooltip to render next to the title */
   titleTooltip: string,
-|};
+};
+
+type Props = {
+  ...DefaultProps,
+  children: React.ChildrenArray<?React.Element<typeof Tab>>,
+};
 
 type State = {
   selectedTab: string,
@@ -44,104 +78,56 @@ type State = {
  * This is an **uncontrolled** component, meaning that the state of which tab
  * to show is handled internally by this component. You cannot control which
  * tab to show via a prop. You can only specify the _initial_ tab.
+ *
+ * For a controlled version use [`<Tabs.Controlled>`](#controlledtabs)
  */
 export default class Tabs extends React.Component<Props, State> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     className: '',
+    contentsClassName: '',
+    headerRowClassName: '',
+    headerRowRightContent: undefined,
     initialTab: undefined,
     onTabChange: noop,
+    renderHeader: undefined,
     tabHeaderSpacing: 50,
+    tabHeadingSize: 'small',
     title: '',
     titleTooltip: '',
   };
 
-  state = {
+  static Controlled: typeof ControlledTabs = ControlledTabs;
+
+  state: State = {
     selectedTab:
       this.props.initialTab ||
       React.Children.toArray(this.props.children)[0].props.name,
   };
 
-  @memoizeOne
-  computeNonNullTabs(
-    tabs: React.ChildrenArray<?React.Element<typeof Tab>>,
-  ): $ReadOnlyArray<React.Element<typeof Tab>> {
-    const nonNullTabs = [];
-    React.Children.forEach(tabs, tab => {
-      if (tab) {
-        nonNullTabs.push(tab);
-      }
-    });
-    return nonNullTabs;
-  }
-
-  getNonNullTabs(): $ReadOnlyArray<React.Element<typeof Tab>> {
-    return this.computeNonNullTabs(this.props.children);
-  }
-
   @autobind
-  onTabClick(selectedTab: string) {
-    this.setState({ selectedTab }, () => {
-      this.props.onTabChange(this.state.selectedTab);
-    });
-  }
-
-  maybeRenderTabGroupTitle() {
-    const { titleTooltip, title } = this.props;
-    if (title !== '') {
-      return (
-        <Heading.Small className="zen-tabs__title" infoTooltip={titleTooltip}>
-          {title}
-        </Heading.Small>
-      );
-    }
-    return null;
-  }
-
-  renderTabContents() {
-    const tabs = this.getNonNullTabs().map(tab => {
-      const { name } = tab.props;
-      return (
-        <TabContent key={name} isActive={name === this.state.selectedTab}>
-          {tab}
-        </TabContent>
-      );
-    });
-    return <div className="zen-tabs__contents-container">{tabs}</div>;
-  }
-
-  renderTabHeader() {
-    const renderableTabs = this.getNonNullTabs();
-    const { tabHeaderSpacing, title } = this.props;
-    const tabHeaders = renderableTabs.map(tab => {
-      const { name, headerClassName, testId } = tab.props;
-      return (
-        <TabHeader
-          key={name}
-          className={headerClassName}
-          name={name}
-          isActive={name === this.state.selectedTab}
-          onTabClick={this.onTabClick}
-          marginRight={tabHeaderSpacing}
-          useLightWeightHeading={title !== ''}
-          testId={testId}
-        />
-      );
-    });
-    return (
-      <div className="zen-tabs__header-row">
-        {this.maybeRenderTabGroupTitle()}
-        {tabHeaders}
-      </div>
+  onTabChange(selectedTab: string) {
+    this.setState({ selectedTab }, () =>
+      this.props.onTabChange(this.state.selectedTab),
     );
   }
 
-  render() {
-    const { className } = this.props;
+  render(): React.Element<typeof ControlledTabs> {
+    const { selectedTab } = this.state;
+
+    const {
+      children,
+      initialTab,
+      onTabChange,
+      ...passThroughProps
+    } = this.props;
     return (
-      <div className={`zen-tabs ${className}`}>
-        {this.renderTabHeader()}
-        {this.renderTabContents()}
-      </div>
+      <ControlledTabs
+        onTabChange={this.onTabChange}
+        selectedTab={selectedTab}
+        {...passThroughProps}
+      >
+        {children}
+      </ControlledTabs>
     );
   }
 }

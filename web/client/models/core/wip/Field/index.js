@@ -1,12 +1,10 @@
 // @flow
+import Promise from 'bluebird';
+
 import * as Zen from 'lib/Zen';
 import CalculationUtil from 'models/core/wip/Calculation/CalculationUtil';
 import CustomizableTimeInterval from 'models/core/wip/QueryFilterItem/CustomizableTimeInterval';
-import Dataset from 'models/core/wip/Dataset';
-import LegacyField from 'models/core/Field';
-import LinkedCategory from 'models/core/wip/LinkedCategory';
 import QueryFilterItemUtil from 'models/core/wip/QueryFilterItem/QueryFilterItemUtil';
-import computeLegacyField from 'models/core/wip/Field/computeLegacyField';
 import { uniqueId } from 'util/util';
 import type {
   Calculation,
@@ -20,51 +18,46 @@ import type {
 import type { Serializable } from 'lib/Zen';
 
 type RequiredValues = {
-  id: string,
-  category: Zen.ReadOnly<LinkedCategory>,
-  canonicalName: Zen.ReadOnly<string>,
-
-  // A shortened version of the Field's canonical name that can never be empty.
-  // It can be used when a short version of the Field name is acceptable to
-  // display because more information exists that makes it obvious what the full
-  // name is.
-  shortName: Zen.ReadOnly<string>,
-  source: Zen.ReadOnly<Dataset>,
-
   /**
    * Defines how this field should be calculated. This Calculation can be any
    * of the allowable calculations: AverageCalculation, SumCalculation, etc.
    */
   calculation: Calculation,
+
+  canonicalName: string,
+  id: string,
+
+  // A shortened version of the Field's canonical name that can never be empty.
+  // It can be used when a short version of the Field name is acceptable to
+  // display because more information exists that makes it obvious what the full
+  // name is.
+  shortName: string,
 };
 
 type DefaultValues = {
   // TODO(pablo): eventually this should be stored as part of the Calculation,
   // not in the Field
-  customizableFilterItems: Zen.Array<QueryFilterItem>,
-  description: string,
-  userDefinedLabel: string,
+  +customizableFilterItems: Zen.Array<QueryFilterItem>,
+  +showNullAsZero: boolean,
+  +userDefinedLabel: string,
 };
 
 type DerivedValues = {
-  // This is the display label to show to the user when a shortened version
-  // of the indicator name is acceptable. It should never be empty.
+  // This is the display label to show to the user the canonical name
+  // or the user customized version of the name. It should never be empty.
   label: string,
-  legacyField: LegacyField,
   name: string,
+  originalId: string,
 };
 
 type SerializedField = {
   calculation: SerializedCalculation,
-  category: Zen.Serialized<LinkedCategory>,
   canonicalName: string,
+  customizableFilterItems?: $ReadOnlyArray<SerializedQueryFilterItem>,
   id: string,
   shortName: string,
-  source: Zen.Serialized<Dataset>,
-
-  customizableFilterItems: Array<SerializedQueryFilterItem>,
-  description?: string,
-  label?: string,
+  showNullAsZero?: boolean,
+  userDefinedLabel?: string,
 };
 
 export type SerializedFieldForQuery = {
@@ -72,84 +65,108 @@ export type SerializedFieldForQuery = {
   id: string,
 };
 
+/* eslint-enable no-use-before-define */
+export function getOriginalId(id: string): string {
+  // HACK(david): Data Quality Lab requires non-customized id. Adding this to
+  // get that value until we come up with a better solution.
+  return id.split('__')[0];
+}
+
 class Field
   extends Zen.BaseModel<Field, RequiredValues, DefaultValues, DerivedValues>
   implements Serializable<SerializedField>, Customizable<Field> {
-  static defaultValues = {
+  tag: 'FIELD' = 'FIELD';
+
+  static defaultValues: DefaultValues = {
     customizableFilterItems: Zen.Array.create(),
-    description: '',
+    showNullAsZero: false,
     userDefinedLabel: '',
   };
 
-  static derivedConfig = {
+  static derivedConfig: Zen.DerivedConfig<Field, DerivedValues> = {
     label: [
-      Zen.hasChanged<Field>('shortName', 'userDefinedLabel'),
+      Zen.hasChanged('canonicalName', 'userDefinedLabel'),
       (field: Zen.Model<Field>) =>
-        field.userDefinedLabel() || field.shortName(),
-    ],
-    legacyField: [
-      Zen.hasChanged<Field>('userDefinedLabel', 'id'),
-      computeLegacyField,
+        field.userDefinedLabel() || field.canonicalName(),
     ],
     name: [
-      Zen.hasChanged<Field>('canonicalName'),
+      Zen.hasChanged('canonicalName'),
       (field: Zen.Model<Field>) => field.canonicalName(),
+    ],
+    originalId: [
+      Zen.hasChanged('id'),
+      (field: Zen.Model<Field>) => getOriginalId(field.id()),
     ],
   };
 
   static deserializeAsync(values: SerializedField): Promise<Zen.Model<Field>> {
     const {
-      id,
-      canonicalName,
-      shortName,
       calculation,
-      customizableFilterItems,
+      canonicalName,
+      customizableFilterItems = [],
+      id,
+      showNullAsZero,
+      shortName,
+      userDefinedLabel,
     } = values;
+
     return Promise.all([
       CalculationUtil.deserializeAsync(calculation),
-      LinkedCategory.deserializeAsync(values.category),
-      Dataset.deserializeAsync(values.source),
       Promise.all(
         customizableFilterItems.map(filterItem =>
           QueryFilterItemUtil.deserializeAsync(filterItem),
         ),
       ),
-    ]).then(([fullCalculation, category, source, deserializedFilterItems]) =>
+    ]).then(([fullCalculation, deserializedFilterItems]) =>
       Field.create({
-        id,
-        category,
-        canonicalName,
-        shortName,
-        source,
         calculation: fullCalculation,
+        canonicalName,
         customizableFilterItems: Zen.Array.create(deserializedFilterItems),
+        id,
+        shortName,
+        showNullAsZero,
+        userDefinedLabel,
       }),
     );
   }
 
+  static strToValidIdentifier(str: string): string {
+    // Convert a string to a valid JS identifiers that can be plugged into a
+    // formula. Replace all invalid characters with underscores.
+    return str.replace(/\W/g, '_');
+  }
+
   static UNSAFE_deserialize(values: SerializedField): Zen.Model<Field> {
-    const { id, canonicalName, shortName } = values;
-    const category = LinkedCategory.UNSAFE_deserialize(values.category);
-    const source = Dataset.UNSAFE_deserialize(values.source);
-    const calculation = CalculationUtil.UNSAFE_deserialize(values.calculation);
-    return this.create({
-      id,
-      category,
+    const {
       canonicalName,
+      id,
       shortName,
-      source,
+      showNullAsZero,
+      userDefinedLabel,
+    } = values;
+
+    const calculation = CalculationUtil.UNSAFE_deserialize(values.calculation);
+    let customizableFilterItems;
+    if (values.customizableFilterItems !== undefined) {
+      customizableFilterItems = Zen.Array.create(
+        values.customizableFilterItems.map(
+          QueryFilterItemUtil.UNSAFE_deserialize,
+        ),
+      );
+    }
+    return this.create({
       calculation,
+      canonicalName,
+      customizableFilterItems,
+      id,
+      shortName,
+      showNullAsZero,
+      userDefinedLabel,
     });
   }
 
   customize(): Zen.Model<Field> {
     return this._.id(`${this._.id()}__${uniqueId()}`);
-  }
-
-  getOriginalId(): string {
-    // HACK(david): Data Quality Lab requires non-customized id. Adding this to
-    // get that value until we come up with a better solution.
-    return this._.id().split('__')[0];
   }
 
   addFilterItem(
@@ -170,39 +187,21 @@ class Field
     return this._.customizableFilterItems(filterItems.clear());
   }
 
-  serialize(): SerializedField {
-    const {
-      calculation,
-      category,
-      canonicalName,
-      id,
-      shortName,
-      source,
-      description,
-      label,
-      customizableFilterItems,
-    } = this.modelValues();
+  getJSIdentifier(): string {
+    return Field.strToValidIdentifier(this._.id());
+  }
 
-    // HACK(stephen): Giant hack because of how Field is saved to a dashboard.
-    // The category/source IDs are not stable at this time.
-    // TODO(stephen, pablo): Fix this dependency. I don't think dashboards need
-    // this metadata anyways.
-    const serializedCategory = category
-      ? category.serialize()
-      : { $ref: 'xxx' };
-    const serializedSource = source ? source.serialize() : { $ref: 'xxx' };
+  serialize(): SerializedField {
     return {
-      canonicalName,
-      id,
-      shortName,
-      description,
-      label,
-      calculation: calculation.serialize(),
-      category: serializedCategory,
-      source: serializedSource,
-      customizableFilterItems: customizableFilterItems.mapValues(filterItem =>
-        QueryFilterItemUtil.serialize(filterItem),
+      calculation: this._.calculation().serialize(),
+      canonicalName: this._.canonicalName(),
+      customizableFilterItems: QueryFilterItemUtil.serializeAppliedItems(
+        this._.customizableFilterItems().arrayView(),
       ),
+      id: this._.id(),
+      shortName: this._.shortName(),
+      showNullAsZero: this._.showNullAsZero(),
+      userDefinedLabel: this._.userDefinedLabel(),
     };
   }
 
@@ -216,6 +215,20 @@ class Field
       id: this._.id(),
     };
   }
+
+  /**
+   * Determine if this Field will produce the same Query representation as
+   * the other Field passed in.
+   */
+  isFieldQueryEqual(otherField: Zen.Model<Field>): boolean {
+    return (
+      this._ === otherField ||
+      (this._.id() === otherField.id() &&
+        this._.calculation() === otherField.calculation() &&
+        this._.customizableFilterItems() ===
+          otherField.customizableFilterItems())
+    );
+  }
 }
 
-export default ((Field: any): Class<Zen.Model<Field>>);
+export default ((Field: $Cast): Class<Zen.Model<Field>>);

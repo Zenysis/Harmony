@@ -1,19 +1,20 @@
 // @flow
 import * as React from 'react';
 
+import * as Zen from 'lib/Zen';
 import InputText from 'components/ui/InputText';
 import SearchPath from 'components/ui/HierarchicalSelector/SearchPath';
-import ZenArray from 'util/ZenModel/ZenArray';
 import autobind from 'decorators/autobind';
 import type HierarchyItem from 'models/ui/HierarchicalSelector/HierarchyItem';
+import type { NamedItem } from 'models/ui/HierarchicalSelector/types';
 import type { StyleObject } from 'types/jsCore';
 
 type InputEvent = SyntheticEvent<HTMLInputElement>;
 
-type Props = {
+type Props<T> = {
   onChange: (value: string, event: InputEvent) => void,
-  onSearchPathChange: (ZenArray<HierarchyItem>) => void,
-  searchPath: ZenArray<HierarchyItem>,
+  onSearchPathChange: (Zen.Array<HierarchyItem<T>>) => void,
+  searchPath: Zen.Array<HierarchyItem<T>>,
 };
 
 type State = {
@@ -30,11 +31,16 @@ const TEXT = t('ui.HierarchicalSelector.SearchBar');
  * can't do that because the InputText is debounced. Which means the
  * only true state of the text is in the DOM, so we need to use a ref.
  */
-export default class SearchBar extends React.PureComponent<Props, State> {
-  _inputTextRef: $RefObject<typeof InputText.Uncontrolled> = React.createRef();
-  _searchPathElt: $RefObject<'span'> = React.createRef();
+export default class SearchBar<T: NamedItem> extends React.PureComponent<
+  Props<T>,
+  State,
+> {
+  _inputTextRef: $ElementRefObject<
+    typeof InputText.Uncontrolled,
+  > = React.createRef();
+  _searchPathElt: $ElementRefObject<'span'> = React.createRef();
 
-  state = {
+  state: State = {
     searchPathWidth: undefined,
   };
 
@@ -95,14 +101,13 @@ export default class SearchBar extends React.PureComponent<Props, State> {
   }
 
   @autobind
-  onSearchPathClick(path: ZenArray<HierarchyItem>) {
+  onSearchPathClick(path: Zen.Array<HierarchyItem<T>>) {
     this.props.onSearchPathChange(path);
   }
 
   @autobind
   onKeyDown(event: SyntheticKeyboardEvent<HTMLInputElement>) {
     const { searchPath } = this.props;
-
     // if we hit backspace, and our search path is not just the root, and
     // we don't have any search text written, then let's remove one
     // of the categories from the search path.
@@ -116,7 +121,7 @@ export default class SearchBar extends React.PureComponent<Props, State> {
     }
   }
 
-  maybeRenderBreadcrumb() {
+  maybeRenderBreadcrumb(): React.Node {
     const { searchPath } = this.props;
     if (searchPath.isEmpty()) {
       return null;
@@ -135,7 +140,7 @@ export default class SearchBar extends React.PureComponent<Props, State> {
     );
   }
 
-  render() {
+  render(): React.Node {
     const { onChange } = this.props;
     return (
       <div className="hierarchical-search-bar">

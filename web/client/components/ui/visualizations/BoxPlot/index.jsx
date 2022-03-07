@@ -1,25 +1,28 @@
 // @flow
 import * as React from 'react';
-import { AxisBottom, AxisLeft } from '@vx/axis';
-import { BoxPlot, ViolinPlot } from '@vx/stats';
-import { Group } from '@vx/group';
-import { PatternLines } from '@vx/pattern';
+import { AxisLeft as AxisLeftOriginal } from '@vx/axis';
+import { scaleLinear, scaleBand } from '@vx/scale';
 
-import * as BoxPlotUtil from 'components/ui/visualizations/BoxPlot/BoxPlotUtil';
+import Box from 'components/ui/visualizations/BoxPlot/internal/Box';
 import BoxPlotTheme from 'components/ui/visualizations/BoxPlot/models/BoxPlotTheme';
-import BoxPlotTooltip from 'components/ui/visualizations/BoxPlot/BoxPlotTooltip';
+import BoxTooltip from 'components/ui/visualizations/BoxPlot/internal/BoxTooltip';
+import LayeredAxis from 'components/ui/visualizations/BarGraph/internal/LayeredAxis';
+import OutlierTooltip from 'components/ui/visualizations/BoxPlot/internal/OutlierTooltip';
+import ResponsiveContainer from 'components/ui/visualizations/common/ResponsiveContainer';
 import { autobind, memoizeOne } from 'decorators';
+import { getNiceTickCount } from 'components/ui/visualizations/common/MetricAxis';
+import { noop } from 'util/util';
 import type {
-  Margin,
-  BoxPlotData,
-  TooltipData,
-  BoxPlotSummary,
+  BoxPlotBoxData,
+  BoxPlotDataPoint,
+  BoxTooltipData,
+  OutlierTooltipData,
   ViolinPatternsNames,
 } from 'components/ui/visualizations/BoxPlot/types';
+import type { LayerData } from 'components/ui/visualizations/BarGraph/internal/LayeredAxis/types';
 
 const BOX_TO_VIOLIN_RATIO: number = 0.8;
-
-const { BoxPlotDataAccessors, VIOLIN_PATTERNS } = BoxPlotUtil;
+const BOTTOM_AXIS_LABEL_PROPS = () => ({ fontWeight: 'bold' });
 
 export type TooltipPosition = {
   /** The left position of the tooltip */
@@ -29,17 +32,9 @@ export type TooltipPosition = {
   tooltipTop: number,
 };
 
-type MedianTooltipData = { median: number, label: string };
-
 type Props = {
-  /**
-   * This horizontal and vertical space to leave at the top, left, bottom
-   * and right of the graph
-   */
-  margin: Margin,
-
-  /** An array of Data points required to draw the box plots */
-  groups: $ReadOnlyArray<BoxPlotData>,
+  /** An array of BoxPlotBoxData, one per box to be drawn */
+  groups: $ReadOnlyArray<BoxPlotBoxData>,
 
   /** The vertical axis label of the box plot */
   yAxisLabel: string,
@@ -68,31 +63,81 @@ type Props = {
   /** The name of the violin patterns to draw */
   violinPatternName: ViolinPatternsNames,
 
+  /** Patterns are defined and get referenced with their IDs, so when multiple
+   * BoxPlots are displayed at the same time, they need unique IDs for unique
+   * patterns. See
+   * https://github.com/hshoff/vx/tree/master/packages/vx-pattern#the-definition-caveat
+   */
+  violinPatternId: string,
+
   /**
    * The theme visualization display theme. Defaults to BoxPlotTheme.DARK_THEME
    */
   theme: BoxPlotTheme,
 
-  /** A function to format values displayed by the tooltip */
-  tooltipValueFormatter: number => number | string,
+  /** A function to format dimension values (x-axis labels) */
+  dimensionValueFormatter: string => string,
 
-  /** A function to format bottom axis tick labels */
-  bottomAxisTickLabelFormatter?: (number | string) => number | string,
+  /** A function to format metric values (y-axis labels and datapoint values) */
+  metricValueFormatter: number => string,
 
-  /** A function to format left axis tick labels */
-  leftAxisTickLabelFormatter?: (number | string) => number | string,
+  /** An optional callback for when an outlier datapoint is clicked */
+  onOutlierClick?: BoxPlotDataPoint => void,
+
+  /** An optional class name for outlier data points */
+  outlierClassName?: string,
+
+  /**
+   * A function to render a custom tooltip for outlier data points instead of
+   * the default
+   */
+  renderOutlierTooltip?: OutlierTooltipData => React.Node,
 };
 
 type State = {
-  /** The data to show in the tooltip */
-  tooltipData: TooltipData | void,
+  innerChartSize: {
+    height: number,
+    width: number,
+  },
 
-  /** The tooltip left coordinate */
-  tooltipLeft: number,
-
-  /** The tooltip top coordinate */
-  tooltipTop: number,
+  boxTooltipData: BoxTooltipData | void,
+  outlierTooltipData: OutlierTooltipData | void,
 };
+
+// TODO(stephen): FIX THIS.
+type BandScale = $FlowTODO;
+type LinearScale = $FlowTODO;
+
+type ViolinPatterns = {
+  [ViolinPatternsNames]: $ReadOnlyArray<'horizontal' | 'diagonal' | 'vertical'>,
+  ...,
+};
+
+type AxisTextProps = {
+  labelProps: { ... },
+  tickLabelProps: mixed => { ... },
+};
+
+const LABEL_FONT_SIZE = 13;
+const LABEL_FONT = 'Lato, sans-serif';
+
+export const VIOLIN_PATTERNS: ViolinPatterns = {
+  horizontal: ['horizontal'],
+  vertical: ['vertical'],
+  diagonal: ['diagonal'],
+  horizontalAndVertical: ['horizontal', 'vertical'],
+  horizontalAndDiagonal: ['horizontal', 'diagonal'],
+  verticalAndDiagonal: ['vertical', 'diagonal'],
+  all: ['horizontal', 'vertical', 'diagonal'],
+};
+
+const CONTAINER_STYLE = {
+  position: 'relative',
+};
+
+const AxisLeft = (React.memo(AxisLeftOriginal): React.AbstractComponent<
+  React.ElementConfig<typeof AxisLeftOriginal>,
+>);
 
 /**
  * This component is built on top of vx's BoxPlot component see
@@ -101,70 +146,97 @@ type State = {
  * @visibleName BoxPlot
  */
 class BoxPlotCore extends React.PureComponent<Props, State> {
-  static defaultProps = {
-    margin: {
-      top: 10,
-      left: 60,
-      right: 0,
-      bottom: 60,
-    },
+  static defaultProps: $AllowZenModelDefaultProp = {
+    onOutlierClick: noop,
+    outlierClassName: '',
     showOutliers: true,
     showViolinPatternLines: true,
     violinPatternName: 'horizontal',
-    theme: BoxPlotTheme.DarkTheme,
+    violinPatternId: 'hViolinLines',
+    theme: BoxPlotTheme.LightTheme,
     showViolinPlot: true,
-    tooltipValueFormatter: (value: number) => value,
-    bottomAxisTickLabelFormatter: undefined,
-    leftAxisTickLabelFormatter: undefined,
+    dimensionValueFormatter: (value: string) => value,
+    metricValueFormatter: (value: number) => `${value}`,
   };
 
-  state = {
-    tooltipData: undefined,
-    tooltipLeft: 0,
-    tooltipTop: 0,
+  state: State = {
+    innerChartSize: {
+      height: 10,
+      width: 10,
+    },
+    boxTooltipData: undefined,
+    outlierTooltipData: undefined,
   };
 
   @memoizeOne
-  computeGraphHeight = BoxPlotUtil.computeGraphHeight;
+  computeYScale(
+    groups: $ReadOnlyArray<BoxPlotBoxData>,
+    height: number,
+    includeOutliers: boolean,
+  ): LinearScale {
+    let maxY = -Infinity;
+    let minY = Infinity;
+    groups.forEach(group => {
+      const { boxPlotSummary, outliers } = group.data;
+      const { max, min } = boxPlotSummary;
+      maxY = Math.max(maxY, max);
+      minY = Math.min(min, minY);
+      if (includeOutliers) {
+        const outlierValues = outliers.map(outlier => outlier.value);
+        maxY = Math.max(maxY, ...outlierValues);
+        minY = Math.min(minY, ...outlierValues);
+      }
+    });
+    const minMaxOffset = 0.2 * Math.abs(minY);
+    return scaleLinear({
+      domain: [minY - minMaxOffset, maxY + minMaxOffset],
+      rangeRound: [height, 0],
+    }).nice(getNiceTickCount(height));
+  }
 
   @memoizeOne
-  computeGraphWidth = BoxPlotUtil.computeGraphWidth;
+  computeXScale(
+    groups: $ReadOnlyArray<BoxPlotBoxData>,
+    width: number,
+  ): BandScale {
+    const domain = groups.map(g => g.key);
+    return scaleBand({
+      domain,
+      rangeRound: [0, width],
+      padding: 0.4,
+    });
+  }
 
   @memoizeOne
-  computeYScale = BoxPlotUtil.computeYScale;
-
-  @memoizeOne
-  computeXScale = BoxPlotUtil.computeXScale;
-
-  @memoizeOne
-  computeTooltipPosition = BoxPlotUtil.computeTooltipPosition;
-
-  @autobind
-  getBottomAxisTickLabelProps() {
-    const { theme } = this.props;
+  computeBackgroundProps(theme: BoxPlotTheme): { fill: string, rx: number } {
     return {
-      fill: theme.axisLabelColor(),
-
-      // default styles from vx docs
-      dy: '0.25em',
-      fontFamily: 'Arial',
-      fontSize: 10,
-      textAnchor: 'middle',
+      fill: theme.backgroundColor(),
+      rx: 14,
     };
   }
 
-  @autobind
-  getLeftAxisTickLabelProps() {
-    const { theme } = this.props;
+  @memoizeOne
+  buildLeftAxisTextProps(theme: BoxPlotTheme): AxisTextProps {
+    const fontColor = theme.axisLabelColor();
+    // TODO(david): A lot of these properties are repeated in several
+    // visualizations (e.g. the box plot). It would be nice to unify them and
+    // ensure we have consistent styles in all our visualizations.
     return {
-      fill: theme.axisLabelColor(),
-
-      // default styles from vx docs
-      dx: '-0.25em',
-      dy: '0.25em',
-      fontFamily: 'Arial',
-      fontSize: 10,
-      textAnchor: 'end',
+      labelProps: {
+        fill: fontColor,
+        fontFamily: LABEL_FONT,
+        fontSize: LABEL_FONT_SIZE,
+        textAnchor: 'middle',
+      },
+      tickLabelProps: () => ({
+        dx: '-0.25em',
+        dy: '0.25em',
+        fill: fontColor,
+        fontFamily: LABEL_FONT,
+        fontSize: LABEL_FONT_SIZE,
+        fontWeight: 'bold',
+        textAnchor: 'end',
+      }),
     };
   }
 
@@ -178,44 +250,42 @@ class BoxPlotCore extends React.PureComponent<Props, State> {
   }
 
   getViolinPlotWidth(): number {
-    const boxWidth = (this.getXScale(): any).bandwidth();
+    const boxWidth = this.getXScale().bandwidth();
     return Math.min(50, boxWidth);
   }
 
   getGraphHeight(): number {
-    const { margin, height } = this.props;
-    return this.computeGraphHeight(height, margin);
+    return this.state.innerChartSize.height;
   }
 
   getGraphWidth(): number {
-    const { width, margin } = this.props;
-    return this.computeGraphWidth(width, margin);
+    return this.state.innerChartSize.width;
   }
 
   getTooltipPosition(xValue: string, yValue: number): TooltipPosition {
-    return this.computeTooltipPosition(
-      xValue,
-      yValue,
-      this.getXScale(),
-      this.getYScale(),
-      this.getBoxPlotWidth(),
-    );
+    const xScale = this.getXScale();
+    const yScale = this.getYScale();
+    return {
+      tooltipTop: yScale(yValue),
+      tooltipLeft: xScale(xValue) + this.getBoxPlotWidth(),
+    };
   }
 
-  getViolinPlotFill() {
+  getViolinPlotFill(): string {
+    const { violinPatternId } = this.props;
     let fill = this.props.theme.violinFillColor();
 
     if (this.props.showViolinPatternLines) {
-      fill = 'url(#hViolinLines)';
+      fill = `url(#${violinPatternId})`;
     }
     return fill;
   }
 
-  getXScale() {
+  getXScale(): BandScale {
     return this.computeXScale(this.props.groups, this.getGraphWidth());
   }
 
-  getYScale() {
+  getYScale(): LinearScale {
     return this.computeYScale(
       this.props.groups,
       this.getGraphHeight(),
@@ -223,292 +293,224 @@ class BoxPlotCore extends React.PureComponent<Props, State> {
     );
   }
 
-  onBoxMouseOver(boxTooltipData: BoxPlotSummary & { label: string }): void {
-    const { label: name, median, ...otherData } = boxTooltipData;
-    this.setState({
-      ...this.getTooltipPosition(name, median),
-      tooltipData: {
-        name,
-        ...otherData,
-      },
-    });
+  // TODO(stephen): Generalize the LayeredAxis a bit more so that non-BarGraph
+  // visualizations can use it more cleanly. Right now, we have to conform the
+  // data in this visualization to approximately look like the BarGraph's data
+  // and usage style (i.e. with `formatXAxisValue` and `buildXAxisLayers`).
+  @autobind
+  formatXAxisValue({ key }: { key: string, ... }): string {
+    return this.props.dimensionValueFormatter(key);
   }
 
-  onMaxMouseOver(minTooltipData: { max: number, label: string }): void {
-    const { max, label } = minTooltipData;
-    this.setState({
-      ...this.getTooltipPosition(label, max),
-      tooltipData: {
-        max,
-        name: label,
-      },
-    });
-  }
+  @memoizeOne
+  buildXAxisLayers(
+    groups: $ReadOnlyArray<BoxPlotBoxData>,
+  ): $ReadOnlyArray<LayerData> {
+    const layerValues = groups.map(({ key }) => ({ key }));
 
-  onMedianMouseOver(medianTooltipData: MedianTooltipData): void {
-    const { median, label } = medianTooltipData;
-    this.setState({
-      ...this.getTooltipPosition(label, median),
-      tooltipData: {
-        median,
-        name: label,
+    return [
+      {
+        angle: 'horizontal',
+        layerDimensions: [],
+        layerValues,
       },
-    });
-  }
-
-  onMinMouseOver(minTooltipData: { min: number, label: string }): void {
-    const { min, label } = minTooltipData;
-    this.setState({
-      ...this.getTooltipPosition(label, min),
-      tooltipData: {
-        min,
-        name: label,
-      },
-    });
+    ];
   }
 
   @autobind
-  onBoxPlotPointsMouseLeave() {
-    this.setState({
-      tooltipData: undefined,
-      tooltipLeft: 0,
-      tooltipTop: 0,
+  onBoxHoverStart(boxTooltipData: BoxTooltipData) {
+    this.setState({ boxTooltipData });
+  }
+
+  @autobind
+  onBoxHoverEnd() {
+    this.setState({ boxTooltipData: undefined });
+  }
+
+  @autobind
+  onOutlierHoverStart(outlierTooltipData: OutlierTooltipData) {
+    this.setState({ outlierTooltipData });
+  }
+
+  @autobind
+  onOutlierHoverEnd() {
+    this.setState({ outlierTooltipData: undefined });
+  }
+
+  @autobind
+  onInnerChartResize(height: number, width: number) {
+    this.setState(prevState => {
+      const prevWidth = prevState.innerChartSize.width;
+      const prevHeight = prevState.innerChartSize.height;
+      if (prevWidth === width && prevHeight === height) {
+        return prevState;
+      }
+      return {
+        innerChartSize: { height, width },
+      };
     });
   }
 
-  maybeRenderTooltip() {
-    const { tooltipValueFormatter } = this.props;
-    const { tooltipLeft, tooltipTop, tooltipData } = this.state;
-
-    if (!tooltipData) {
+  maybeRenderBoxTooltip(): React.Node {
+    const { boxTooltipData } = this.state;
+    if (boxTooltipData === undefined) {
       return null;
     }
 
+    const { dimensionValueFormatter, metricValueFormatter } = this.props;
+    const { boxPlotSummary, dimensionValue, left, top } = boxTooltipData;
     return (
-      <BoxPlotTooltip
-        tooltipLeft={tooltipLeft}
-        tooltipTop={tooltipTop}
-        tooltipData={tooltipData}
-        tooltipValueFormatter={tooltipValueFormatter}
+      <BoxTooltip
+        boxPlotSummary={boxPlotSummary}
+        label={dimensionValueFormatter(dimensionValue)}
+        left={left}
+        tooltipValueFormatter={metricValueFormatter}
+        top={top}
       />
     );
   }
 
-  maybeRenderViolinPlot(group: BoxPlotData) {
-    if (!this.props.showViolinPlot) {
+  maybeRenderOutlierTooltip(): React.Node {
+    const { outlierTooltipData } = this.state;
+    if (outlierTooltipData === undefined) {
       return null;
     }
 
-    const data = BoxPlotDataAccessors.getBinData(group);
-    const label = BoxPlotDataAccessors.getGroupName(group);
+    const {
+      dimensionValueFormatter,
+      metricValueFormatter,
+      renderOutlierTooltip,
+    } = this.props;
+
+    if (renderOutlierTooltip !== undefined) {
+      return renderOutlierTooltip(outlierTooltipData);
+    }
+
+    // TODO(david): Currently all uses of the box plot use a custom tooltip.
+    // Keeping this here for now but if we never use it elsewhere then it may be
+    // worth removing this and the OutlierTooltip component.
+    const { dimensionValue, left, top, dataPoint } = outlierTooltipData;
+
+    return (
+      <OutlierTooltip
+        label={dimensionValueFormatter(dimensionValue)}
+        left={left}
+        top={top}
+        value={metricValueFormatter(dataPoint.value)}
+      />
+    );
+  }
+
+  @autobind
+  renderBox(group: BoxPlotBoxData, idx: number): React.Node {
+    const {
+      onOutlierClick,
+      outlierClassName,
+      showOutliers,
+      showViolinPatternLines,
+      showViolinPlot,
+      theme,
+      violinPatternName,
+      violinPatternId,
+    } = this.props;
     const xScale = this.getXScale();
     return (
-      <ViolinPlot
-        data={data}
-        stroke={this.props.theme.violinPlotStrokeColor()}
-        left={xScale(label)}
-        width={this.getViolinPlotWidth()}
-        valueScale={this.getYScale()}
-        fill={this.getViolinPlotFill()}
-      />
-    );
-  }
-
-  maybeRenderViolinPlotPatterns() {
-    const { theme, showViolinPlot, showViolinPatternLines } = this.props;
-
-    if (!showViolinPlot || !showViolinPatternLines) {
-      return null;
-    }
-
-    const violinPattern = VIOLIN_PATTERNS[this.props.violinPatternName];
-
-    return (
-      <PatternLines
-        id="hViolinLines"
-        height={3}
-        width={3}
-        stroke={theme.violinPatternsStrokeColor()}
-        strokeWidth={0.5}
-        fill={theme.violinPatternsFillColor()}
-        orientation={violinPattern}
-      />
-    );
-  }
-
-  renderBackground() {
-    const { width, height, theme } = this.props;
-    return (
-      <rect
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        fill={theme.backgroundColor()}
-        rx={14}
-      />
-    );
-  }
-
-  renderBoxPlot(group: BoxPlotData) {
-    const xScale = this.getXScale();
-    const { theme } = this.props;
-    const summary = BoxPlotDataAccessors.getBoxPlotSummary(group);
-    const label = BoxPlotDataAccessors.getGroupName(group);
-    const data = BoxPlotDataAccessors.getBinData(group);
-    const outliers = BoxPlotDataAccessors.getOutliers(group);
-    const plotOutliers = this.props.showOutliers ? outliers : [];
-
-    const minProps = {
-      onMouseOver: () =>
-        this.onMinMouseOver({
-          min: summary.min,
-          label,
-        }),
-      onMouseLeave: this.onBoxPlotPointsMouseLeave,
-    };
-    const maxProps = {
-      onMouseOver: () =>
-        this.onMaxMouseOver({
-          max: summary.max,
-          label,
-        }),
-      onMouseLeave: this.onBoxPlotPointsMouseLeave,
-    };
-    const medianProps = {
-      onMouseOver: () =>
-        this.onMedianMouseOver({
-          median: summary.median,
-          label,
-        }),
-      onMouseLeave: this.onBoxPlotPointsMouseLeave,
-    };
-    const boxProps = {
-      onMouseOver: () =>
-        this.onBoxMouseOver({
-          ...summary,
-          label,
-        }),
-      onMouseLeave: this.onBoxPlotPointsMouseLeave,
-    };
-
-    return (
-      <BoxPlot
-        data={data}
-        firstQuartile={summary.firstQuartile}
-        thirdQuartile={summary.thirdQuartile}
-        min={summary.min}
-        max={summary.max}
-        outliers={plotOutliers}
-        median={summary.median}
-        valueScale={this.getYScale()}
+      <Box
+        key={group.key}
+        addViolinPatternDefinition={idx === 0 && showViolinPatternLines}
+        boxOffset={this.getBoxPlotOffset()}
         boxWidth={this.getBoxPlotWidth()}
-        left={xScale(label) + this.getBoxPlotOffset()}
+        data={group}
         fill={theme.boxPlotFillColor()}
         fillOpacity={0.4}
+        left={xScale(group.key)}
+        outlierStroke={theme.outliersStrokeColor()}
+        onBoxHoverStart={this.onBoxHoverStart}
+        onBoxHoverEnd={this.onBoxHoverEnd}
+        onOutlierClick={onOutlierClick}
+        onOutlierHoverStart={this.onOutlierHoverStart}
+        onOutlierHoverEnd={this.onOutlierHoverEnd}
+        outlierClassName={outlierClassName}
+        showOutliers={showOutliers}
+        showViolinPlot={showViolinPlot}
+        scale={this.getYScale()}
         stroke={theme.boxPlotLinesColor()}
-        strokeWidth={2}
-        minProps={minProps}
-        maxProps={maxProps}
-        medianProps={medianProps}
-        boxProps={boxProps}
-        outlierProps={{ strokeWidth: 0.8 }}
+        violinFill={this.getViolinPlotFill()}
+        violinPatternFill={theme.violinPatternsFillColor()}
+        violinPatternDirection={VIOLIN_PATTERNS[violinPatternName]}
+        violinPatternStroke={theme.violinPatternsStrokeColor()}
+        violinPatternId={violinPatternId}
+        violinStroke={theme.violinPlotStrokeColor()}
+        violinWidth={this.getViolinPlotWidth()}
       />
     );
   }
 
-  renderLeftAxis() {
-    const {
-      yAxisLabel,
-      margin,
-      theme,
-      leftAxisTickLabelFormatter,
-    } = this.props;
+  renderLeftAxis(): React.Element<typeof AxisLeft> {
+    const { yAxisLabel, theme, metricValueFormatter } = this.props;
     return (
       <AxisLeft
         scale={this.getYScale()}
-        left={margin.left - margin.right}
-        bottom={margin.bottom}
-        top={margin.top}
         label={yAxisLabel}
-        labelProps={{
-          fill: theme.axisLabelColor(),
-          fontSize: 13,
-
-          // default styles from vx docs
-          textAnchor: 'middle',
-          fontFamily: 'Arial',
-        }}
+        left={10}
         stroke={theme.axisLineColor()}
-        tickLabelProps={this.getLeftAxisTickLabelProps}
         tickStroke={theme.axisLineColor()}
-        tickFormat={leftAxisTickLabelFormatter}
+        tickFormat={metricValueFormatter}
+        {...this.buildLeftAxisTextProps(theme)}
       />
     );
   }
 
-  renderBottomAxis() {
-    const {
-      xAxisLabel,
-      margin,
-      theme,
-      bottomAxisTickLabelFormatter,
-    } = this.props;
-    const xScale = (this.getXScale(): any);
-    const bandWidth = xScale.bandwidth();
-    const xTickTransform = Math.ceil(
-      (bandWidth - this.getViolinPlotWidth()) / 2,
-    );
+  renderBottomAxis(): React.Element<'g'> {
+    const { groups, theme, xAxisLabel } = this.props;
+    const xScale = this.getXScale();
+    const left = (xScale.bandwidth() - xScale.step()) / 2;
     return (
-      <AxisBottom
-        scale={xScale}
-        top={this.getGraphHeight() + margin.top}
-        left={margin.left - margin.right}
-        tickTransform={`translate(${-xTickTransform}, 0)`}
-        label={xAxisLabel}
-        labelProps={{
-          fontSize: 13,
-          fill: theme.axisLabelColor(),
-
-          // default styles from vx docs
-          textAnchor: 'middle',
-          fontFamily: 'Arial',
-        }}
-        stroke={theme.axisLineColor()}
-        tickLabelProps={this.getBottomAxisTickLabelProps}
-        tickStroke={theme.axisLineColor()}
-        tickFormat={bottomAxisTickLabelFormatter}
-      />
-    );
-  }
-
-  renderAllBoxPlots(): React.Node {
-    const { groups } = this.props;
-
-    // The box plot is drawn on top of the violin plot because its interactive
-    // while the violin plot is not
-    return groups.map((group: BoxPlotData) => (
-      <g key={BoxPlotDataAccessors.getGroupName(group)}>
-        {this.maybeRenderViolinPlot(group)}
-        {this.renderBoxPlot(group)}
+      <g transform={`translate(${left}, 0)`}>
+        <LayeredAxis
+          axisValueFormatter={this.formatXAxisValue}
+          fontSize={LABEL_FONT_SIZE}
+          groupPadding={0}
+          layers={this.buildXAxisLayers(groups)}
+          onAxisValueClick={noop}
+          scale={xScale}
+          textColor={theme.axisLabelColor()}
+          tickColor={theme.axisLineColor()}
+          tickLabelProps={BOTTOM_AXIS_LABEL_PROPS}
+          title={xAxisLabel}
+          top={4}
+          width={this.getGraphWidth()}
+        />
       </g>
-    ));
+    );
   }
 
-  render() {
-    const { height, width, margin } = this.props;
+  @autobind
+  renderInnerChart(): React.Element<'g'> {
+    return <g>{this.props.groups.map(this.renderBox)}</g>;
+  }
+
+  renderGraph(): React.Element<typeof ResponsiveContainer> {
+    const { height, theme, width } = this.props;
     return (
-      <div className="box-plot__container">
-        <svg width={width} height={height}>
-          {this.renderBackground()}
-          {this.maybeRenderViolinPlotPatterns()}
-          <Group left={margin.left - margin.right} top={margin.top}>
-            {this.renderAllBoxPlots()}
-          </Group>
-          {this.renderBottomAxis()}
-          {this.renderLeftAxis()}
-        </svg>
-        {this.maybeRenderTooltip()}
+      <ResponsiveContainer
+        axisBottom={this.renderBottomAxis()}
+        axisLeft={this.renderLeftAxis()}
+        backgroundProps={this.computeBackgroundProps(theme)}
+        chart={this.renderInnerChart()}
+        height={height}
+        onChartResize={this.onInnerChartResize}
+        width={width}
+      />
+    );
+  }
+
+  render(): React.Element<'div'> {
+    return (
+      <div className="box-plot" style={CONTAINER_STYLE}>
+        {this.renderGraph()}
+        {this.maybeRenderBoxTooltip()}
+        {this.maybeRenderOutlierTooltip()}
       </div>
     );
   }

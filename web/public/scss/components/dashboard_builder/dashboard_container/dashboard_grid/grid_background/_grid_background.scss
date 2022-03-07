@@ -1,0 +1,16 @@
+.gd-grid-background {
+  background-color: $white;
+  // NOTE(nina): We defined our own box shadow instead of using the
+  // zen-elevation-1 mixin. This is because the shadow provided by the mixin
+  // was being cut off by the surrounding container when the container becomes
+  // scrollable (aka when the grid is too large for its container by
+  // zooming in). Note that the use of 'inset' makes the shadow appear
+  // inside the element.
+  box-shadow: (
+    0 2px 2px 0 rgba(0, 0, 0, 0.16),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.14)
+  );
+  grid-column: 1;
+  grid-row: 1;
+  transform-origin: top left;
+}

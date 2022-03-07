@@ -84,14 +84,34 @@ export function computeDragThreshold(
       ? Math.ceil((height + previousNeighborHeight) / 4)
       : 0;
 
+  // The upper threshold offset cannot be more than the height of the next
+  // neighbor, because in the case that the next neighbor is the last element
+  // and has a height less than the threshold offset, the current element is
+  // not able to shift downwards enough to get outside of the upper threshold.
+  // Eg. If the current element is height 10, and the next is height 2, then
+  // the upper threshold is (10+2)/4 = 3, and the upper bound is 10 + 3 = 13.
+  // However, we know that the max Y position possible for the element will be
+  // 12 (since the elements combined are height 12), so we can never satisfy
+  // the condition (that the element move to position 13). Since we
+  // check for strictly greater than, we then subtract 1 from this value so
+  // that the max y position will satisfy the condition that it is greater
+  // than the upper bound.
+  const offset = Math.min(
+    Math.ceil((height + nextNeighborHeight) / 4),
+    nextNeighborHeight - 1,
+  );
+
   // If the next neighbor height is 0, we are at the bottom of the list and
   // cannot swap with a later element.
-  const upperThreshold =
-    nextNeighborHeight > 0 ? Math.ceil((height + nextNeighborHeight) / 4) : top;
-
+  const upperThreshold = nextNeighborHeight > 0 ? offset : top;
   // Need to find the midpoint between the combined height of the two elements
   // (cur + prev) and (cur + next). By finding the midpoint, we avoid flickering
   // that can happen at the boundary.
+  // TODO(sophie): There is still flickering in the case that a much larger
+  // element is being moved below a small element (which is the case the above
+  // comment and offset calculation address). This case should be rare, but if
+  // it ends up being an issue, re-evaluate and decide whether we need to
+  // change the calculation.
   const lowerBound = top - previousNeighborHeight + lowerThreshold;
   const upperBound = top + upperThreshold;
   return [lowerBound, upperBound];

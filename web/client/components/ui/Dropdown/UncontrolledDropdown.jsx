@@ -10,39 +10,41 @@ import type { StyleObject } from 'types/jsCore';
 
 const TEXT = t('ui.Dropdown');
 
-type SingleSelectUncontrolledProps<T> = {|
+type DefaultProps<T> = {
   /**
-   * **Required for an uncontrolled Dropdown.** THis is the initial value to
-   * select. Pass `undefined` if there is no initial selection.
+   * The accessibility name for this dropdown that will be assigned to the
+   * main button.
    */
-  initialValue: T | void,
+  ariaName?: string,
 
   /**
-   * **Optional for an uncontrolled Dropdown.**
-   * Callback for when the selection changes.
+   * This prop should be used sparringly, only when you want to change the way
+   * a dropdown blur should trigger. Read the `blurType` prop explanation in
+   * [Popover](#popover) to understand what this does.
    */
-  onSelectionChange?: (
-    selectedValue: T,
-    event: SyntheticEvent<HTMLElement>,
-  ) => void,
+  blurType?: 'overlay' | 'document',
 
   /**
-   * **Single-select prop:** a render prop that returns the contents to display
-   * in the dropdown button.
+   * The currently selected options for a dropdown. Used for async search
+   * dropdowns to render the selected options when no search text is specified.
+   * It is also used to render the button label when the selected option does
+   * not match the current search and is therefore not in the children prop.
    */
-  renderButtonLabel?: (selectedValue: T) => React.Node,
-|};
+  asyncSelectedOptions?: $ReadOnlyArray<React.Element<Class<Option<T>>>>,
 
-type BaseProps<T> = {|
   /** CSS class name for the dropdown button */
   buttonClassName: string,
 
   /** Minimum width (in pixels) for the dropdown button */
   buttonMinWidth?: number,
 
-  /** Changes the color of the dropdown button based on intent */
+  /**
+   * Changes the color of the dropdown button based on intent. Can be specified
+   * using `Dropdown.Intents`
+   */
   buttonIntent:
     | 'default'
+    | 'plain'
     | 'primary'
     | 'success'
     | 'danger'
@@ -58,14 +60,8 @@ type BaseProps<T> = {|
     ?React.Element<Class<Option<T>>> | ?React.Element<Class<OptionsGroup<T>>>,
   >,
 
-  /** The class name to give to the top-level dropdown div */
+  /** The class name for the dropdown container */
   className: string,
-
-  /**
-   * Whether or not dropdown position should be auto-controlled based on if
-   * it will overflow past the window dimensions.
-   */
-  controlDropDownPosition: boolean,
 
   /** Used to show tooltips on the dropdown.  */
   dataContent?: string,
@@ -104,6 +100,13 @@ type BaseProps<T> = {|
   hideCaret: boolean,
 
   /**
+   * Function to check for value equality. Is used to work which option is
+   * selected. Should be provided if we cannot guarantee that the selectedValue
+   * and the value held in the dropdown hold references to the same objects.
+   */
+  isSameValue: (valA: T, valB: T) => boolean,
+
+  /**
    * The margin-left to add at each level off the dropdown hierarchy, if we
    * have OptionGroups. This is useful so that each nested level can be
    * indented. The margin must be in 'em' or 'px'.
@@ -113,8 +116,14 @@ type BaseProps<T> = {|
   /** Align the menu to the right or left */
   menuAlignment: 'left' | 'right',
 
+  /** The class name to give to the dropdown menu div */
+  menuClassName: string,
+
   /** The maximum height (in pixels) for the dropdown menu. */
   menuMaxHeight?: number,
+
+  /** The maximum width for the dropdown menu. */
+  menuMaxWidth?: string | number,
 
   /** The minimum width for the dropdown menu. */
   menuMinWidth?: string | number,
@@ -134,19 +143,62 @@ type BaseProps<T> = {|
   /** Callback for when the dropdown menu is opened */
   onOpenDropdownClick?: () => void,
 
+  /**
+   * **Optional for an uncontrolled Dropdown.**
+   * Callback for when the selection changes.
+   */
+  onSelectionChange?: (
+    selectedValue: T,
+    event: SyntheticEvent<HTMLElement>,
+  ) => void,
+
+  /**
+   * **Single-select prop:** a render prop that returns the contents to display
+   * in the dropdown button.
+   */
+  renderButtonLabel?: (selectedValue: T) => React.Node,
+
   /** Debounce time (in ms) for the search input */
   searchDebounceTimeoutMs: number,
 
   /** Placeholder text for the search input box */
   searchInputPlaceholder: string,
 
+  /**
+   * Show the full button contents on hover. This is useful for dropdowns that
+   * have very long options, and when selected they get cut off by an ellipsis
+   * because they don't fit in the dropdown button. Setting this to true allows
+   * the user to hover over the button to see the full contents. This only works
+   * if your options are strings or numbers and not more complex React Nodes.
+   */
+  showButtonContentsOnHover: boolean,
+
   /** CSS styles to set on the dropdown button content */
   valueStyle?: StyleObject,
-|};
+
+  /** testId used to access the element in tests */
+  testId?: string,
+
+  /**
+   * An object mapping window edges to their thresholds, meaning how close
+   * the dropdown is allowed to get to a window edge before adjusting its
+   * position.
+   */
+  windowEdgeThresholds?: {
+    bottom?: number,
+    left?: number,
+    right?: number,
+    top?: number,
+  },
+};
 
 type Props<T> = {
-  ...SingleSelectUncontrolledProps<T>,
-  ...BaseProps<T>,
+  ...DefaultProps<T>,
+  /**
+   * **Required for an uncontrolled Dropdown.** THis is the initial value to
+   * select. Pass `undefined` if there is no initial selection.
+   */
+  initialValue: T | void,
 };
 
 /**
@@ -165,7 +217,10 @@ type Props<T> = {
 export default class UncontrolledDropdown<T> extends React.PureComponent<
   Props<T>,
 > {
-  static defaultProps = {
+  static defaultProps: DefaultProps<T> = {
+    ariaName: undefined,
+    asyncSelectedOptions: undefined,
+    blurType: 'document',
     buttonClassName: '',
     buttonMinWidth: undefined,
     buttonIntent: 'default',
@@ -173,7 +228,6 @@ export default class UncontrolledDropdown<T> extends React.PureComponent<
     caretType: Caret.Types.TRIANGLE,
     children: null,
     className: '',
-    controlDropDownPosition: true,
     dataContent: undefined,
     debounceSearch: false,
     defaultDisplayContent: null,
@@ -183,9 +237,12 @@ export default class UncontrolledDropdown<T> extends React.PureComponent<
     enableSearch: false,
     expandSearchResults: true,
     hideCaret: false,
+    isSameValue: (valA: mixed, valB: mixed) => valA === valB,
     marginPerLevel: '1.25em',
     menuAlignment: 'left',
+    menuClassName: '',
     menuMaxHeight: undefined,
+    menuMaxWidth: undefined,
     menuMinWidth: undefined,
     menuWidth: undefined,
     noOptionsContent: TEXT.noOptions,
@@ -196,10 +253,13 @@ export default class UncontrolledDropdown<T> extends React.PureComponent<
     renderButtonLabel: undefined,
     searchDebounceTimeoutMs: 300,
     searchInputPlaceholder: TEXT.searchPlaceholder,
+    showButtonContentsOnHover: false,
     valueStyle: undefined,
+    windowEdgeThresholds: undefined,
+    testId: undefined,
   };
 
-  _dropdownRef: $RefObject<typeof BaseDropdown> = React.createRef();
+  _dropdownRef: $ElementRefObject<Class<BaseDropdown<T>>> = React.createRef();
 
   /**
    * Get the currently selected value. This will return `undefined` if no value
@@ -216,7 +276,7 @@ export default class UncontrolledDropdown<T> extends React.PureComponent<
     );
   }
 
-  render() {
+  render(): React.Element<typeof BaseDropdown> {
     return (
       <BaseDropdown
         ref={this._dropdownRef}

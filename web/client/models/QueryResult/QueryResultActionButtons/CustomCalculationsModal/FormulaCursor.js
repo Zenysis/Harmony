@@ -2,7 +2,7 @@
 import * as Zen from 'lib/Zen';
 import CursorPosition from 'models/QueryResult/QueryResultActionButtons/CustomCalculationsModal/CursorPosition';
 
-type Values = {
+type DefaultValues = {
   start: CursorPosition,
   end: CursorPosition,
 };
@@ -14,8 +14,8 @@ type Values = {
  * a ranged selection (e.g. when we highlight text) and not just a single
  * position.
  */
-class FormulaCursor extends Zen.BaseModel<FormulaCursor, {}, Values> {
-  static defaultValues = {
+class FormulaCursor extends Zen.BaseModel<FormulaCursor, {}, DefaultValues> {
+  static defaultValues: DefaultValues = {
     start: CursorPosition.create({}),
     end: CursorPosition.create({}),
   };
@@ -37,4 +37,4 @@ class FormulaCursor extends Zen.BaseModel<FormulaCursor, {}, Values> {
   }
 }
 
-export default ((FormulaCursor: any): Class<Zen.Model<FormulaCursor>>);
+export default ((FormulaCursor: $Cast): Class<Zen.Model<FormulaCursor>>);

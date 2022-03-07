@@ -1,0 +1,46 @@
+.gd-dashboard-container {
+  display: grid;
+
+  // The dashboard container should fill the remaining space on the screen.
+  height: calc(var(--main-height) - #{$dashboard-header-height});
+
+  &__common-settings-panel {
+    margin-bottom: $space-s-px;
+  }
+
+  &__grid-container {
+    overflow: auto;
+  }
+
+  &__dashboard-grid {
+    display: flex;
+    margin: 0 auto;
+    min-height: 100%;
+
+    // NOTE(stephen): These are the vendor prefixes for the `max-content` value.
+    /* stylelint-disable: declaration-block-no-duplicate-properties */
+    width: intrinsic;
+    width: -moz-max-content; // stylelint-disable-line
+    width: -webkit-max-content; // stylelint-disable-line
+    width: max-content; // stylelint-disable-line
+  }
+
+  &--settings-left {
+    grid-template-columns: auto 1fr;
+  }
+
+  &--settings-top {
+    grid-template-rows: auto 1fr;
+  }
+}
+
+// TODO(isabel) Remove when legacy dashboards are deprecated
+body.dashboard-legacy-mode .gd-dashboard-container {
+  &__dashboard-grid {
+    width: initial;
+
+    .gd-dashboard-grid {
+      width: 100%;
+    }
+  }
+}

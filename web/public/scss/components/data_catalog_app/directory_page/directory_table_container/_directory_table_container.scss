@@ -1,0 +1,9 @@
+$row-height: 120px;
+$row-padding: $space-m-px;
+$cell-height: $row-height - 2 * $row-padding;
+
+.dc-directory-table-container {
+  &__header {
+    margin-bottom: $space-m-px;
+  }
+}

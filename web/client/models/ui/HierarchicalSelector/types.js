@@ -6,6 +6,9 @@
  */
 export interface NamedItem {
   name(): string;
+  // NOTE(yitian): typing `any` here because tag is typed as a different string
+  // literal in each ZenModel.
+  tag?: any;
 }
 
 /**
@@ -13,7 +16,6 @@ export interface NamedItem {
  * string that can be displayed when a more compact version of an item name
  * is needed.
  */
-export interface ShortNamedItem {
-  name(): string;
+export interface ShortNamedItem extends NamedItem {
   shortName(): string;
 }

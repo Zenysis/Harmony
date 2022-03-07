@@ -1,5 +1,3 @@
-import os
-
 from builtins import object
 from flask import g
 from flask_potion import fields
@@ -10,7 +8,6 @@ from werkzeug.exceptions import BadRequest, MethodNotAllowed
 from models.alchemy.configuration import Configuration
 from web.server.configuration.settings import (
     CONFIGURATION_KEYS,
-    CUR_DATASOURCE_KEY,
     _DEFAULT_CONFIGURATION_STORE,
     get_configuration,
     assert_valid_configuration,
@@ -18,10 +15,6 @@ from web.server.configuration.settings import (
 from web.server.data.data_access import Transaction
 from web.server.routes.views.authorization import AuthorizedOperation
 from web.server.api.api_models import PrincipalResource
-
-RESTART_GUNICORN_COMMAND = "for ppid in $(ps -ef | grep gunicorn | \
-    awk 'FNR == 1 {print $2}'); do sudo kill -s USR2 $ppid && \
-    sudo kill -s WINCH $ppid && sudo kill -s QUIT $ppid; done"
 
 
 class ConfigurationResource(PrincipalResource):
@@ -103,9 +96,6 @@ class ConfigurationResource(PrincipalResource):
             configuration.overwritten = False
             transaction.add_or_update(configuration, flush=True)
 
-            # Restart gunicorn when a datasource is selected.
-            restart_gunicorn_on_datasource_change(key, old_value, default_value)
-
         return configuration
 
     # Flask Potion requires this to be an instance method.
@@ -145,20 +135,7 @@ class ConfigurationResource(PrincipalResource):
             configuration.overwritten_value = configuration.overwritten_value[0]
             transaction.add_or_update(configuration)
 
-            # Restart gunicorn when a new datasource is selected.
-            restart_gunicorn_on_datasource_change(key, old_value, updated_value)
-
         return configuration
-
-
-# pylint:disable=C0103
-def restart_gunicorn_on_datasource_change(configuration_key, old_value, new_value):
-    '''Checks if new datasource value is valid. If so, restarts gunicorn master
-    and child processes.
-    '''
-    if configuration_key == CUR_DATASOURCE_KEY and old_value != new_value:
-        g.request_logger.info('Restarting gunicorn server.')
-        os.system(RESTART_GUNICORN_COMMAND)
 
 
 # pylint:disable=W0613

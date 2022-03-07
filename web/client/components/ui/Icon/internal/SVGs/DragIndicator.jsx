@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import type { SVGProps } from 'components/ui/Icon/internal/SVGs/types';
 
-export default function DragIndicator(props: SVGProps) {
+export default function DragIndicator(props: SVGProps): React.Element<'svg'> {
   return (
     <svg
       height="24"

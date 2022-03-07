@@ -5,14 +5,15 @@ body.ReactModal__Body--open {
   overflow: hidden;
 }
 
+// All modal sections that are not the body section should be drawn at a higher
+// elevation. The body section should always be below the header/footer.
+$modal-pieces-z-index: 1;
 // Zenysis styles
 .zen-modal {
   &__body {
-    left: 0;
-    padding: 30px;
+    flex: 1;
     overflow: auto;
-    position: absolute;
-    right: 0;
+    padding: 20px;
   }
 
   &__close-x-btn {
@@ -24,10 +25,24 @@ body.ReactModal__Body--open {
     position: absolute;
     right: 25px;
     top: 4px;
+    z-index: $modal-pieces-z-index;
 
     &:hover {
       opacity: 0.4;
     }
+  }
+
+  // Prevent the modal from extending outside the height of the screen. Include
+  // some additional padding to ensure things feel nice. If the screen size is
+  // particularly large, clamp the max height to be 1400px since incredibly
+  // large modals do not feel great.
+  // NOTE(stephen): This would be A LOT EASIER if all browsers supported the
+  // min() operator and we could do min(calc(100vh - 30px), 1400px)`.
+  // Unfortunately, Firefox and Edge do not support it.
+  max-height: calc(100vh - 30px);
+
+  @media (min-height: 1400px) {
+    max-height: 1400px;
   }
 }
 
@@ -36,16 +51,13 @@ body.ReactModal__Body--open {
   background-color: $gray-light;
   height: $header-height;
   padding-left: 30px;
+  padding-right: 30px;
+  z-index: $modal-pieces-z-index;
 
   &__title {
     display: inline-block;
     line-height: $header-height;
     margin: 0;
-  }
-
-  &__secondary-content {
-    display: inline-block;
-    margin-left: 10px;
   }
 }
 
@@ -53,20 +65,11 @@ body.ReactModal__Body--open {
   $footer-height: 60px;
   border-top: 1px solid #f3f4f6;
   box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.3);
-  bottom: 0;
   display: flex;
-  height: $footer-height;
+  flex: 0 0 $footer-height;
   justify-content: center;
-  left: 0;
   padding: 10px 0;
-  position: absolute;
-  right: 0;
-
-  &__button-row {
-    button {
-      margin-right: 20px;
-    }
-  }
+  z-index: $modal-pieces-z-index;
 
   &__content-after-action-btns,
   &__content-before-action-btns {

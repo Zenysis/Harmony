@@ -2,29 +2,35 @@
 import * as React from 'react';
 import invariant from 'invariant';
 import { RectClipPath } from '@vx/clip-path';
-import { scaleBand, scaleLinear } from '@vx/scale';
+import { scaleBand } from '@vx/scale';
 
 import * as Zen from 'lib/Zen';
 import BarGraphTooltip from 'components/ui/visualizations/BarGraph/internal/BarGraphTooltip';
 import BarSeries from 'components/ui/visualizations/BarGraph/internal/BarSeries';
 import FocusWindow from 'components/ui/visualizations/BarGraph/internal/FocusWindow';
 import LayeredAxis from 'components/ui/visualizations/BarGraph/internal/LayeredAxis';
-import MetricAxis, {
-  getNiceTickCount,
-} from 'components/ui/visualizations/BarGraph/internal/MetricAxis';
-import ResponsiveContainer from 'components/ui/visualizations/ResponsiveContainer';
+import MetricAxis from 'components/ui/visualizations/common/MetricAxis';
+import ResponsiveContainer from 'components/ui/visualizations/common/ResponsiveContainer';
+import RotatedMetricAxis from 'components/ui/visualizations/BarGraph/internal/RotatedMetricAxis';
+import buildYScale from 'components/ui/visualizations/BarGraph/internal/buildYScale';
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
+import { DEFAULT_THEME } from 'components/ui/visualizations/BarGraph/defaults';
 import { autobind, memoizeOne } from 'decorators';
+import { createGoalLineObject } from 'components/ui/visualizations/BarGraph/internal/createGoalLineObject';
 import { objKeyEq } from 'util/objUtil';
-import type { ChartSize, HoverPoint } from 'components/ui/visualizations/types';
 import type {
+  AxisRanges,
+  BarGraphTheme,
   DataPoint,
   DimensionID,
-  GoalLineData,
-  GoalLineTheme,
   Metric,
   ScaleMap,
-  YAxisID,
 } from 'components/ui/visualizations/BarGraph/types';
+import type { ChartSize, HoverPoint } from 'components/ui/visualizations/types';
+import type {
+  GoalLineData,
+  YAxisID,
+} from 'components/ui/visualizations/common/MetricAxis/types';
 import type {
   LayerData,
   LayerValue,
@@ -32,59 +38,52 @@ import type {
   LinearScale,
 } from 'components/ui/visualizations/BarGraph/internal/LayeredAxis/types';
 
-type BandScale = any;
+type BandScale = $FlowTODO;
 
-// TODO(stephen): Kind of a StyleObject type but different. Need a better type
-// for this.
-type LabelProps = {};
-type AxisTheme = {
-  ticks: {
-    color: string,
-    label: LabelProps,
-  },
-  title: LabelProps,
-};
-
-type BarGraphTheme = {
-  axis: {
-    xAxis: AxisTheme,
-    y1Axis: AxisTheme,
-    y2Axis: AxisTheme,
-  },
-  backgroundColor: string,
-  focus: {
-    activeColor: string,
-    height: number,
-    inactiveColor: string,
-    marginTop: number,
-  },
-  goalLine: {
-    hover: GoalLineTheme,
-    placed: GoalLineTheme,
-  },
-  groupPadding: number,
-  innerBarPadding: number,
-  minBarWidth: number,
-  stroke: string,
-  tickColor: string,
-};
-
-type Props = ChartSize & {
+type DefaultProps = {
+  /** The accessibility name for this bar graph. Defaults to 'Bar chart'. */
+  ariaName?: string,
+  axisRanges: AxisRanges | void,
   axisTitles: {
     xAxis: string,
     y1Axis: string,
     y2Axis: string,
   },
 
-  dataPoints: $ReadOnlyArray<DataPoint>,
+  /**
+   * How the bar graph should be layed out on screen.
+   * - `vertical`: Each bar will be drawn vertically, in a column chart style.
+   *               The x-axis will be on the bottom of the visualization. The
+   *               y1-axis will be on the left side of the visualization, and
+   *               the y2-axis (if in use) will be on the right.
+   * - `horizontal`: Each bar will be drawn horizontally. The x-axis will be on
+   *                 the left side of the visualization. The y1-axis will be on
+   *                 the bottom, and the y2-axis (if in use) will be on the top.
+   */
+  barDirection: 'horizontal' | 'vertical',
 
   /**
-   * Ordered list of bar groupings specifying how the bars should be sorted and
-   * by which fields. The order is from least specific (the outer level) to the
-   * most specific (the final group that holds just a single set of bars).
+   * How the bars should be laid out on the screen.
+   * - `overlaid`: Each bar will be drawn on top of the previous bar with the
+   *               full width. The tallest bar will be drawn first, then the
+   *               second-tallest, and so on. Each bar will be drawn with
+   *               opacity so it is possible to see the height despite drawing
+   *               in the same space.
+   * - `overlapping`: Each bar will be drawn on top of the previous bar and will
+   *                  have a smaller width.
+   * - `sequential`: Each bar will be drawn directly after the previous bar.
+   * - `stacked`: Each bar will be drawn above the previous bar. The y-value of
+   *              the full stacked bar will be the sum of each bar in the stack.
    */
-  levels: $ReadOnlyArray<LevelSpec>,
-  metricOrder: $ReadOnlyArray<Metric>,
+  barTreatment: 'overlaid' | 'overlapping' | 'sequential' | 'stacked',
+
+  /**
+   * The default maximum number of bar groups that should be shown when the
+   * chart is initialized. If this value changes, the focus window will be
+   * reset to the beginning and show the selected number of bar groups. If
+   * set to a value less than zero, all bar groups will be shown.
+   */
+  defaultVisibleBarGroups: number,
 
   /**
    * Convert a dimension ID into the full dimension display name.
@@ -102,19 +101,31 @@ type Props = ChartSize & {
   /**
    * When enabled, the only the visible bars (determined by the current focus
    * focus selection) will dictate the height of the rendered bars. When
-   * disabled, the height will be determined from all bars.
+   * disabled, the height will be determined from all bars. If the user has
+   * entered an axis range, that will be used over this.
    */
   dynamicBarHeight: boolean,
+  enableFocusWindow: boolean,
+  theme: BarGraphTheme,
+};
+
+type Props = {
+  ...DefaultProps,
+  dataPoints: $ReadOnlyArray<DataPoint>,
+  height: number,
+
+  goalLines: $ReadOnlyArray<GoalLineData>,
 
   /**
-   * The default maximum number of bar groups that should be shown when the
-   * chart is initialized. If this value changes, the focus window will be
-   * reset to the beginning and show the selected number of bar groups. If
-   * set to a value less than zero, all bar groups will be shown.
+   * Ordered list of bar groupings specifying how the bars should be sorted and
+   * by which fields. The order is from least specific (the outer level) to the
+   * most specific (the final group that holds just a single set of bars).
    */
-  defaultVisibleBarGroups: number,
-  stack: boolean,
-  theme: BarGraphTheme,
+  levels: $ReadOnlyArray<LevelSpec>,
+  metricOrder: $ReadOnlyArray<Metric>,
+  width: number,
+  onGoalLineChange: (goalLines: $ReadOnlyArray<GoalLineData>) => void,
+  ...
 };
 
 type State = {
@@ -122,10 +133,6 @@ type State = {
   focusPosition: {
     end: number,
     start: number,
-  },
-  goalLines: {
-    y1Axis: Zen.Array<GoalLineData>,
-    y2Axis: Zen.Array<GoalLineData>,
   },
   hoverData: {
     dataPoint: DataPoint,
@@ -139,93 +146,24 @@ type State = {
   selectedDimensionValues: Zen.Map<Set<string | null>>,
 };
 
-export const DEFAULT_THEME = {
-  axis: {
-    xAxis: {
-      ticks: {
-        color: 'black',
-        label: {},
-      },
-      title: {
-        fill: 'black',
-        fontSize: 12,
-        textAnchor: 'middle',
-      },
-    },
-    y1Axis: {
-      ticks: {
-        color: 'black',
-        label: {
-          fill: '#000000',
-          pointerEvents: 'none',
-          textAnchor: 'end',
-          fontSize: 12,
-          dx: '-0.25em',
-          dy: '0.25em',
-        },
-      },
-      title: {
-        fill: 'black',
-        fontSize: 12,
-        textAnchor: 'middle',
-      },
-    },
-    y2Axis: {
-      ticks: {
-        color: 'black',
-        label: {
-          fill: '#000000',
-          pointerEvents: 'none',
-          textAnchor: 'start',
-          fontSize: 12,
-          dx: '0.25em',
-          dy: '0.25em',
-        },
-      },
-      title: {
-        fill: 'black',
-        fontSize: 12,
-        textAnchor: 'middle',
-      },
-    },
-  },
-  backgroundColor: 'white',
-  focus: {
-    activeColor: '#ffffff00',
-    height: 30,
-    inactiveColor: '#ffffffbb',
-    marginTop: 10,
-  },
-  groupPadding: 0.2,
-  innerBarPadding: 0,
-  minBarWidth: 20,
-  stroke: '#000000',
-  tickColor: '#000000',
-  goalLine: {
-    hover: {
-      backgroundColor: '#e3e7f1',
-      lineColor: 'black',
-      textStyle: {
-        fill: '#293742',
-        fontSize: 12,
-        fontWeight: 500,
-      },
-    },
-    placed: {
-      backgroundColor: '#c6cbef',
-      lineColor: 'black',
-      textStyle: {
-        fill: '#293742',
-        fontSize: 12,
-        fontWeight: 700,
-      },
-    },
-  },
-};
-
 const EMPTY_SET: Set<string | null> = new Set();
 
-const INNER_CHART_CLIP = 'inner-chart-clip';
+const CONTAINER_STYLE = {
+  position: 'relative',
+};
+
+// NOTE(stephen): Need to use `display: block` on the focus window SVG to ensure
+// that it is positioned and sized properly after the responsive bar graph.
+const FOCUS_STYLE = {
+  display: 'block',
+  overflow: 'visible',
+};
+
+// NOTE(stephen): Need to apply `display: block` to the root SVG when in
+// horizontal bar since the ResponsiveContainer is not handling it for us.
+const HORIZONTAL_CONTAINER_STYLE = {
+  display: 'block',
+};
 
 function _buildLayerValue(
   layerDimensions: $ReadOnlyArray<DimensionID>,
@@ -239,104 +177,96 @@ function _buildLayerValue(
   return output;
 }
 
-function buildYScale({ enabled, max, min }, height): LinearScale | void {
-  if (!enabled) {
-    return undefined;
-  }
-
-  return scaleLinear({
-    domain: [min, max],
-    range: [height, 0],
-  }).nice(getNiceTickCount(height));
-}
-
 // Compute the minimum and maximum values that will be displayed on each
-// y-axis. Build a LinearScale that will map points within this range to
-// absolute coordinates in the SVG. If the bars are being stacked, compute
-// the minimum and maximum *accumulated values* for each data point and use
-// that to set the scale. The values are accumulated since bars are *stacked*
-// and the combined value of the stack is what should dictate the axis scale.
-// This means the maximum value will be the sum of all positive values within
-// the group. And the minimum value will be the sum of all negative values
-// within the group.
+// y-axis. Ensure the goal line values that are set for each axis are included
+// in the range calculation.
 function buildYScales(
   dataPoints: $ReadOnlyArray<DataPoint>,
   metricOrder: $ReadOnlyArray<Metric>,
+  goalLines: $ReadOnlyArray<GoalLineData>,
   height: number,
   stack: boolean,
+  axisRanges: AxisRanges | void,
 ): [LinearScale | void, LinearScale | void] {
   const y1 = {
-    max: 0,
-    min: 0,
-    enabled: false,
-
-    // Convenience accumulators used when computing the total positive/negative
-    // sum for an individual data point.
-    stackNegativeTotal: 0,
-    stackPositiveTotal: 0,
+    initialMax: 0,
+    initialMin: 0,
   };
   const y2 = {
-    max: 0,
-    min: 0,
-    enabled: false,
-    stackNegativeTotal: 0,
-    stackPositiveTotal: 0,
+    initialMax: 0,
+    initialMin: 0,
   };
-  const axes = [y1, y2];
-  dataPoints.forEach(({ metrics }: DataPoint) => {
-    metricOrder.forEach(({ axis, id }) => {
-      const axisData = axis === 'y1Axis' ? y1 : y2;
-      axisData.enabled = true;
 
-      // NOTE(stephen): Even though Number.isFinite properly refines the
-      // value, flow does not recognize this.
-      const value = metrics[id];
-      if (Number.isFinite(value) && value !== null) {
-        // Accumulate the positive and negative values separately since we need
-        // their *totals* when building stacked bars.
-        if (stack) {
-          if (value < 0) {
-            axisData.stackNegativeTotal += value;
-          } else {
-            axisData.stackPositiveTotal += value;
-          }
-        } else {
-          // If not stacking, store the min and max directly.
-          axisData.min = Math.min(axisData.min, value);
-          axisData.max = Math.max(axisData.max, value);
-        }
-      }
-    });
-
-    // Update the min/max for each axis and reset the accumulators.
-    if (stack) {
-      axes.forEach(axisData => {
-        /* eslint-disable no-param-reassign */
-        axisData.min = Math.min(axisData.min, axisData.stackNegativeTotal);
-        axisData.max = Math.max(axisData.max, axisData.stackPositiveTotal);
-        axisData.stackNegativeTotal = 0;
-        axisData.stackPositiveTotal = 0;
-        /* eslint-enable no-param-reassign */
-      });
-    }
+  // Include the goal line values currently set to ensure the axis that is
+  // created includes their values. Without this, a goal line that is set larger
+  // than the biggest data point will not be visible.
+  goalLines.forEach(({ axis, value }) => {
+    const axisData = axis === 'y1Axis' ? y1 : y2;
+    axisData.initialMin = Math.min(axisData.initialMin, value);
+    axisData.initialMax = Math.max(axisData.initialMax, value);
   });
 
-  return [buildYScale(y1, height), buildYScale(y2, height)];
+  const yScales = {
+    y1: buildYScale(
+      dataPoints,
+      metricOrder.filter(({ axis }) => axis === 'y1Axis'),
+      height,
+      stack,
+      y1.initialMin,
+      y1.initialMax,
+    ),
+    y2: buildYScale(
+      dataPoints,
+      metricOrder.filter(({ axis }) => axis === 'y2Axis'),
+      height,
+      stack,
+      y2.initialMin,
+      y2.initialMax,
+    ),
+  };
+
+  // If the user has set the range, override the values set by buildYScale.
+  if (axisRanges !== undefined) {
+    Object.keys(axisRanges).forEach(axis => {
+      const yScale = axis === 'y1Axis' ? yScales.y1 : yScales.y2;
+      if (yScale === undefined) {
+        return;
+      }
+
+      const { max, min } = axisRanges[axis];
+      const domain = yScale.domain();
+
+      // Modify the scale's domain *in-place* with the overridden values (if they
+      // exist).
+      yScale.domain([
+        min !== undefined && min !== null ? min : domain[0],
+        max !== undefined && max !== null ? max : domain[1],
+      ]);
+    });
+  }
+
+  return [yScales.y1, yScales.y2];
 }
 
+const TEXT = t('ui.visualizations.BarGraph');
+
 export default class BarGraph extends React.PureComponent<Props, State> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
+    ariaName: TEXT.title,
+    axisRanges: undefined,
     axisTitles: {
       xAxis: '',
       y1Axis: '',
       y2Axis: '',
     },
+    barDirection: 'vertical',
+    barTreatment: 'sequential',
     defaultVisibleBarGroups: 50,
     dimensionFormatter: (dimensionID: DimensionID) => dimensionID,
     dimensionValueFormatter: (dimensionID: DimensionID, value: string | null) =>
       value === null ? 'null' : value,
     dynamicBarHeight: false,
-    stack: false,
+    enableFocusWindow: true,
     theme: DEFAULT_THEME,
   };
 
@@ -346,10 +276,6 @@ export default class BarGraph extends React.PureComponent<Props, State> {
       end: 0,
       start: 0,
     },
-    goalLines: {
-      y1Axis: Zen.Array.create(),
-      y2Axis: Zen.Array.create(),
-    },
     hoverData: undefined,
     hoverLine: undefined,
     innerChartSize: {
@@ -358,6 +284,12 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     },
     selectedDimensionValues: Zen.Map.create(),
   };
+
+  // NOTE(stephen): The clip path ID *must be unique*. If the BarGraph component
+  // is loaded multiple times on the same page, and each clip-path shares the
+  // same ID, then it is possible for the wrong clipPath to get used. This
+  // results in improper clipping.
+  +clipPathId: string = `inner-chart-clip--${+new Date()}`;
 
   componentDidUpdate(prevProps: Props) {
     const { defaultVisibleBarGroups } = this.props;
@@ -426,9 +358,11 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     groupWidth: number,
   ): BandScale {
     return scaleBand({
-      domain: metricOrder.map(({ id }) => id),
+      domain: metricOrder
+        .filter(m => m.visualDisplayShape === 'bar')
+        .map(({ id }) => id),
       padding,
-      rangeRound: [0, groupWidth],
+      range: [0, groupWidth],
     });
   }
 
@@ -439,7 +373,9 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     groupWidth: number,
   ): BandScale {
     return scaleBand({
-      domain: metricOrder.map(({ id }) => id),
+      domain: metricOrder
+        .filter(m => m.visualDisplayShape === 'bar')
+        .map(({ id }) => id),
       padding,
       range: [0, groupWidth],
       round: false,
@@ -503,12 +439,88 @@ export default class BarGraph extends React.PureComponent<Props, State> {
   }
 
   /**
+   * When any bar values are being displayed, we need to introduce a placeholder
+   * top axis to ensure the bar values do not get cut off.
+   */
+  @memoizeOne
+  buildAxisTopHeight(
+    metricOrder: $ReadOnlyArray<Metric>,
+    y1Scale: LinearScale | void,
+    y2Scale: LinearScale | void,
+    barDirection: 'horizontal' | 'vertical',
+  ): number {
+    if (y1Scale === undefined && y2Scale === undefined) {
+      return 0;
+    }
+
+    // Find the longest possible bar value based on the y-axis range.
+    // HACK(stephen): Implement a simple heuristic to try and minimize the
+    // amount of padding that is needed, based on the length of the largest
+    // value being displayed.
+    const y1Max = y1Scale !== undefined ? y1Scale.domain()[1] : 0;
+    const y2Max = y2Scale !== undefined ? y2Scale.domain()[1] : 0;
+
+    // If the bars are displayed horizontally then the y-axis labels will also
+    // be horizontal. When this happens, we need to ensure their values don't
+    // get cut off as well.
+    const isHorizontal = barDirection === 'horizontal';
+    const maxValueLength = metricOrder.reduce((curMax, metric) => {
+      if (!metric.showValue && !isHorizontal) {
+        return curMax;
+      }
+
+      // Format the largest value for each axis with the metric formatter.
+      // NOTE(stephen): Since we don't know which metric has the largest value,
+      // we can't use the specific metric formatter for that value. By using
+      // every formatter, we can at least guarantee we provide enough space,
+      // even if we might overcalculate a bit.
+      // NOTE(stephen): We could directly calculate it by finding the max value
+      // for each bar with a value being shown, but that seemed like overkill.
+      // It would need to account for stacked bars, and could potentially be
+      // costly having to loop over all values each time a metric settings
+      // changes.
+      const formattedValue =
+        metric.axis === 'y1Axis'
+          ? metric.formatValue(y1Max)
+          : metric.formatValue(y2Max);
+
+      // HACK(stephen): The only reason we would store the value length if the
+      // metric is *not* being shown is if the bar graph is in horizontal mode.
+      // When this happens, the final y-axis tick value is centered over the
+      // last tick. If the metric value is not being shown, we want to compute
+      // roughly where this final tick will end up on the y-axis. Since the
+      // value is centered, we divide by 2 to get the amount that the label will
+      // overflow past the tick mark.
+      const valueLength = metric.showValue
+        ? `${formattedValue}`.length
+        : `${formattedValue}`.length / 2;
+      return Math.max(valueLength, curMax);
+    }, 0);
+
+    // If no bars have a value being displayed, the max will be 0.
+    if (maxValueLength === 0) {
+      return 0;
+    }
+
+    // TODO(stephen): When value font size is implemented, we will need a better
+    // way to calculate this. Right now it is just an approximation based on
+    // hand tested values.
+    return 10 + 5 * maxValueLength;
+  }
+
+  getAxisTopHeight(): number {
+    const { barDirection, metricOrder } = this.props;
+    const { y1Scale, y2Scale } = this.getScales();
+    return this.buildAxisTopHeight(metricOrder, y1Scale, y2Scale, barDirection);
+  }
+
+  /**
    * Build the full width that bars can be rendered to. This can be larger than
    * the visualization width since we want to enforce a minimum bar width and
    * not all bars can fit inside the panel with this constraint. The user will
    * then be able to pan to adjust which bars are in view.
    */
-  getFullXAxisWidth() {
+  getFullXAxisWidth(): number {
     const { defaultVisibleBarGroups } = this.props;
     const barGroupCount = this.getSortedDataPoints().length;
     const visibleWidth = this.getVisibleXAxisWidth();
@@ -525,19 +537,35 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     );
   }
 
-  enableFocusWindow() {
+  usingFocusWindow(): boolean {
+    const { enableFocusWindow, defaultVisibleBarGroups } = this.props;
+
+    // NOTE(stephen): Right now, the horizontal bar chart cannot use the focus
+    // window.
+    if (!enableFocusWindow || !this.isColumnChart()) {
+      return false;
+    }
+
     const barGroupCount = this.getSortedDataPoints().length;
-    return barGroupCount > this.props.defaultVisibleBarGroups;
+    return barGroupCount > defaultVisibleBarGroups;
+  }
+
+  getFocusWindowHeight(): number {
+    if (!this.usingFocusWindow()) {
+      return 0;
+    }
+
+    return this.props.theme.focus.height;
   }
 
   /**
    * This is the visible width that can be seen by the user at any time.
    */
-  getVisibleXAxisWidth() {
+  getVisibleXAxisWidth(): number {
     return this.state.innerChartSize.width;
   }
 
-  getYAxisHeight() {
+  getYAxisHeight(): number {
     return this.state.innerChartSize.height;
   }
 
@@ -545,10 +573,19 @@ export default class BarGraph extends React.PureComponent<Props, State> {
   buildChartYScales(
     dataPoints: $ReadOnlyArray<DataPoint>,
     metricOrder: $ReadOnlyArray<Metric>,
+    goalLines: $ReadOnlyArray<GoalLineData>,
     height: number,
     stack: boolean,
+    axisRanges: AxisRanges | void,
   ): [LinearScale | void, LinearScale | void] {
-    return buildYScales(dataPoints, metricOrder, height, stack);
+    return buildYScales(
+      dataPoints,
+      metricOrder,
+      goalLines,
+      height,
+      stack,
+      axisRanges,
+    );
   }
 
   @memoizeOne
@@ -557,8 +594,9 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     metricOrder: $ReadOnlyArray<Metric>,
     height: number,
     stack: boolean,
+    axisRanges: AxisRanges | void,
   ): [LinearScale | void, LinearScale | void] {
-    return buildYScales(dataPoints, metricOrder, height, stack);
+    return buildYScales(dataPoints, metricOrder, [], height, stack, axisRanges);
   }
 
   @memoizeOne
@@ -572,9 +610,15 @@ export default class BarGraph extends React.PureComponent<Props, State> {
   }
 
   getScales(): ScaleMap {
-    const { dynamicBarHeight, stack, metricOrder } = this.props;
+    const {
+      axisRanges,
+      barTreatment,
+      dynamicBarHeight,
+      goalLines,
+      metricOrder,
+    } = this.props;
     const dataPoints =
-      dynamicBarHeight && this.enableFocusWindow()
+      dynamicBarHeight && this.usingFocusWindow()
         ? this.getVisibleDataPoints()
         : this.getSortedDataPoints();
     return this.buildScaleMap(
@@ -583,8 +627,10 @@ export default class BarGraph extends React.PureComponent<Props, State> {
       ...this.buildChartYScales(
         dataPoints,
         metricOrder,
+        goalLines,
         this.getYAxisHeight(),
-        stack,
+        barTreatment === 'stacked',
+        axisRanges,
       ),
     );
   }
@@ -600,7 +646,7 @@ export default class BarGraph extends React.PureComponent<Props, State> {
   }
 
   getFocusScales(): ScaleMap {
-    const { metricOrder, stack, theme } = this.props;
+    const { axisRanges, barTreatment, metricOrder, theme } = this.props;
     const barGroupScale = this.buildFocusBarGroupScale(
       this.getDataPointKeyMap(),
       theme.groupPadding,
@@ -617,8 +663,9 @@ export default class BarGraph extends React.PureComponent<Props, State> {
       ...this.buildFocusChartYScales(
         this.getSortedDataPoints(),
         metricOrder,
-        theme.focus.height,
-        stack,
+        this.getFocusWindowHeight(),
+        barTreatment === 'stacked',
+        axisRanges,
       ),
     );
   }
@@ -664,10 +711,10 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     levels: $ReadOnlyArray<LevelSpec>,
     sortedDataPoints: $ReadOnlyArray<DataPoint>,
     dataPointKeyMap: Map<DataPoint, string>,
+    axisTheme: $PropertyType<$PropertyType<BarGraphTheme, 'axis'>, 'xAxis'>,
+    barDirection: 'horizontal' | 'vertical',
     // eslint-disable-next-line no-unused-vars
     selectedDimensionValues: Zen.Map<Set<string | null>>,
-    // eslint-disable-next-line no-unused-vars
-    axisTheme: mixed,
   ): $ReadOnlyArray<LayerData> {
     const numDataPoints = sortedDataPoints.length;
     if (numDataPoints === 0) {
@@ -675,8 +722,12 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     }
 
     const currentDimensions = [];
-    return levels.map(({ dimensionID }: LevelSpec) => {
-      currentDimensions.push(dimensionID);
+
+    // If this is a horizontal bar chart, we need to rotate the labels since the
+    // entire chart is rotated 90 degrees from its normal column orientation.
+    const rotateAll = barDirection === 'horizontal';
+    return levels.map(level => {
+      currentDimensions.push(level.dimensionID);
       const layerValues = [];
       let curLayerValue;
       sortedDataPoints.forEach(dataPoint => {
@@ -692,6 +743,7 @@ export default class BarGraph extends React.PureComponent<Props, State> {
       });
 
       return {
+        angle: rotateAll ? 'vertical' : level.angle,
         layerDimensions: currentDimensions.slice(),
         layerValues,
       };
@@ -699,25 +751,23 @@ export default class BarGraph extends React.PureComponent<Props, State> {
   }
 
   getAxisLayers(): $ReadOnlyArray<LayerData> {
-    const { levels, theme } = this.props;
+    const { barDirection, levels, theme } = this.props;
 
-    // HACK(stephen): Passing in `selectedDimensionValues` and `xAxis` theme
-    // even though it is unused because we need a way to trigger a component
-    // change in a deeply nested PureComponent (CollisionAvoidantAxis). Tick
-    // label props are generated through a callback which is autobinded. This
-    // means that the prop doesn't change even though the *result* of calling
-    // the function is different. The simplest way to trigger the update (from
-    // what I've found) is to rebuild the axis layers object.
+    // HACK(stephen): Passing in `selectedDimensionValues` even though it is
+    // unused because we need a way to trigger a component change in a deeply
+    // nested PureComponent (CollisionAvoidantAxis). The simplest way to trigger
+    // the update (from what I've found) is to rebuild the axis layers object.
     return this.buildAxisLayers(
       levels,
       this.getSortedDataPoints(),
       this.getDataPointKeyMap(),
+      theme.axis.xAxis,
+      barDirection,
       this.state.selectedDimensionValues,
-      theme.axis.xAxis.ticks.label,
     );
   }
 
-  isSelected(dimensionValues: { +[DimensionID]: string | null }): boolean {
+  isSelected(dimensionValues: { +[DimensionID]: string | null, ... }): boolean {
     const { selectedDimensionValues } = this.state;
 
     return (
@@ -751,17 +801,27 @@ export default class BarGraph extends React.PureComponent<Props, State> {
 
   @autobind
   getBarGroupOpacity(dataPoint: DataPoint): number {
+    const { barTreatment, metricOrder } = this.props;
     const { selectedDimensionValues } = this.state;
+    // The bar should have full color unless it there are no bars selected or
+    // if this is one of the bars selected.
+    const fullColor =
+      selectedDimensionValues.isEmpty() ||
+      this.isSelected(dataPoint.dimensions);
 
-    // If no one is selected, full color.
-    return selectedDimensionValues.isEmpty() ||
-      this.isSelected(dataPoint.dimensions)
-      ? 1
-      : 0.25;
+    // The overlaid bar treatment must always use opaque bars when there is more
+    // than 1 metric.
+    if (barTreatment === 'overlaid' && metricOrder.length > 1) {
+      return fullColor ? 0.5 : 0.25;
+    }
+
+    return fullColor ? 1 : 0.25;
   }
 
   @autobind
-  tickLabelProps(layerValue: LayerValue) {
+  tickLabelProps(
+    layerValue: LayerValue,
+  ): {| fontWeight?: 'bold' | number, cursor?: string |} {
     const output = {
       ...this.props.theme.axis.xAxis.ticks.label,
       cursor: 'pointer',
@@ -775,18 +835,53 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     return output;
   }
 
-  @autobind
-  axisValueFormatter(
+  @memoizeOne
+  buildXAxisValueFormatter(
+    dimensionValueFormatter: $PropertyType<Props, 'dimensionValueFormatter'>,
+    maxInnerLayerTextLength: number | void,
+  ): (
     layerValue: LayerValue,
     layerDimensions: $ReadOnlyArray<DimensionID>,
-  ): string {
-    const dimensionID = layerDimensions[layerDimensions.length - 1];
-    const rawValue = layerValue[dimensionID];
-    if (rawValue === undefined) {
-      return '';
-    }
+  ) => string {
+    return (layerValue, layerDimensions) => {
+      const dimensionID = layerDimensions[layerDimensions.length - 1];
+      const rawValue = layerValue[dimensionID];
+      if (rawValue === undefined) {
+        return '';
+      }
 
-    return this.props.dimensionValueFormatter(dimensionID, rawValue);
+      const value = dimensionValueFormatter(dimensionID, rawValue);
+
+      // Truncate the axis value if we are on an inner layer and the user's theme
+      // calls for the inner layer text to be truncated.
+      if (
+        maxInnerLayerTextLength !== undefined &&
+        layerDimensions.length > 1 &&
+        value.length > maxInnerLayerTextLength
+      ) {
+        return `${value.substr(0, maxInnerLayerTextLength).trim()}...`;
+      }
+
+      return value;
+    };
+  }
+
+  @memoizeOne
+  buildY1AxisGoalLines(
+    goalLines: $ReadOnlyArray<GoalLineData>,
+  ): $ReadOnlyArray<GoalLineData> {
+    return goalLines.filter(data => data.axis === 'y1Axis');
+  }
+
+  @memoizeOne
+  buildY2AxisGoalLines(
+    goalLines: $ReadOnlyArray<GoalLineData>,
+  ): $ReadOnlyArray<GoalLineData> {
+    return goalLines.filter(data => data.axis === 'y2Axis');
+  }
+
+  isColumnChart(): boolean {
+    return this.props.barDirection === 'vertical';
   }
 
   @autobind
@@ -830,7 +925,7 @@ export default class BarGraph extends React.PureComponent<Props, State> {
   onHoverStart(
     dataPoint: DataPoint,
     metric: Metric,
-    event: SyntheticMouseEvent<window.SVGRectElement>,
+    event: SyntheticMouseEvent<SVGElement>,
   ) {
     const { offsetX, offsetY } = event.nativeEvent;
     this.setState({
@@ -851,23 +946,18 @@ export default class BarGraph extends React.PureComponent<Props, State> {
   }
 
   @autobind
-  onY1AxisHoverMove(metric: Metric, value: number) {
-    this.onYAxisHoverMove('y1Axis', metric, value);
+  onY1AxisHoverMove(value: number) {
+    this.onYAxisHoverMove('y1Axis', value);
   }
 
   @autobind
-  onY2AxisHoverMove(metric: Metric, value: number) {
-    this.onYAxisHoverMove('y2Axis', metric, value);
+  onY2AxisHoverMove(value: number) {
+    this.onYAxisHoverMove('y2Axis', value);
   }
 
   @autobind
-  onYAxisHoverMove(axis: YAxisID, metric: Metric, value: number) {
-    const hoverLine = {
-      axis,
-      metric,
-      value,
-      id: 'hover',
-    };
+  onYAxisHoverMove(axis: YAxisID, value: number) {
+    const hoverLine = createGoalLineObject({ axis, id: 'hover', value });
     this.setState({ hoverLine });
   }
 
@@ -876,35 +966,40 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     this.setState({ hoverLine: undefined });
   }
 
+  /**
+   * HACK(yitian): We want to round values so that they display nicely on
+   * the goal line control but we only round if the value is an integer. This
+   * logic exists in MetricAxis, so we we define a round parameter that will be
+   * filled in MetricAxis and this call will be triggered in GoalLine component.
+   */
   @autobind
-  onGoalLineClick(goalLineID: string) {
-    this.setState(prevState => {
-      const { goalLines, hoverLine } = prevState;
-      if (hoverLine === undefined) {
-        return prevState;
-      }
+  onGoalLineClick(goalLineID: string, roundValue: boolean) {
+    const { goalLines, onGoalLineChange } = this.props;
+    const { hoverLine } = this.state;
 
-      const { axis } = hoverLine;
-      const axisGoalLines = goalLines[axis];
-      const idx = axisGoalLines.findIndex(
-        ({ id }: GoalLineData) => id === goalLineID,
-      );
-
-      const newGoalLines = { ...goalLines };
-      if (idx !== -1) {
-        newGoalLines[axis] = axisGoalLines.delete(idx);
-        return { goalLines: newGoalLines };
-      }
-
-      const goalLineData = {
+    // This should never happen, but on the off chance that somehow we clicked
+    // an undefined hoverline, we return and do nothing.
+    if (hoverLine === undefined) {
+      return;
+    }
+    // If goal line ID exists in goal lines, remove. Otherwise, we know
+    // this is a new goal line.
+    const filtered = goalLines.filter(line => line.id !== goalLineID);
+    if (filtered.length !== goalLines.length) {
+      onGoalLineChange(filtered);
+    } else {
+      const updatedValue = roundValue
+        ? Number(hoverLine.value.toFixed(2))
+        : hoverLine.value;
+      // Hoverline id is always 'hover'. Generate a new permanent id by overriding
+      // id to undefined.
+      const updatedGoalLine = createGoalLineObject({
         ...hoverLine,
-        id: `goal-line-${axisGoalLines.size()}`,
-      };
-      newGoalLines[axis] = axisGoalLines.push(goalLineData);
-      return {
-        goalLines: newGoalLines,
-      };
-    });
+        id: undefined,
+        value: updatedValue,
+      });
+      onGoalLineChange([...goalLines, updatedGoalLine]);
+    }
   }
 
   @autobind
@@ -973,7 +1068,7 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     });
   }
 
-  maybeRenderTooltip() {
+  maybeRenderTooltip(): React.Node {
     const { hoverData } = this.state;
     if (!hoverData) {
       return null;
@@ -983,7 +1078,6 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     const { dataPoint, metric, point } = hoverData;
     return (
       <BarGraphTooltip
-        backgroundColor={metric.color}
         dataPoint={dataPoint}
         dimensionFormatter={dimensionFormatter}
         dimensionValueFormatter={dimensionValueFormatter}
@@ -996,9 +1090,9 @@ export default class BarGraph extends React.PureComponent<Props, State> {
   @autobind
   maybeRenderY1Axis(
     innerRef: (React.ElementRef<'g'> | null) => void,
-  ): React.Element<typeof MetricAxis> | null {
-    const { axisTitles, metricOrder, theme } = this.props;
-    const { goalLines, hoverLine } = this.state;
+  ): React.MixedElement | null {
+    const { axisTitles, goalLines, metricOrder, theme } = this.props;
+    const { hoverLine } = this.state;
     const { y1Scale } = this.getScales();
     const metric = metricOrder.find(m => m.axis === 'y1Axis');
 
@@ -1011,20 +1105,22 @@ export default class BarGraph extends React.PureComponent<Props, State> {
         ? hoverLine
         : undefined;
     const axisTheme = theme.axis.y1Axis;
+    const axisGoalLines = this.buildY1AxisGoalLines(goalLines);
+    const AxisComponent = this.isColumnChart() ? MetricAxis : RotatedMetricAxis;
     return (
-      <MetricAxis
+      <AxisComponent
         axisOrientation="left"
         chartWidth={this.getVisibleXAxisWidth()}
+        formatValue={metric.formatValue}
         goalLineThemes={theme.goalLine}
-        goalLines={goalLines.y1Axis.arrayView()}
+        goalLines={axisGoalLines}
         height={this.getYAxisHeight()}
         hoverLine={axisHoverLine}
         innerRef={innerRef}
-        metric={metric}
         onGoalLineClick={this.onGoalLineClick}
         onHoverMove={this.onY1AxisHoverMove}
         onHoverEnd={this.onYAxisHoverEnd}
-        stroke={theme.stroke}
+        stroke={axisTheme.stroke}
         tickColor={axisTheme.ticks.color}
         tickLabelProps={axisTheme.ticks.label}
         title={axisTitles.y1Axis}
@@ -1035,9 +1131,11 @@ export default class BarGraph extends React.PureComponent<Props, State> {
   }
 
   @autobind
-  maybeRenderY2Axis(innerRef: (React.ElementRef<'g'> | null) => void) {
-    const { axisTitles, metricOrder, theme } = this.props;
-    const { goalLines, hoverLine } = this.state;
+  maybeRenderY2Axis(
+    innerRef: (React.ElementRef<'g'> | null) => void,
+  ): React.MixedElement | null {
+    const { axisTitles, goalLines, metricOrder, theme } = this.props;
+    const { hoverLine } = this.state;
     const { y2Scale } = this.getScales();
     const metric = metricOrder.find(m => m.axis === 'y2Axis');
 
@@ -1050,20 +1148,22 @@ export default class BarGraph extends React.PureComponent<Props, State> {
         ? hoverLine
         : undefined;
     const axisTheme = theme.axis.y2Axis;
+    const axisGoalLines = this.buildY2AxisGoalLines(goalLines);
+    const AxisComponent = this.isColumnChart() ? MetricAxis : RotatedMetricAxis;
     return (
-      <MetricAxis
+      <AxisComponent
         axisOrientation="right"
         chartWidth={this.getVisibleXAxisWidth()}
+        formatValue={metric.formatValue}
         goalLineThemes={theme.goalLine}
-        goalLines={goalLines.y2Axis.arrayView()}
+        goalLines={axisGoalLines}
         height={this.getYAxisHeight()}
         hoverLine={axisHoverLine}
         innerRef={innerRef}
-        metric={metric}
         onGoalLineClick={this.onGoalLineClick}
         onHoverMove={this.onY2AxisHoverMove}
         onHoverEnd={this.onYAxisHoverEnd}
-        stroke={theme.stroke}
+        stroke={axisTheme.stroke}
         tickColor={axisTheme.ticks.color}
         tickLabelProps={axisTheme.ticks.label}
         title={axisTitles.y2Axis}
@@ -1073,90 +1173,143 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     );
   }
 
-  maybeRenderFocus() {
-    if (!this.enableFocusWindow()) {
+  maybeRenderFocus(): React.Node {
+    const height = this.getFocusWindowHeight();
+    if (!this.usingFocusWindow() || height === 0) {
       return null;
     }
 
-    const { metricOrder, stack, theme } = this.props;
-    const { height, marginTop } = theme.focus;
+    const {
+      barDirection,
+      barTreatment,
+      metricOrder,
+      theme,
+      width: containerWidth,
+    } = this.props;
+
     const width = this.getVisibleXAxisWidth();
-
-    // HACK(stephen): Need a better way to place focus bar beneath the x-axis
-    // than this approximation nonsense.
-    const layerCount = this.getAxisLayers().length;
-
-    // Assume maximum 3 levels per layer. Include extra offset for the non-first
-    // layer.
-    const maxLevels = 3;
-    const offsetTop =
-      // Text level height.
-      19.3 * maxLevels * layerCount +
-      // Tick height per layer.
-      8 * layerCount +
-      // Include extra offset for the non-first layers.
-      (layerCount > 1 ? (layerCount - 1) * 8 : 0) +
-      // Focus window margin.
-      marginTop;
     const { start, end } = this.state.focusPosition;
+
+    const dataPoints = this.getSortedDataPoints();
+    const scales = this.getFocusScales();
+
+    // Only show the bars in the focus window if they will actually be visible
+    // and useful. If there are too many bars, or if the bars would be rendered
+    // too small, then they are not useful and we should not show them. This
+    // helps improve performance when the visualization has a lot of data.
+    // NOTE(stephen): The `bandwidth` of the bar scale is the width that each
+    // bar will occupy on the page in pixels. If this width is less than 1 pixel
+    // then it will be very difficult for the user to get meaningful information
+    // from the focus window.
+    // NOTE(stephen): When we hide the bars, we will draw a gray box along the
+    // bottom of the focus window to remind the user that the focus window still
+    // operates across the whole bar chart. This gray box is basically what the
+    // user would have seen anyways with a large number of points and a tiny bar
+    // size.
+    const hideBars =
+      dataPoints.length * metricOrder.length > 10000 ||
+      scales.barScale.bandwidth() < 1;
+
+    // HACK(stephen): Since we are rendering the FocusWindow outside of the
+    // ResponsiveContainer, we don't have access to the left/right axis sizes
+    // to properly offset the window. Try to guess the best offsets for the
+    // focus window so it is positioned directly under the bars.
+    const { y1Scale, y2Scale } = this.getScales();
+    const extraSpace = Math.max(containerWidth - width, 0);
+    let marginLeft = 0;
+    if (y1Scale !== undefined && y2Scale !== undefined) {
+      // Center the focus window if both y-axes are in use.
+      marginLeft = extraSpace / 2;
+    } else if (y1Scale !== undefined) {
+      // Align the focus window to the right if only the y1Axis is in use.
+      marginLeft = extraSpace;
+    }
+
     return (
-      <g transform={`translate(0, ${offsetTop})`}>
-        <FocusWindow
-          focusEnd={end}
-          focusStart={start}
-          height={height}
-          onDragStart={this.onFocusDragStart}
-          onDragStop={this.onFocusDragStop}
-          onFocusAreaChange={this.onFocusAreaChange}
-          width={width}
-        >
-          <BarSeries
-            barGroupOpacity={this.getBarGroupOpacity}
-            dataPointKeyMap={this.getDataPointKeyMap()}
-            dataPoints={this.getSortedDataPoints()}
+      <svg height={height} style={FOCUS_STYLE} width={containerWidth}>
+        <g transform={`translate(${marginLeft}, 0)`}>
+          <FocusWindow
+            focusEnd={end}
+            focusStart={start}
             height={height}
-            metricOrder={metricOrder}
-            scales={this.getFocusScales()}
-            stack={stack}
+            onDragStart={this.onFocusDragStart}
+            onDragStop={this.onFocusDragStop}
+            onFocusAreaChange={this.onFocusAreaChange}
             width={width}
-          />
-        </FocusWindow>
-      </g>
+          >
+            {!hideBars && (
+              <BarSeries
+                barDirection={barDirection}
+                barGroupOpacity={this.getBarGroupOpacity}
+                barStroke={theme.stroke}
+                barStrokeWidth={theme.strokeWidth}
+                barTreatment={barTreatment}
+                dataPointKeyMap={this.getDataPointKeyMap()}
+                dataPoints={dataPoints}
+                enableValueDisplay={false}
+                height={height}
+                metricOrder={metricOrder}
+                minBarHeight={theme.minBarHeight}
+                scales={scales}
+                width={width}
+              />
+            )}
+            {hideBars && (
+              <rect
+                fill="#c4c4c4"
+                height={2}
+                width={width}
+                x="0"
+                y={height - 2}
+              />
+            )}
+          </FocusWindow>
+        </g>
+      </svg>
     );
   }
 
-  maybeRenderXAxis() {
-    const { axisTitles, theme, width } = this.props;
-    const axisHeight = this.getYAxisHeight();
-    if (axisHeight <= 0 || width === 0) {
-      return null;
-    }
-
+  maybeRenderXAxis(): React.Element<typeof LayeredAxis> {
+    const { axisTitles, dimensionValueFormatter, height, theme } = this.props;
     const barGroupScale = this.getBarGroupScale();
     const padding = barGroupScale.step() - barGroupScale.bandwidth();
     const axisTheme = theme.axis.xAxis;
+    const layers = this.getAxisLayers();
+    const axisValueFormatter = this.buildXAxisValueFormatter(
+      dimensionValueFormatter,
+      axisTheme.maxInnerLayerTextLength,
+    );
     return (
-      <React.Fragment>
-        <LayeredAxis
-          axisValueFormatter={this.axisValueFormatter}
-          groupPadding={padding}
-          layers={this.getAxisLayers()}
-          onAxisValueClick={this.onAxisValueClick}
-          scale={this.getBarGroupScale()}
-          stroke={theme.stroke}
-          tickColor={axisTheme.ticks.color}
-          tickLabelProps={this.tickLabelProps}
-          title={axisTitles.xAxis}
-          titleLabelProps={axisTheme.title}
-          width={this.getVisibleXAxisWidth()}
-        />
-        {this.maybeRenderFocus()}
-      </React.Fragment>
+      <LayeredAxis
+        axisValueFormatter={axisValueFormatter}
+        groupPadding={padding}
+        layers={layers}
+        maxHeightSuggestion={height * 0.5}
+        onAxisValueClick={this.onAxisValueClick}
+        scale={this.getBarGroupScale()}
+        tickColor={axisTheme.ticks.color}
+        tickLabelProps={this.tickLabelProps}
+        title={axisTitles.xAxis}
+        titleLabelProps={axisTheme.title}
+        width={this.getVisibleXAxisWidth()}
+      />
     );
   }
 
-  renderInnerChart() {
-    const { metricOrder, stack } = this.props;
+  // HACK(stephen): It is very difficult to ensure that bar values can be
+  // displayed within the chart area. To try and compensate for this limitation,
+  // we introduce a top axis with a given height that will provide an area for
+  // bar values to overflow into. Trying to adjust the SVG container to allow
+  // overflow in certain areas proved to be very difficult, so this route is
+  // preferred.
+  renderAxisTop(): React.Element<'rect'> {
+    return (
+      <rect fill="transparent" height={this.getAxisTopHeight()} width={10} />
+    );
+  }
+
+  renderInnerChart(): React.MixedElement {
+    const { barDirection, barTreatment, metricOrder, theme } = this.props;
     const { innerChartSize, selectedDimensionValues } = this.state;
     const { height, width } = innerChartSize;
 
@@ -1164,22 +1317,34 @@ export default class BarGraph extends React.PureComponent<Props, State> {
     // component so that we trigger a rerender when it changes. This is because
     // the `BarSeries` component does not know when the bar group opacity
     // has changed since it is an autobound callback.
+    // HACK(stephen): Increase the height of the clip-path so that when bar
+    // values are displayed, they won't be cutoff on the top of the viz.
+    const axisTopHeight = this.getAxisTopHeight();
     return (
       <React.Fragment>
-        <RectClipPath id={INNER_CHART_CLIP} height={height} width={width} />
-        <g clipPath={`url(#${INNER_CHART_CLIP})`}>
+        <RectClipPath
+          height={height + axisTopHeight}
+          id={this.clipPathId}
+          width={width}
+          y={-axisTopHeight}
+        />
+        <g clipPath={`url(#${this.clipPathId})`}>
           <BarSeries
+            barDirection={barDirection}
             barGroupOpacity={this.getBarGroupOpacity}
+            barStroke={theme.stroke}
+            barStrokeWidth={theme.strokeWidth}
+            barTreatment={barTreatment}
             dataPointKeyMap={this.getDataPointKeyMap()}
             dataPoints={this.getSortedDataPoints()}
             height={height}
             hideOverflowing
             metricOrder={metricOrder}
+            minBarHeight={theme.minBarHeight}
             onHoverEnd={this.onHoverEnd}
             onHoverStart={this.onHoverStart}
             selectedDimensionValues={selectedDimensionValues}
             scales={this.getScales()}
-            stack={stack}
             width={this.getVisibleXAxisWidth()}
           />
         </g>
@@ -1188,26 +1353,76 @@ export default class BarGraph extends React.PureComponent<Props, State> {
   }
 
   @autobind
-  renderGraph() {
-    const { height, width } = this.props;
+  renderGraph(): React.Node {
+    const { ariaName, height, width } = this.props;
+
+    // The focus window will be rendered as a separate SVG after the main chart
+    // SVG. Ensure there is space for both the main chart and the focus window.
+    const containerHeight = Math.max(height - this.getFocusWindowHeight(), 10);
+    const fullAriaName = normalizeARIAName(ariaName);
+    if (this.isColumnChart()) {
+      return (
+        <ResponsiveContainer
+          ariaName={fullAriaName}
+          axisBottom={this.maybeRenderXAxis()}
+          axisLeft={this.maybeRenderY1Axis}
+          axisRight={this.maybeRenderY2Axis}
+          axisTop={this.renderAxisTop()}
+          chart={this.renderInnerChart()}
+          disableResize={this.state.dragging}
+          height={containerHeight}
+          onChartResize={this.onInnerChartResize}
+          width={width}
+        />
+      );
+    }
+
+    // When we are in horizontal bar mode, we rotate the root SVG 90 degrees.
+    // This requires us to swap the width and height that the
+    // ResponsiveContainer renders using and adjust where the placement of the
+    // chart is after translation.
+    // NOTE(stephen): We unfortunately cannot apply the `transform` directly to
+    // the root ResponsiveContainer SVG because not all browsers support it. It
+    // is a SVG Version 2 capability that is not supported yet by Safari. Using
+    // a wrapper SVG allows us to have cross-browser compatibility.
+    // Ref: T8343
     return (
-      <ResponsiveContainer
-        axisBottom={this.maybeRenderXAxis()}
-        axisLeft={this.maybeRenderY1Axis}
-        axisRight={this.maybeRenderY2Axis}
-        chart={this.renderInnerChart()}
-        disableResize={this.state.dragging}
-        height={height}
-        onChartResize={this.onInnerChartResize}
+      <svg
+        aria-label={fullAriaName}
+        height={containerHeight}
+        role="figure"
+        style={HORIZONTAL_CONTAINER_STYLE}
         width={width}
-      />
+      >
+        <g
+          transform={`translate(${width}, 0) rotate(90)`}
+          transform-origin="top left"
+        >
+          <ResponsiveContainer
+            ariaName={fullAriaName}
+            axisBottom={this.maybeRenderXAxis()}
+            // NOTE(stephen): Flip the y-axes when the chart is in horizontal
+            // bar mode since we want the Y1 axis to appear on the bottom of the
+            // chart.
+            axisLeft={this.maybeRenderY2Axis}
+            axisRight={this.maybeRenderY1Axis}
+            axisTop={this.renderAxisTop()}
+            chart={this.renderInnerChart()}
+            disableResize={this.state.dragging}
+            height={width}
+            onChartResize={this.onInnerChartResize}
+            width={containerHeight}
+          />
+        </g>
+      </svg>
     );
   }
 
-  render() {
+  render(): React.Element<'div'> {
     return (
-      <div style={{ position: 'relative' }}>
+      <div style={CONTAINER_STYLE}>
         {this.renderGraph()}
+        {this.maybeRenderFocus()}
         {this.maybeRenderTooltip()}
       </div>
     );

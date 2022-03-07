@@ -50,9 +50,12 @@ def initialize_database_seed_values(database_connection_string):
             The connection string that will be used to connect to the database and perform any
             runtime seeding.
     '''
-
+    # pylint: disable=C0103
     Session = sessionmaker()
-    engine = create_engine(database_connection_string)
+    engine = create_engine(
+        database_connection_string,
+        connect_args={'application_name': 'setup:initialize db seed values'},
+    )
     Session.configure(bind=engine)
     session = Session()
 

@@ -5,6 +5,7 @@ export function stopDropdownClickEvent(event: SyntheticEvent<HTMLElement>) {
   event.stopPropagation();
 
   // stop other listeners of this same click event from propagating (this
-  // stops the dropdown from hiding)
+  // stops the dropdown from hiding before we specifically call `hideDropdown`
+  // in BaseDropdown.jsx)
   event.nativeEvent.stopImmediatePropagation();
 }

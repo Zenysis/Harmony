@@ -1,6 +1,6 @@
 from .model import (
-    DefaultRoles,
     User,
+    UserAcl,
     UserRoles,
     UserStatus,
     UserStatusEnum,

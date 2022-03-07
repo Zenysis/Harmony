@@ -3,38 +3,51 @@ import numeral from 'numeral';
 
 import * as Zen from 'lib/Zen';
 import { Y1_AXIS } from 'components/visualizations/common/SettingsModal/AxesSettingsTab/constants';
-import { formatFieldValueForDisplay } from 'indicator_fields';
+import { formatFieldValueForDisplay } from 'util/valueDisplayUtil';
 import { indexToSeriesColor } from 'components/QueryResult/graphUtil';
 import type { Serializable } from 'lib/Zen';
 
-const NO_DATA_TEXT = t('visualizations.common.noData');
+const NOT_A_NUMBER_TEXT = t('visualizations.common.notANumber');
+export const NO_DATA_DISPLAY_VALUE: string = t('visualizations.common.noData');
+export const ZERO_DISPLAY_VALUE = '0';
 
 type Values = {
   id: string,
   label: string,
 };
 
+export type ValuePosition = 'top' | 'center' | 'bottom';
+export type VisualDisplayShape = 'bar' | 'line' | 'dotted';
+
 type DefaultValues = {
+  barLabelPosition: ValuePosition,
   color: string,
-  dataLabelFormat: string,
   dataLabelFontSize: string,
+  dataLabelFormat: string,
   isVisible: boolean,
-  showConstituents: boolean,
+
+  /**
+   * The value to display when a `null` is encountered during formatting.
+   */
+  nullValueDisplay: string,
   showSeriesValue: boolean,
+  visualDisplayShape: VisualDisplayShape,
 
   // TODO(pablo): change to 'y1Axis' | 'y2Axis', imported from AxesSettingsTab
   yAxis: string,
 };
 
 type SerializedQueryResultSeries = {
-  id: string,
-  label: string,
+  barLabelPosition?: ValuePosition,
   color?: string,
-  dataLabelFormat?: string,
   dataLabelFontSize?: string,
+  dataLabelFormat?: string,
+  id: string,
   isVisible?: boolean,
-  showConstituents?: boolean,
+  label: string,
+  nullValueDisplay?: string,
   showSeriesValue?: boolean,
+  visualDisplayShape: VisualDisplayShape,
   yAxis?: string,
 };
 
@@ -55,20 +68,22 @@ type DeserializationConfig = {
 class QueryResultSeries
   extends Zen.BaseModel<QueryResultSeries, Values, DefaultValues>
   implements Serializable<SerializedQueryResultSeries> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
+    barLabelPosition: 'top',
     color: indexToSeriesColor(0),
-    dataLabelFormat: 'none',
     dataLabelFontSize: '12px',
+    dataLabelFormat: 'none',
     isVisible: true,
-    showConstituents: false,
+    nullValueDisplay: NO_DATA_DISPLAY_VALUE,
     showSeriesValue: false,
+    visualDisplayShape: 'bar',
     yAxis: Y1_AXIS,
   };
 
   static deserialize(
     values: SerializedQueryResultSeries,
     extraConfig?: DeserializationConfig = { seriesIndex: 0 },
-  ): QueryResultSeries {
+  ): Zen.Model<QueryResultSeries> {
     // in case a color isn't included from the backend (due to some older
     // dashboards that may not have this information), base it off of the
     // series index
@@ -81,21 +96,28 @@ class QueryResultSeries
 
   formatFieldValue(value: number | string | void | null): string {
     if (value === undefined || value === null || value === '') {
-      return NO_DATA_TEXT;
+      return this._.nullValueDisplay();
     }
 
-    // NOTE(toshi): Checking dataLabelFormat for BarGraph and BumpChart
+    if (typeof value === 'number' && !Number.isFinite(value)) {
+      return NOT_A_NUMBER_TEXT;
+    }
+
     const dataLabelFormat = this._.dataLabelFormat();
     if (dataLabelFormat && dataLabelFormat !== 'none') {
       return numeral(value).format(dataLabelFormat);
     }
 
-    return formatFieldValueForDisplay(value, this._.id());
+    return formatFieldValueForDisplay(value);
   }
 
   serialize(): SerializedQueryResultSeries {
-    return { ...this.modelValues() };
+    return {
+      ...this.modelValues(),
+    };
   }
 }
 
-export default ((QueryResultSeries: any): Class<Zen.Model<QueryResultSeries>>);
+export default ((QueryResultSeries: $Cast): Class<
+  Zen.Model<QueryResultSeries>,
+>);

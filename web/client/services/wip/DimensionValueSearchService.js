@@ -2,15 +2,18 @@
 import Promise from 'bluebird';
 
 import APIService, { API_VERSION } from 'services/APIService';
-import Dimension from 'models/core/wip/Dimension';
 import DimensionValue from 'models/core/wip/Dimension/DimensionValue';
 import autobind from 'decorators/autobind';
 import type { APIVersion, HTTPService } from 'services/APIService';
 
+// TODO(david): Add a cache so we do not have to make repeat requests for the
+// same search term. (The current cache does not do this - it only ensures
+// that we do not have multiple DimensionValue instances representing the same
+// dimension value).
 class DimensionValueSearchService {
   apiVersion: APIVersion = API_VERSION.V2;
-  endpoint: string = 'wip/dimension_values/search';
-  _cache: { [dimensionId: string]: DimensionValue };
+  endpoint: string = 'query/dimension_values/search';
+  _cache: { [dimensionId: string]: DimensionValue, ... };
   _httpService: HTTPService;
 
   constructor(httpService: HTTPService) {
@@ -18,19 +21,26 @@ class DimensionValueSearchService {
     this._cache = {};
   }
 
+  /**
+   * Search for matching DimensionValues with a given search term in a
+   * Dimension. If the search term is an empty string, this will
+   * automatically return an empty array.
+   */
   @autobind
-  get(
-    searchTerm: string,
-    dimension: Dimension,
-  ): Promise<Array<DimensionValue>> {
+  get(searchTerm: string, dimensionId: string): Promise<Array<DimensionValue>> {
+    // empty string is not a valid search term for a dimension value
+    if (searchTerm === '') {
+      return Promise.resolve([]);
+    }
+
     const queryString = `?where={"name":{"$icontains":"${searchTerm}"}}`;
 
-    const uri = `${this.endpoint}/${dimension.id()}${queryString}`;
+    const uri = `${this.endpoint}/${dimensionId}${queryString}`;
     return this._httpService
       .get(this.apiVersion, uri)
       .then(rawDimensionValuesList =>
-        rawDimensionValuesList.map(rawDimensionValue =>
-          DimensionValue.UNSAFE_deserialize(rawDimensionValue),
+        Promise.all(
+          rawDimensionValuesList.map(DimensionValue.deserializeAsync),
         ),
       )
       .then(dimensionValues =>
@@ -49,4 +59,6 @@ class DimensionValueSearchService {
   }
 }
 
-export default new DimensionValueSearchService(APIService);
+export default (new DimensionValueSearchService(
+  APIService,
+): DimensionValueSearchService);

@@ -1,0 +1,60 @@
+.field-setup-page {
+  margin: auto;
+  max-width: 2112px;
+  padding: 0px $space-l-px $space-l-px $space-l-px;
+
+  &__title {
+    font-size: 20px;
+    font-weight: 600;
+    padding-top: $space-xl-px;
+  }
+}
+
+.field-setup-page-header-actions {
+  &__batch-buttons {
+    padding-left: $space-xxs-px;
+  }
+
+  &__default-buttons {
+    display: flex;
+    margin-left: auto;
+  }
+}
+
+.fs-update-datasource-action {
+  // Had to create our own dropdown popover and reusing the dropdown css styling
+  // here.
+  &__menu {
+    @extend .zen-dropdown__menu;
+  }
+
+  &__menu-option {
+    @extend .zen-dropdown-item-wrapper;
+    @extend .zen-dropdown-item-wrapper__content;
+  }
+}
+
+.fs-update-calculation-action {
+  &__calculation-popover {
+    background-color: $white;
+    border-radius: 5px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+    min-width: 200px;
+
+    .fs-editable-calculation__customization-block {
+      padding: $space-m-px $space-m-px 0 $space-m-px;
+    }
+  }
+}
+
+.fs-batch-publish-action {
+  &__title {
+    font-size: 14px;
+  }
+
+  &__indicator-names {
+    ul.b {
+      list-style-type: square;
+    }
+  }
+}

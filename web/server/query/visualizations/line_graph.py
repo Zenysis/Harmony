@@ -1,21 +1,46 @@
-from flask import request
-
-from web.server.query.visualizations.bar_graph import BarGraph
-from web.server.query.visualizations.base import BaseVisualization
+from data.query.models import GroupingGranularity
+from web.server.query.visualizations.base import QueryBase, TIMESTAMP_COLUMN
+from web.server.query.visualizations.request import QueryRequest
 from web.server.query.visualizations.util import (
     build_key_column,
     clean_df_for_json_export,
 )
 
 
-def _calculate_totals(line_graph_request, query_client):
-    # Copy the query request and set the time granularity to "all" since we want to
-    # calculate total values.
-    new_request = {**line_graph_request, 'granularity': 'all'}
+def calculate_totals(line_graph_viz, original_df):
+    # Remove any granularity groupings from the query request and leave only
+    # Dimensions behind.
+    groups = [
+        group
+        for group in line_graph_viz.request.groups
+        if not isinstance(group, GroupingGranularity)
+    ]
 
-    # Run a new query and build a new dataframe.
-    viz = LineGraph(new_request, query_client)
-    df = clean_df_for_json_export(viz.get_df())
+    # Create a new request with only the dimension groupings.
+    request = QueryRequest(
+        fields=line_graph_viz.request.fields,
+        groups=groups,
+        filter=line_graph_viz.request.filter,
+    )
+
+    # Run a new query and create a new dataframe.
+    raw_df = LineGraphVisualization(
+        request, line_graph_viz.query_client, line_graph_viz.datasource
+    ).get_df()
+    df = clean_df_for_json_export(raw_df)
+
+    # If no results are returned, we likely are dealing with a LAST_VALUE type indicator
+    # where querying it when grouping by time works, but querying it while grouping by
+    # "all" results in no data (since the final time bucket is empty). If this happens,
+    # use the last datapoints from the original line graph dataframe to create the
+    # totals.
+    if df.empty:
+        df_slice = original_df[
+            original_df[TIMESTAMP_COLUMN] == original_df[TIMESTAMP_COLUMN].max()
+        ]
+        # Swap out the empty dataframe reference for this slice of the final values in
+        # the line graph dataframe.
+        df = df_slice.reset_index(drop=True).copy()
 
     # NOTE(stephen): Remove any invalid keys. This in theory should not be possible but
     # previously there were bugs related to it so keeping it in to be safe.
@@ -23,53 +48,48 @@ def _calculate_totals(line_graph_request, query_client):
     # Make the key the index so we can easily convert the result to a dict mapping
     # unique `key` to a values dict.
     df.set_index('key', inplace=True)
-    return df[viz.numeric_fields].to_dict('index')
+
+    numeric_fields = [field.id for field in line_graph_viz.request.fields]
+    return df[numeric_fields].to_dict('index')
 
 
-class LineGraph(BaseVisualization):
-    '''Line graph visualization endpoint.
-
-    Extra request param:
-      labelDimensions: list of dimensions to use to label the line.
+class LineGraphVisualization(QueryBase):
+    ''' Class to process the pandas dataframe returned from a druid query into
+    the format needed for the line graph and bump chart visualizations.
     '''
 
-    def __init__(self, request, query_client):
-        super(LineGraph, self).__init__(request, query_client)
-        # The user should specify which dimensions will be used as the label
-        # for the output values. Default to the requested dimensions if not
-        # specified.
-        self._label_dimensions = request.get('labelDimensions') or self.dimensions
-        self._request = request
+    def build_df(self, raw_df):
+        if raw_df.empty:
+            return raw_df
 
-    def build_df(self, df):
-        if df.empty:
-            return df
-
+        dimensions = self.grouping_dimension_ids()
         # TODO(stephen): If no dimensions are grouped on, there should only be
         # one row returned. Validate this.
-        if not self.dimensions:
-            df['key'] = 'Nation'
-            return df
+        if not dimensions:
+            raw_df['key'] = ''
+            return raw_df
 
         # Add a 'key' column so that the grouped dimensions can be represented
         # in a single string to display on the frontend. The key is based off
         # the label dimensions.
-        label_df = build_key_column(df, 'key', self.dimensions, self._label_dimensions)
-        return df.join(label_df, on=self.dimensions)
+        label_df = build_key_column(raw_df, 'key', dimensions, [dimensions[-1]])
+        return raw_df.join(label_df, on=dimensions)
 
-    # Output data is stored as a list of SingleBars, with a bar being
-    # built for each output field requested
     def build_response(self, df):
+        numeric_fields = [field.id for field in self.request.fields]
         data = []
-        totals = []
-        if not df.empty:
-            columns = ['key', 'timestamp'] + self.numeric_fields
-            data = df[columns].to_dict('records')
-            totals = _calculate_totals(self._request, self.query_client)
+        dates = []
+        totals = {}
 
-        return {
-            'data': data,
-            'fields': self.numeric_fields,
-            'dates': sorted(df['timestamp'].unique()),
-            'totals': totals,
-        }
+        if not df.empty:
+            dimensions = df[self.grouping_dimension_ids()].to_dict('records')
+            columns = ['key', TIMESTAMP_COLUMN] + numeric_fields
+            data = df[columns].to_dict('records')
+            dates = sorted(df[TIMESTAMP_COLUMN].unique())
+            totals = calculate_totals(self, df)
+
+            # Merge the dimensions into the datapoints.
+            for i, data_point in enumerate(data):
+                data_point['dimensions'] = dimensions[i] if dimensions else {}
+
+        return {'data': data, 'dates': dates, 'totals': totals}

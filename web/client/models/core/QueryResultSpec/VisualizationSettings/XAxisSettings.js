@@ -3,61 +3,41 @@ import * as Zen from 'lib/Zen';
 import type { Serializable } from 'lib/Zen';
 
 export type DefaultXAxisValues = {
-  goalLine: string,
-  goalLineLabel: string,
-  goalLineFontSize: string,
-  goalLineColor: string,
-  goalLineThickness: string,
-  goalLineStyle: string,
-  labelsFontSize: string,
+  additionalAxisTitleDistance: string,
   labelsFontColor: string,
   labelsFontFamily: string,
+  labelsFontSize: string,
   title: string,
-  titleFontSize: string,
   titleFontColor: string,
   titleFontFamily: string,
-  additionalAxisTitleDistance: string,
+  titleFontSize: string,
 };
 
-type SerializedXAxis = {
-  goalLine?: string,
-  goalLineLabel?: string,
-  goalLineFontSize?: string,
-  goalLineColor?: string,
-  goalLineThickness?: string,
-  goalLineStyle?: string,
-  labelsFontSize?: string,
-  labelsFontColor?: string,
-  title?: string,
-  titleFontSize?: string,
-  titleFontColor?: string,
-  labelsFontFamily?: string,
-  titleFontFamily?: string,
+export type SerializedXAxis = {
   additionalAxisTitleDistance?: string,
+  labelsFontColor?: string,
+  labelsFontFamily?: string,
+  labelsFontSize?: string,
+  title?: string,
+  titleFontColor?: string,
+  titleFontFamily?: string,
+  titleFontSize?: string,
 };
 
 class XAxisSettings extends Zen.BaseModel<XAxisSettings, {}, DefaultXAxisValues>
   implements Serializable<SerializedXAxis> {
-  static defaultValues = {
-    goalLine: '',
-    goalLineLabel: '',
-    goalLineFontSize: '14px',
-    goalLineColor: 'black',
-    goalLineThickness: '1',
-    goalLineStyle: 'Solid',
-    labelsFontSize: '16px',
+  static defaultValues: DefaultXAxisValues = {
+    additionalAxisTitleDistance: '0px',
     labelsFontColor: 'black',
     labelsFontFamily: 'Arial',
+    labelsFontSize: '13px',
     title: '',
-    titleFontSize: '18px',
     titleFontColor: 'black',
     titleFontFamily: 'Arial',
-    additionalAxisTitleDistance: '0px',
+    titleFontSize: '13px',
   };
 
-  static deserialize(
-    modelValues?: SerializedXAxis = {},
-  ): Zen.Model<XAxisSettings> {
+  static deserialize(modelValues: SerializedXAxis): Zen.Model<XAxisSettings> {
     return XAxisSettings.create({ ...modelValues });
   }
 
@@ -66,4 +46,4 @@ class XAxisSettings extends Zen.BaseModel<XAxisSettings, {}, DefaultXAxisValues>
   }
 }
 
-export default ((XAxisSettings: any): Class<Zen.Model<XAxisSettings>>);
+export default ((XAxisSettings: $Cast): Class<Zen.Model<XAxisSettings>>);

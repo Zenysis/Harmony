@@ -3,14 +3,14 @@
   position: relative;
 
   &__circle {
-    background-color: $blue-primary;
+    background-color: $blue-dark;
   }
 
   &__line {
     position: absolute;
 
     &--active {
-      background-color: $blue-primary;
+      background-color: $blue-dark;
     }
 
     &--inactive {

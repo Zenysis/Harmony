@@ -6,26 +6,27 @@ import autobind from 'decorators/autobind';
 import { noop } from 'util/util';
 import type { StyleObject } from 'types/jsCore';
 
-type Props = {
-  isDisabled: boolean,
-  fontSize: string,
-  seriesId: string,
-  seriesLabel: string,
-  seriesColor: string,
-
+type DefaultProps = {
   fontColor: string,
   fontFamily: string,
   onSeriesClick: (seriesId: string) => void,
 };
 
-const defaultProps = {
-  onSeriesClick: noop,
-  fontColor: 'black',
-  fontFamily: 'Arial',
+type Props = {
+  ...DefaultProps,
+  isDisabled: boolean,
+  fontSize: string,
+  seriesId: string,
+  seriesLabel: string,
+  seriesColor: string,
 };
 
 export default class SeriesRow extends React.PureComponent<Props> {
-  static defaultProps = defaultProps;
+  static defaultProps: DefaultProps = {
+    onSeriesClick: noop,
+    fontColor: 'black',
+    fontFamily: 'Arial',
+  };
 
   @autobind
   onSeriesClick() {
@@ -33,15 +34,15 @@ export default class SeriesRow extends React.PureComponent<Props> {
     onSeriesClick(seriesId);
   }
 
-  renderColorBlock() {
+  renderColorBlock(): React.Node {
     return (
       <div className="legend-row__color-block">
-        <ColorBlock color={this.props.seriesColor} size={14} />
+        <ColorBlock color={this.props.seriesColor} shape="circle" size={12} />
       </div>
     );
   }
 
-  renderSeriesLabel() {
+  renderSeriesLabel(): React.Node {
     const { fontSize, fontColor, fontFamily, seriesLabel } = this.props;
 
     const style: StyleObject = {
@@ -63,7 +64,7 @@ export default class SeriesRow extends React.PureComponent<Props> {
     );
   }
 
-  render() {
+  render(): React.Node {
     const className = !this.props.isDisabled
       ? 'legend-row'
       : 'legend-row legend-row--disabled';

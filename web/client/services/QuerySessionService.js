@@ -2,11 +2,16 @@
 import Promise from 'bluebird';
 
 import APIService, { API_VERSION } from 'services/APIService';
-import QuerySession from 'models/AdvancedQueryApp/QuerySession';
+import QuerySession, {
+  SESSION_SOURCES,
+} from 'models/AdvancedQueryApp/QuerySession';
 import autobind from 'decorators/autobind';
 import type QueryResultSpec from 'models/core/QueryResultSpec';
 import type QuerySelections from 'models/core/wip/QuerySelections';
 import type { HTTPService } from 'services/APIService';
+import type { ResultViewType } from 'components/QueryResult/viewTypes';
+import type { SessionSourceType } from 'models/AdvancedQueryApp/QuerySession';
+import type { VisualizationType } from 'models/AdvancedQueryApp/VisualizationType/types';
 
 class QuerySessionService {
   _httpService: HTTPService;
@@ -33,14 +38,17 @@ class QuerySessionService {
   }
 
   /**
-   * Post query session data to server, get associated hash.
+   * Post query session data to server to store it, get associated hash.
    * @returns {Promise<string>} Promise returning associated query hash
    */
   @autobind
-  postQuerySession(
+  storeQuerySession(
     queryResultSpec: QueryResultSpec | void,
     querySelections: QuerySelections,
+    viewType: ResultViewType,
+    visualizationType: VisualizationType,
     userId: string,
+    sourceType?: SessionSourceType = SESSION_SOURCES.SHARED,
   ): Promise<string> {
     const maybeSerializedQueryResultSpec = queryResultSpec
       ? queryResultSpec.serialize()
@@ -48,6 +56,9 @@ class QuerySessionService {
     const querySession = {
       userId,
       queryBlob: {
+        sourceType,
+        viewType,
+        visualizationType,
         queryResultSpec: maybeSerializedQueryResultSpec,
         querySelections: querySelections.serialize(),
       },
@@ -62,4 +73,4 @@ class QuerySessionService {
   }
 }
 
-export default new QuerySessionService(APIService);
+export default (new QuerySessionService(APIService): QuerySessionService);

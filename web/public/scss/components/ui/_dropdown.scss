@@ -2,17 +2,8 @@ $dropdown-item-horizontal-padding: 20px;
 
 .zen-dropdown {
   display: inline-block;
-  margin-right: 0.4em;
+  max-width: 100%;
   position: relative;
-
-  &:last-child {
-    margin-right: 0;
-  }
-
-  &__dividing-line {
-    border-top: 1px solid $slate;
-    margin: $spacing-s (-$dropdown-item-horizontal-padding);
-  }
 
   &__search-bar {
     padding: 7px 8px 3px;
@@ -20,29 +11,22 @@ $dropdown-item-horizontal-padding: 20px;
   }
 
   &__menu {
-    @include box-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
     background-clip: padding-box;
     background-color: $white;
     border-radius: 5px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
     color: $slate;
-    display: none;
+    display: block;
     font-size: 15px;
-    margin-top: 2px;
+
+    /* For screens taller than 1000px */
+    max-height: 365px;
     overflow-y: auto;
-    position: absolute;
     text-align: left;
-    top: inherit;
-    z-index: 1000;
 
-    &--open {
-      display: block;
-
-      /* For screens taller than 1000px */
-      max-height: 365px;
-      @media screen and (max-height: 1000px) {
-        /* For screens shorter than 1000px*/
-        max-height: 245px;
-      }
+    @media screen and (max-height: 1000px) {
+      /* For screens shorter than 1000px*/
+      max-height: 245px;
     }
 
     &--wrap-words {
@@ -66,6 +50,7 @@ $dropdown-item-horizontal-padding: 20px;
 }
 
 .zen-dropdown-item-wrapper {
+  cursor: pointer;
   line-height: 2;
   white-space: nowrap;
 
@@ -88,13 +73,12 @@ $dropdown-item-horizontal-padding: 20px;
   }
 
   &--unselectable {
+    color: $gray;
     &:hover {
       background-color: initial;
     }
-  }
 
-  // Prevent the content from using a pointer cursor for unselectable values.
-  &--unselectable {
+    // Prevent the content from using a pointer cursor for unselectable values.
     .zen-dropdown-item-wrapper__content {
       cursor: auto;
     }
@@ -128,6 +112,7 @@ $dropdown-item-horizontal-padding: 20px;
 
 .zen-dropdown-button {
   display: inline-block;
+  width: 100%;
 
   &__main-btn {
     align-items: center;
@@ -140,6 +125,12 @@ $dropdown-item-horizontal-padding: 20px;
 
     &[disabled] {
       cursor: not-allowed;
+    }
+
+    &--plain {
+      background-color: inherit;
+      border: none;
+      color: $slate;
     }
 
     &--default {
@@ -177,7 +168,7 @@ $dropdown-item-horizontal-padding: 20px;
       @include dropdown-button(
         $blue-primary,
         $blue-primary-hover,
-        $blue-primary-active,
+        $blue-primary-active
       );
     }
 
@@ -185,7 +176,7 @@ $dropdown-item-horizontal-padding: 20px;
       @include dropdown-button(
         $success-color,
         $success-color-hover,
-        $success-color-active,
+        $success-color-active
       );
     }
 
@@ -193,7 +184,7 @@ $dropdown-item-horizontal-padding: 20px;
       @include dropdown-button(
         $error-color,
         $error-color-hover,
-        $error-color-active,
+        $error-color-active
       );
     }
 
@@ -201,7 +192,7 @@ $dropdown-item-horizontal-padding: 20px;
       @include dropdown-button(
         $info-color,
         $info-color-hover,
-        $info-color-active,
+        $info-color-active
       );
     }
 
@@ -209,7 +200,7 @@ $dropdown-item-horizontal-padding: 20px;
       @include dropdown-button(
         $warning-color,
         $warning-color-hover,
-        $warning-color-active,
+        $warning-color-active
       );
     }
   }
@@ -231,12 +222,11 @@ $dropdown-item-horizontal-padding: 20px;
   }
 
   &__caret {
+    align-items: center;
+    display: flex;
+
     &.zen-caret {
       margin-right: 0;
-    }
-
-    .zen-caret__icon {
-      margin-top: 50%
     }
   }
 }

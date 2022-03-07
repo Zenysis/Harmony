@@ -4,6 +4,7 @@ import type AndFilter, {
   SerializedAndFilter,
 } from 'models/core/wip/QueryFilter/AndFilter';
 import type FieldFilter from 'models/core/wip/QueryFilter/FieldFilter';
+import type FieldInFilter from 'models/core/wip/QueryFilter/FieldInFilter';
 import type InFilter from 'models/core/wip/QueryFilter/InFilter';
 import type IntervalFilter from 'models/core/wip/QueryFilter/IntervalFilter';
 import type NotFilter, {
@@ -17,6 +18,7 @@ import type SelectorFilter from 'models/core/wip/QueryFilter/SelectorFilter';
 type QueryFilterMap = {
   AND: AndFilter,
   FIELD: FieldFilter,
+  FIELD_IN: FieldInFilter,
   IN: InFilter,
   INTERVAL: IntervalFilter,
   NOT: NotFilter,
@@ -35,6 +37,7 @@ export type QueryFilter = $Values<QueryFilterMap>;
 export type SerializedQueryFilter =
   | SerializedAndFilter
   | Zen.Serialized<FieldFilter>
+  | Zen.Serialized<FieldInFilter>
   | Zen.Serialized<InFilter>
   | Zen.Serialized<IntervalFilter>
   | SerializedNotFilter

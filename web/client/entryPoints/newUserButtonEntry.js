@@ -1,4 +1,4 @@
-// Now set up react.
+// @flow
 import Navbar from 'components/Navbar';
 import NewUserButton from 'components/NewUserButton';
 

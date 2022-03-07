@@ -4,7 +4,6 @@ import Promise from 'bluebird';
 import APIService, { API_VERSION } from 'services/APIService';
 import CachedMapService from 'services/wip/CachedMapService';
 import CategoryService from 'services/wip/CategoryService';
-import DatasetService from 'services/wip/DatasetService';
 import DimensionService from 'services/wip/DimensionService';
 import Field from 'models/core/wip/Field';
 import { convertIDToURI, convertURIToID } from 'services/wip/util';
@@ -17,7 +16,7 @@ import type { URI, URIConverter } from 'services/types/api';
  */
 class FieldService extends CachedMapService<Field> implements URIConverter {
   apiVersion: APIVersion = API_VERSION.V2;
-  endpoint: string = 'wip/fields';
+  endpoint: string = 'query/fields';
   _httpService: HTTPService;
 
   constructor(httpService: HTTPService) {
@@ -25,7 +24,6 @@ class FieldService extends CachedMapService<Field> implements URIConverter {
     this._httpService = httpService;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   buildCache(
     resolve: ResolveFn<Field>,
     reject: RejectFn,
@@ -39,14 +37,13 @@ class FieldService extends CachedMapService<Field> implements URIConverter {
     const promise = Promise.all([
       this._httpService.get(this.apiVersion, this.endpoint),
       CategoryService.getAll(),
-      DatasetService.getAll(),
       DimensionService.getAll(),
     ]);
     return promise
       .then(([rawFieldList]) => {
         const fieldMappingCache = {};
-        rawFieldList.forEach(rawField => {
-          const field = Field.UNSAFE_deserialize(rawField);
+        rawFieldList.forEach(serializedField => {
+          const field = Field.UNSAFE_deserialize(serializedField);
           fieldMappingCache[field.id()] = field;
         });
         resolve(fieldMappingCache);
@@ -63,4 +60,4 @@ class FieldService extends CachedMapService<Field> implements URIConverter {
   }
 }
 
-export default new FieldService(APIService);
+export default (new FieldService(APIService): FieldService);

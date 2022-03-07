@@ -1,8 +1,9 @@
 // @flow
 import * as React from 'react';
 import ReactDOMServer from 'react-dom/server';
-import ResizeObserver from 'resize-observer-polyfill';
 
+import ElementResizeService from 'services/ui/ElementResizeService';
+import PlotlyTooltip from 'components/visualizations/common/PlotlyTooltip';
 import ProgressBar from 'components/ui/ProgressBar';
 import Visualization from 'components/visualizations/common/Visualization';
 import withScriptLoader from 'components/common/withScriptLoader';
@@ -12,18 +13,33 @@ import {
   X_AXIS,
   Y1_AXIS,
 } from 'components/visualizations/common/SettingsModal/AxesSettingsTab/constants';
+import { Z_AXIS_NONE } from 'components/visualizations/BubbleChart/BubbleChartControlsBlock';
 import { autobind, memoizeOne } from 'decorators';
-import type BubbleChartQueryResultData from 'components/visualizations/BubbleChart/models/BubbleChartQueryResultData';
-import type { DataPoint } from 'components/visualizations/BubbleChart/types';
+import type BubbleChartQueryResultData from 'models/visualizations/BubbleChart/BubbleChartQueryResultData';
+import type GroupBySettings from 'models/core/QueryResultSpec/GroupBySettings';
+import type SeriesSettings from 'models/core/QueryResultSpec/VisualizationSettings/SeriesSettings';
+import type { DataPoint } from 'models/visualizations/BubbleChart/types';
 import type { StyleObject } from 'types/jsCore';
-import type { VisualizationProps } from 'components/visualizations/common/commonTypes';
-
-type Props = VisualizationProps<'BUBBLE_CHART'>;
+import type {
+  VisualizationDefaultProps,
+  VisualizationProps,
+} from 'components/visualizations/common/commonTypes';
 
 type LinearRegressionData = {
   intercept: number,
   r2: number,
   slope: number,
+};
+
+type HoverData = {
+  dataPointIdx: number,
+  x: number,
+  y: number,
+};
+
+type Props = VisualizationProps<'BUBBLE_CHART'>;
+type State = {
+  hoverData: HoverData | void,
 };
 
 const DEFAULT_BUBBLE_OPACITY = 1;
@@ -105,16 +121,27 @@ function calculateLinearRegression(
   return { intercept, r2, slope };
 }
 
-class BubbleChart extends React.PureComponent<Props> {
-  observer: ResizeObserver = new ResizeObserver(this.onResize);
+class BubbleChart extends React.PureComponent<Props, State> {
   elt: ?HTMLDivElement;
+  resizeRegistration = ElementResizeService.register<HTMLDivElement>(
+    this.onResize,
+    (elt: HTMLDivElement | null | void) => {
+      this.elt = elt;
+    },
+  );
+
+  state = {
+    hoverData: undefined,
+  };
 
   componentDidMount() {
     this.createPlot();
   }
 
-  componentDidUpdate() {
-    this.createPlot();
+  componentDidUpdate(prevProps: Props) {
+    if (this.props !== prevProps) {
+      this.createPlot();
+    }
   }
 
   @autobind
@@ -129,33 +156,25 @@ class BubbleChart extends React.PureComponent<Props> {
       this.getGraphLayout(),
       PLOTLY_CONFIG,
     );
+    // Plotly attaches an `on` listener to the div element that Flow cannot
+    // detect.
+    // $FlowExpectedError[incompatible-use]
+    // $FlowExpectedError[prop-missing]
+    this.elt.on('plotly_hover', this.onHoverStart);
+
+    // $FlowExpectedError[incompatible-use]
+    // $FlowExpectedError[prop-missing]
+    this.elt.on('plotly_unhover', this.onHoverEnd);
   }
 
-  @autobind
-  setRef(elt: HTMLDivElement | null) {
-    if (elt === this.elt) {
-      return;
-    }
-
-    if (this.elt) {
-      this.observer.unobserve(this.elt);
-    }
-
-    if (elt) {
-      this.observer.observe(elt);
-    }
-
-    this.elt = elt;
-  }
-
-  getGraphLayout(): {} {
+  getGraphLayout(): { ... } {
     const { axesSettings, controls, seriesSettings } = this.props;
     const xAxis = axesSettings[X_AXIS]();
     const yAxis = axesSettings[Y1_AXIS]();
     const seriesObjects = seriesSettings.seriesObjects();
 
-    const xSeries = seriesObjects[controls.xAxis];
-    const ySeries = seriesObjects[controls.yAxis];
+    const xSeries = seriesObjects[controls.xAxis()];
+    const ySeries = seriesObjects[controls.yAxis()];
 
     const xAxisTitle = xAxis.title() || (xSeries && xSeries.label());
     const yAxisTitle = yAxis.title() || (ySeries && ySeries.label());
@@ -219,9 +238,15 @@ class BubbleChart extends React.PureComponent<Props> {
     // Plotly's regex to match correctly.
   }
 
-  getGraphData(): $ReadOnlyArray<{}> {
+  getGraphData(): $ReadOnlyArray<{ ... }> {
     const { controls, queryResult } = this.props;
-    const { linearFit, resultLimit, xAxis, yAxis, zAxis } = controls;
+    const {
+      linearFit,
+      resultLimit,
+      xAxis,
+      yAxis,
+      zAxis,
+    } = controls.modelValues();
     const output = [];
 
     // Collect the values of each DataPoint that is plotted.
@@ -229,9 +254,9 @@ class BubbleChart extends React.PureComponent<Props> {
     const yValues = [];
     const colors = [];
     const sizes = [];
-    const tooltips = [];
+    const dataPointIndexes = [];
 
-    queryResult.data().every(dataPoint => {
+    queryResult.data().every((dataPoint, idx) => {
       const { metrics } = dataPoint;
       const xVal = metrics[xAxis];
       const yVal = metrics[yAxis];
@@ -242,18 +267,19 @@ class BubbleChart extends React.PureComponent<Props> {
         yValues.push(yVal);
         colors.push(this.getColorForDataPoint(dataPoint));
         sizes.push(this.scaleMarkerSizeByCount(zAxis, zVal));
-        tooltips.push(this.getTooltip(xAxis, yAxis, zAxis, dataPoint));
+        dataPointIndexes.push(idx);
       }
 
       // Testing the output values length instead of slicing the input data to
       // match the `resultLimit`. This ensures that we display at most
       // `resultLimit` values. Sometimes, the first N values in the input data
       // array have `null` and cannot be drawn.
-      return xValues.length < resultLimit;
+      return resultLimit === -1 || xValues.length < resultLimit;
     });
 
     output.push({
-      hoverinfo: 'text',
+      dataPointIndexes,
+      hoverinfo: 'none',
       marker: {
         color: '#fff',
         line: {
@@ -264,7 +290,6 @@ class BubbleChart extends React.PureComponent<Props> {
         size: sizes,
       },
       mode: 'markers',
-      text: tooltips,
       x: xValues,
       y: yValues,
       yaxis: 'y',
@@ -311,7 +336,7 @@ class BubbleChart extends React.PureComponent<Props> {
   // collection of these values since it can be costly and we might need it
   // inside a loop.
   @memoizeOne
-  buildAllValuesForColorFilter(
+  buildAllValuesForColorValueFilter(
     queryResult: BubbleChartQueryResultData,
     metricID: string,
   ): $ReadOnlyArray<number | null> {
@@ -325,19 +350,49 @@ class BubbleChart extends React.PureComponent<Props> {
   // dictates the color. Potentially allow Dimensions to be selected too and
   // generate the colors from the unique values.
   getColorForDataPoint(dataPoint: DataPoint): string {
-    const { colorFilters, controls, queryResult } = this.props;
-    const { zAxis } = controls;
-    const colorFilter = colorFilters.get(zAxis);
-    if (colorFilter === undefined) {
+    const { controls, queryResult, seriesSettings } = this.props;
+    const zAxis = controls.zAxis();
+    if (zAxis === Z_AXIS_NONE) {
+      return DEFAULT_BUBBLE_COLOR;
+    }
+
+    const dataActionGroup = seriesSettings.getSeriesDataActionGroup(zAxis);
+    if (dataActionGroup === undefined) {
       return DEFAULT_BUBBLE_COLOR;
     }
 
     const value = dataPoint.metrics[zAxis];
     return (
-      colorFilter.getValueColor(
+      dataActionGroup.getValueColor(
         value,
-        this.buildAllValuesForColorFilter(queryResult, zAxis),
+        this.buildAllValuesForColorValueFilter(queryResult, zAxis),
       ) || DEFAULT_BUBBLE_COLOR
+    );
+  }
+
+  getTransformedTextForDataPoint(
+    dataPoint: DataPoint,
+    fieldId: string,
+  ): string | void {
+    const { controls, queryResult, seriesSettings } = this.props;
+    const zAxis = controls.zAxis();
+    if (zAxis === Z_AXIS_NONE) {
+      return undefined;
+    }
+
+    if (zAxis !== fieldId) {
+      return undefined;
+    }
+
+    const dataActionGroup = seriesSettings.getSeriesDataActionGroup(zAxis);
+    if (dataActionGroup === undefined) {
+      return undefined;
+    }
+
+    const value = dataPoint.metrics[zAxis];
+    return dataActionGroup.getTransformedText(
+      value,
+      this.buildAllValuesForColorValueFilter(queryResult, zAxis),
     );
   }
 
@@ -350,7 +405,73 @@ class BubbleChart extends React.PureComponent<Props> {
   }
 
   canShowScatterPlot(): boolean {
-    return this.props.fields.length >= 2;
+    return this.props.seriesSettings.seriesOrder().length >= 2;
+  }
+
+  @memoizeOne
+  buildTooltipRows(
+    { dimensions, metrics }: DataPoint,
+    groupBySettings: GroupBySettings,
+    seriesSettings: SeriesSettings,
+  ) {
+    const output = [];
+    groupBySettings.groupings().forEach(grouping => {
+      const dimensionValue = dimensions[grouping.id()];
+      if (dimensionValue !== undefined) {
+        output.push({
+          label: grouping.label() || '',
+          value: grouping.formatGroupingValue(dimensionValue),
+        });
+      }
+    });
+    seriesSettings.seriesOrder().forEach(id => {
+      const seriesObject = seriesSettings.getSeriesObject(id);
+      const value = metrics[id];
+
+      if (seriesObject !== undefined && value !== undefined) {
+        output.push({
+          label: seriesObject.label(),
+          value:
+            this.getTransformedTextForDataPoint({ dimensions, metrics }, id) ||
+            seriesObject.formatFieldValue(value),
+        });
+      }
+    });
+    return output;
+  }
+
+  @autobind
+  onHoverStart({
+    points,
+  }: {
+    points: $ReadOnlyArray<{
+      data: { dataPointIndexes: $ReadOnlyArray<number> },
+      pointNumber: number,
+      x: number,
+      y: number,
+    }>,
+  }) {
+    if (points.length === 0) {
+      return;
+    }
+    const { data, pointNumber, x, y } = points[0];
+    const { dataPointIndexes } = data;
+    if (dataPointIndexes.length === 0 || dataPointIndexes === undefined) {
+      return;
+    }
+
+    this.setState({
+      hoverData: {
+        dataPointIdx: dataPointIndexes[pointNumber],
+        x,
+        y,
+      },
+    });
+  }
+
+  @autobind
+  onHoverEnd() {
+    this.setState({ hoverData: undefined });
   }
 
   @autobind
@@ -389,7 +510,7 @@ class BubbleChart extends React.PureComponent<Props> {
 
   maybeRenderLegend() {
     const { controls, queryResult } = this.props;
-    const { showLegend, zAxis } = controls;
+    const { showLegend, zAxis } = controls.modelValues();
     if (!this.canShowScatterPlot() || !showLegend || !zAxis) {
       return null;
     }
@@ -429,6 +550,28 @@ class BubbleChart extends React.PureComponent<Props> {
     return <div className="bubblechart-legend">{labelDivs}</div>;
   }
 
+  maybeRenderTooltip() {
+    const { hoverData } = this.state;
+    if (hoverData === undefined) {
+      return null;
+    }
+
+    const { groupBySettings, queryResult, seriesSettings } = this.props;
+    const { dataPointIdx, x, y } = hoverData;
+    const dataPoint = queryResult.data()[dataPointIdx];
+    if (dataPoint === undefined) {
+      return null;
+    }
+
+    const rows = this.buildTooltipRows(
+      dataPoint,
+      groupBySettings,
+      seriesSettings,
+    );
+
+    return <PlotlyTooltip plotContainer={this.elt} rows={rows} x={x} y={y} />;
+  }
+
   renderTooltipDimensionLines({ dimensions }: DataPoint) {
     const { groupBySettings } = this.props;
     const groupings = groupBySettings.groupings();
@@ -442,7 +585,7 @@ class BubbleChart extends React.PureComponent<Props> {
         <span key={id}>
           <br />
           <b>{grouping.displayLabel()}: </b>
-          {grouping.formatGroupingValue(dimensions[id] || '')}
+          {grouping.formatGroupingValue(dimensions[id])}
         </span>
       );
     });
@@ -451,16 +594,19 @@ class BubbleChart extends React.PureComponent<Props> {
   render() {
     return (
       <Visualization loading={this.props.loading}>
-        <div ref={this.setRef}>
+        <div className="bubblechart-viz" ref={this.resizeRegistration.setRef}>
           {this.maybeRenderReturnError()}
           {this.maybeRenderLegend()}
         </div>
+        {this.maybeRenderTooltip()}
       </Visualization>
     );
   }
 }
 
-export default withScriptLoader(BubbleChart, {
+export default (withScriptLoader(BubbleChart, {
   scripts: [VENDOR_SCRIPTS.plotly],
   loadingNode: <ProgressBar enabled />,
-});
+}): React.AbstractComponent<
+  React.Config<Props, VisualizationDefaultProps<'BUBBLE_CHART'>>,
+>);

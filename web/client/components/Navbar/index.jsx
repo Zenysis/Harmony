@@ -1,28 +1,33 @@
+// @flow
+import * as React from 'react';
 import Promise from 'bluebird';
-import PropTypes from 'prop-types';
-import React from 'react';
 import ReactDOM from 'react-dom';
 import classNames from 'classnames';
+import invariant from 'invariant';
 
-import AuthorizationService, {
-  RESOURCE_TYPES,
-  SITE_PERMISSIONS,
-  DASHBOARD_PERMISSIONS,
-} from 'services/AuthorizationService'; // eslint-disable-line import/extensions
+import * as Zen from 'lib/Zen';
+import AuthorizationService from 'services/AuthorizationService';
 import CollapsibleLink from 'components/Navbar/CollapsibleLink';
 import ConfigurationService, {
   CONFIGURATION_KEY,
 } from 'services/ConfigurationService';
-import DashboardMeta from 'models/core/Dashboard/DashboardMeta';
-import DashboardService from 'services/DashboardService';
-import DashboardsDropdown from 'components/common/DashboardsDropdown';
+import CreateDashboardModal from 'components/common/CreateDashboardModal';
+import DashboardService from 'services/DashboardBuilderApp/DashboardService';
+import DashboardsFlyout from 'components/Navbar/DashboardsFlyout';
+import DirectoryService from 'services/DirectoryService';
 import Dropdown from 'components/ui/Dropdown';
+import HypertextLink from 'components/ui/HypertextLink';
 import Icon from 'components/ui/Icon';
-import InputModal from 'components/common/InputModal';
 import MoreLinks from 'components/Navbar/MoreLinks';
 import NavigationDropdown from 'components/Navbar/NavigationDropdown';
-import ZenArray from 'util/ZenModel/ZenArray';
-import { CARET_TYPES } from 'components/ui/Caret';
+import Popover from 'components/ui/Popover';
+import {
+  ALERTS_PERMISSIONS,
+  DASHBOARD_PERMISSIONS,
+  RESOURCE_TYPES,
+  SITE_PERMISSIONS,
+} from 'services/AuthorizationService/registry';
+import { NAVBAR_ID } from 'components/Navbar/constants';
 import { VENDOR_SCRIPTS } from 'vendor/registry';
 import {
   asButton,
@@ -30,85 +35,107 @@ import {
   localizeUrl,
   onLinkClicked,
   isMobileBrowser,
-  isForbiddenPath,
+  isUnoptimizedForMobile,
+  isMobileView,
 } from 'components/Navbar/util';
 import { autobind } from 'decorators';
-import { noop } from 'util/util';
+import type DashboardMeta from 'models/core/Dashboard/DashboardMeta';
+import type { AuthorizationRequest } from 'services/AuthorizationService/types';
 
-const propTypes = {
-  flagClass: PropTypes.string,
-  fullPlatformName: PropTypes.string.isRequired,
-  isAuthenticated: PropTypes.bool.isRequired,
-  logoPath: PropTypes.string,
-  username: PropTypes.string.isRequired,
-  visibleName: PropTypes.string,
-
-  checkCanViewQueryForm: PropTypes.func,
-
-  /**
-   * A callback that is invoked when the user wishes to create a new dashboard.
-   *
-   * @param {String} dashboardTitle The title for the new dashboard
-   *
-   * @returns {Promise<Dashboard>} The created dashboard.
-   */
-  createDashboard: PropTypes.func,
+type DefaultProps = {
+  checkAuthorizations: (
+    $ReadOnlyArray<AuthorizationRequest>,
+  ) => Promise<
+    $ReadOnlyArray<{
+      ...AuthorizationRequest,
+      authorized: boolean,
+    }>,
+  >,
+  flagClass: string,
+  getActiveUsername: typeof DirectoryService.getActiveUsername,
+  getConfiguration: typeof ConfigurationService.getConfiguration,
 
   /**
    * A callback that is invoked when the user wants to retrieve a list of all
    * dashboards.
    *
-   * @returns {Promise<ZenArray<DashboardMeta>>} A listing of all the
+   * @returns {Promise<Zen.Array<DashboardMeta>>} A listing of all the
    *                                             dashboards.
    */
-  getDashboards: PropTypes.func,
-
-  /**
-   * A callback to test whether public access is enabled for this session.
-   *
-   * @returns {Promise<Configuration>} The public access configuration value.
-   */
-  getPublicAccess: PropTypes.func,
-
-  lastDataUpdate: PropTypes.string,
-  checkCanCreateDashboards: PropTypes.func, // f().then(isAuthorized: bool)
-  checkIsAdmin: PropTypes.func, // f().then(isAdmin: bool)
+  getDashboards: typeof DashboardService.getDashboards,
+  lastDataUpdate: ?string,
+  logoPath: string,
+  markDashboardAsFavorite: typeof DashboardService.markDashboardAsFavorite,
+  visibleName: string,
 };
 
-const defaultProps = {
-  visibleName: '',
-  flagClass: '',
-  logoPath: '',
-  createDashboard: DashboardService.createDashboard,
-  getDashboards: () =>
-    DashboardService.getDashboards().then(dashboards =>
-      ZenArray.ofType(DashboardMeta).create(dashboards),
-    ),
-  lastDataUpdate: null,
-  checkCanCreateDashboards: () =>
-    AuthorizationService.isAuthorized(
-      DASHBOARD_PERMISSIONS.CREATE,
-      RESOURCE_TYPES.DASHBOARD,
-    ),
-  checkIsAdmin: () =>
-    AuthorizationService.isAuthorized(
-      SITE_PERMISSIONS.VIEW_ADMIN_PAGE,
-      RESOURCE_TYPES.SITE,
-    ),
-  checkCanViewQueryForm: () =>
-    AuthorizationService.isAuthorized(
-      SITE_PERMISSIONS.VIEW_QUERY_FORM,
-      RESOURCE_TYPES.SITE,
-      'website',
-    ),
-  getPublicAccess: () =>
-    ConfigurationService.getConfiguration(CONFIGURATION_KEY.PUBLIC_ACCESS),
+type Props = {
+  ...DefaultProps,
+  fullPlatformName: string,
+  isAuthenticated: boolean,
+  username: string,
+};
+
+type State = {
+  areDashboardsLoading: boolean,
+  canCreateDashboards: boolean,
+  canUploadData: boolean,
+  canViewAlertsPage: boolean,
+  canViewCaseManagement: boolean,
+  canViewDataQuality: boolean,
+  canViewQueryForm: boolean,
+
+  // the slug for the case management homepage dashboard (if there is one)
+  caseManagementDashboardSlug: string | void,
+  dashboards: Zen.Array<DashboardMeta>,
+  isAdmin: boolean,
+  isCaseManagementEnabled: boolean,
+  isCrispEnabled: boolean,
+  isMobileView: boolean,
+  moreOptionsCount: number,
+  openDrawer: boolean,
+  showAcronym: boolean,
+  showCreateDashboardModal: boolean,
+  showDashboardsFlyout: boolean,
+  small: boolean,
+};
+
+// Mapping from state variable to the permission and resourceType that need to
+// be checked with the authorization API.
+const STATE_TO_AUTH = {
+  canCreateDashboards: {
+    permission: DASHBOARD_PERMISSIONS.CREATE,
+    resourceType: RESOURCE_TYPES.DASHBOARD,
+  },
+  canUploadData: {
+    permission: SITE_PERMISSIONS.CAN_UPLOAD_DATA,
+    resourceType: RESOURCE_TYPES.SITE,
+  },
+  canViewAlertsPage: {
+    permission: ALERTS_PERMISSIONS.CREATE,
+    resourceType: RESOURCE_TYPES.ALERT,
+  },
+  canViewCaseManagement: {
+    permission: SITE_PERMISSIONS.VIEW_CASE_MANAGEMENT,
+    resourceType: RESOURCE_TYPES.SITE,
+  },
+  canViewDataQuality: {
+    permission: SITE_PERMISSIONS.VIEW_DATA_QUALITY,
+    resourceType: RESOURCE_TYPES.SITE,
+  },
+  canViewQueryForm: {
+    permission: SITE_PERMISSIONS.VIEW_QUERY_FORM,
+    resourceType: RESOURCE_TYPES.SITE,
+  },
+  isAdmin: {
+    permission: SITE_PERMISSIONS.VIEW_ADMIN_PAGE,
+    resourceType: RESOURCE_TYPES.SITE,
+  },
 };
 
 const ALERTS_URL = '/alerts';
 const CASE_MANAGEMENT_URL = '/case-management';
 const DATA_QUALITY_URL = '/data-quality';
-const FORBIDDEN_PATH_KEY = 'FORBIDDEN_MOBILE_PATH_MESSAGE';
 
 const TEXT = t('Navbar');
 // Matches navbar-transition-width in _zen_variables.scss
@@ -118,33 +145,33 @@ const TRANSITION_WIDTH = 1250;
 const SHOW_ACRONYM_WIDTH = 1296;
 
 // The width to consider putting the last 2 items in the more dropdown
-const HIDE_TWO_WIDTH = 1024;
+const HIDE_TWO_WIDTH = 1050;
 
 // The width to consider putting the last 3 items in the more dropdown
 const HIDE_THREE_WIDTH = 800;
 
-// The width below which we should switch to the mobile view
-const MOBILE_VIEW_WIDTH = 678;
+// NOTE(stephen): We know that the document body will always be non-null.
+// Cast it to a non-null type so that Flow is happy.
+const DOCUMENT_BODY = ((document.body: $Cast): HTMLBodyElement);
 
-function onSelection(value, e) {
+function onSelection(
+  value: (SyntheticEvent<HTMLElement>) => void,
+  e: SyntheticEvent<HTMLElement>,
+) {
   // The value stored is an onClick event we want to use.
   value(e);
 }
 
 function isSmall() {
-  return $(window).width() < TRANSITION_WIDTH;
-}
-
-function isMobileView() {
-  return $(window).width() < MOBILE_VIEW_WIDTH;
+  return DOCUMENT_BODY.clientWidth < TRANSITION_WIDTH;
 }
 
 function showAcronym() {
-  return $(window).width() < SHOW_ACRONYM_WIDTH;
+  return DOCUMENT_BODY.clientWidth < SHOW_ACRONYM_WIDTH;
 }
 
 function getMoreOptionsCount() {
-  const deviceWidth = $(window).width();
+  const deviceWidth = DOCUMENT_BODY.clientWidth;
 
   if (deviceWidth <= HIDE_THREE_WIDTH) {
     return 3;
@@ -180,58 +207,67 @@ function extractAcronym(deploymentName) {
   return acronym;
 }
 
-class Navbar extends React.PureComponent {
-  static renderToDOM(navbarProps = {}, elementId = 'header') {
+export default class Navbar extends React.PureComponent<Props, State> {
+  static defaultProps: DefaultProps = {
+    checkAuthorizations: AuthorizationService.isAuthorizedMulti,
+    flagClass: '',
+    getActiveUsername: DirectoryService.getActiveUsername,
+    getConfiguration: ConfigurationService.getConfiguration,
+    getDashboards: DashboardService.getDashboards,
+    lastDataUpdate: null,
+    logoPath: '',
+    markDashboardAsFavorite: DashboardService.markDashboardAsFavorite,
+    visibleName: '',
+  };
+
+  static renderToDOM(elementId?: string = 'header') {
+    const elt: ?HTMLElement = document.getElementById(elementId);
+    invariant(elt, `Element ID does not exist: ${elementId}`);
+
     const { ui, user } = window.__JSON_FROM_BACKEND;
-    const { isAuthenticated, username, lastName, firstName } = user;
+    const { firstName, isAuthenticated, lastName, username } = user;
     const visibleName = firstName || lastName;
-    const { fullPlatformName, flagClass, logoPath, lastDataUpdate } = ui;
-    const props = Object.assign(
-      {
-        fullPlatformName,
-        flagClass,
-        logoPath,
-        isAuthenticated,
-        lastDataUpdate,
-        username,
-        visibleName,
-      },
-      navbarProps,
+    const { flagClass, fullPlatformName, lastDataUpdate, logoPath } = ui;
+    ReactDOM.render(
+      <Navbar
+        flagClass={flagClass}
+        fullPlatformName={fullPlatformName}
+        isAuthenticated={isAuthenticated}
+        lastDataUpdate={lastDataUpdate}
+        logoPath={logoPath}
+        username={username}
+        visibleName={visibleName}
+      />,
+      elt,
     );
-
-    ReactDOM.render(<Navbar {...props} />, document.getElementById(elementId));
   }
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      dashboards: ZenArray.create(),
-      canViewQueryForm: false,
-      canCreateDashboards: false,
-      isAdmin: false,
-      showCreateDashboardModal: false,
-      areDashboardsLoading: true,
-      small: isSmall(),
-      showAcronym: showAcronym(),
-      moreOptionsCount: getMoreOptionsCount(),
-      isMobileView: isMobileView(),
-      openDrawer: false,
-    };
+  state: State = {
+    areDashboardsLoading: true,
+    canCreateDashboards: false,
+    canUploadData: false,
+    canViewAlertsPage: false,
+    canViewCaseManagement: false,
+    canViewDataQuality: false,
+    canViewQueryForm: false,
+    caseManagementDashboardSlug: undefined,
+    dashboards: Zen.Array.create(),
+    isAdmin: false,
+    isCaseManagementEnabled: false,
+    isCrispEnabled: false,
+    isMobileView: isMobileView(),
+    moreOptionsCount: getMoreOptionsCount(),
+    openDrawer: false,
+    showAcronym: showAcronym(),
+    showCreateDashboardModal: false,
+    showDashboardsFlyout: false,
+    small: isSmall(),
+  };
 
-    // prettier-ignore
-    this.openCreateDashboardModal =
-      this.setCreateDashboardModalVisibility.bind(this, true);
-    // prettier-ignore
-    this.closeCreateDashboardModal =
-      this.setCreateDashboardModalVisibility.bind(this, false);
-    this.createNewDashboard = this.createNewDashboard.bind(this);
-    this.onDashboardSelection = this.onDashboardSelection.bind(this);
-    this.handleResize = this.handleResize.bind(this);
-    this.onOpenDashboardDropdown = this.onOpenDashboardDropdown.bind(this);
-  }
+  _dashboardsButtonRef: $ElementRefObject<'div'> = React.createRef();
 
   componentDidMount() {
-    this.maybeRedirectOnMobile();
+    this.maybeShowMobileOptimizationDisclaimer();
     this.initializeDashboardsAndPermissions();
     window.addEventListener('resize', this.handleResize);
     window.addEventListener('offline', this.handleOffline);
@@ -242,6 +278,11 @@ class Navbar extends React.PureComponent {
     // altogether, but I have a feeling that other uses of toastr around the
     // site will break because they don't check if it is loaded.
     VENDOR_SCRIPTS.toastr.load();
+
+    // NOTE(stephen): Do not put any permissions detection code inside this
+    // function! Permissions (and configuration) checks require a user to be
+    // authenticated. `initializeDashboardsAndPermissions` handles this. Place
+    // your permission loading code there.
   }
 
   componentWillUnmount() {
@@ -250,87 +291,105 @@ class Navbar extends React.PureComponent {
     window.removeEventListener('online', this.handleOnline);
   }
 
-  maybeRedirectOnMobile() {
+  @autobind
+  openCreateDashboardModal() {
+    this.setState({
+      showCreateDashboardModal: true,
+      showDashboardsFlyout: false,
+    });
+  }
+
+  @autobind
+  closeCreateDashboardModal() {
+    this.setState({ showCreateDashboardModal: false });
+  }
+
+  @autobind
+  openDashboardsFlyout() {
+    this.setState({ showDashboardsFlyout: true });
+    this.updateDashboardList();
+  }
+
+  @autobind
+  closeDashboardsFlyout() {
+    this.setState({ showDashboardsFlyout: false });
+  }
+
+  maybeShowMobileOptimizationDisclaimer() {
     const path = window.location.pathname;
-    const errorMessage = localStorage.getItem(FORBIDDEN_PATH_KEY);
 
-    if (isMobileBrowser() && isForbiddenPath(path)) {
-      window.location.replace(`${window.location.origin}/query`);
-      localStorage.setItem(
-        FORBIDDEN_PATH_KEY,
-        JSON.stringify(TEXT.mobileForbiddenError),
-      );
-    }
-
-    if (errorMessage) {
-      window.toastr.error(JSON.parse(errorMessage));
-      localStorage.removeItem(FORBIDDEN_PATH_KEY);
+    if (isMobileBrowser() && isUnoptimizedForMobile(path)) {
+      window.toastr.warning(TEXT.mobileOptimizationDisclaimer);
     }
   }
 
-  createNewDashboard(dashboardName) {
-    this.props
-      .createDashboard(dashboardName)
-      .then(dashboard => {
-        // redirect to the new dashboard
-        onLinkClicked(
-          localizeUrl(`/dashboard/${dashboard.slug()}`),
-          {},
-          'Dashboard created',
-          { dashboardName, createdInSaveToDashboardModal: false },
-        );
-      })
-      .catch(error => {
-        toastr.error(error.message);
-        console.error(error);
-        analytics.track('Dashboard creation error', error);
-      });
-  }
-
+  @autobind
   handleResize() {
     this.setState({
-      small: isSmall(),
-      showAcronym: showAcronym(),
-      moreOptionsCount: getMoreOptionsCount(),
       isMobileView: isMobileView(),
+      moreOptionsCount: getMoreOptionsCount(),
+      showAcronym: showAcronym(),
+      small: isSmall(),
     });
   }
 
   initializeDashboardsAndPermissions() {
     // If the user is authenticated or public access is enabled, we can
     // initialize the dashboards and user permissions.
-    // HACK(stephen): Ignore getPublicAccess errors since the configuration API
-    // requires authorization at this time if public portal is disabled.
-    const accessPromise = this.props.isAuthenticated
-      ? Promise.resolve(true)
-      : this.props
-          .getPublicAccess()
-          .then(setting => setting.value())
-          .catch(noop);
+    const {
+      checkAuthorizations,
+      getConfiguration,
+      isAuthenticated,
+    } = this.props;
+    if (isAuthenticated) {
+      this.updateDashboardList();
+      checkAuthorizations(
+        Object.keys(STATE_TO_AUTH).map(k => STATE_TO_AUTH[k]),
+      ).then(authorizations => {
+        // NOTE(stephen): n^2 loop is ok here because the number of
+        // authorization checks we issue is small.
+        const newState = {};
+        Object.keys(STATE_TO_AUTH).forEach(stateKey => {
+          const { permission, resourceType } = STATE_TO_AUTH[stateKey];
+          authorizations.some(authorizationResponse => {
+            if (
+              authorizationResponse.permission === permission &&
+              authorizationResponse.resourceType === resourceType
+            ) {
+              newState[stateKey] = authorizationResponse.authorized;
+              return true;
+            }
+            return false;
+          });
+        });
+        this.setState(newState);
+      });
 
-    // Fetch the latest dashboards and retrieve the user's permissions.
-    accessPromise.then(canAccess => {
-      if (canAccess) {
-        this.updateDashboardList();
-        this.props.checkCanCreateDashboards().then(canCreateDashboards => {
-          this.setState({ canCreateDashboards });
+      // We cannot check configuration values when the user is not logged in,
+      // even if the site has public accessibility.
+      // TODO(stephen): God this is a mess. Find someone to help clean it up.
+      if (isAuthenticated) {
+        getConfiguration(
+          CONFIGURATION_KEY.CASE_MANAGEMENT_HOME_PAGE_DASHBOARD,
+        ).then(homepage => {
+          this.setState({
+            caseManagementDashboardSlug: homepage.value(),
+          });
         });
-        this.props.checkIsAdmin().then(isAdmin => {
-          this.setState({ isAdmin });
-        });
-        this.props.checkCanViewQueryForm().then(canViewQueryForm => {
-          this.setState({ canViewQueryForm });
+
+        getConfiguration(CONFIGURATION_KEY.CRISP_ENABLED).then(setting => {
+          this.setState({ isCrispEnabled: setting.value() });
         });
       }
-    });
+    }
   }
 
   updateDashboardList() {
     this.setState({ areDashboardsLoading: true });
     this.props.getDashboards().then(dashboards => {
       this.setState({
-        dashboards,
         areDashboardsLoading: false,
+        dashboards: Zen.Array.create(dashboards),
       });
     });
   }
@@ -354,53 +413,38 @@ class Navbar extends React.PureComponent {
     window.toastr.clear();
   }
 
-  setCreateDashboardModalVisibility(showModal) {
-    this.setState({ showCreateDashboardModal: showModal });
-  }
-
-  getSummaryInfo() {
+  getSummaryInfo(): {
+    dataUpdate: React.Element<'div'> | null,
+    userStatus: React.Element<'div'> | null,
+    versionInfo: React.Element<'div'> | null,
+  } {
     const { isAuthenticated, lastDataUpdate, username } = this.props;
     const userStatus = isAuthenticated
       ? this.renderDropdownTitleItem(TEXT.loggedInAs, username)
       : null;
-    const dataUpdate =
-      lastDataUpdate
-        ? this.renderDropdownTitleItem(TEXT.lastDataRefresh, lastDataUpdate)
-        : null;
+    const dataUpdate = lastDataUpdate
+      ? this.renderDropdownTitleItem(TEXT.lastDataRefresh, lastDataUpdate)
+      : null;
 
     const { isAdmin } = window.__JSON_FROM_BACKEND.user;
     const { buildTag } = window.__JSON_FROM_BACKEND;
-    const versionInfo = isAdmin
-      ? this.renderDropdownTitleItem(TEXT.buildVersion, buildTag)
-      : null;
+    const versionInfo =
+      isAdmin && buildTag
+        ? this.renderDropdownTitleItem(TEXT.buildVersion, buildTag)
+        : null;
     return {
-      userStatus,
       dataUpdate,
+      userStatus,
       versionInfo,
     };
   }
 
-  @autobind
-  onDashboardSelection(dashboard, e) {
-    onLinkClicked(
-      localizeUrl(`/dashboard/${dashboard}`),
-      e,
-      undefined /* analyticsEvent */,
-      undefined /* analyticsProperties */,
-      true /* openNewTab */,
-    );
-  }
-
-  onOpenDashboardDropdown() {
-    this.updateDashboardList();
-  }
-
-  onHomeClicked(e) {
+  onHomeClicked(e: SyntheticMouseEvent<HTMLDivElement>) {
     onLinkClicked(localizeUrl('/overview'), e);
   }
 
   @autobind
-  onHamburgerClick(e) {
+  onHamburgerClick(e: SyntheticMouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     this.setState(prevState => ({
       openDrawer: !prevState.openDrawer,
@@ -408,13 +452,36 @@ class Navbar extends React.PureComponent {
   }
 
   @autobind
-  maybeRenderAnalyzeLink(isDropdownOption = false, showDropdownIcon = true) {
+  onUpdateDashboardIsFavorite(dashboard: DashboardMeta, isFavorite: boolean) {
+    const { markDashboardAsFavorite } = this.props;
+
+    const newDashboard = dashboard.isFavorite(isFavorite);
+
+    this.setState(
+      prevState => {
+        const index = prevState.dashboards.findIndex(
+          currDashboard => currDashboard.slug() === dashboard.slug(),
+        );
+        const newDashboards = prevState.dashboards.set(index, newDashboard);
+
+        return { dashboards: newDashboards };
+      },
+      () => markDashboardAsFavorite(dashboard, isFavorite),
+    );
+  }
+
+  @autobind
+  maybeRenderAnalyzeLink(
+    isDropdownOption?: boolean = false,
+    showDropdownIcon?: boolean = true,
+  ): React.Node {
     const { isAuthenticated } = this.props;
     const { canViewQueryForm } = this.state;
     if (!isAuthenticated || !canViewQueryForm) {
       return null;
     }
-    const url = localizeUrl('/query');
+
+    const url = localizeUrl('/advanced-query');
     const isActive = window.location.pathname.includes(url);
     const iconClassName = showDropdownIcon ? 'glyphicon glyphicon-search' : '';
 
@@ -426,20 +493,23 @@ class Navbar extends React.PureComponent {
       );
     }
 
-    return asButton(e => onLinkClicked(url, e), TEXT.analyze, isActive);
+    return (
+      <HypertextLink
+        key="analyze"
+        onClick={e => onLinkClicked(url, e)}
+        url={url}
+      >
+        {asButton(() => undefined, TEXT.analyze, isActive)}
+      </HypertextLink>
+    );
   }
 
-  maybeRenderCreateDashboardModal() {
+  maybeRenderCreateDashboardModal(): React.Node {
     if (this.state.showCreateDashboardModal) {
       return (
-        <InputModal
-          show={this.state.showCreateDashboardModal}
-          title={TEXT.createNewDashboard}
-          textElement={TEXT.createDashboardTitlePrompt}
+        <CreateDashboardModal
           onRequestClose={this.closeCreateDashboardModal}
-          defaultHeight={260}
-          primaryButtonText={TEXT.create}
-          onPrimaryAction={this.createNewDashboard}
+          show={this.state.showCreateDashboardModal}
         />
       );
     }
@@ -448,44 +518,73 @@ class Navbar extends React.PureComponent {
   }
 
   @autobind
-  maybeRenderDashboardsDropdown() {
-    const { isAuthenticated } = window.__JSON_FROM_BACKEND.user;
-    if (!isAuthenticated) {
-      // Don't render dashboards dropdown for public users who have their own
-      // special dropdowns.
-      return null;
-    }
+  maybeRenderDashboardsFlyoutButton(): React.Node {
+    const { getActiveUsername } = this.props;
+    const {
+      areDashboardsLoading,
+      canCreateDashboards,
+      caseManagementDashboardSlug,
+      dashboards,
+      showDashboardsFlyout,
+    } = this.state;
 
-    // If the current viewer can view any Dashboards, then render this dropdown.
-    if (this.state.canCreateDashboards || this.state.dashboards.size() > 0) {
-      const isActive = window.location.pathname.includes('/dashboard');
-      const className = classNames(
-        'navbar__item navbar__item--link navbar__item--link-offset',
-        {
-          'navbar__item--active': isActive,
-        },
-      );
+    if (
+      this.props.isAuthenticated
+    ) {
+      const locationPath = window.location.pathname;
+      const isCaseManagementDashboard =
+        caseManagementDashboardSlug &&
+        locationPath.includes(caseManagementDashboardSlug);
+
+      const isActive =
+        window.location.pathname.includes('/dashboard') &&
+        !isCaseManagementDashboard;
+
+      const className = classNames('dashboards-dropdown-button', {
+        'navbar-item--active': isActive,
+      });
 
       return (
-        <div className={className} key="dashboards-dropdown">
-          <DashboardsDropdown
-            className="navbar-dropdown navbar-dashboards-dropdown"
-            dashboards={this.state.dashboards}
-            defaultDisplayContent={TEXT.dashboardsDropdownLabel}
-            onDashboardSelection={this.onDashboardSelection}
-            onNewDashboardClick={this.openCreateDashboardModal}
-            showLoadingSpinner={this.state.areDashboardsLoading}
-            canCreateDashboards={this.state.canCreateDashboards}
-            onOpenDropdownClick={this.onOpenDashboardDropdown}
-            useDashboardGroups={isAuthenticated}
-          />
+        <div
+          key="dashboards-dropdown"
+          ref={this._dashboardsButtonRef}
+          className={className}
+        >
+          {asButton(
+            this.openDashboardsFlyout,
+            TEXT.dashboardsFlyoutLabel,
+            false,
+            null,
+            'navbar-dashboards-flyout-button',
+          )}
+          <Popover
+            anchorElt={this._dashboardsButtonRef.current}
+            isOpen={showDashboardsFlyout}
+            onRequestClose={this.closeDashboardsFlyout}
+            windowEdgeThresholds={{
+              bottom: 0,
+              left: 0,
+              right: 0,
+              // Prevents the popover overlaying the navbar on small screens.
+              top: 60,
+            }}
+          >
+            <DashboardsFlyout
+              activeUsername={getActiveUsername()}
+              canCreateDashboards={canCreateDashboards}
+              dashboards={dashboards}
+              dashboardsLoaded={!areDashboardsLoading}
+              onNewDashboardClick={this.openCreateDashboardModal}
+              onUpdateDashboardIsFavorite={this.onUpdateDashboardIsFavorite}
+            />
+          </Popover>
         </div>
       );
     }
     return null;
   }
 
-  maybeRenderLastDataRefresh() {
+  maybeRenderLastDataRefresh(): React.Node {
     const { lastDataUpdate } = this.props;
     if (lastDataUpdate) {
       if (this.state.small) {
@@ -496,7 +595,7 @@ class Navbar extends React.PureComponent {
     return null;
   }
 
-  maybeRenderLoggedInStatus() {
+  maybeRenderLoggedInStatus(): React.Node {
     const { isAuthenticated, username } = this.props;
     if (isAuthenticated) {
       return ` | ${TEXT.loggedInAs} ${username}`;
@@ -504,65 +603,12 @@ class Navbar extends React.PureComponent {
     return null;
   }
 
-  maybeRenderUserManualLink(isDropdownOption = false) {
-    const { userManualUrl } = window.__JSON_FROM_BACKEND.ui;
-    if (userManualUrl && this.props.isAuthenticated) {
-      const wrapper = isDropdownOption ? asDropdownOption : asButton;
-      return wrapper(
-        e =>
-          onLinkClicked(userManualUrl, e, 'User manual accessed', {
-            nonInteraction: 1,
-          }),
-        TEXT.userManual,
-        'glyphicon glyphicon-briefcase',
-      );
-    }
-    return null;
-  }
-
-  @autobind
-  maybeRenderCaseManagementLink(
-    isDropdownOption = false,
-    showDropdownIcon = true,
-  ) {
+  maybeRenderDrawer(): React.Node {
     const { isAuthenticated } = this.props;
-    const { caseManagementAppOptions } = window.__JSON_FROM_BACKEND;
-    if (
-      isAuthenticated &&
-      caseManagementAppOptions !== undefined &&
-      caseManagementAppOptions.showInNavbar &&
-      !isMobileBrowser()
-    ) {
-      const url = localizeUrl(CASE_MANAGEMENT_URL);
-      const isActive = window.location.pathname.includes(url);
-      const iconClassName = showDropdownIcon
-        ? 'glyphicon glyphicon-folder-open'
-        : '';
+    const { locales, ui } = window.__JSON_FROM_BACKEND;
+    const { canUploadData, isAdmin, openDrawer } = this.state;
 
-      if (isDropdownOption) {
-        return asDropdownOption(
-          e => onLinkClicked(url, e),
-          // TODO(pablo): the CMA title should be handled through a config,
-          // not hardcoded in the JSON_FROM_BACKEND
-          caseManagementAppOptions.navbarTitle,
-          iconClassName,
-        );
-      }
-
-      return asButton(
-        e => onLinkClicked(url, e),
-        caseManagementAppOptions.navbarTitle,
-        isActive,
-      );
-    }
-    return null;
-  }
-
-  maybeRenderDrawer() {
-    const { isAuthenticated, visibleName } = this.props;
-    const { ui, locales } = window.__JSON_FROM_BACKEND;
-
-    if (!this.state.openDrawer) {
+    if (!openDrawer) {
       return null;
     }
 
@@ -572,21 +618,20 @@ class Navbar extends React.PureComponent {
         <div>
           {this.maybeRenderAnalyzeLink()}
           {this.maybeRenderDataQualityLink()}
-          {this.maybeRenderCaseManagementLink()}
           {this.maybeRenderAlertsLink()}
         </div>
         <CollapsibleLink
-          label="More"
           className="navbar-item__more-links"
+          label="More"
           openClassName="navbar-item__more-links--open"
         >
           <MoreLinks
-            linksAsDropdownOptions={false}
-            isAdmin={this.state.isAdmin}
+            isAdmin={isAdmin}
             isAuthenticated={isAuthenticated}
-            showLocales={ui.showLocalePicker}
+            linksAsDropdownOptions={false}
             locales={locales}
-            visibleName={visibleName}
+            showDataUpload={canUploadData}
+            showLocales={ui.showLocalePicker}
           />
         </CollapsibleLink>
       </div>
@@ -594,11 +639,16 @@ class Navbar extends React.PureComponent {
   }
 
   @autobind
-  maybeRenderAlertsLink(isDropdownOption = false, showDropdownIcon = true) {
-    const { isAuthenticated } = this.props;
-    const { alertsOptions } = window.__JSON_FROM_BACKEND;
-    const alertsEnabled = alertsOptions ? alertsOptions.length : false;
-    if (!isAuthenticated || !alertsEnabled || isMobileBrowser()) {
+  maybeRenderAlertsLink(
+    isDropdownOption?: boolean = false,
+    showDropdownIcon?: boolean = true,
+  ): React.Node {
+    if (!this.state.canViewAlertsPage) {
+      return null;
+    }
+
+    const { alertsEnabled } = window.__JSON_FROM_BACKEND;
+    if (!alertsEnabled) {
       return null;
     }
 
@@ -614,10 +664,22 @@ class Navbar extends React.PureComponent {
       );
     }
 
-    return asButton(e => onLinkClicked(url, e), TEXT.alerts, isActive);
+    return (
+      <HypertextLink
+        key="alerts"
+        onClick={e => onLinkClicked(url, e)}
+        url={url}
+      >
+        {asButton(() => undefined, TEXT.alerts, isActive)}
+      </HypertextLink>
+    );
   }
 
-  maybeRenderMoreOptionsDropdown(children = null) {
+  maybeRenderMoreOptionsDropdown(
+    children: $ReadOnlyArray<?React.Element<
+      Class<Dropdown.Option<(SyntheticEvent<HTMLElement>) => void>>,
+    >>,
+  ): React.Node {
     const showMoreOptionsDropdown =
       this.state.moreOptionsCount > 0 && children.length > 0;
 
@@ -626,29 +688,28 @@ class Navbar extends React.PureComponent {
     }
 
     return (
-      <div className="navbar__item navbar__item--link navbar__item--link-offset">
-        <Dropdown
-          hideCaret={false}
-          caretType={CARET_TYPES.MENU}
-          className="navbar-dropdown more-dropdown-link"
-          defaultDisplayContent={TEXT.more}
-          displayCurrentSelection={false}
-          onSelectionChange={onSelection}
-          menuAlignment={Dropdown.Alignments.RIGHT}
-          value=""
-        >
-          {children}
-        </Dropdown>
-      </div>
+      <Dropdown
+        buttonClassName="navbar-item"
+        caretType={Dropdown.CaretTypes.MENU}
+        defaultDisplayContent={TEXT.more}
+        displayCurrentSelection={false}
+        hideCaret={false}
+        menuAlignment={Dropdown.Alignments.RIGHT}
+        menuClassName="navbar-dropdown-menu navbar-more-links__menu"
+        onSelectionChange={onSelection}
+        value={undefined}
+      >
+        {children}
+      </Dropdown>
     );
   }
 
   @autobind
-  maybeRenderDataQualityLink(isDropdownOption = false) {
+  maybeRenderDataQualityLink(isDropdownOption?: boolean = false): React.Node {
     if (
+      !this.state.canViewDataQuality ||
       !this.props.isAuthenticated ||
-      !window.__JSON_FROM_BACKEND.ui.enableDataQualityLab ||
-      isMobileBrowser()
+      !window.__JSON_FROM_BACKEND.ui.enableDataQualityLab
     ) {
       return null;
     }
@@ -665,14 +726,21 @@ class Navbar extends React.PureComponent {
       );
     }
 
-    return asButton(
-      e => onLinkClicked(localizeUrl(DATA_QUALITY_URL), e),
-      TEXT.dataQuality,
-      isActive,
+    return (
+      <HypertextLink
+        key="data-quality"
+        onClick={e => onLinkClicked(url, e)}
+        url={url}
+      >
+        {asButton(() => undefined, TEXT.dataQuality, isActive)}
+      </HypertextLink>
     );
   }
 
-  renderDropdownTitleItem(titleName, value) {
+  renderDropdownTitleItem(
+    titleName: string,
+    value: string,
+  ): React.Element<'div'> {
     return (
       <div className="navbar-dropdown-summary__item">
         <div className="navbar-dropdown-summary__title-name">{titleName}</div>
@@ -681,16 +749,16 @@ class Navbar extends React.PureComponent {
     );
   }
 
-  renderDropdownSummaryTitle() {
-    const { userStatus, dataUpdate, versionInfo } = this.getSummaryInfo();
+  renderDropdownSummaryTitle(): React.Element<typeof Dropdown.Option> {
+    const { dataUpdate, userStatus, versionInfo } = this.getSummaryInfo();
 
     return (
       <Dropdown.Option
-        disableSearch
         key="summary"
+        className="navbar-dropdown-summary__title"
+        disableSearch
         value="__unused__"
         wrapperClassName="navbar-dropdown-summary"
-        unselectable
       >
         {userStatus}
         {dataUpdate}
@@ -699,10 +767,10 @@ class Navbar extends React.PureComponent {
     );
   }
 
-  renderMobileSummaryInfo() {
-    const { userStatus, dataUpdate, versionInfo } = this.getSummaryInfo();
+  renderMobileSummaryInfo(): React.Node {
+    const { dataUpdate, userStatus, versionInfo } = this.getSummaryInfo();
     return (
-      <div className="navbar__mobile-summary-container">
+      <div className="navbar-mobile-summary-container">
         {userStatus}
         {dataUpdate}
         {versionInfo}
@@ -710,13 +778,12 @@ class Navbar extends React.PureComponent {
     );
   }
 
-  renderFullNavbar() {
-    const { moreOptionsCount } = this.state;
+  renderFullNavbar(): React.Node {
+    const { isCrispEnabled, moreOptionsCount } = this.state;
     let leftAlignedLinks = [
       this.maybeRenderAnalyzeLink,
-      this.maybeRenderDashboardsDropdown,
+      this.maybeRenderDashboardsFlyoutButton,
       this.maybeRenderDataQualityLink,
-      this.maybeRenderCaseManagementLink,
       this.maybeRenderAlertsLink,
     ];
 
@@ -740,30 +807,33 @@ class Navbar extends React.PureComponent {
 
     return (
       <React.Fragment>
-        <div className="navbar__links--left">
+        <div className="navbar-items__left">
           {leftAlignedLinks.map(renderLink => renderLink())}
           {this.maybeRenderMoreOptionsDropdown(
+            // $FlowFixMe[extra-arg] - this is not a good pattern
+            // $FlowFixMe[incompatible-call] - this is not a good pattern
+            // $FlowFixMe[incompatible-exact] - this is not a good pattern
             moreDropdownLinks.map(renderLink => renderLink(true, false)),
           )}
         </div>
-        <div className="navbar__links--right">
+        <div className="navbar-items__right">
           {this.renderNavigationDropdown()}
         </div>
       </React.Fragment>
     );
   }
 
-  renderMobileNavbar() {
+  renderMobileNavbar(): React.Node {
     return (
       <React.Fragment>
-        <div className="navbar__links--left">
-          {this.maybeRenderDashboardsDropdown()}
+        <div className="navbar-items__left">
+          {this.maybeRenderDashboardsFlyoutButton()}
         </div>
-        <div className="navbar__links--right">
+        <div className="navbar-items__right">
           <button
-            type="button"
-            className="navbar__item navbar__item--link"
+            className="navbar-item"
             onClick={this.onHamburgerClick}
+            type="button"
           >
             <Icon type="menu-hamburger" />
           </button>
@@ -773,93 +843,74 @@ class Navbar extends React.PureComponent {
     );
   }
 
-  // render actual navigation buttons
-  renderNavArea() {
-    const content = this.renderFullNavbar();
-    return <div className="navbar__links">{content}</div>;
-  }
-
-  renderMobileNavArea() {
-    return <div className="navbar__links">{this.renderMobileNavbar()}</div>;
-  }
-
-  renderNavigationDropdown(children = null) {
+  renderNavigationDropdown(): React.Node {
     const { isAuthenticated, visibleName } = this.props;
-    const { ui, locales } = window.__JSON_FROM_BACKEND;
+    const { locales, ui } = window.__JSON_FROM_BACKEND;
     return (
-      <div className="navbar__item navbar__item--link">
-        <NavigationDropdown
-          isAdmin={this.state.isAdmin}
-          isAuthenticated={isAuthenticated}
-          showLocales={ui.showLocalePicker}
-          locales={locales}
-          visibleName={visibleName}
-        >
-          {this.renderDropdownSummaryTitle()}
-          {children}
-        </NavigationDropdown>
-      </div>
+      <NavigationDropdown
+        isAdmin={this.state.isAdmin}
+        isAuthenticated={isAuthenticated}
+        locales={locales}
+        showDataUpload={this.state.canUploadData}
+        showLocales={ui.showLocalePicker}
+        visibleName={visibleName}
+      >
+        {this.renderDropdownSummaryTitle()}
+      </NavigationDropdown>
     );
   }
 
-  renderTitleContainer() {
-    const { flagClass, logoPath, fullPlatformName } = this.props;
+  renderTitleContainer(): React.Node {
+    const { flagClass, fullPlatformName, logoPath } = this.props;
     let platformName = fullPlatformName;
 
     if (this.state.showAcronym) {
       platformName = extractAcronym(fullPlatformName);
     }
 
-    let logo;
-    if (logoPath) {
-      logo = <img src={logoPath} alt={platformName} />;
-    } else {
-      logo = (
-        <React.Fragment>
-          <span className="navbar__logo">
-            <i className={`flag ${flagClass}`} />
-          </span>
-          <span className="navbar__title">{platformName}</span>
-        </React.Fragment>
-      );
-    }
+    const logo = logoPath ? (
+      <img alt="logo" src={logoPath} />
+    ) : (
+      <i className={`flag ${flagClass}`} />
+    );
+
+    const platformTitle = (
+      <span className="navbar-title-container__title">{platformName}</span>
+    );
 
     return (
-      <div
-        className="navbar__title-container"
+      <button
+        className="navbar-title-container"
         onClick={this.onHomeClicked}
-        role="button"
+        type="button"
       >
-        {logo}
-      </div>
+        <span className="navbar-title-container__logo">{logo}</span>
+        {platformTitle}
+      </button>
     );
   }
 
-  renderNavbar() {
+  renderNavbar(): React.Node {
+    const navbarItems = this.state.isMobileView
+      ? this.renderMobileNavbar()
+      : this.renderFullNavbar();
     return (
       <React.Fragment>
-        {this.state.isMobileView
-          ? this.renderMobileNavArea()
-          : this.renderNavArea()}
+        <div className="navbar-items">{navbarItems}</div>
         {this.maybeRenderCreateDashboardModal()}
       </React.Fragment>
     );
   }
 
-  render() {
+  render(): React.Node {
     const className = classNames('navbar', 'hide-in-screenshot', {
-      navbar__mobile: this.state.isMobileView,
+      'navbar-mobile': this.state.isMobileView,
     });
     return (
-      <div className={className}>
+      <div className={className} id={NAVBAR_ID}>
         {this.renderTitleContainer()}
         {this.renderNavbar()}
       </div>
     );
   }
 }
-
-Navbar.propTypes = propTypes;
-Navbar.defaultProps = defaultProps;
-
-export default Navbar;

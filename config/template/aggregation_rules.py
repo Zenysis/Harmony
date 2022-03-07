@@ -8,17 +8,16 @@ from config.template.calculated_indicators import (
 from config.template.indicators import GROUP_DEFINITIONS
 from data.calculated_indicator.util import (
     build_calculated_indicator_calculation,
+    get_exports_for_composite_indicator,
     sort_calculated_indicators,
 )
 from data.composite_indicator.util import build_composite_indicator_calculation
-from db.druid.aggregations.time_interval_aggregation import (
-    GregorianStockIntervalCreator,
-    TimeIntervalAggregation,
-)
 from db.druid.calculations.calculation_merger import CalculationMerger
 from db.druid.calculations.simple_calculation import (
     AverageCalculation,
     AverageOverTimeBucketCalculation,
+    LastValueCalculation,
+    MaxCalculation,
     SumCalculation,
     WeightedAverageCalculation,
 )
@@ -57,6 +56,9 @@ def _build_indicator_calculation(ind):
     if not ind_type:
         return SumCalculation(dimension=FIELD_NAME, field=ind_id)
 
+    if ind_type == 'MAX':
+        return MaxCalculation(dimension=FIELD_NAME, field=ind_id)
+
     if ind_type == 'AVERAGE':
         if ind_subtype == 'TIME_BUCKET':
             return AverageOverTimeBucketCalculation(FIELD_NAME, ind_id)
@@ -64,30 +66,10 @@ def _build_indicator_calculation(ind):
             LOG.error('Unknown AVERAGE indicator subtype: %s', ind_subtype)
         return AverageCalculation(dimension=FIELD_NAME, field=ind_id)
 
-    # Stock indicators should take the summed value for a specific time interval.
-    # This time interval is computed at runtime by computing the start and end
-    # timestamps for the given granularity bucket during the queried interval.
+    # Stock indicators should take the summed value when the row's timestamp equals
+    # the max timestamp seen for that field in the grouping.
     if ind_type == 'STOCK':
-        # TODO(stephen): Enforce that the granularity requested is actually
-        # one we can interpret
-        granularity = ind['stock_granularity'].lower()
-        # A stock indicator can be computed from either the first or the last
-        # bucket of the queried interval.
-        # TODO(stephen): Support more than first/last bucket by allowing an
-        # index to be passed. This will require more validation at runtime.
-        bucket_index = -1 if ind_subtype == 'LAST_BUCKET' else 0
-        interval_creator = GregorianStockIntervalCreator(granularity, bucket_index)
-
-        # Convert the basic sum/count aggregations into a time interval
-        # aggregation that can only be resolved at query time
-        calculation = SumCalculation(dimension=FIELD_NAME, field=ind_id)
-        aggregations = calculation.aggregations
-        for key in aggregations.keys():
-            base_aggregation = aggregations[key]
-            aggregations[key] = TimeIntervalAggregation(
-                base_aggregation, interval_creator
-            )
-        return calculation
+        return LastValueCalculation(dimension=FIELD_NAME, field=ind_id)
 
     if ind_type == 'WEIGHTED_AVG':
         return WeightedAverageCalculation(
@@ -123,10 +105,12 @@ def _cache_groups(groups):
         for ind in group['indicators']:
             ind_id = ind['id']
             # Calculated indicators and composite indicators will be processed last.
-            if (
-                ind_id in CALCULATED_INDICATOR_FORMULAS
-                or ind.get('type') == 'COMPOSITE'
-            ):
+            is_composite = ind.get('type') == 'COMPOSITE'
+            if ind_id in CALCULATED_INDICATOR_FORMULAS or is_composite:
+                if is_composite:
+                    (formula, constituents) = get_exports_for_composite_indicator(ind)
+                    CALCULATED_INDICATOR_FORMULAS[ind_id] = formula
+                    CALCULATED_INDICATOR_CONSTITUENTS[ind_id] = constituents
                 continue
             calculation = _build_indicator_calculation(ind)
             CALCULATIONS_FOR_FIELD[ind_id] = calculation

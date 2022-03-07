@@ -21,12 +21,22 @@ NEW_IMPORT="
 from models.python.dashboard.latest.model import (
     DashboardSpecification as DashboardSpecification_${NEW_VERSION_SHORT},"
 
-UPGRADE_FN="def _upgrade_${CURRENT_VERSION_UNDERSCORE}_specification(specification):
+UPGRADE_DOWNGRADE_FNS="def _upgrade_${CURRENT_VERSION_UNDERSCORE}_specification(specification):
+    '''UPGRADE DESCRIPTION GOES HERE'''
     upgraded_specification = related.to_model(
         DashboardSpecification_${NEW_VERSION_SHORT}, specification
     )
     upgraded_specification.version = ${NEW_VERSION_ID}
-    return related.to_dict(upgraded_specification)"
+    return related.to_dict(upgraded_specification)
+
+
+def _downgrade_${NEW_VERSION_UNDERSCORE}_specification(specification):
+    '''DOWNGRADE DESCRIPTION GOES HERE'''
+    downgraded_specification = related.to_model(
+        DashboardSpecification_${CURRENT_VERSION_SHORT}, specification
+    )
+    downgraded_specification.version = ${CURRENT_VERSION_ID}
+    return related.to_dict(downgraded_specification)"
 
 echo "Current version: ${CURRENT_VERSION}"
 echo "New version: ${NEW_VERSION}"
@@ -74,23 +84,25 @@ perl \
   -e "s:LATEST_VERSION = .+:${NEW_VERSION_ID} = '${NEW_VERSION}'\nLATEST_VERSION = ${NEW_VERSION_ID}:" \
   version.py
 
-echo '(4/10) Updating DASHBOARD_SCHEMA_VERSIONS and NEXT_SCHEMA_VERSION_MAP'
-perl \
-  -pi \
-  -e "s:(        ${CURRENT_VERSION_ID},):\$1\n        ${NEW_VERSION_ID},:;" \
-  -e "s#(    ${CURRENT_VERSION_ID}): None,#\$1: ${NEW_VERSION_ID},\n    ${NEW_VERSION_ID}: None,#" \
-  version.py
-
-echo '(5/10) Adding a default spec upgrade method. You might need to customize this.'
-perl \
-  -pi \
-  -e "s#(VERSION_TO_UPGRADE_FUNCTION = {)#${UPGRADE_FN}\n\n\$1#" \
-  version.py
-
-echo '(6/10) Registering the spec upgrade method.'
+echo '(4/10) Updating DASHBOARD_SCHEMA_VERSIONS, NEXT_SCHEMA_VERSION_MAP, and PREVIOUS_SCHEMA_VERSION_MAP'
 perl \
   -0pi \
-  -e "s#(    VERSION_.+: _upgrade_.+_specification,)\n}#\$1\n    ${CURRENT_VERSION_ID}: _upgrade_${CURRENT_VERSION_UNDERSCORE}_specification,\n}#" \
+  -e "s:(        ${CURRENT_VERSION_ID},):\$1\n        ${NEW_VERSION_ID},:;" \
+  -e "s#(    ${CURRENT_VERSION_ID}): None,#\$1: ${NEW_VERSION_ID},\n    ${NEW_VERSION_ID}: None,#;" \
+  -e "s#(    ${CURRENT_VERSION_ID}: VERSION_.+,)\n}#\$1\n    ${NEW_VERSION_ID}: ${CURRENT_VERSION_ID},\n}#" \
+  version.py
+
+echo '(5/10) Adding default spec upgrade and downgrade methods. You might need to customize these.'
+perl \
+  -pi \
+  -e "s#(VERSION_TO_UPGRADE_FUNCTION = {)#${UPGRADE_DOWNGRADE_FNS}\n\n\n\$1#" \
+  version.py
+
+echo '(6/10) Registering the spec upgrade and downgrade methods.'
+perl \
+  -0pi \
+  -e "s#(    VERSION_.+: _upgrade_.+_specification,)\n}#\$1\n    ${CURRENT_VERSION_ID}: _upgrade_${CURRENT_VERSION_UNDERSCORE}_specification,\n}#;" \
+  -e "s#(    VERSION_.+: _downgrade_.+_specification,)\n}#\$1\n    ${NEW_VERSION_ID}: _downgrade_${NEW_VERSION_UNDERSCORE}_specification,\n}#" \
   version.py
 
 popd &> /dev/null
@@ -104,25 +116,41 @@ perl \
   -e "s:const EXPECTED_VERSION =.+:const EXPECTED_VERSION = '${NEW_VERSION}';:" \
   web/client/models/core/Dashboard/DashboardSpecification/index.js
 
-echo '(8/10) Adding empty schema to config/dashboard_base.py'
+echo '(8/10) Adding unit test for dashboard downgrade and upgrade'
 
-NEW_EMPTY_SPECIFICATION=$(sed \
-    -n "/EMPTY_SPECIFICATION_${CURRENT_VERSION_UNDERSCORE} = {/,/^}/p" \
-    config/dashboard_base.py \
-  | perl \
-      -pe "s:${CURRENT_VERSION_UNDERSCORE}:${NEW_VERSION_UNDERSCORE}:;" \
-      -e "s:${CURRENT_VERSION}:${NEW_VERSION}:")
-perl \
-  -pi \
-  -e "s#EMPTY_SPECIFICATION = .+#${NEW_EMPTY_SPECIFICATION}\n\nEMPTY_SPECIFICATION = EMPTY_SPECIFICATION_${NEW_VERSION_UNDERSCORE}#" \
-  config/dashboard_base.py
+TEST_UPGRADE_DOWNGRADE="    def test_upgrade_downgrade_${NEW_VERSION_UNDERSCORE}_specification(self):
+        '''TEST DESCRIPTION GOES HERE'''
+        my_dashboard_spec = upgrade_spec_to_current(
+          self.specification, ${CURRENT_VERSION_ID}
+        )
+        # make a copy of my_dashboard_spec as a normal dict (a) to store the 
+        # original values before the spec is mutated in upgraded_spec() and (b)
+        # so that key order doesn't matter 
+        my_dashboard_spec_dict = json.loads(json.dumps(my_dashboard_spec))
+        upgrade_function = VERSION_TO_UPGRADE_FUNCTION[${CURRENT_VERSION_ID}]
+        downgrade_function = VERSION_TO_DOWNGRADE_FUNCTION[${NEW_VERSION_ID}]
+        upgraded_spec = upgrade_function(my_dashboard_spec)
+        downgraded_spec = downgrade_function(upgraded_spec)
 
+        # converting from ordered dict to normal dict so key order doesn't matter
+        downgraded_spec_dict = json.loads(json.dumps(downgraded_spec))
+        diff = DeepDiff(
+          my_dashboard_spec_dict, 
+          downgraded_spec_dict, 
+          ignore_order=False, 
+          ignore_numeric_type_changes=True
+        )
+
+        self.assertEqual(my_dashboard_spec_dict, downgraded_spec_dict, diff)"
+
+echo -e "\n${TEST_UPGRADE_DOWNGRADE}" >> models/python/dashboard/tests/test_schema_upgrade_downgrade.py
+    
 echo '(9/10) Adding all new files to git'
 git add \
   "${ZEN_SRC_ROOT}/models/python/dashboard/${SCHEMA_DIR_NAME}" \
   "${ZEN_SRC_ROOT}/models/python/dashboard/version.py" \
-  web/client/models/core/Dashboard/DashboardSpecification/index.js \
-  config/dashboard_base.py
+  models/python/dashboard/tests/test_schema_upgrade_downgrade.py \
+  web/client/models/core/Dashboard/DashboardSpecification/index.js
 
 popd &> /dev/null
 

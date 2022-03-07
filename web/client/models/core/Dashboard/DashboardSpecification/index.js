@@ -1,47 +1,49 @@
 // @flow
-import PropTypes from 'prop-types';
+import Promise from 'bluebird';
 
-import DashboardDateRange from 'models/core/Dashboard/DashboardSpecification/DashboardDateRange';
-import DashboardEditableText from 'models/core/Dashboard/DashboardSpecification/DashboardEditableText';
-import DashboardFilter from 'models/core/Dashboard/DashboardSpecification/DashboardFilter';
-import DashboardItem from 'models/core/Dashboard/DashboardSpecification/DashboardItem';
-import DashboardItemSettings from 'models/core/Dashboard/DashboardSpecification/DashboardItemSettings';
+import * as Zen from 'lib/Zen';
+import DashboardCommonSettings from 'models/DashboardBuilderApp/DashboardCommonSettings';
+import DashboardItemHolder from 'models/DashboardBuilderApp/DashboardItem/DashboardItemHolder';
 import DashboardOptions from 'models/core/Dashboard/DashboardSpecification/DashboardOptions';
-import DashboardQuery from 'models/core/Dashboard/DashboardSpecification/DashboardQuery';
-import RelationalDashboardQuery from 'models/core/Dashboard/DashboardSpecification/RelationalDashboardQuery';
 import ZenError from 'util/ZenError';
-import ZenMap from 'util/ZenModel/ZenMap';
-import ZenModel, {
-  def,
-  derived,
-  hasChanged,
-  statefulCompute,
-} from 'util/ZenModel';
-import override from 'decorators/override';
-import { getEnabledDimensions } from 'components/QueryApp/QueryForm/queryUtil';
-import { recomputeQueries } from 'models/core/Dashboard/DashboardSpecification/derivedValue';
-import type { SerializedDashboardDateRange } from 'models/core/Dashboard/DashboardSpecification/DashboardDateRange';
-import type { SerializedDashboardEditableText } from 'models/core/Dashboard/DashboardSpecification/DashboardEditableText';
-import type { SerializedDashboardFilter } from 'models/core/Dashboard/DashboardSpecification/DashboardFilter';
-import type { SerializedDashboardItem } from 'models/core/Dashboard/DashboardSpecification/DashboardItem';
-import type { SerializedDashboardItemSettings } from 'models/core/Dashboard/DashboardSpecification/DashboardItemSettings';
-import type { SerializedDashboardOptions } from 'models/core/Dashboard/DashboardSpecification/DashboardOptions';
-import type { SerializedDashboardQuery } from 'models/core/Dashboard/DashboardSpecification/RelationalDashboardQuery';
+import type { Serializable } from 'lib/Zen';
 
-const EXPECTED_VERSION = '2019-09-18';
+export const EXPECTED_VERSION = '2021-10-25';
 
 const DEFAULT_DASHBOARD_TITLE = 'New Dashboard';
 
-const QUERIES_DEPENDENT_VALUES = ['dateRanges', 'filters', 'relationalQueries'];
+type DefaultValues = {
+  /**
+   * Model containing common settings for the dashboard, such as filters and
+   * groupings.
+   */
+  commonSettings: DashboardCommonSettings,
 
-export type SerializedDashboardSpecification = {
-  dateRanges: { [string]: SerializedDashboardDateRange },
-  filters: { [string]: SerializedDashboardFilter },
-  items: { [string]: SerializedDashboardItem },
-  options: SerializedDashboardOptions,
-  queries: { [string]: SerializedDashboardQuery },
-  textItems: { [string]: SerializedDashboardEditableText },
-  settings: { [string]: SerializedDashboardItemSettings },
+  /**
+   * The model containing options/preferences that have a dashboard-wide effect.
+   */
+  dashboardOptions: DashboardOptions,
+
+  /**
+   * The models containing the information needed to render each dashboard tile.
+   */
+  items: $ReadOnlyArray<DashboardItemHolder>,
+
+  /**
+   * This flag indicates that the dashboard layout was built using the legacy
+   * dashboard building experience.
+   */
+  legacy: boolean,
+
+  /** The schema version of the Dashboard Specification. */
+  version: string,
+};
+
+type SerializedDashboardSpecification = {
+  commonSettings: Zen.Serialized<DashboardCommonSettings>,
+  items: $ReadOnlyArray<Zen.Serialized<DashboardItemHolder>>,
+  legacy: boolean,
+  options: Zen.Serialized<DashboardOptions>,
   version: string,
 };
 
@@ -50,86 +52,29 @@ export type SerializedDashboardSpecification = {
  * It contains the metadata including visualizations, placements, queries,
  * date ranges and other information required to completely render a dashboard.
  */
-export default class DashboardSpecification extends ZenModel.withTypes({
-  /**
-   * The model containing options/preferences that have a dashboard-wide effect.
-   */
-  dashboardOptions: def(
-    DashboardOptions.type(),
-    DashboardOptions.create({ title: DEFAULT_DASHBOARD_TITLE }),
-  ),
+class DashboardSpecification
+  extends Zen.BaseModel<DashboardSpecification, {}, DefaultValues>
+  implements Serializable<SerializedDashboardSpecification> {
+  static defaultValues: DefaultValues = {
+    commonSettings: DashboardCommonSettings.create({}),
+    dashboardOptions: DashboardOptions.create({
+      title: DEFAULT_DASHBOARD_TITLE,
+    }),
+    items: [],
+    legacy: false,
+    version: EXPECTED_VERSION,
+  };
 
-  /**
-   * The mapping of `DashboardDateRange` instances to their corresponding `id`
-   * property.
-   */
-  dateRanges: def(ZenMap.of(DashboardDateRange).isRequired, ZenMap.create()),
-
-  /**
-   * The mapping of `DashboardFilter` instances to their corresponding `id`
-   * property.
-   */
-  filters: def(ZenMap.of(DashboardFilter).isRequired, ZenMap.create()),
-
-  /**
-   * The mapping of `DashboardItem` instances to their corresponding
-   * `id` property.
-   */
-  items: def(ZenMap.of(DashboardItem).isRequired, ZenMap.create()),
-
-  /**
-   * The mapping of `DashboardEditableText` instances to their corresponding
-   * `id` property.
-   */
-  textItems: def(ZenMap.of(DashboardEditableText), ZenMap.create()),
-
-  /**
-   * The mapping of `RelationalDashboardQuery` instances to their corresponding
-   * `id` property.
-   */
-  relationalQueries: def(
-    ZenMap.of(RelationalDashboardQuery).isRequired,
-    ZenMap.create(),
-  ),
-
-  /**
-   * The mapping of `DashboardItemSettings` instances to their corresponding
-   * `id` property.
-   */
-  settings: def(ZenMap.of(DashboardItemSettings).isRequired, ZenMap.create()),
-
-  /**
-   * @readonly
-   * The schema version of the Dashboard Specification.
-   */
-  version: def(PropTypes.string.isRequired, undefined, ZenModel.PRIVATE),
-}).withDerivedValues({
-  /**
-   * The mapping of 'rich' `DashboardQuery` instances to their corresponding
-   * `id` property. Recomputed whenever a change to one of the dependencies of
-   * a dashboard query has been detected.
-   */
-  queries: derived(
-    ZenMap.of(DashboardQuery).isRequired,
-    hasChanged(...QUERIES_DEPENDENT_VALUES),
-    statefulCompute(recomputeQueries),
-  ),
-}) {
-  @override
   static deserializeAsync(
     values: SerializedDashboardSpecification,
-  ): Promise<DashboardSpecification> {
+  ): Promise<Zen.Model<DashboardSpecification>> {
     const {
+      commonSettings: serializedCommonSettings,
+      items: serializedItems,
+      legacy,
       options,
-      dateRanges,
-      items,
-      filters,
-      queries,
-      textItems,
-      settings,
       version,
     } = values;
-
     if (version !== EXPECTED_VERSION) {
       throw new ZenError(
         `Unexpected Dashboard Specification version of '${version}'.
@@ -138,110 +83,45 @@ export default class DashboardSpecification extends ZenModel.withTypes({
       );
     }
 
-    let settingsModelMap: ZenMap<DashboardItemSettings> = ZenMap.create();
-    Object.keys(settings).forEach((settingId: string) => {
-      const backendSettings: SerializedDashboardItemSettings =
-        settings[settingId];
-      const settingModel = DashboardItemSettings.deserialize(backendSettings);
-      settingsModelMap = settingsModelMap.set(settingModel.id(), settingModel);
-    });
+    const commonSettingsPromise = DashboardCommonSettings.deserializeAsync(
+      serializedCommonSettings,
+    );
 
-    let dateRangeModelMap: ZenMap<DashboardDateRange> = ZenMap.create();
-    Object.keys(dateRanges).forEach((dateRangeId: string) => {
-      const backendDateRange: SerializedDashboardDateRange =
-        dateRanges[dateRangeId];
-      const dateRangeModel: DashboardDateRange = DashboardDateRange.deserialize(
-        backendDateRange,
-      );
-      dateRangeModelMap = dateRangeModelMap.set(
-        dateRangeModel.id(),
-        dateRangeModel,
-      );
-    });
+    const itemsPromise = Zen.deserializeAsyncArray(
+      DashboardItemHolder,
+      serializedItems,
+    );
 
-    let filterModelMap: ZenMap<DashboardFilter> = ZenMap.create();
-    Object.keys(filters).forEach((filterId: string) => {
-      const backendFilter: SerializedDashboardFilter = filters[filterId];
-      const filterModel: DashboardFilter = DashboardFilter.deserialize(
-        backendFilter,
-      );
-      filterModelMap = filterModelMap.set(filterModel.id(), filterModel);
-    });
-
-    let itemModelMap: ZenMap<DashboardItem> = ZenMap.create();
-    Object.keys(items).forEach((itemId: string) => {
-      const itemModel: DashboardItem = DashboardItem.deserialize(items[itemId]);
-      itemModelMap = itemModelMap.set(itemModel.id(), itemModel);
-    });
-
-    let textItemModelMap: ZenMap<DashboardEditableText> = ZenMap.create();
-    Object.keys(textItems).forEach((textItemId: string) => {
-      const textItemModel: DashboardEditableText = DashboardEditableText.deserialize(
-        textItems[textItemId],
-      );
-      textItemModelMap = textItemModelMap.set(
-        textItemModel.id(),
-        textItemModel,
-      );
-    });
-
-    const dashboardQueryPromises = Object.keys(queries).map(queryId => {
-      const backendQuery = queries[queryId];
-      const seriesSettings = settingsModelMap
-        .forceGet(backendQuery.settingId)
-        .viewTypeSettings()
-        .forceGet(backendQuery.type)
-        .seriesSettings();
-      return DashboardQuery.deserializeAsync(backendQuery, {
-        seriesSettings,
-      });
-    });
-
-    return Promise.all(dashboardQueryPromises).then(
-      (queryModels: Array<RelationalDashboardQuery>) => {
-        const queryModelMap = ZenMap.fromArray(queryModels, 'id');
+    return Promise.all([commonSettingsPromise, itemsPromise]).then(
+      ([commonSettings, items]) => {
         return DashboardSpecification.create({
+          commonSettings,
           dashboardOptions: DashboardOptions.deserialize(options),
-          dateRanges: dateRangeModelMap,
-          filters: filterModelMap,
-          items: itemModelMap,
-          textItems: textItemModelMap,
-          relationalQueries: queryModelMap,
-          settings: settingsModelMap,
+          items,
+          legacy,
           version,
         });
       },
     );
   }
 
-  hasAQTQueries(): boolean {
-    return this.relationalQueries().some(dashboardQuery =>
-      dashboardQuery.isAdvancedQueryItem(),
-    );
-  }
-
-  @override
   serialize(): SerializedDashboardSpecification {
+    const {
+      commonSettings,
+      dashboardOptions,
+      items,
+      legacy,
+    } = this.modelValues();
     return {
-      options: this.dashboardOptions().serialize(),
-      dateRanges: this.dateRanges().serialize(),
-      filters: this.filters().serialize(),
-      items: this.items().serialize(),
-      textItems: this.textItems().serialize(),
-      queries: this.relationalQueries().serialize(),
-      settings: this.settings().serialize(),
+      commonSettings: commonSettings.serialize(),
+      items: Zen.serializeArray(items),
+      legacy,
+      options: dashboardOptions.serialize(),
       version: EXPECTED_VERSION,
     };
   }
-
-  getValidDimensions(): Array<string> {
-    const fields = [];
-    this.items().forEach(item =>
-      item
-        .query()
-        .advancedFields()
-        .forEach(field => fields.push(field.id())),
-    );
-    return getEnabledDimensions(fields);
-  }
 }
+
+export default ((DashboardSpecification: $Cast): Class<
+  Zen.Model<DashboardSpecification>,
+>);

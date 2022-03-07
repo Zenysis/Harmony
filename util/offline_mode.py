@@ -1,4 +1,5 @@
 from builtins import str, range, object
+from typing import Dict, Any
 from past.utils import old_div
 from datetime import date, datetime, timedelta
 import random
@@ -14,7 +15,7 @@ from db.druid.util import unpack_time_interval
 
 # This is a dictionary that caches randomized values to use for the dimension
 # fields of different queries so that they all come from the same set of strings
-DIMENSION_VALUES = {}
+DIMENSION_VALUES: Dict[Any, Any] = {}  # type: ignore
 
 VOWELS = 'aeiou'
 CONSONANTS = 'bcdfghjklmnpqrstvwxyz'
@@ -46,10 +47,14 @@ def random_coord_array(center, lrange, urange, count):
 
 
 def granularity_increment(day, granularity):
+    if granularity == 'day':
+        day = day + timedelta(days=1)
+    elif granularity == 'week':
+        day = day + timedelta(weeks=7)
     if granularity == 'month':
         day = day + relativedelta(months=1)
     elif granularity == 'quarter':
-        day = day + relativedelta(months=4)
+        day = day + relativedelta(months=3)
     elif granularity == 'year':
         day = day + relativedelta(years=1)
     elif granularity == 'all':
@@ -149,14 +154,6 @@ class MockDruidQueryClient(DruidQueryRunner):
     def __init__(self, geo_to_lat_long_field, map_default_lat_long):
         self.geo_to_lat_long_field = geo_to_lat_long_field
         self.map_default_lat_long = map_default_lat_long
-        # $ConfigImportHack
-        # TODO (ellen, stephen): figure out a better way to avoid error on
-        # custom sorting logic. Also need to make post_aggregations equal
-        # the sum of the actually randomized aggregations at some point.
-        # Generate from a set of randomized strings instead of completely random
-        # strings for dimension names.
-        # This is done to avoid errors in the event of custom sorting logic.
-        current_app.zen_config.aggregation.BACKEND_SORTS.clear()
 
     def run_query(self, query):
         (begin, end) = unpack_time_interval(query.intervals[0])
@@ -196,7 +193,7 @@ class MockDruidQueryClient(DruidQueryRunner):
                 data = {
                     'timestamp': day.strftime('%Y-%m-%dT00:00:00.000Z'),
                     'version': 'v1',
-                    'event': {},
+                    'event': {'timestamp': day.strftime('%Y-%m-%dT00:00:00.000Z')},
                 }
 
                 for dim in dimen:

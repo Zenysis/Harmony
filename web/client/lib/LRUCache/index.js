@@ -97,7 +97,14 @@ export default class LRUCache<T> {
   /**
    * Returns a copy of the current contents of the cache.
    */
-  snapshot(): $ReadOnlyMap<string, $NonMaybeType<T>> {
+  snapshot(): Map<string, $NonMaybeType<T>> {
     return new Map(this._map);
+  }
+
+  /**
+   * Returns an immutable view of the current cache contents.
+   */
+  snapshotView(): $ReadOnlyMap<string, $NonMaybeType<T>> {
+    return this._map;
   }
 }

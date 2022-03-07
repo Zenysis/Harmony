@@ -1,8 +1,7 @@
 // @flow
 import * as Zen from 'lib/Zen';
 import FormulaCursor from 'models/QueryResult/QueryResultActionButtons/CustomCalculationsModal/FormulaCursor';
-import LegacyField from 'models/core/Field';
-import PlaceholderFieldTag from 'components/QueryResult/QueryResultActionButtons/CustomCalculationsModal/PlaceholderFieldTag';
+import PlaceholderFieldTag from 'components/common/CustomCalculationsModal/PlaceholderFieldTag';
 import checkValidity from 'models/core/Field/CustomField/Formula/checkValidity';
 import {
   escapeHTML,
@@ -11,10 +10,35 @@ import {
   replaceAll,
   replaceAt,
 } from 'util/stringUtil';
+import type { Deserializable } from 'lib/Zen';
 
-function _sortFields(fields: Zen.Array<LegacyField>): Zen.Array<LegacyField> {
-  return fields.sort((f1, f2) => f2.label().length - f1.label().length);
+// We are using FieldShape type instead of a specific Field model type. This
+// allows FieldMetadata to be supported by a broader range of types that includes
+// only the bare minimum properties required here.
+export type FieldShape = {
+  id: () => string,
+  getLabel: () => string,
+  jsIdentifier: () => string,
+};
+
+function _sortFields(fields: Zen.Array<FieldShape>): Zen.Array<FieldShape> {
+  return fields.sort((f1, f2) => f2.getLabel().length - f1.getLabel().length);
 }
+
+// Convert a string to a valid JS identifiers that can be plugged into a
+// formula. Replace all invalid characters with underscores.
+export function strToValidIdentifier(str: string): string {
+  return str.replace(/\W/g, '_');
+}
+
+// A field configuration object stores any special behavior that must
+// be applied to a field in a custom calculation. For example, if a field
+// should treat any 'No data' (i.e. null/undefined) values as zeros inside
+// a custom calculation.
+type FieldConfiguration = {
+  +fieldId: string,
+  +treatNoDataAsZero: boolean,
+};
 
 type DefaultValues = {
   /**
@@ -24,16 +48,33 @@ type DefaultValues = {
   lines: Zen.Array<string>,
 
   /**
+   * An array of all dimensions (represented as ids, e.g. 'RegionName') that
+   * is available to this calculation. A date grouping will be labeled as
+   * 'timestamp'.
+   * NOTE(pablo): for now, this array includes *all* dimensions that the user
+   * queried for, and not specifically just the ones that this calculation
+   * references. So some dimensions in this array might not be referenced in
+   * the formula text.
+   */
+  dimensions: $ReadOnlyArray<string>,
+
+  /**
    * An array of fields that this calculation depends on.
    */
-  fields: Zen.Array<LegacyField>,
+  fields: Zen.Array<FieldShape>,
+
+  /**
+   * A map of field configurations so we can apply any special behaviors
+   * to different fields.
+   */
+  fieldConfigurations: Zen.Map<FieldConfiguration>,
 };
 
 type DerivedValues = {
   /**
    * Array of fields sorted by label length (longest ones first)
    */
-  sortedFields: Zen.Array<LegacyField>,
+  sortedFields: Zen.Array<FieldShape>,
 
   /**
    * Specifies whether the formula is valid or not.
@@ -48,40 +89,69 @@ type DerivedValues = {
 
 type SerializedFormulaMetadata = {
   formula: string,
+
+  // NOTE(pablo): on 09/02/2020 this feature was added to Custom Calculations.
+  // This object should always exist, but it's possible that AQT tabs that had
+  // *already* been persisted to the browser before this feature landed will
+  // be missing this object. Or they might have the object, but be missing some
+  // fields in it. So we are marking this value as optional, even though that
+  // should rarely be the case.
+  fieldConfigurations?: { +[fieldId: string]: FieldConfiguration, ... },
 };
 
-class FormulaMetadata extends Zen.BaseModel<
-  FormulaMetadata,
-  {},
-  DefaultValues,
-  DerivedValues,
-> {
-  static defaultValues = {
+type DeserializationConfig = {
+  dimensions: $ReadOnlyArray<string>,
+  fields: $ReadOnlyArray<FieldShape>,
+
+  // An optional array of fields used to replace the formula expression ids.
+  // If not provided, will default to use the original fields array.
+  matchFields?: $ReadOnlyArray<FieldShape>,
+};
+
+/**
+ * Initializes a field configuration with default values for each field
+ * in an array.
+ */
+function initializeFieldConfigurations(
+  fields: $ReadOnlyArray<FieldShape>,
+): { +[fieldId: string]: FieldConfiguration, ... } {
+  const fieldConfigs = {};
+  fields.forEach(field => {
+    const fieldId = field.id();
+    fieldConfigs[fieldId] = { fieldId, treatNoDataAsZero: false };
+  });
+  return fieldConfigs;
+}
+
+class FormulaMetadata
+  extends Zen.BaseModel<FormulaMetadata, {}, DefaultValues, DerivedValues>
+  implements Deserializable<SerializedFormulaMetadata, DeserializationConfig> {
+  static defaultValues: DefaultValues = {
     lines: Zen.Array.create(['']),
+    dimensions: [],
     fields: Zen.Array.create(),
+    fieldConfigurations: Zen.Map.create(),
   };
 
-  static derivedConfig = {
+  static derivedConfig: Zen.DerivedConfig<FormulaMetadata, DerivedValues> = {
     sortedFields: [
-      Zen.hasChanged<FormulaMetadata>('fields'),
+      Zen.hasChanged('fields'),
       formula => _sortFields(formula.fields()),
     ],
     isValid: [
-      Zen.hasChanged<FormulaMetadata>('lines'),
+      Zen.hasChanged('lines'),
       formula => checkValidity(formula).isValid,
     ],
     validityMessage: [
-      Zen.hasChanged<FormulaMetadata>('lines'),
+      Zen.hasChanged('lines'),
       formula => checkValidity(formula).message,
     ],
   };
 
   static deserialize(
-    { formula }: SerializedFormulaMetadata,
-    extraConfig: { fields: $ReadOnlyArray<LegacyField> },
+    { formula, fieldConfigurations }: SerializedFormulaMetadata,
+    { dimensions, fields, matchFields }: DeserializationConfig,
   ): Zen.Model<FormulaMetadata> {
-    const { fields } = extraConfig;
-
     // Sort field IDs in descending order from longest to shortest and by
     // alpha sort (reversed) if the length is the same. This sort is stable.
     // NOTE(stephen): This is duplicated with _sortFields except it uses ID
@@ -89,7 +159,8 @@ class FormulaMetadata extends Zen.BaseModel<
     // field ID strings with the full field label. The _sortFields method is
     // used when the opposite is needed: replace the full field label with the
     // field ID.
-    const sortedFields = fields.slice().sort((a, b) => {
+    const fieldsToSort = matchFields !== undefined ? matchFields : fields;
+    const sortedFields = fieldsToSort.slice().sort((a, b) => {
       const aID = a.id();
       const bID = b.id();
 
@@ -111,48 +182,125 @@ class FormulaMetadata extends Zen.BaseModel<
       .split('\n')
       .map(line =>
         sortedFields.reduce(
-          (fullLine, field) => replaceAll(fullLine, field.id(), field.label()),
+          (fullLine, field) =>
+            replaceAll(fullLine, field.id(), field.getLabel()),
           line,
         ),
       );
 
+    // NOTE(pablo): on 09/02/2020 the `treatNoDataAsZero` feature was added
+    // to Custom Calculations.
+    // Due to some AQT tabs having already been persisted prior to the launch
+    // of this feature, some FormulaMetadata models might have persisted an
+    // incomplete object of field configurations (i.e. some fields might be
+    // missing). So we use this function to build a base set of field
+    // configurations to make sure all fields are included.
+    const baseFieldConfigurations = initializeFieldConfigurations(fields);
+
     return FormulaMetadata.create({
+      dimensions,
       fields: Zen.Array.create(fields),
       lines: Zen.Array.create(lines),
+      fieldConfigurations: Zen.Map.create({
+        ...baseFieldConfigurations,
+        ...fieldConfigurations,
+      }),
     });
   }
 
-  getJSFormulaText(): string {
-    // Iterate over the fields and replace their labels with their IDs
-    // This requires that all fields have unique labels
+  /**
+   *  Replace all field labels with unique token identifiers.
+   *  The reason we do this is because some field labels may be subsets
+   *  of other labels (e.g. 'Malaria' and 'Malaria - Female'), which breaks
+   *  our usage of string operations such as replaceAll.
+   *
+   *  @returns {{ lines: ZenArray<string>, labelToTokenMap: Map<string, string>}}
+   *    An object consisting of:
+   *    `lines`: The new lines with tokenized field
+   *    `labelToTokenMap` A mapping of field label to unique token string
+   */
+  tokenizeLines(): {
+    lines: Zen.Array<string>,
+    labelToTokenMap: Map<string, string>,
+  } {
     // HACK(pablo): We need to sort by longest fields (because
     // some field labels may be subsets of larger fields). Ideally we just
     // don't use field labels (other than when rendering in HTML) - we should
-    // use Field ids.
+    // use Field ids. But even with field ids we'd still need to tokenize
+    // the text, because field ids can still be subsets of others (e.g.
+    // 'malaria' and 'malaria_total').
     // HACK(pablo): another hack. This is a mess. We still have to account
     // for the fact that some field IDs can be subsets of other field IDs
     // (e.g. custom_field_test and custom_field_test2). So we need to do
     // this in two parts. First pass: convert all field IDs to a randomized
     // string to avoid any possible subset collisions. Then do a replaceAll.
-    // Second pass: now replace all the randomized IDs with their real ID.
+    // Second pass: now replace all the randomized IDs with their real JS
+    // identifier.
     // TODO(pablo): completely redesign how formulas are represented.
-    const fieldLabelToTempId = {};
-    const tempIdToFieldId = {};
-    this._.sortedFields().forEach(field => {
-      const tempId = generateRandomString();
-      fieldLabelToTempId[field.label()] = tempId;
-      tempIdToFieldId[tempId] = field.jsIdentifier();
-    });
+    const labels = this._.sortedFields().map(f => f.getLabel());
+    const fieldLabelToToken = labels.reduce((map, label) => {
+      const token = generateRandomString();
 
-    const firstPassText = this._.sortedFields().reduce(
-      (text, field) =>
-        replaceAll(text, field.label(), fieldLabelToTempId[field.label()]),
-      this._.lines().join(' '),
+      // make sure no labels are present in our random token, otherwise
+      // we'll end up with very weird conflicts.
+      // TODO(pablo): This is all haappening because we store field labels
+      // direclty instead of ids and oh god it is so painful
+      const finalToken = labels.reduce(
+        (tkn, lbl) => replaceAll(tkn, lbl, ''),
+        token,
+      );
+      return map.set(label, finalToken);
+    }, new Map());
+
+    const newLines = this._.sortedFields().reduce(
+      (lines, field) =>
+        lines.map(text =>
+          replaceAll(
+            text,
+            field.getLabel(),
+            fieldLabelToToken.get(field.getLabel()) || '',
+          ),
+        ),
+      this._.lines(),
     );
 
-    const finalText = Object.keys(tempIdToFieldId).reduce(
-      (text, tempId) => replaceAll(text, tempId, tempIdToFieldId[tempId]),
-      firstPassText,
+    return { lines: newLines, labelToTokenMap: fieldLabelToToken };
+  }
+
+  getJSFormulaText(): string {
+    // Iterate over the fields and replace their labels with their IDs
+    // This requires that all fields have unique labels
+    const { lines, labelToTokenMap } = this.tokenizeLines();
+    const tokenToJSIdentifier = new Map<string, string>();
+    this._.sortedFields().forEach(field => {
+      const token = labelToTokenMap.get(field.getLabel());
+      if (token) {
+        tokenToJSIdentifier.set(token, field.jsIdentifier());
+      }
+    });
+
+    const finalText = [...tokenToJSIdentifier.entries()].reduce(
+      (text, [token, jsIdentifier]) => replaceAll(text, token, jsIdentifier),
+      lines.join(' '),
+    );
+    return finalText;
+  }
+
+  getBackendFormulaText(): string {
+    // Iterate over the fields and replace their labels with their IDs
+    // This requires that all fields have unique labels
+    const { lines, labelToTokenMap } = this.tokenizeLines();
+    const tokenToId = new Map<string, string>();
+    this._.sortedFields().forEach(field => {
+      const token = labelToTokenMap.get(field.getLabel());
+      if (token) {
+        tokenToId.set(token, field.id());
+      }
+    });
+
+    const finalText = [...tokenToId.entries()].reduce(
+      (text, [token, id]) => replaceAll(text, token, id),
+      lines.join(' '),
     );
     return finalText;
   }
@@ -178,7 +326,7 @@ class FormulaMetadata extends Zen.BaseModel<
       // and char position. That way we can use field IDs in the formula,
       // instead of field label.
       this._.sortedFields().forEach(field => {
-        const fieldText = field.label();
+        const fieldText = field.getLabel();
         const fieldLength = fieldText.length;
         const startIndices = findAllIndices(line, fieldText);
         startIndices.forEach(startIdx => {
@@ -193,7 +341,8 @@ class FormulaMetadata extends Zen.BaseModel<
               startIndex: startIdx,
               endIndex: endIdx,
               replacement: PlaceholderFieldTag.asHTML({
-                field,
+                fieldId: field.id(),
+                label: fieldText,
                 lineNumber,
                 startIndex: startIdx,
                 mode,
@@ -230,11 +379,16 @@ class FormulaMetadata extends Zen.BaseModel<
   }
 
   addField(
-    field: LegacyField,
+    fieldConfig: {
+      fieldId: string,
+      fieldLabel: string,
+      treatNoDataAsZero: boolean,
+    },
     formulaCursor: FormulaCursor,
   ): Zen.Model<FormulaMetadata> {
+    const { fieldId, fieldLabel, treatNoDataAsZero } = fieldConfig;
     const { end, start } = formulaCursor.modelValues();
-    const fieldText = `${field.label()} `;
+    const fieldText = `${fieldLabel} `;
 
     // Update the text
     let newLines = this._.lines();
@@ -265,18 +419,27 @@ class FormulaMetadata extends Zen.BaseModel<
     //     newLines = newLines.splice(start.lineNumber() + 1, linesToDelete);
     //   }
     // }
-
+    const jsIdentifier = strToValidIdentifier(fieldId);
+    const field = {
+      id: () => fieldId,
+      getLabel: () => fieldLabel,
+      jsIdentifier: () => jsIdentifier,
+    };
     const oldFields = this._.fields();
     const newFields = oldFields.push(field);
-
+    const oldFieldConfigurations = this._.fieldConfigurations();
     return this.modelValues({
       lines: newLines,
       fields: newFields,
+      fieldConfigurations: oldFieldConfigurations.set(fieldId, {
+        fieldId,
+        treatNoDataAsZero,
+      }),
     });
   }
 
   removeField(
-    field: LegacyField,
+    fieldId: string,
     lineNumber: number,
     startIndex: number,
     endIndex: number,
@@ -285,10 +448,11 @@ class FormulaMetadata extends Zen.BaseModel<
       replaceAt(line, '', startIndex, endIndex),
     );
 
-    const fieldId = field.id();
+    const oldFieldConfigurations = this._.fieldConfigurations();
     return this.modelValues({
       lines: newLines,
       fields: this._.fields().findAndDelete(f => f.id() === fieldId),
+      fieldConfigurations: oldFieldConfigurations.delete(fieldId),
     });
   }
 
@@ -303,4 +467,4 @@ class FormulaMetadata extends Zen.BaseModel<
   }
 }
 
-export default ((FormulaMetadata: any): Class<Zen.Model<FormulaMetadata>>);
+export default ((FormulaMetadata: $Cast): Class<Zen.Model<FormulaMetadata>>);

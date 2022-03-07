@@ -1,21 +1,24 @@
 .sunburst-info-container {
   height: 120px;
 
-  .percentage, .identifier, .absolute {
+  .percentage,
+  .identifier,
+  .absolute {
     font-size: 1.5em;
   }
 
-  .sequence text, .legend text {
-    font-weight: normal;
-    font-size: 16px;
+  .sequence text,
+  .legend text {
     fill: #fff;
+    font-size: 16px;
+    font-weight: normal;
   }
 }
 
 .sunburst {
   height: 100%;
-  width: 100%;
   text-align: center;
+  width: 100%;
 }
 
 .sunburst path {

@@ -1,20 +1,29 @@
 // @flow
 import * as React from 'react';
 
+import ElementResizeService from 'services/ui/ElementResizeService';
 import ProgressBar from 'components/ui/ProgressBar';
 import Visualization from 'components/visualizations/common/Visualization';
 import withScriptLoader from 'components/common/withScriptLoader';
 import { VENDOR_SCRIPTS } from 'vendor/registry';
 import { autobind, memoizeOne } from 'decorators';
 import { formatNum } from 'components/QueryResult/resultUtil';
-import type SunburstQueryResultData from 'components/visualizations/Sunburst/models/SunburstQueryResultData';
+import type SunburstQueryResultData from 'models/visualizations/Sunburst/SunburstQueryResultData';
 import type {
   D3SunburstNode,
   HierarchyNode,
 } from 'components/visualizations/Sunburst/types';
-import type { VisualizationProps } from 'components/visualizations/common/commonTypes';
+import type {
+  VisualizationDefaultProps,
+  VisualizationProps,
+} from 'components/visualizations/common/commonTypes';
 
 type Props = VisualizationProps<'SUNBURST'>;
+type State = {
+  height: number,
+  radius: number,
+  width: number,
+};
 
 const ROOT_NAME = window.__JSON_FROM_BACKEND.nationName;
 
@@ -71,30 +80,41 @@ function getAncestors(node: D3SunburstNode): $ReadOnlyArray<D3SunburstNode> {
   return path;
 }
 
-class Sunburst extends React.PureComponent<Props> {
+class Sunburst extends React.PureComponent<Props, State> {
+  _selectedItems: Set<number> = new Set();
+  _absoluteRef: ?HTMLSpanElement = undefined;
+  _explanationRef: ?HTMLDivElement = undefined;
+  _identifierRef: ?HTMLSpanElement = undefined;
+  _percentageRef: ?HTMLSpanElement = undefined;
+  _sequenceRef: ?HTMLDivElement = undefined;
+  _sunburstRef: ?HTMLDivElement = undefined;
+  _totalSize: number;
+
   // TODO(stephen, nina, anyone): Fix this.
-  _selectedItems: any = new Set();
-  _absoluteRef: any = undefined;
-  _explanationRef: any = undefined;
-  _identifierRef: any = undefined;
-  _percentageRef: any = undefined;
-  _sequenceRef: any = undefined;
-  _sunburstRef: any = undefined;
-  _vis: any = undefined;
-  _container: any = undefined;
-  _outerColor: any = undefined;
-  _innerColor: any = undefined;
-  _xScale: any = undefined;
-  _yScale: any = undefined;
-  _partition: any = undefined;
-  _percentageElt: any = undefined;
-  _absoluteElt: any = undefined;
-  _identifierElt: any = undefined;
-  _explanationElt: any = undefined;
-  _trailElt: any = undefined;
-  _path: any = undefined;
-  _totalSize: any = undefined;
-  _arc: any = undefined;
+  _vis: $FlowTODO = undefined;
+  _container: $FlowTODO = undefined;
+  _outerColor: $FlowTODO = undefined;
+  _innerColor: $FlowTODO = undefined;
+  _xScale: $FlowTODO = undefined;
+  _yScale: $FlowTODO = undefined;
+  _partition: $FlowTODO = undefined;
+  _percentageElt: $FlowTODO = undefined;
+  _absoluteElt: $FlowTODO = undefined;
+  _identifierElt: $FlowTODO = undefined;
+  _explanationElt: $FlowTODO = undefined;
+  _trailElt: $FlowTODO = undefined;
+  _path: $FlowTODO = undefined;
+  _arc: $FlowTODO = undefined;
+
+  resizeRegistration = ElementResizeService.register(this.onResize, elt => {
+    this._sunburstRef = elt;
+  });
+
+  state = {
+    height: 10,
+    radius: 10,
+    width: 10,
+  };
 
   componentDidMount() {
     this.setupSunburst();
@@ -113,13 +133,16 @@ class Sunburst extends React.PureComponent<Props> {
       this._vis.remove();
     }
 
-    this._sunburstRef.innerHTML = '';
-    this._sequenceRef.innerHTML = '';
+    if (this._sunburstRef) {
+      this._sunburstRef.innerHTML = '';
+    }
+
+    if (this._sequenceRef) {
+      this._sequenceRef.innerHTML = '';
+    }
   }
 
   setupD3Helpers() {
-    const { radius } = this.getSunburstBounds();
-
     // D3 coloring scale.
     this._outerColor = window.d3.scale.category20c();
     this._innerColor = window.d3.scale.category20();
@@ -127,7 +150,7 @@ class Sunburst extends React.PureComponent<Props> {
     // Used for zoom animation interpolation.
     this._xScale = window.d3.scale.linear().range([0, 2 * Math.PI]);
 
-    this._yScale = window.d3.scale.sqrt().range([0, radius]);
+    this._yScale = window.d3.scale.sqrt().range([0, this.state.radius]);
 
     this._arc = window.d3.svg
       .arc()
@@ -139,15 +162,9 @@ class Sunburst extends React.PureComponent<Props> {
       .outerRadius(d => Math.max(0, this._yScale(d.y + d.dy)));
   }
 
-  getSunburstBounds() {
-    const output = this._sunburstRef.getBoundingClientRect();
-    output.radius = Math.min(output.height, output.width) / 2;
-    return output;
-  }
-
   setupSunburst() {
-    const { selectedField } = this.props.controls;
-    const { height, radius, width } = this.getSunburstBounds();
+    const selectedField = this.props.controls.selectedField();
+    const { height, radius, width } = this.state;
     this.cleanup();
     this.setupD3Helpers();
     this._vis = window.d3
@@ -322,17 +339,27 @@ class Sunburst extends React.PureComponent<Props> {
       return ROOT_NAME;
     }
 
-    // TODO(stephen): Shouldn't QueryResultGrouping handle this case?
-    if (name === null) {
-      return 'null';
-    }
-
     const grouping = groupBySettings.settingsForGroup(dimension);
     if (grouping === undefined) {
-      return name;
+      return name || 'null';
     }
 
     return grouping.formatGroupingValue(name);
+  }
+
+  updateNodeOpacity(idx: number, value: string | void) {
+    const elt = this._path[0][idx];
+    // Sometimes we can get into a state where the element being referenced no
+    // longer exists. This mostly happens when the query result changes before
+    // we have time to fully reset the sunburst.
+    if (elt === undefined) {
+      return;
+    }
+    if (value === undefined) {
+      elt.removeAttribute('fill-opacity');
+    } else {
+      elt.setAttribute('fill-opacity', value);
+    }
   }
 
   @autobind
@@ -340,12 +367,11 @@ class Sunburst extends React.PureComponent<Props> {
     // Retrieve current js event
     const { target } = window.d3.event;
     const d = target.__data__;
-    const { radius } = this.getSunburstBounds();
 
     this._path
       .transition()
       .duration(1000)
-      .attrTween('d', this.arcTweenZoom(d, radius));
+      .attrTween('d', this.arcTweenZoom(d, this.state.radius));
   }
 
   @autobind
@@ -379,14 +405,12 @@ class Sunburst extends React.PureComponent<Props> {
     this.updateBreadcrumbs(sequenceArray, percentageString);
 
     const indexes = new Set(sequenceArray.map(data => data.idx));
-    indexes.forEach(idx => {
-      this._path[0][idx].setAttribute('fill-opacity', '1');
-    });
+    indexes.forEach(idx => this.updateNodeOpacity(idx, '1'));
 
     // Remove attributes on previously selected
     this._selectedItems.forEach(idx => {
       if (!indexes.has(idx)) {
-        this._path[0][idx].removeAttribute('fill-opacity');
+        this.updateNodeOpacity(idx, undefined);
       }
     });
     this._selectedItems = indexes;
@@ -398,15 +422,18 @@ class Sunburst extends React.PureComponent<Props> {
     this.resetExplanations();
 
     // Cleanup last highlighted items
-    this._selectedItems.forEach(idx => {
-      this._path[0][idx].removeAttribute('fill-opacity');
-    });
+    this._selectedItems.forEach(idx => this.updateNodeOpacity(idx, undefined));
     this._container.attr('fill-opacity', '1');
   }
 
   @autobind
-  onResize() {
-    this.cleanup();
+  onResize({ contentRect }: ResizeObserverEntry) {
+    const { height, width } = contentRect;
+    this.setState({
+      height,
+      width,
+      radius: Math.min(height, width) / 2,
+    });
   }
 
   renderExplanation() {
@@ -460,18 +487,15 @@ class Sunburst extends React.PureComponent<Props> {
   render() {
     return (
       <Visualization loading={this.props.loading} footer={this.renderFooter()}>
-        <div
-          className="sunburst"
-          ref={ref => {
-            this._sunburstRef = ref;
-          }}
-        />
+        <div className="sunburst" ref={this.resizeRegistration.setRef} />
       </Visualization>
     );
   }
 }
 
-export default withScriptLoader(Sunburst, {
+export default (withScriptLoader(Sunburst, {
   scripts: [VENDOR_SCRIPTS.d3],
   loadingNode: <ProgressBar enabled />,
-});
+}): React.AbstractComponent<
+  React.Config<Props, VisualizationDefaultProps<'SUNBURST'>>,
+>);

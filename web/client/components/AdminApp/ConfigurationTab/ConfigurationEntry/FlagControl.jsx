@@ -1,10 +1,11 @@
 // @flow
 import * as React from 'react';
 
-import Configuration from 'services/models/Configuration';
 import Dropdown from 'components/ui/Dropdown';
+import Group from 'components/ui/Group';
 import { autobind } from 'decorators';
 import { noop } from 'util/util';
+import type Configuration from 'services/models/Configuration';
 import type { ChildProps } from 'components/AdminApp/ConfigurationTab/ConfigurationEntry';
 
 const TEXT = t('admin_app.configuration.flagConfiguration');
@@ -16,7 +17,9 @@ const FLAG_OPTIONS = {
 };
 
 export default class FlagControl extends React.PureComponent<ChildProps> {
-  static defaultProps = {
+  static defaultProps: {
+    onConfigurationUpdated: (updatedValue: Configuration) => void,
+  } = {
     onConfigurationUpdated: noop,
   };
 
@@ -30,8 +33,8 @@ export default class FlagControl extends React.PureComponent<ChildProps> {
     this.props.onConfigurationUpdated(updatedConfiguration);
   }
 
-  render() {
-    const { configuration } = this.props;
+  render(): React.Node {
+    const { configuration, testId } = this.props;
     const value = configuration.value();
 
     const flagOptions = Object.keys(FLAG_OPTIONS).map(element => {
@@ -50,22 +53,18 @@ export default class FlagControl extends React.PureComponent<ChildProps> {
       },
     );
 
-    const controlClassName = `configuration-flag configuration-flag-${configuration.key()}`;
-    const dropdownClassName = `configuration-flag-dropdown configuration-flag-text-${configuration.key()}`;
-    const textClassName = `configuration-flag-text configuration-flag-dropdown-${configuration.key()}`;
-
     return (
-      <div className={controlClassName}>
-        <div className={textClassName}>{dropdownText}</div>
+      <Group.Vertical spacing="s">
+        {dropdownText}
         <Dropdown
-          className={dropdownClassName}
           defaultDisplayContent={value ? TEXT.enabled : TEXT.disabled}
           value={value ? TEXT.enabled : TEXT.disabled}
           onSelectionChange={this.toggleConfiguration}
+          testId={testId}
         >
           {flagOptions}
         </Dropdown>
-      </div>
+      </Group.Vertical>
     );
   }
 }

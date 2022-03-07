@@ -1,8 +1,9 @@
+// @flow
+
 // List of colors to use for charts and markers. If there are more markers than
 // colors, you should wrap around.
 // Generated at http://phrogz.net/css/distinct-colors.html
-
-export const PRIMARY_COLORS = {
+export const PRIMARY_COLORS: { +[string]: string, ... } = {
   ZA_RED: '#D31F29',
   ZA_BLUE: '#003082',
   ZA_ORANGE: '#FF6600',
@@ -29,7 +30,7 @@ export const PRIMARY_COLORS = {
   MAGENTA: '#DB2C6F',
 };
 
-export const LIGHT_PRIMARY_COLORS = {
+export const LIGHT_PRIMARY_COLORS: { +[string]: string, ... } = {
   RED: '#EB9694',
   ORANGE: '#EBB48F',
   TOMATO: '#FFA190',
@@ -44,18 +45,18 @@ export const LIGHT_PRIMARY_COLORS = {
   MAGENTA: '#EEACC6',
 };
 
-export const SERIES_COLORS = [
+export const SERIES_COLORS: $ReadOnlyArray<string> = [
   PRIMARY_COLORS.BLUE,
   PRIMARY_COLORS.GREEN,
   PRIMARY_COLORS.YELLOW,
   PRIMARY_COLORS.RED,
   PRIMARY_COLORS.CYAN,
   PRIMARY_COLORS.VIOLET,
+  PRIMARY_COLORS.LIME,
   PRIMARY_COLORS.MAGENTA,
   PRIMARY_COLORS.ORANGE,
   PRIMARY_COLORS.INDIGO,
   PRIMARY_COLORS.TOMATO,
-  PRIMARY_COLORS.LIME,
   PRIMARY_COLORS.DEEP_SKY_BLUE,
   PRIMARY_COLORS.BRIGHT_GREEN,
   PRIMARY_COLORS.BRIGHT_YELLOW,
@@ -85,7 +86,7 @@ export const SERIES_COLORS = [
 
 // This is an interpolation from LIGHT_PRIMARY_COLORS to PRIMARY_COLORS
 // based on http://gka.github.io/palettes
-export const COLOR_GRADIENT = [
+export const COLOR_GRADIENT: $ReadOnlyArray<string> = [
   '#eb9694',
   '#ebb48f',
   '#f1cf79',
@@ -142,7 +143,11 @@ export const COLOR_GRADIENT = [
   '#8f398f',
 ];
 
-export const PALETTE_COLOR_ORDER = [
+const CUSTOM_COLORS: $ReadOnlyArray<string> = window.__JSON_FROM_BACKEND.ui
+  ? window.__JSON_FROM_BACKEND.ui.customColors
+  : [];
+
+export const PALETTE_COLOR_ORDER: $ReadOnlyArray<string> = [
   PRIMARY_COLORS.RED,
   PRIMARY_COLORS.ORANGE,
   PRIMARY_COLORS.YELLOW,
@@ -162,24 +167,55 @@ export const PALETTE_COLOR_ORDER = [
   PRIMARY_COLORS.ZA_GREEN,
   PRIMARY_COLORS.ZA_LIGHT_BLUE,
   PRIMARY_COLORS.ZA_DARK_BLUE,
+  ...CUSTOM_COLORS,
 ];
 
-export const SORT_ASCENDING = 'ASC';
-export const SORT_DESCENDING = 'DESC';
-export const SORT_ALPHABETICAL = 'ALPH';
+export type SortOrder = 'ASC' | 'DESC' | 'ALPH';
 
-export const DEFAULT_SORT_ORDER = SORT_DESCENDING;
+export const SORT_ASCENDING: 'ASC' = 'ASC';
+export const SORT_DESCENDING: 'DESC' = 'DESC';
+export const SORT_ALPHABETICAL: 'ALPH' = 'ALPH';
 
-export const DISPLAY_DATE_FORMAT = 'D MMM YYYY';
+export const DEFAULT_SORT_ORDER: SortOrder = SORT_DESCENDING;
+
+export const DISPLAY_DATE_FORMAT: string = 'D MMM YYYY';
 
 // Create a mapping from field ID to color based on the ordering of the
 // specified palette.
-export function initializeFieldColors(fields, palette = SERIES_COLORS) {
+export function initializeFieldColors(
+  fields: $ReadOnlyArray<string>,
+  palette: $ReadOnlyArray<string> = SERIES_COLORS,
+): { +[string]: string, ... } {
   const output = {};
-  fields.forEach((f, idx) => { output[f] = palette[idx % palette.length]; });
+  fields.forEach((f, idx) => {
+    output[f] = palette[idx % palette.length];
+  });
   return output;
 }
 
-export function indexToSeriesColor(idx) {
+/**
+ * Given an index, return a corresponding series color
+ */
+export function indexToSeriesColor(idx: number): string {
   return SERIES_COLORS[idx % SERIES_COLORS.length];
+}
+
+/**
+ * Given a set of already assigned colors, return the first available unassigned
+ * series color
+ *
+ * @param {Set<string>} takenColors The set of already assigned colors
+ * @returns {string | void} The first available unassigned color, or void if
+ * there are no available series colors.
+ */
+export function getAvailableSeriesColor(
+  takenColors: $ReadOnlySet<string>,
+): string | void {
+  for (let i = 0; i < SERIES_COLORS.length; i++) {
+    const color = SERIES_COLORS[i];
+    if (!takenColors.has(color)) {
+      return color;
+    }
+  }
+  return undefined;
 }

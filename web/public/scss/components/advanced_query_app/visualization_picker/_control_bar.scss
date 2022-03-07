@@ -1,0 +1,141 @@
+@mixin control-bar-button() {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+
+  &:hover {
+    background-color: white;
+    box-shadow: 0 0 5px 0 rgba(35, 36, 37, 0.2);
+    z-index: 1; // so that the drop shadow will show above the other buttons
+  }
+}
+
+.visualization-picker-control-bar {
+  $popover-arrow-position: 30px;
+  align-items: center;
+  background-color: $gray-light;
+  border-top-left-radius: $aqt-query-result-border-radius;
+  border-top-right-radius: $aqt-query-result-border-radius;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+
+  // NOTE(pablo): use clip-path to only show the bottom shadow and hide the
+  // horizontal parts of the shadow
+  clip-path: inset(0px 0px -5px 0px);
+  display: flex;
+  flex-basis: $visualization-picker-control-bar-height;
+  height: $visualization-picker-control-bar-height;
+  width: 100%;
+  z-index: 1;
+
+  &__visualization-buttons {
+    display: flex;
+    flex: 2;
+    height: 100%;
+  }
+
+  &__back-btn {
+    @include control-bar-button;
+    align-items: center;
+    display: flex;
+
+    font-size: $font-l;
+    padding-left: $spacing-s;
+    padding-right: $spacing-s;
+
+    &:hover {
+      &:before {
+        @include tooltip-arrow();
+
+        top: $popover-arrow-position;
+      }
+    }
+  }
+
+  &__explore-view-btn {
+    @include control-bar-button;
+    font-size: $font-l;
+    padding-left: $spacing-s;
+    text-align: right;
+
+    &:hover {
+      box-shadow: 0 0 5px 0 rgba(35, 36, 37, 0.2);
+      &:before {
+        @include tooltip-arrow();
+
+        top: $popover-arrow-position;
+      }
+    }
+  }
+
+  &__show-me-icon {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    width: 35px;
+
+    & > svg {
+      height: 15px;
+    }
+  }
+
+  &__show-me-label {
+    margin-right: $spacing-s;
+  }
+
+  // TODO(nina): $VizPicker - this will be removed when we create a new
+  // tooltip UI component
+  &__tooltip {
+    background-color: $slate;
+    box-shadow: none;
+    color: $white;
+  }
+}
+
+.aqt-view-type-picker-btn {
+  @include control-bar-button;
+  background-color: $gray-light;
+  border: none;
+  color: $gray;
+  width: 35px;
+
+  &--disabled {
+    cursor: not-allowed;
+  }
+
+  &__icon {
+    height: 15px;
+
+    // NOTE(stephen): Disabling pointer events on the icon itself since it can
+    // cause issues with the hover detection that triggers the popover. It's
+    // possible for the user to hover over the SVG icon and cause the popover to
+    // close and reopen.
+    pointer-events: none;
+    width: 15px;
+  }
+}
+
+.aqt-view-type-picker-btn-popover {
+  $popover-spacing: 20px;
+  background-color: white;
+  clip-path: inset(0px -40px -40px -40px);
+  font-size: 16px;
+  padding: 0 $spacing-m;
+  width: 285px;
+
+  &__title {
+    border-bottom: solid 1px #979797;
+    font-weight: bold;
+    padding-bottom: $popover-spacing;
+    padding-top: $popover-spacing;
+    text-align: center;
+  }
+
+  &__requirements {
+    // NOTE(stephen): Force this padding to take precedence over the default
+    // requirements details padding used in the explore view.
+    padding-bottom: $popover-spacing !important;
+    padding-top: $popover-spacing !important;
+  }
+}

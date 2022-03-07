@@ -1,20 +1,18 @@
-from builtins import object
 import collections
 
-from functools import wraps
 from abc import ABCMeta, abstractmethod
+from functools import wraps
 
 from stringcase import camelcase
 
 from web.server.util.util import assert_mapping
-from future.utils import with_metaclass
 
 TraversalNode = collections.namedtuple(
     'TraversalNode', ['key', 'value', 'source_object']
 )
 
 
-class PropertyRegistry(object):
+class PropertyRegistry:
     def __init__(self, key_converter=None):
         self._getter_registry = {}
         self._setter_registry = {}
@@ -261,7 +259,7 @@ class PropertyRegistry(object):
         return set_property
 
 
-class PythonModel(with_metaclass(ABCMeta, dict)):
+class PythonModel(dict, metaclass=ABCMeta):
     def __init__(self, values=None, allow_extra_properties=True):
         super(PythonModel, self).__init__()
         if isinstance(values, PythonModel):

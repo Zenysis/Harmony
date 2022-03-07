@@ -1,19 +1,21 @@
 // @flow
 import * as React from 'react';
-import ReactDOMServer from 'react-dom/server';
 
-import LineGraphQueryResultData from 'components/visualizations/LineGraph/models/LineGraphQueryResultData';
+import ElementResizeService from 'services/ui/ElementResizeService';
+import LineGraphLegend from 'components/visualizations/LineGraph/LineGraphLegend';
+import LineGraphQueryResultData from 'models/visualizations/LineGraph/LineGraphQueryResultData';
+import PlotlyTooltip from 'components/visualizations/common/PlotlyTooltip';
 import ProgressBar from 'components/ui/ProgressBar';
 import QueryResultGrouping, {
   TIMESTAMP_GROUPING_ID,
 } from 'models/core/QueryResultSpec/QueryResultGrouping';
-import ResizeService from 'services/ResizeService';
 import Visualization from 'components/visualizations/common/Visualization';
+import buildColoredBandLines from 'components/visualizations/LineGraph/buildColoredBandLines';
+import computeLineGraphMargins from 'components/visualizations/LineGraph/computeLineGraphMargins';
 import withScriptLoader from 'components/common/withScriptLoader';
 import {
   BACKEND_GRANULARITIES,
   buildPlotlyDateLabels,
-  getForecastFieldId,
 } from 'components/QueryResult/timeSeriesUtil';
 import { SERIES_COLORS } from 'components/QueryResult/graphUtil';
 import { VENDOR_SCRIPTS } from 'vendor/registry';
@@ -21,38 +23,27 @@ import {
   Y1_AXIS,
   // eslint-disable-next-line max-len
 } from 'components/visualizations/common/SettingsModal/AxesSettingsTab/constants';
-import {
-  addArrays,
-  generateIdToObjectMapping,
-  debounce,
-  subArrays,
-} from 'util/util';
+import { ZEN_GRAPH_FORMAT_LABEL } from 'vendor/registry/patches';
 import { autobind, memoizeOne } from 'decorators';
-import {
-  formatFieldValueForDisplay,
-  getFieldSymbol,
-  getFieldValueType,
-  FIELD_VALUE_TYPES,
-} from 'indicator_fields';
-import { formatNum } from 'components/QueryResult/resultUtil';
-import { truncate } from 'util/stringUtil';
 import { visualizationDefaultProps } from 'components/visualizations/common/commonTypes';
+import type AxesSettings from 'models/core/QueryResultSpec/VisualizationSettings/AxesSettings';
 import type GroupBySettings from 'models/core/QueryResultSpec/GroupBySettings';
+import type QueryResultSeries from 'models/core/QueryResultSpec/QueryResultSeries';
+import type SeriesSettings from 'models/core/QueryResultSpec/VisualizationSettings/SeriesSettings';
+import type { BandSetting } from 'models/visualizations/LineGraph/LineGraphSettings';
 import type {
   DataPoint,
   FieldId,
+  LineGraphLines,
   RawTimestamp,
-} from 'components/visualizations/LineGraph/types';
-import type { SubscriptionObject } from 'services/ResizeService';
-import type { VisualizationProps } from 'components/visualizations/common/commonTypes';
+} from 'models/visualizations/LineGraph/types';
+import type { LegendItem } from 'components/visualizations/LineGraph/LineGraphLegend/types';
+import type {
+  VisualizationDefaultProps,
+  VisualizationProps,
+} from 'components/visualizations/common/commonTypes';
 
 const DEFAULT_LINE_WIDTH = 2;
-const DEFAULT_MARKER_SIZE = 4;
-const FORECAST_LINE_WIDTH = 3;
-const FORECAST_MARKER_SIZE = 5;
-const WINDOW_RESIZE_DEBOUNCE_TIMEOUT = 100;
-
-const TIME_TEXT = t('query_result.time');
 
 const PLOTLY_CONFIG = {
   modeBarButtonsToRemove: [
@@ -64,287 +55,366 @@ const PLOTLY_CONFIG = {
   ],
 };
 
-// $CycloneIdaiHack
-const DEPLOYMENT = window.__JSON_FROM_BACKEND.deploymentName;
+const DASH_STYLES = [
+  'solid',
+  'dashdot',
+  'dot',
+  'dash',
+  'longdashdot',
+  'longdash',
+];
+
+type PlotlyDashStyle =
+  | 'dot'
+  | 'dash'
+  | 'dashdot'
+  | 'longdash'
+  | 'longdashdot'
+  | 'solid';
+
+// HACK(stephen): This is all just a mess. Creating a new line type type
+// definition since we don't have an exact plotly type.
+type PlotlyLineShape = {
+  name: string,
+  x: $ReadOnlyArray<string>,
+  y: $ReadOnlyArray<?number>,
+  xaxis: 'x',
+  yaxis: 'y' | 'y2',
+  mode: 'line' | 'marker',
+  hoverinfo: 'none',
+  type: 'scatter',
+  showlegend: true,
+  line: {
+    color: string,
+    dash: PlotlyDashStyle,
+    width: number,
+  },
+  connectgaps: true,
+  tooltipData: {
+    fieldId: string,
+    key: string,
+    yAxis: 'y1Axis' | 'y2Axis',
+  },
+};
+
+type LegendItems = {
+  coloredBands: $ReadOnlyArray<LegendItem>,
+  lines: $ReadOnlyArray<LegendItem>,
+  metrics: $ReadOnlyArray<LegendItem>,
+};
+
+type HoverData = {
+  x: number,
+  y: number,
+  fieldId: string,
+  key: string,
+  yAxis: 'y1Axis' | 'y2Axis',
+};
+
+// NOTE(stephen): To the person that refactors the LineGraph to stop using
+// Plotly, don't just copy this type without thinking about it. It might be tied
+// to Plotly usage in some areas.
+type Metric = {
+  colorOverride: string | void,
+  id: string,
+  label: string,
+  plotlyDashStyle: PlotlyDashStyle,
+  shape: $PropertyType<LegendItem, 'shape'>,
+  yAxis: 'y1Axis' | 'y2Axis',
+};
 
 type Props = VisualizationProps<'TIME'>;
+type State = {
+  disabledLegendItems: {
+    coloredBands: $ReadOnlyArray<string>,
+    metrics: $ReadOnlyArray<string>,
+    lines: $ReadOnlyArray<string>,
+  },
+  hoverData: HoverData | void,
+  legendSize: {
+    height: number,
+    width: number,
+  },
+};
 
-class LineGraph extends React.PureComponent<Props> {
-  _graphElt: $RefObject<'div'> = React.createRef();
-  _resizeSubscription: ?SubscriptionObject = undefined;
+const HACK_USE_SERIES_SETTING_COLOR = false;
 
-  static defaultProps = {
+function seriesIdsChanged(
+  prevSeriesOrder: $ReadOnlyArray<string>,
+  seriesOrder: $ReadOnlyArray<string>,
+): boolean {
+  if (prevSeriesOrder === seriesOrder) {
+    return false;
+  }
+
+  if (prevSeriesOrder.length !== seriesOrder.length) {
+    return true;
+  }
+
+  const prevIds = new Set(prevSeriesOrder);
+  return !seriesOrder.every(id => prevIds.has(id));
+}
+
+class LineGraph extends React.PureComponent<Props, State> {
+  static defaultProps: VisualizationDefaultProps<'TIME'> = {
     ...visualizationDefaultProps,
     queryResult: LineGraphQueryResultData.create({}),
   };
 
-  componentDidMount() {
-    this.createPlot();
+  ref: $ElementRefObject<'div'> = React.createRef();
+  legendResizeRegistration = ElementResizeService.register(this.onLegendResize);
+  state = {
+    disabledLegendItems: {
+      coloredBands: [],
+      metrics: [],
+      lines: [],
+    },
+    hoverData: undefined,
+    legendSize: {
+      height: 0,
+      width: 0,
+    },
+  };
 
-    // Watch for resize events so we can adjust the column count.
-    this._resizeSubscription = ResizeService.subscribe(
-      debounce(this.onResize.bind(this), WINDOW_RESIZE_DEBOUNCE_TIMEOUT),
-    );
-  }
-
-  componentDidUpdate() {
-    this.createPlot();
-  }
-
-  componentWillUnmount() {
-    if (this._resizeSubscription) {
-      ResizeService.unsubscribe(this._resizeSubscription);
+  componentDidUpdate(prevProps: Props) {
+    if (
+      prevProps.queryResult !== this.props.queryResult ||
+      seriesIdsChanged(
+        prevProps.seriesSettings.seriesOrder(),
+        this.props.seriesSettings.seriesOrder(),
+      )
+    ) {
+      this.clearDisabledLegendItems();
     }
   }
 
-  createPlot() {
-    const data = this.getPlotlyData();
-    if (data.length === 0) {
+  clearDisabledLegendItems() {
+    this.setState({
+      disabledLegendItems: {
+        coloredBands: [],
+        metrics: [],
+        lines: [],
+      },
+    });
+  }
+
+  // HACK(stephen): Just going full-on hack mode at this point with Plotly
+  // line graph. We need access to the width/height that the plot will render in
+  // and it is easy enough to receive it as a callback from the <Visualization>
+  // during rendering. However, we only want to redraw the plot when the
+  // dimensions have changed or if the props have changed. By memoizing this
+  // in this style, we can avoid the need to use componentDidMount/Update and
+  // can just freely call `createPlot` in the render path.
+  @memoizeOne
+  createPlot(
+    data: $ReadOnlyArray<PlotlyLineShape>,
+    height: number,
+    width: number,
+    elt: ?HTMLDivElement,
+    props: Props, // eslint-disable-line no-unused-vars
+  ) {
+    // Only render the plot if we have an element to render on and the
+    // dimensions are big enough.
+    if (!elt || height <= 10 || width <= 10) {
       return;
     }
 
-    const layout = this.maybeAddAnotations(this.getGraphLayout(), data);
-    window.Plotly.newPlot(this._graphElt.current, data, layout, PLOTLY_CONFIG);
+    const layout = this.maybeAddAnotations(
+      this.getGraphLayout(height, width),
+      data,
+    );
+    layout.margin = computeLineGraphMargins(layout, data);
+
+    window.Plotly.newPlot(elt, data, layout, PLOTLY_CONFIG);
+    // Plotly attaches an `on` listener to the div element that Flow cannot
+    // detect.
+    // $FlowExpectedError[prop-missing]
+    elt.on('plotly_hover', this.onHoverStart);
+
+    // $FlowExpectedError[prop-missing]
+    elt.on('plotly_unhover', this.onHoverEnd);
   }
 
-  getPlotlyAreaObject(
-    key: string,
-    lineData: $ReadOnlyArray<DataPoint>,
-    fieldId: FieldId,
-    sigmaFieldId: string,
-    dateLabels: $ReadOnlyArray<string>,
-    colorIdx: number,
-  ): any {
-    // TODO(toshi): If the error field is changed to standard deviation, then we
-    // need to change sigma so we don't take the square root anymore.
-    // Generate shaded area given a set of values and their corresponding
-    // uncertainties.
-    let legendText = this.getSeriesTextForGeoAndField(key, fieldId);
-    // Sigma is the width of the error band.
-    const sigmaData = lineData.map(dataObj => dataObj[sigmaFieldId]);
+  @memoizeOne
+  buildMetricOrder(
+    seriesSettings: SeriesSettings,
+    hasSingleQueryResultRow: boolean,
+  ): $ReadOnlyArray<Metric> {
+    const output = [];
 
-    legendText = `${t('query_result.time.confidence_interval')}: ${legendText}`;
+    let metricCount = 0;
+    seriesSettings.visibleSeriesOrder().forEach(fieldId => {
+      const seriesObject = seriesSettings.getSeriesObject(fieldId);
+      if (seriesObject !== undefined) {
+        // Each series object should use a different shape since the unique
+        // dimension values all use the same color.
+        // NOTE(stephen): If there is only a single row in the query result, we
+        // want to *color by series* instead of coloring by dimension value.
+        let colorOverride = hasSingleQueryResultRow
+          ? SERIES_COLORS[metricCount % SERIES_COLORS.length]
+          : undefined;
+        const plotlyDashStyle = hasSingleQueryResultRow
+          ? 'solid'
+          : DASH_STYLES[metricCount % DASH_STYLES.length];
 
-    // Send xs and ys series to plotly.
-    const numericValues = lineData.map(dataObj => dataObj[fieldId]);
-    // Modify x and y for area plot.
-    // Format:
-    //   x = [1, 2, 3, 3, 2, 1]
-    //   y = (y_upper(1), y_u(2), y_u(3), y_lower(3), y_l(2), y_l(1))
-    const areaXs = dateLabels.concat(dateLabels.slice().reverse());
-    const upperBound = addArrays(numericValues, sigmaData);
-    const lowerBound = subArrays(numericValues, sigmaData);
-    const areaYs = upperBound.concat(lowerBound.reverse());
-    // Remove the NaNs or else the area plot goes crazy.
-    const goodAreaXs = [];
-    const goodAreaYs = [];
-    for (let i = 0; i < areaYs.length; i++) {
-      if (areaYs[i]) {
-        goodAreaXs.push(areaXs[i]);
-        goodAreaYs.push(areaYs[i]);
+        // TODO(stephen): Improve Flow's refinement of this.
+        // $FlowExpectedError[incompatible-type]
+        const shape: $PropertyType<Metric, 'shape'> = `line-${plotlyDashStyle}`;
+
+        // HACK(stephen): BR COVID has very specific requirements around the
+        // usage of color in the line graph when there is only a single query
+        // result row. For that specific deployment, use the color set in the
+        // series settings. For all other deployments, sequentially choose a
+        // color from the SERIES_COLORS.
+        if (hasSingleQueryResultRow && HACK_USE_SERIES_SETTING_COLOR) {
+          // NOTE(stephen): The series object color should never be missing, but
+          // just to be safe, default to the original color override.
+          colorOverride = seriesObject.color() || colorOverride;
+        }
+
+        output.push({
+          colorOverride,
+          plotlyDashStyle,
+          shape,
+          id: seriesObject.id(),
+          label: seriesObject.label(),
+          yAxis: seriesObject.yAxis() === Y1_AXIS ? 'y1Axis' : 'y2Axis',
+        });
+        metricCount++;
       }
+    });
+    return output;
+  }
+
+  getMetricOrder(): $ReadOnlyArray<Metric> {
+    const { queryResult, seriesSettings } = this.props;
+    return this.buildMetricOrder(
+      seriesSettings,
+      queryResult.lines().length === 1,
+    );
+  }
+
+  @memoizeOne
+  buildLegendItems(
+    lineColors: { +[string]: string },
+    bandSettings: $ReadOnlyArray<BandSetting>,
+    metricOrder: $ReadOnlyArray<Metric>,
+    disabledLegendItems: $PropertyType<State, 'disabledLegendItems'>,
+  ): LegendItems {
+    const output = {
+      coloredBands: [],
+      metrics: metricOrder.map(({ colorOverride, id, label, shape }) => ({
+        color: colorOverride !== undefined ? colorOverride : '#313234',
+        enabled: !disabledLegendItems.metrics.includes(id),
+        id,
+        label,
+        shape,
+      })),
+      lines: Object.keys(lineColors).map(key => ({
+        color: lineColors[key],
+        enabled: !disabledLegendItems.lines.includes(key),
+        id: key,
+        label: key,
+        shape: 'line-solid',
+      })),
+    };
+
+    bandSettings.forEach(({ areaColor, areaLabel }, idx) => {
+      if (
+        areaColor !== undefined &&
+        areaLabel !== undefined &&
+        areaLabel.length > 0
+      ) {
+        const id = `${areaColor}--${areaLabel}--${idx}`;
+        output.coloredBands.push({
+          id,
+          color: areaColor,
+          enabled: !disabledLegendItems.coloredBands.includes(id),
+          label: areaLabel,
+          shape: 'block',
+        });
+      }
+    });
+
+    return output;
+  }
+
+  getLegendItems(): LegendItems {
+    const { controls, queryResult } = this.props;
+    return this.buildLegendItems(
+      this.buildLineColors(queryResult.lines()),
+      controls.bands(),
+      this.getMetricOrder(),
+      this.state.disabledLegendItems,
+    );
+  }
+
+  @memoizeOne
+  buildColoredBands(
+    bands: $ReadOnlyArray<BandSetting>,
+    dates: $ReadOnlyArray<RawTimestamp>,
+    dateLabels: $ReadOnlyArray<string>,
+    lines: LineGraphLines,
+    metricOrder: $ReadOnlyArray<Metric>,
+  ): $ReadOnlyArray<mixed> {
+    if (bands.length === 0) {
+      return [];
     }
 
-    // Add upper and lower bound values to hover text.
-    const toolTipArr = goodAreaYs.map((value, i) =>
-      this.getErrorBandToolTip(
-        key,
-        fieldId,
-        value,
-        goodAreaYs[goodAreaYs.length - i - 1],
-      ),
+    const y2AxisFieldIds = [];
+    metricOrder.forEach(({ id, yAxis }) => {
+      if (yAxis === 'y2Axis') {
+        y2AxisFieldIds.push(id);
+      }
+    });
+    return buildColoredBandLines(
+      bands,
+      dates,
+      dateLabels,
+      lines,
+      y2AxisFieldIds,
     );
-    return {
-      name: legendText,
-      x: goodAreaXs,
-      y: goodAreaYs,
-      text: toolTipArr,
-      fill: 'toself',
-      // 33 is a hex value that scales the alpha parameter for transparency.
-      fillcolor: `${SERIES_COLORS[colorIdx % SERIES_COLORS.length]}33`,
-      line: {
-        color: `${SERIES_COLORS[colorIdx % SERIES_COLORS.length]}33`,
-      },
-      // TODO(attila): Why did the hoverinfo on the error bands stop working?
-      hoverinfo: 'text',
-      hoveron: 'points',
-      mode: 'lines+markers',
-      marker: {
-        size: 5.5,
-      },
-      showlegend: false,
-      type: 'scatter',
-      connectgaps: true,
-    };
-  }
-
-  // $CycloneIdaiHack
-  buildTwoFieldCorridor(
-    lineData: $ReadOnlyArray<DataPoint>,
-    lowerBoundFieldId: string,
-    upperBoundFieldId: string,
-    dateLabels: $ReadOnlyArray<string>,
-    colorIdx: number,
-  ): any {
-    const lowerBound = lineData.map(dataObj => dataObj[lowerBoundFieldId] || 0);
-    const upperBound = lineData.map(dataObj => dataObj[upperBoundFieldId] || 0);
-    // To create the area object in plotly, we need to flatten these two series
-    // into a single series. To do this, we append the upper bound values
-    // after the lower bound values.
-    // NOTE(stephen): We have to reverse the fields when placing one after
-    // another so plotly will draw them in the correct order on the viz.
-    const x = dateLabels.concat(dateLabels.slice().reverse());
-    const y = lowerBound.concat(upperBound.slice().reverse());
-
-    return {
-      x,
-      y,
-      fill: 'toself',
-      // 33 is a hex value that scales the alpha parameter for transparency.
-      fillcolor: `${SERIES_COLORS[colorIdx % SERIES_COLORS.length]}33`,
-      line: {
-        color: `${SERIES_COLORS[colorIdx % SERIES_COLORS.length]}33`,
-      },
-      hoverinfo: 'none',
-      mode: 'lines+markers',
-      marker: {
-        size: 5.5,
-      },
-      showlegend: false,
-      type: 'scatter',
-      connectgaps: true,
-    };
   }
 
   getPlotlyLineObject(
     lineData: $ReadOnlyArray<DataPoint>,
     fieldId: FieldId,
     dates: $ReadOnlyArray<RawTimestamp>,
-    isForecast: boolean,
-    colorIdx: number,
-  ): any {
+    color: string,
+    yAxis: 'y1Axis' | 'y2Axis' = 'y1Axis',
+    dashStyleIdx: number,
+  ): $FlowTODO {
     const { key } = lineData[0];
-    let showLegend = true;
-    let dashStyle = 'None';
-    let legendText = this.getSeriesTextForGeoAndField(key, fieldId);
 
-    const timestampToDataPoints = generateIdToObjectMapping(
-      lineData,
-      TIMESTAMP_GROUPING_ID,
-    );
+    const timestampToDataPoints = {};
+    lineData.forEach(datapoint => {
+      timestampToDataPoints[datapoint[TIMESTAMP_GROUPING_ID]] = datapoint;
+    });
+
     const numericValues = dates.map(timestamp =>
       timestampToDataPoints[timestamp]
         ? timestampToDataPoints[timestamp][fieldId]
         : undefined,
     );
-    const textValues = numericValues.map(val =>
-      formatFieldValueForDisplay(val, fieldId),
-    );
-
-    let percentDiffs = [];
-    const { fields } = this.props;
-    const fieldIds = fields.map(fieldObj => fieldObj.id());
-    const forecastFieldId = getForecastFieldId(fieldId);
-    // For fields that have an associated forecast series, get percent diffs
-    if (fieldIds.includes(forecastFieldId)) {
-      const forecastValues = lineData.map(dataObj => dataObj[forecastFieldId]);
-
-      // If values are forecasted to be a zero, then return null, otherwise
-      // (Observed - Expected) / Expected
-      percentDiffs = forecastValues.map((val, index) => {
-        if (val === 0) {
-          return null;
-        }
-        // prettier-ignore
-        if (numericValues[index] !== undefined) {
-          return Math.round(((numericValues[index] - val) / val) * 100);
-        }
-        return undefined;
-      });
-    }
-
-    const toolTipArr = textValues.map((value, index) =>
-      this.getLineGraphToolTip(key, fieldId, value, percentDiffs, index),
-    );
-
-    // Modify line style if this is a forecast
-    let numericNonZeroValues = numericValues;
-    if (isForecast) {
-      legendText = `Forecast: ${legendText}`;
-      showLegend = false;
-      dashStyle = 'dot';
-      // TODO(attila) Make druid return NaN if a dateBucket has 0 count.
-      // By defualt we set values of empty time buckets to 0, not good...
-      numericNonZeroValues = numericValues.map(val => (val === 0 ? null : val));
-    }
 
     return {
-      name: legendText,
+      name: key || 'null',
       x: this.getDateLabels(),
-      y: numericNonZeroValues,
-      text: toolTipArr,
+      y: numericValues,
       xaxis: 'x',
-      yaxis: 'y',
-      mode: dates.length === 1 ? 'markers' : 'lines+markers',
-      hoverinfo: 'text+x',
+      yaxis: yAxis === 'y1Axis' ? 'y' : 'y2',
+      mode: dates.length === 1 ? 'markers' : 'lines',
+      hoverinfo: 'none',
       type: 'scatter',
-      showlegend: showLegend,
-      marker: {
-        size: isForecast ? FORECAST_MARKER_SIZE : DEFAULT_MARKER_SIZE,
-        symbol: 'square',
-        color: SERIES_COLORS[colorIdx % SERIES_COLORS.length],
-      },
+      showlegend: true,
       line: {
-        dash: dashStyle,
-        width: isForecast ? FORECAST_LINE_WIDTH : DEFAULT_LINE_WIDTH,
+        color,
+        dash: DASH_STYLES[dashStyleIdx % DASH_STYLES.length],
+        width: DEFAULT_LINE_WIDTH,
       },
       connectgaps: true,
+      tooltipData: { key, fieldId, yAxis },
     };
-  }
-
-  // Compute the correct d3 value format string for the field type.
-  // HACK(stephen): This function shouldn't live here and should be deleted
-  // when we move to NVD3. They let you pass a callback for formatting!
-  getAxisTickFormat(): ?string {
-    const fieldId = this.props.controls.sortOn;
-
-    const valueType = getFieldValueType(fieldId);
-    if (valueType === FIELD_VALUE_TYPES.PERCENT) {
-      return '.2p';
-    }
-
-    if (valueType === FIELD_VALUE_TYPES.CURRENCY) {
-      return `${getFieldSymbol(fieldId)} .2f`;
-    }
-
-    return null;
-  }
-
-  getErrorBandToolTip(
-    key: string,
-    fieldId: string,
-    valUp: number,
-    valLow: number,
-  ): string {
-    return ReactDOMServer.renderToStaticMarkup(
-      <span>
-        <b>{key}</b>
-        <br />
-        <b>
-          {`${this.props.seriesSettings.seriesObjects()[fieldId].label()}: `}
-        </b>
-        {formatNum((valLow + valUp) / 2)}
-        <br />
-        <b>{`${t('query_result.time.lower_bound')}: `}</b>
-        {formatNum(parseInt(valLow, 10))}
-        <br />
-        <b>{`${t('query_result.time.upper_bound')}: `}</b>
-        {formatNum(parseInt(valUp, 10))}
-      </span>,
-    ).replace(/<br\/>/g, '<br />'); // Plotly has a really annoying bug
-    // where it doesn't recognized condensed break tags (<br/>).
-    // React converts all break tags into the condensed version.
-    // Adding a space to the tag allows Plotly's regex to match correctly.
   }
 
   /**
@@ -360,28 +430,42 @@ class LineGraph extends React.PureComponent<Props> {
     return QueryResultGrouping.create({
       id: bucketType,
       type: 'DATE',
-      displayValueFormat: BACKEND_GRANULARITIES[bucketType],
+      // HACK(stephen): Under rare circumstances, this path can get hit in AQT.
+      // Ensure that a valid string is provided here in case the bucket type
+      // provided does not exist in the legacy BACKEND_GRANULARITIES constant.
+      displayValueFormat:
+        BACKEND_GRANULARITIES[bucketType.toUpperCase()] || bucketType,
       label: bucketType,
     });
+  }
+
+  @memoizeOne
+  buildDateGrouping(
+    groupBySettings: GroupBySettings,
+    // NOTE(stephen): This parameter only matters for SQT. Remove it when SQT
+    // querying style is removed.
+    bucketType: string,
+  ): QueryResultGrouping {
+    return groupBySettings
+      .groupings()
+      .get(
+        TIMESTAMP_GROUPING_ID,
+        this.buildDefaultDateQueryResultGrouping(bucketType),
+      );
+  }
+
+  getDateGrouping(): QueryResultGrouping {
+    const { controls, groupBySettings } = this.props;
+    return this.buildDateGrouping(groupBySettings, controls.bucketType());
   }
 
   @memoizeOne
   buildDateLabels(
     dates: $ReadOnlyArray<RawTimestamp>,
     useEthiopianDates: boolean,
-    groupBySettings: GroupBySettings,
-    // NOTE(stephen): This parameter only matters for SQT. Remove it when SQT
-    // querying style is removed.
-    bucketType: string,
+    grouping: QueryResultGrouping,
   ): $ReadOnlyArray<string> {
-    const groupingObject = groupBySettings
-      .groupings()
-      .get(
-        TIMESTAMP_GROUPING_ID,
-        this.buildDefaultDateQueryResultGrouping(bucketType),
-      );
-
-    const labels = groupingObject.formatGroupingValues(
+    const labels = grouping.formatGroupingValues(
       dates,
       true,
       useEthiopianDates,
@@ -392,215 +476,355 @@ class LineGraph extends React.PureComponent<Props> {
   }
 
   getDateLabels() {
-    const { controls, groupBySettings, queryResult } = this.props;
+    const { controls, queryResult } = this.props;
     return this.buildDateLabels(
       queryResult.dates(),
-      controls.useEthiopianDates,
-      groupBySettings,
-      controls.bucketType,
+      controls.useEthiopianDates(),
+      this.getDateGrouping(),
     );
   }
 
   /**
-   * Use QueryReusltData to generate Plotly specific data
+   * Build mapping from dimension value key to the color for that dimension
+   * value.
    */
-  getPlotlyData(): any {
-    const data = [];
-    const { fields } = this.props;
-    const { dates, lines } = this.props.queryResult.modelValues();
-    if (!lines || lines.length === 0) {
-      return data;
-    }
-
-    // Remove all fieldIds that have a forecast_ prefix
-    const fieldIds = fields.map(field => field.id());
-    let filteredFieldIds = fieldIds.filter(e => !e.includes('forecast'));
-    if (filteredFieldIds.length < 1) {
-      // User is graphing forecasts only, so just show them normally.
-      filteredFieldIds = fieldIds;
-    }
-
-    const forecastFieldIds = new Set(
-      fieldIds.filter(e => e.includes('forecast')),
-    );
-    const forecastErrorFieldIds = new Set(
-      fieldIds.filter(e => e.includes('forecast_error')),
-    );
-
-    const {
-      seriesObjects,
-      seriesOrder,
-    } = this.props.seriesSettings.modelValues();
-    const y1AxisSeriesIds = new Set();
-    const y2AxisSeriesIds = new Set();
-    seriesOrder.forEach(seriesId => {
-      const seriesObj = seriesObjects[seriesId];
-
-      // add the series to an axis only if it's visible
-      if (seriesObj.isVisible()) {
-        const setToAdd =
-          seriesObj.yAxis() === Y1_AXIS ? y1AxisSeriesIds : y2AxisSeriesIds;
-        setToAdd.add(seriesId);
-      }
-    });
-
-    let colorIdx = -1;
-
-    // $CycloneIdaiHack
-    let addedMalariaBounds = false;
+  @memoizeOne
+  buildLineColors(lines: LineGraphLines): { +[string]: string } {
+    const output = {};
+    let colorIdx = 0;
     lines.forEach(lineData => {
-      const { key } = lineData[0];
-      filteredFieldIds.forEach(fieldId => {
-        colorIdx++;
-
-        if (y1AxisSeriesIds.has(fieldId) || y2AxisSeriesIds.has(fieldId)) {
-          const point = this.getPlotlyLineObject(
-            lineData,
-            fieldId,
-            dates,
-            false,
-            colorIdx,
-          );
-          // Add second Y-Axis.
-          if (y2AxisSeriesIds.has(fieldId)) {
-            point.yaxis = 'y2';
-            point.marker.symbol = 'diamond-tall';
-          }
-          data.push(point);
-
-          // Add giant hack for malaria corridor data to allow it to show up
-          // with shading. Use the `addedMalariaBounds` so we don't can avoid
-          // drawing the area object twice (once for upper and once for lower).
-          // $CycloneIdaiHack
-          if (
-            DEPLOYMENT === 'mz' &&
-            fieldId.endsWith('_bound') &&
-            !addedMalariaBounds
-          ) {
-            let level;
-            if (fieldId.startsWith('district_malaria_')) {
-              level = 'district';
-            } else if (fieldId.startsWith('facility_malaria_')) {
-              level = 'facility';
-            }
-
-            if (level !== undefined) {
-              addedMalariaBounds = true;
-              // NOTE(stephen): Adding to front of array so that it is drawn at
-              // the bottom and won't block hover events.
-              data.unshift(
-                this.buildTwoFieldCorridor(
-                  lineData,
-                  `${level}_malaria_lower_bound`,
-                  `${level}_malaria_upper_bound`,
-                  dates,
-                  colorIdx,
-                ),
-              );
-            }
-            return;
-          }
-
-          // Get forecast_error and forecast prefix for the indicator being
-          // plotted. If forecast then add to axis. If forecast_error then add
-          // error band.
-          const sigmaFieldId = `forecast_error_${fieldId}`;
-          const forecastFieldId = getForecastFieldId(fieldId);
-
-          // Check if forecast_fieldId exists in our list of forecastFeildIds
-          if (forecastFieldIds.has(forecastFieldId)) {
-            // All forecasts will have errors, check that one exists anyway.
-            // Ordering of objects in `data` matters when layering annotations.
-            // In this case, forecast data should end up over error bands.
-            if (forecastErrorFieldIds.has(sigmaFieldId)) {
-              data.push(
-                this.getPlotlyAreaObject(
-                  key,
-                  lineData,
-                  forecastFieldId,
-                  sigmaFieldId,
-                  this.getDateLabels(),
-                  colorIdx,
-                ),
-              );
-            }
-            data.push(
-              this.getPlotlyLineObject(
-                lineData,
-                forecastFieldId,
-                dates,
-                true,
-                colorIdx,
-              ),
-            );
-          }
-        }
-      });
+      if (lineData.length === 0) {
+        return;
+      }
+      output[lineData[0].key] = SERIES_COLORS[colorIdx % SERIES_COLORS.length];
+      colorIdx++;
     });
-    return data;
+    return output;
   }
 
-  maybeAddAnotations(layout, data): any {
-    if (!this.props.controls.showDataLabels) {
+  /**
+   * Use QueryResultData to generate Plotly specific data
+   */
+  // HACK(stephen): Memoizing purely based on the props since this code is a
+  // mess and it is hard to specifically whitelist certain props.
+  @memoizeOne
+  buildPlotlyData(
+    queryResult: LineGraphQueryResultData,
+    dateLabels: $ReadOnlyArray<string>,
+    metricOrder: $ReadOnlyArray<Metric>,
+    lineColors: { +[string]: string },
+    coloredBands: $ReadOnlyArray<any>,
+    disabledLegendItems: $PropertyType<State, 'disabledLegendItems'>,
+  ): $ReadOnlyArray<PlotlyLineShape> {
+    const dates = queryResult.dates();
+    const lines = queryResult.lines();
+
+    if (!lines || lines.length === 0) {
+      return coloredBands;
+    }
+
+    const dateIndexMap = {};
+    dates.forEach((date, idx) => {
+      dateIndexMap[date] = idx;
+    });
+
+    // TODO(stephen): Something about coloring lines differently if no grouping
+    // exists (otherwise default behavior would be changing style of line).
+    const outputLines = [];
+    const lineMode = dates.length > 1 ? 'lines' : 'markers';
+    lines.forEach(lineData => {
+      if (lineData.length === 0) {
+        return;
+      }
+
+      const { key } = lineData[0];
+      if (disabledLegendItems.lines.includes(key)) {
+        return;
+      }
+
+      const lineColor = lineColors[key];
+      metricOrder.forEach(({ colorOverride, id, plotlyDashStyle, yAxis }) => {
+        if (disabledLegendItems.metrics.includes(id)) {
+          return;
+        }
+
+        const numericValues = new Array(dates.length);
+        lineData.forEach(dataPoint => {
+          const dateIdx = dateIndexMap[dataPoint[TIMESTAMP_GROUPING_ID]];
+          numericValues[dateIdx] = dataPoint[id];
+        });
+
+        outputLines.push({
+          name: key || 'null',
+          x: dateLabels,
+          y: numericValues,
+          xaxis: 'x',
+          yaxis: yAxis === 'y1Axis' ? 'y' : 'y2',
+          mode: lineMode,
+          hoverinfo: 'none',
+          type: 'scatter',
+          showlegend: true,
+          line: {
+            color: colorOverride !== undefined ? colorOverride : lineColor,
+            dash: plotlyDashStyle,
+            width: DEFAULT_LINE_WIDTH,
+          },
+          connectgaps: true,
+          tooltipData: { key, yAxis, fieldId: id },
+        });
+      });
+    });
+
+    // NOTE(stephen): Draw the lines *last* so that they appear on top of
+    // everything non-line (like shaded areas).
+    return [...coloredBands, ...outputLines];
+  }
+
+  getPlotlyData(): $ReadOnlyArray<PlotlyLineShape> {
+    const { controls, queryResult } = this.props;
+    const dateLabels = this.getDateLabels();
+
+    const metricOrder = this.getMetricOrder();
+    const coloredBands = this.buildColoredBands(
+      controls.bands(),
+      queryResult.dates(),
+      dateLabels,
+      queryResult.lines(),
+      metricOrder,
+    );
+    return this.buildPlotlyData(
+      queryResult,
+      dateLabels,
+      metricOrder,
+      this.buildLineColors(queryResult.lines()),
+      coloredBands,
+      this.state.disabledLegendItems,
+    );
+  }
+
+  maybeAddAnotations(layout, data): $FlowTODO {
+    const { controls, seriesSettings } = this.props;
+    if (data.length === 0) {
       return layout;
     }
+
+    const logScaling = controls.logScaling();
     const textValues = [];
     // Have the annotations hover above the series' by an amount scaled by
     // the maximum value.
-    const textPadding =
-      0.01 *
-      Math.max(
-        ...data.map(series =>
-          Math.max(...series.y.filter(dataPoint => dataPoint !== undefined)),
-        ),
-      );
+    let yMax = 0;
+    data.forEach(series => {
+      series.y.forEach(val => {
+        if (val !== undefined && val !== null && val > yMax) {
+          yMax = val;
+        }
+      });
+    });
+
+    const textPadding = 0.02 * yMax;
     data.forEach(dataPoint => {
+      const fieldId =
+        dataPoint.tooltipData !== undefined
+          ? dataPoint.tooltipData.fieldId
+          : '';
+      const seriesObject = seriesSettings.getSeriesObject(fieldId);
+      if (seriesObject === undefined || !seriesObject.showSeriesValue()) {
+        return;
+      }
+
       for (let i = 0; i < dataPoint.y.length; i++) {
         const yValue = dataPoint.y[i];
-        const textValue = yValue ? `${yValue}` : ' ';
+        if (yValue === null || yValue === undefined) {
+          continue;
+        }
+
+        const labelAdjustment = this.getDataPointAdjustments(
+          dataPoint.y[i - 1] || undefined,
+          yValue || undefined,
+          dataPoint.y[i + 1] || undefined,
+        );
+
+        // Retrieve y value adjustments.
+        const { adjustYDirection } = labelAdjustment;
+        let adjustedTextPadding = 0;
+        if (adjustYDirection === 'top') {
+          adjustedTextPadding = textPadding;
+        } else {
+          adjustedTextPadding = -textPadding;
+        }
+
         const t = {
           x: dataPoint.x[i],
-          y: yValue + textPadding,
-          text: textValue,
+
+          // HACK(stephen): We have to adjust log scale the y-value ourselves
+          // to work around a bug in the Plotly library.
+          // NOTE(stephen): The text padding adjustment doesn't do very much
+          // in log scale mode and was not able to calculate a good alternative
+          // that would work.
+          y: logScaling ? Math.log10(yValue) : yValue + adjustedTextPadding,
+          text: `${seriesObject.formatFieldValue(yValue)}`,
+          textangle: -45,
           font: {
             family: 'Arial',
-            size: 10,
+            size: seriesObject.dataLabelFontSize().split('px')[0],
             color: 'black',
           },
           showarrow: false,
+          // Always setting xanchor to center now so that it aligns with the
+          // data point when rotated. We may go back to using the xanchor
+          // value from getDataPointAdjustments
+          xanchor: 'center',
+          yanchor: 'middle',
+          borderpad: 5,
         };
 
         textValues.push(t);
       }
     });
-    const newLayout = Object.assign({}, layout);
-    newLayout.annotations = textValues;
-    return newLayout;
+
+    return {
+      ...layout,
+      annotations: textValues,
+    };
   }
 
-  getGraphLayout(): any {
-    const { axesSettings, seriesSettings, smallMode } = this.props;
-    const {
-      showLegend,
-      legendFontSize,
-      legendFontColor,
-      legendFontFamily,
-    } = this.props.legendSettings.modelValues();
+  /**
+   * Returns an object containing the xanchor value and whether to offset the y value
+   * the xanchor value for data annotations. Anchor values are determined
+   * by calculating the slope with y values. Note that we don't use x values
+   * because they are usually string values and not integers.
+   * @param{y2} the data point for which we are calculating the anchor value
+   * @param{y1} the data point before y2
+   * @param{y3} the data point after y2
+   */
+  getDataPointAdjustments(
+    y1: number | void,
+    y2: number | void,
+    y3: number | void,
+  ): { xAnchor: string, adjustYDirection: 'top' | 'bottom' | '' } {
+    const top = { xAnchor: 'center', adjustYDirection: 'top' };
+    const bottom = { xAnchor: 'center', adjustYDirection: 'bottom' };
+    const rightSide = { xAnchor: 'left', adjustYDirection: '' };
+    const leftSide = { xAnchor: 'right', adjustYDirection: '' };
 
+    if ((y1 === undefined && y3 === undefined) || y2 === undefined) {
+      return top;
+    }
+    if (y1 === undefined) {
+      return leftSide;
+    }
+    if (y3 === undefined) {
+      return rightSide;
+    }
+
+    const slope1 = y2 - y1;
+    const slope2 = y3 - y2;
+    if (slope1 > 0 && slope2 > 0) {
+      return leftSide;
+    }
+    if (slope1 < 0 && slope2 < 0) {
+      return rightSide;
+    }
+    if (slope1 > 0 && slope2 < 0) {
+      return top;
+    }
+    if (slope1 < 0 && slope2 > 0) {
+      return bottom;
+    }
+    return top;
+  }
+
+  // HACK(stephen): Manually compute the tick labels to display instead of
+  // letting Plotly do it for us. This is necessary because Plotly will
+  // potentially omit key date labels (like ones that have year included) that
+  // would make the graph harder to understand.
+  @memoizeOne
+  buildTickValues(
+    axesSettings: AxesSettings,
+    dateLabels: $ReadOnlyArray<string>,
+    xAxisWidth: number,
+  ): $ReadOnlyArray<string> {
+    // NOTE(stephen): This spacing calculation is copied from Plotly.
+    const xAxis = axesSettings.xAxis();
+    const fontSize = parseInt(xAxis.labelsFontSize(), 10);
+    const minPixels = fontSize * 1.2;
+    const tickCount = xAxisWidth / minPixels;
+    let tickSpacing = Math.ceil(dateLabels.length / tickCount) || 1;
+
+    // HACK(stephen): Try to space the date values cleanly when bucketing by
+    // month. Even though we might not be grouping by month, this formula is
+    // "good enough" for the rare cases where we have lots of date labels and
+    // are not grouping by month.
+    if (12 % tickSpacing !== 0) {
+      if (tickSpacing > 12) {
+        tickSpacing = 12 * Math.ceil(tickSpacing / 12);
+      } else {
+        tickSpacing = 12 / Math.floor(12 / tickSpacing);
+      }
+    }
+
+    // Track the next date index to show so that when we interrupt the normal
+    // spacing to display a date label with a year, we can still draw the labels
+    // after that year consistently.
+    let nextIdx = 0;
+    return dateLabels.filter((label, idx) => {
+      // HACK(stephen): Parse the simple date string and determine if the year
+      // is included in the label. Only some date labels will have the year, and
+      // it will always be the last piece of the string.
+      const pieces = label.trim().split(' ');
+      const hasYear =
+        pieces.length > 1 &&
+        Number.isFinite(Number.parseInt(pieces[pieces.length - 1], 10));
+
+      // Always show labels with a year. If the label does not have a year, only
+      // include it if it is the next label we should include based on the
+      // spacing calculated.
+      if (!hasYear && idx !== nextIdx) {
+        return false;
+      }
+      nextIdx = idx + tickSpacing;
+      return true;
+    });
+  }
+
+  getYAxisTickFormat(
+    visibleSeries: $ReadOnlyArray<QueryResultSeries>,
+  ): string | void {
+    return visibleSeries.length === 0 ||
+      visibleSeries[0].dataLabelFormat() === 'none'
+      ? undefined
+      : `${ZEN_GRAPH_FORMAT_LABEL}${visibleSeries[0].dataLabelFormat()}`;
+  }
+
+  getGraphLayout(height: number, width: number): $FlowTODO {
+    const {
+      axesSettings,
+      controls,
+      queryResult,
+      seriesSettings,
+      smallMode,
+    } = this.props;
+    const dateCount = queryResult.dates().length;
     const xAxis = axesSettings.xAxis();
     const y1Axis = axesSettings.y1Axis();
 
-    const scalingType = this.props.controls.logScaling ? 'log' : 'linear';
+    const { current } = this.ref;
+    let xAxisWidth = 100;
+    if (current) {
+      // Try to use the width of the center plot (the actual line graph) to
+      // determine the desired xAxisWidth. If the plot has not yet been drawn,
+      // use the parent container width and subtract some padding to account
+      // for y-axis and legend.
+      const plotElt = current.getElementsByClassName('plot')[0];
+      xAxisWidth =
+        plotElt !== undefined
+          ? plotElt.getBoundingClientRect().width
+          : Math.max(width - 170, 10);
+    }
 
     const layout = {
       font: {
         size: smallMode ? 11 : 14,
-      },
-      margin: {
-        l: 75,
-        r: 56,
-        t: 20,
-        b: 115,
       },
       xaxis: {
         title: xAxis.title(),
@@ -619,42 +843,39 @@ class LineGraph extends React.PureComponent<Props> {
           color: xAxis.labelsFontColor(),
           family: xAxis.labelsFontFamily(),
         },
-        tickangle: this.props.controls.rotateLabels ? 45 : 0,
+        tickangle: controls.rotateLabels() ? 45 : 0,
+        tickmode: 'array',
+        tickvals: this.buildTickValues(
+          axesSettings,
+          this.getDateLabels(),
+          xAxisWidth,
+        ),
         type: 'category',
-        range: undefined,
+        range: dateCount > 1 ? [-1, dateCount] : undefined,
       },
-      legend: {
-        orientation: 'v',
-        font: {
-          size: smallMode ? 12 : parseInt(legendFontSize, 10),
-          color: legendFontColor,
-          family: legendFontFamily,
-        },
-      },
+      // NOTE(stephen): Disabling plotly's legend since we render our own
+      // version.
+      showlegend: false,
       hovermode: 'closest',
-      autosize: true,
-      showlegend: showLegend,
+
+      // We are directly supplying chart size so Plotly does not need to derive
+      // it.
+      autosize: false,
       yaxis: undefined,
       yaxis2: undefined,
+      height,
+      width,
     };
 
-    // TODO(stephen, any): Figure out why this doesn't work when using gregorian
-    // dates (Plotly doesn't center the graph correctly because it parses the
-    // dates as date types instead of strings).
-    const dates = this.props.queryResult.dates();
-    const dateCount = dates ? dates.length : 0;
-    if (this.props.controls.useEthiopianDates && dateCount > 1) {
-      // prettier-ignore
-      layout.xaxis.range = [-0.1, (dateCount - 1) + 0.1];
-    }
-
+    const scalingType = controls.logScaling() ? 'log' : 'linear';
     const { y1AxisSeries, y2AxisSeries } = seriesSettings.getSeriesByAxes();
     if (y1AxisSeries.length > 0) {
+      const visibleSeries = y1AxisSeries.filter(series => series.isVisible());
+
       layout.yaxis = {
         range: [y1Axis.rangeFrom(), y1Axis.rangeTo()],
         type: scalingType,
         overlaying: 'y2',
-        tickformat: this.getAxisTickFormat(),
         title: y1Axis.title(),
         titlefont: {
           size: parseInt(y1Axis.titleFontSize(), 10),
@@ -666,6 +887,8 @@ class LineGraph extends React.PureComponent<Props> {
         showline: false,
         ticks: '',
         showticklabels: true,
+        tickformat: this.getYAxisTickFormat(visibleSeries),
+        exponentformat: 'none',
         tickfont: {
           size: parseInt(y1Axis.labelsFontSize(), 10),
           color: y1Axis.labelsFontColor(),
@@ -679,11 +902,11 @@ class LineGraph extends React.PureComponent<Props> {
 
     if (y2AxisSeries.length > 0) {
       const y2Axis = axesSettings.y2Axis();
+      const visibleSeries = y2AxisSeries.filter(series => series.isVisible());
 
       layout.yaxis2 = {
         range: [y2Axis.rangeFrom(), y2Axis.rangeTo()],
         type: scalingType,
-        tickformat: this.getAxisTickFormat(),
         title: y2Axis.title(),
         titlefont: {
           size: parseInt(y2Axis.titleFontSize(), 10),
@@ -696,6 +919,8 @@ class LineGraph extends React.PureComponent<Props> {
         ticks: '',
         side: 'right',
         showticklabels: true,
+        tickformat: this.getYAxisTickFormat(visibleSeries),
+        exponentformat: 'none',
         tickfont: {
           size: parseInt(y2Axis.labelsFontSize(), 10),
           color: y2Axis.labelsFontColor(),
@@ -709,88 +934,230 @@ class LineGraph extends React.PureComponent<Props> {
     return layout;
   }
 
-  getLineGraphToolTip(
-    key: string,
-    fieldId: FieldId,
-    val: number,
-    percentDiffs: $ReadOnlyArray<?number>,
-    index: number,
-  ): string {
-    let forecastDiffSpan = null;
-    const difference = percentDiffs[index];
-    if (
-      percentDiffs.length > 0 &&
-      difference !== null &&
-      difference !== undefined
-    ) {
-      const quantifier =
-        difference && difference < 0 ? TIME_TEXT.lower : TIME_TEXT.higher;
-      const forecastText = TIME_TEXT.forecast_percent_diff_text;
-      forecastDiffSpan = (
-        <span>
-          <br />
-          <b>
-            {Math.abs(difference)}%{quantifier}{' '}
-          </b>
-          {forecastText}
-        </span>
-      );
+  @autobind
+  onHoverStart({
+    points,
+  }: {
+    points: $ReadOnlyArray<{
+      data: {
+        tooltipData: {
+          fieldId: string,
+          key: string,
+          yAxis: 'y1Axis' | 'y2Axis',
+        },
+      },
+      pointNumber: number,
+      y: number,
+    }>,
+  }) {
+    if (points.length === 0) {
+      return;
     }
-
-    return ReactDOMServer.renderToStaticMarkup(
-      <span>
-        <b>{key}</b>
-        <br />
-        <b>
-          {`${this.props.seriesSettings.seriesObjects()[fieldId].label()}: `}
-        </b>
-        {formatFieldValueForDisplay(val, fieldId)}
-        {forecastDiffSpan}
-      </span>,
-    ).replace(/<br\/>/g, '<br />'); // Plotly has a really annoying bug
-    // where it doesn't recognize condensed break tags (<br/>).
-    // React converts all break tags into the condensed version.
-    // Adding a space to the tag allows Plotly's regex to match correctly.
-  }
-
-  getSeriesTextForGeoAndField(key: ?string, fieldId: string): string {
-    const { queryResult, seriesSettings } = this.props;
-    let fullLine = '';
-    if (this.props.fields.length === 1) {
-      // TODO(stephen, pablo): standardize this. Using a 'null' string is gets
-      // the point across analytically, but if the user wants to use this in a
-      // report it is really ugly.
-      fullLine = key || 'null';
-    } else {
-      const label = seriesSettings.seriesObjects()[fieldId].label();
-      if (queryResult.uniqueDimensionValueCount() < 2 || key === null) {
-        fullLine = label;
-      } else if (key) {
-        fullLine = `${key} - ${label}`;
-      }
-    }
-
-    return truncate(fullLine, 40);
+    const { data, pointNumber, y } = points[0];
+    this.setState({
+      hoverData: {
+        x: pointNumber,
+        y,
+        ...data.tooltipData,
+      },
+    });
   }
 
   @autobind
-  onResize() {
-    const { current } = this._graphElt;
-    if (current) {
-      window.Plotly.Plots.resize(current);
+  onHoverEnd() {
+    this.setState({ hoverData: undefined });
+  }
+
+  @autobind
+  onLegendResize({ contentRect }) {
+    const { height, width } = contentRect;
+    this.setState({ legendSize: { height, width } });
+  }
+
+  @autobind
+  onLegendLineClick(id: string) {
+    this.onLegendItemClick('lines', id);
+  }
+
+  @autobind
+  onLegendLineDoubleClick(id: string) {
+    this.onLegendItemDoubleClick('lines', id);
+  }
+
+  @autobind
+  onLegendMetricClick(id: string) {
+    this.onLegendItemClick('metrics', id);
+  }
+
+  @autobind
+  onLegendMetricDoubleClick(id: string) {
+    this.onLegendItemDoubleClick('metrics', id);
+  }
+
+  onLegendItemClick(type: 'coloredBands' | 'lines' | 'metrics', id: string) {
+    this.setState(prevState => {
+      const disabledLegendItems = { ...prevState.disabledLegendItems };
+      disabledLegendItems[type] = disabledLegendItems[type].includes(id)
+        ? disabledLegendItems[type].filter(v => v !== id)
+        : [...disabledLegendItems[type], id];
+
+      return { disabledLegendItems };
+    });
+  }
+
+  /**
+   * When a user double clicks a legend item, one of these things will happen:
+   * - If the item being clicked is enabled, then all items will be disabled
+   *   except for the selected ID.
+   * - If the item being clicked is disabled, then all items will be reenabled.
+   * - If the item being clicked is enabled and all other items are disabled,
+   *   reenable all items.
+   */
+  onLegendItemDoubleClick(
+    type: 'coloredBands' | 'lines' | 'metrics',
+    id: string,
+  ) {
+    const allIdsForType = this.getLegendItems()[type].map(item => item.id);
+    this.setState(prevState => {
+      const disabledLegendItems = { ...prevState.disabledLegendItems };
+      const disabledIds = disabledLegendItems[type];
+      // If the item being clicked is not disabled and it is also not the only
+      // item enabled, then disable everything except for this ID.
+      if (
+        !disabledIds.includes(id) &&
+        disabledIds.length !== allIdsForType.length - 1
+      ) {
+        disabledLegendItems[type] = allIdsForType.filter(v => v !== id);
+      } else {
+        // Otherwise, reenable all items.
+        disabledLegendItems[type] = [];
+      }
+      return { disabledLegendItems };
+    });
+  }
+
+  maybeRenderTooltip() {
+    const { hoverData } = this.state;
+    if (hoverData === undefined) {
+      return null;
     }
+
+    const { controls, queryResult, seriesSettings } = this.props;
+    const { fieldId, key, x, y, yAxis } = hoverData;
+    const seriesObject = seriesSettings.getSeriesObject(fieldId);
+    const rawDate = queryResult.dates()[x];
+    if (seriesObject === undefined || rawDate === undefined) {
+      return null;
+    }
+
+    const dateGrouping = this.getDateGrouping();
+    const rows = [
+      {
+        label: dateGrouping.label() || '',
+        value: dateGrouping.formatGroupingValue(
+          rawDate,
+          true,
+          controls.useEthiopianDates(),
+        ),
+      },
+      {
+        label: seriesObject.label(),
+        value: seriesObject.formatFieldValue(y),
+      },
+    ];
+    return (
+      <PlotlyTooltip
+        plotContainer={this.ref.current}
+        rows={rows}
+        title={key}
+        x={x}
+        y={y}
+        yAxis={yAxis}
+      />
+    );
+  }
+
+  @autobind
+  renderPlot(height: number, width: number) {
+    // HACK(stephen): This is so dirty. But I've given up on making the Plotly
+    // line graph nice.
+    const legendItems = this.getLegendItems();
+
+    const orientation =
+      legendItems.lines.length <= 12 ? 'horizontal' : 'vertical';
+
+    const { legendSize } = this.state;
+    const chartSize = { height, width };
+
+    // NOTE(stephen): Since the Plotly plot requires height/width values to be
+    // built, we need to ensure there is space for the legend when plotly
+    // renders. Also, include some padding.
+    if (orientation === 'vertical') {
+      chartSize.width -= legendSize.width + 8;
+    } else {
+      chartSize.height -= legendSize.height + 8;
+    }
+
+    // Have Plotly render some stuff.
+    this.createPlot(
+      this.getPlotlyData(),
+      chartSize.height,
+      chartSize.width,
+      this.ref.current,
+      this.props,
+    );
+
+    const showMetricsLegend =
+      legendItems.metrics.length > 1 ||
+      (legendItems.lines.length === 1 && legendItems.metrics.length === 1);
+    return (
+      <div className={`line-graph-viz line-graph-viz--legend-${orientation}`}>
+        <div ref={this.ref} />
+        <div
+          className="line-graph-viz__legend"
+          ref={this.legendResizeRegistration.setRef}
+        >
+          {showMetricsLegend && (
+            <LineGraphLegend
+              items={legendItems.metrics}
+              onClick={this.onLegendMetricClick}
+              onDoubleClick={this.onLegendMetricDoubleClick}
+              orientation={orientation}
+            />
+          )}
+          {legendItems.lines.length > 1 && (
+            <LineGraphLegend
+              className="line-graph-viz__legend-lines-section"
+              items={legendItems.lines}
+              onClick={this.onLegendLineClick}
+              onDoubleClick={this.onLegendLineDoubleClick}
+              orientation={orientation}
+            />
+          )}
+          {legendItems.coloredBands.length > 0 && (
+            <LineGraphLegend
+              items={legendItems.coloredBands}
+              orientation={orientation}
+            />
+          )}
+        </div>
+        {this.maybeRenderTooltip()}
+      </div>
+    );
   }
 
   render() {
     return (
       <Visualization loading={this.props.loading}>
-        <div ref={this._graphElt} />
+        {this.renderPlot}
       </Visualization>
     );
   }
 }
 
-export default withScriptLoader(LineGraph, {
+export default (withScriptLoader(LineGraph, {
   scripts: [VENDOR_SCRIPTS.plotly],
   loadingNode: <ProgressBar enabled />,
-});
+}): React.AbstractComponent<
+  React.Config<Props, VisualizationDefaultProps<'TIME'>>,
+>);

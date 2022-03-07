@@ -6,28 +6,27 @@ import type { StyleObject } from 'types/jsCore';
 type Props = {
   backgroundColor: string | void,
   displayValue: string | number,
-  height: number,
+  style: StyleObject | void,
 };
 
-export default class ColorFilterTableCell extends React.PureComponent<Props> {
-  static defaultProps = {
-    colorFilter: undefined,
-  };
+function ColorFilterTableCell({
+  backgroundColor,
+  displayValue,
+  style,
+}: Props): React.Node {
+  let fullStyle = style === undefined ? {} : style;
 
-  buildStyle(): StyleObject {
-    const { height, backgroundColor } = this.props;
-    return {
-      height,
-      backgroundColor,
-      lineHeight: `${height}px`,
-    };
+  if (backgroundColor !== undefined) {
+    fullStyle = { ...fullStyle, backgroundColor };
   }
 
-  render() {
-    return (
-      <div className="color-filter-table-cell" style={this.buildStyle()}>
-        {this.props.displayValue}
-      </div>
-    );
-  }
+  return (
+    <div className="table-visualization__table-cell" style={fullStyle}>
+      {displayValue}
+    </div>
+  );
 }
+
+export default (React.memo(
+  ColorFilterTableCell,
+): React.AbstractComponent<Props>);

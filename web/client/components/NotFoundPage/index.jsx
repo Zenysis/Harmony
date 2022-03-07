@@ -14,7 +14,7 @@ export default class NotFoundPage extends React.Component<{}> {
     }
   }
 
-  mayRenderAdminHint() {
+  mayRenderAdminHint(): React.Node {
     const { isAdmin, isAuthenticated } = window.__JSON_FROM_BACKEND.user;
     if (isAdmin && isAuthenticated) {
       return (
@@ -27,7 +27,7 @@ export default class NotFoundPage extends React.Component<{}> {
     return null;
   }
 
-  renderInstructions() {
+  renderInstructions(): React.Node {
     return (
       <ol className="notfound-page__hints">
         <li>{TEXT.correctUrlHint}</li>
@@ -40,7 +40,7 @@ export default class NotFoundPage extends React.Component<{}> {
     );
   }
 
-  render() {
+  render(): React.Node {
     return (
       <div className="notfound-page min-full-page-height">
         <div className="notfound-page__main-container">

@@ -1,0 +1,1 @@
+The models in this directory are used by the site configs. They provide standardized structures for different areas of a site's config (like defining calendar settings).

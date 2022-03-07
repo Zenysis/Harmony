@@ -5,11 +5,14 @@ import classNames from 'classnames';
 import BreadcrumbItem from 'components/ui/Breadcrumb/BreadcrumbItem';
 import autobind from 'decorators/autobind';
 
-type Props<T> = {
-  children: React.Element<Class<BreadcrumbItem<T>>>,
-  onClick: (value: T, event: SyntheticEvent<HTMLDivElement>) => void,
-
+type DefaultProps<T> = {
   className: string,
+  onClick: ((value: T, event: SyntheticEvent<HTMLDivElement>) => void) | void,
+};
+
+type Props<T> = {
+  ...DefaultProps<T>,
+  children: React.Element<Class<BreadcrumbItem<T>>>,
 };
 
 /**
@@ -21,26 +24,33 @@ type Props<T> = {
 export default class BreadcrumbItemWrapper<T> extends React.PureComponent<
   Props<T>,
 > {
-  static defaultProps = {
+  static defaultProps: DefaultProps<T> = {
     className: '',
+    onClick: undefined,
   };
 
   @autobind
   onClick(event: SyntheticEvent<HTMLDivElement>) {
     const { children, onClick } = this.props;
-    const child = React.Children.only(children);
-    onClick(child.props.value, event);
+    if (onClick !== undefined) {
+      const child = React.Children.only(children);
+      onClick(child.props.value, event);
+    }
   }
 
-  render() {
-    const { children } = this.props;
+  render(): React.Element<'div'> {
+    const { children, onClick } = this.props;
     const className = classNames(
       'zen-breadcrumb-item-wrapper',
       this.props.className,
     );
 
+    if (onClick === undefined) {
+      return <div className={className}>{children}</div>;
+    }
+
     return (
-      <div role="button" className={className} onClick={this.onClick}>
+      <div onClick={this.onClick} role="button" className={className}>
         {children}
       </div>
     );

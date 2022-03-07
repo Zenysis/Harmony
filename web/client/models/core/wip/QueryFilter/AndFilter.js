@@ -44,4 +44,4 @@ class AndFilter extends Zen.BaseModel<AndFilter, Values>
   }
 }
 
-export default ((AndFilter: any): Class<Zen.Model<AndFilter>>);
+export default ((AndFilter: $Cast): Class<Zen.Model<AndFilter>>);

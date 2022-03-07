@@ -1,14 +1,14 @@
-from builtins import object
 import json
 import logging
 import os
 
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
+from typing import Dict, Any
 
 import requests
 from db.druid.errors import DruidQueryError
 from log import LOG
-from future.utils import with_metaclass
+from util.error_links import get_error_background_link_msg
 
 # Create a shared request session that provides connection pooling. Each worker
 # process should receive its own session/pool. This is because Request's
@@ -18,7 +18,8 @@ from future.utils import with_metaclass
 # NOTE(stephen): This is a simple way to manage sessions across workers. This
 # does not account for workers that are killed by gunicorn (due to exceptions
 # or staleness), so multiple unused sessions could potentially accumulate.
-_SESSIONS = {}
+# TODO(david): fix this type
+_SESSIONS: Dict[Any, Any] = {}
 
 
 def _get_session(druid_configuration):
@@ -36,7 +37,41 @@ def _get_session(druid_configuration):
     return session
 
 
-class DruidQueryRunner(with_metaclass(ABCMeta, object)):
+def _is_connection_aborted_error(connection_error):
+    '''Detect if exception is of the form:
+    ConnectionError(
+        ProtocolError(
+            'Connection aborted.',
+            RemoteDisconnected('Remote end closed connection without response'),
+        ),
+    )'''
+    exception = connection_error.args[0] if connection_error.args else None
+    if (
+        not isinstance(exception, requests.urllib3.exceptions.ProtocolError)
+        or len(exception.args) != 2
+    ):
+        return False
+
+    (message, inner_exception) = exception.args
+    return message == 'Connection aborted.' and str(inner_exception) in (
+        'Remote end closed connection without response',
+        '[Errno 54] Connection reset by peer',
+    )
+
+
+def _post_query(session, url, query_dict, retry=True):
+    '''Send a post request to Druid. Retry the connection if the session was closed
+    before the query was sent.
+    '''
+    try:
+        return session.post(url, json=query_dict)
+    except requests.exceptions.ConnectionError as e:
+        if not retry or not _is_connection_aborted_error(e):
+            raise
+        return _post_query(session, url, query_dict, False)
+
+
+class DruidQueryRunner(ABC):
     @abstractmethod
     def run_query(self, query):
         pass
@@ -79,7 +114,10 @@ class DruidQueryClient_(DruidQueryRunner):
             LOG.debug(json.dumps(query_dict, indent=2).replace('\\n', '\n'))
 
         # Kick off a new druid query
-        r = _get_session(self.druid_configuration).post(self.query_url, json=query_dict)
+        r = _post_query(
+            _get_session(self.druid_configuration), self.query_url, query_dict
+        )
+        # pylint: disable=no-member
         if r.status_code != requests.codes.ok:
             error_msg = 'Server response: %s' % r.content
             try:
@@ -88,9 +126,15 @@ class DruidQueryClient_(DruidQueryRunner):
                 # for non 200 responses.
                 r.raise_for_status()
             except requests.exceptions.HTTPError as e:
-                error_msg = '%s\n%s' % (e.message, error_msg)
+                error_msg = '%s\n%s' % (e, error_msg)
+            error_msg_link = get_error_background_link_msg('DruidQueryError')
+            error_msg = f'{error_msg} {error_msg_link}' if error_msg_link else error_msg
 
-            raise DruidQueryError(error_msg)
+            query_error = json.dumps(
+                {'message': error_msg, 'query': query_dict}, indent=2
+            ).replace('\\n', '\n')
+
+            raise DruidQueryError(query_error)
 
         ret = r.json()
         if LOG.level <= logging.DEBUG and os.getenv('LOG_DRUID_RESPONSES'):
@@ -137,7 +181,8 @@ class DruidQueryClient(DruidQueryRunner):
             LOG.debug(json.dumps(query_dict, indent=2).replace('\\n', '\n'))
 
         # Kick off a new druid query
-        r = _get_session(DruidConfig).post(cls.QUERY_URL, json=query_dict)
+        r = _post_query(_get_session(DruidConfig), cls.QUERY_URL, query_dict)
+        # pylint: disable=no-member
         if r.status_code != requests.codes.ok:
             error_msg = 'Server response: %s' % r.content
             try:
@@ -146,7 +191,7 @@ class DruidQueryClient(DruidQueryRunner):
                 # for non 200 responses.
                 r.raise_for_status()
             except requests.exceptions.HTTPError as e:
-                error_msg = '%s\n%s' % (e.message, error_msg)
+                error_msg = '%s\n%s' % (e, error_msg)
 
             raise DruidQueryError(error_msg)
         return r.json()

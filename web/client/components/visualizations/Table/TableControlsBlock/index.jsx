@@ -1,239 +1,206 @@
 // @flow
 import * as React from 'react';
 
-import CheckboxControl from 'components/visualizations/common/controls/CheckboxControl';
-import ControlsGroup from 'components/visualizations/common/controls/ControlsGroup';
-import FontColorControl from 'components/visualizations/common/controls/FontColorControl';
-import FontSizeControl from 'components/visualizations/common/controls/FontSizeControl';
-import Heading from 'components/ui/Heading';
+// TODO(pablo): we should use React Suspense with the CasePageLinkingControl to
+// load the CaseManagementService asynchronously only if CaseManagement is
+// enabled. Otherwise it's a large amount of code to bundle in with our Table
+// visualization for a lot of deployments that don't use case management
+import CaseManagementInfoContext from 'components/QueryResult/CaseManagementInfoContext';
+import CasePageLinkingControl from 'components/visualizations/Table/TableControlsBlock/CasePageLinkingControl';
+import ColorControl from 'components/visualizations/common/controls/ColorControl';
+import Group from 'components/ui/Group';
+import InputControl from 'components/visualizations/common/controls/InputControl';
 import MultipleFieldSelectionControl from 'components/visualizations/common/controls/MultipleFieldSelectionControl';
 import RadioControl from 'components/visualizations/common/controls/RadioControl';
-import { RadioItem } from 'components/common/RadioGroup';
-import type { ControlsBlockProps } from 'components/visualizations/common/commonTypes';
-import type { ViewTypeConfig } from 'models/core/QueryResultSpec/VisualizationSettings';
+import RadioGroup from 'components/ui/RadioGroup';
+import ToggleSwitchControl from 'components/visualizations/common/controls/ToggleSwitchControl';
+import type { ControlsBlockProps } from 'components/visualizations/common/types/controlsBlockProps';
 
 type Props = ControlsBlockProps<'TABLE'>;
-type Controls = $PropertyType<Props, 'controls'>;
 const TEXT = t('visualizations.Table.TableControlsBlock');
-const DEPLOYMENT = window.__JSON_FROM_BACKEND.deploymentName;
+
+// NOTE(stephen.byarugaba): Hiding Min and Max column inputs to finalize on their treatment
+const DISPLAY_MIN_MAX_INPUTS = false;
 
 export default class TableControlsBlock extends React.PureComponent<Props> {
-  // eslint-disable-next-line no-unused-vars
-  static getDefaultControls(viewTypeConfig: ViewTypeConfig): Controls {
-    return {
-      addTotalRow: false,
-      enablePagination: true,
-      invertedFields: [],
-      rowHeight: 30,
-      tableFormat: 'table',
-      headerFontFamily: 'Arial',
-      headerColor: 'black',
-      headerFontSize: '12px',
-      headerBackground: '#fff',
-      headerBorderColor: '#d9d9d9',
-      rowFontFamily: 'Arial',
-      rowColor: 'black',
-      rowFontSize: '12px',
-      rowBackground: '#fff',
-      rowAlternateBackground: '#f0f0f0',
-      rowBorderColor: '#d9d9d9',
-      footerFontFamily: 'Arial',
-      footerColor: 'black',
-      footerFontSize: '12px',
-      footerBackground: '#fff',
-      footerBorderColor: '#fff',
-    };
-  }
+  static contextType: typeof CaseManagementInfoContext = CaseManagementInfoContext;
+  context: $ContextType<typeof CaseManagementInfoContext>;
 
-  maybeRenderInvertedIndicatorsDropdown() {
+  maybeRenderInvertedIndicatorsDropdown(): React.Node {
     const { controls, fields, onControlsSettingsChange } = this.props;
-    if (controls.tableFormat !== 'scorecard') {
+    if (controls.tableFormat() !== 'scorecard') {
       return null;
     }
 
     return (
-      <ControlsGroup>
-        <MultipleFieldSelectionControl
-          controlKey="invertedFields"
-          onValueChange={onControlsSettingsChange}
-          value={controls.invertedFields}
-          label={TEXT.invertColoration}
-          fields={fields}
-          colsWrapper={12}
-          colsLabel={3}
-          colsControl={9}
-        />
-      </ControlsGroup>
+      <MultipleFieldSelectionControl
+        controlKey="invertedFields"
+        onValueChange={onControlsSettingsChange}
+        value={controls.invertedFields()}
+        label={TEXT.invertColoration}
+        fields={fields}
+      />
     );
   }
 
-  maybeRenderPaginationToggle() {
-    if (this.props.controls.tableFormat !== 'table') {
+  maybeRenderPaginationToggle(): React.Node {
+    if (this.props.controls.tableFormat() !== 'table') {
       return null;
     }
 
     return (
-      <ControlsGroup>
-        <CheckboxControl
-          controlKey="enablePagination"
-          onValueChange={this.props.onControlsSettingsChange}
-          value={this.props.controls.enablePagination}
-          label={TEXT.enablePagination}
-          colsWrapper={4}
-          colsLabel={9}
-          colsControl={3}
-        />
-      </ControlsGroup>
+      <ToggleSwitchControl
+        controlKey="enablePagination"
+        onValueChange={this.props.onControlsSettingsChange}
+        value={this.props.controls.enablePagination()}
+        label={TEXT.enablePagination}
+      />
     );
   }
 
-  // HACK(stephen): Totals need to be supported in a more robust way. This works
-  // only for MZ right now.
-  // $CycloneIdaiHack
-  maybeRenderTotalRowToggle() {
-    if (DEPLOYMENT !== 'mz') {
-      return null;
-    }
-
-    return (
-      <ControlsGroup>
-        <CheckboxControl
-          controlKey="addTotalRow"
-          onValueChange={this.props.onControlsSettingsChange}
-          value={this.props.controls.addTotalRow}
-          label="Add total row"
-          colsWrapper={4}
-          colsLabel={9}
-          colsControl={3}
-        />
-      </ControlsGroup>
-    );
+  maybeRenderTotalRowToggle(): React.Node {
+    return null;
   }
 
-  maybeRenderAlternateBackgroundControl(section: string) {
+  maybeRenderAlternateBackgroundControl(section: string): React.Node {
     if (section !== 'row') {
       return null;
     }
 
     const alternateBackgroundControl = 'AlternateBackground';
     return (
-      <FontColorControl
-        className="settings-block__contents"
+      <ColorControl
         controlKey={`${section}${alternateBackgroundControl}`}
-        value={this.props.controls[`${section}${alternateBackgroundControl}`]}
+        enableNoColor={false}
+        value={this.props.controls[`${section}${alternateBackgroundControl}`]()}
         onValueChange={this.props.onControlsSettingsChange}
         label={TEXT.label.alternateBackgroundControl}
         labelClassName="wrap-label-text"
-        colsWrapper={6}
-        colsLabel={6}
-        colsControl={3}
       />
     );
   }
 
-  maybeRenderStyleControls(): any {
-    if (DEPLOYMENT !== 'mz' && DEPLOYMENT !== 'et') {
+  maybeRenderMaxColumnWidthInput(): React.Node {
+    const { controls, onControlsSettingsChange } = this.props;
+    if (!DISPLAY_MIN_MAX_INPUTS) {
       return null;
     }
 
-    // Only MZ supports a footer right now due to the Total row hack.
-    // $CycloneIdaiHack
-    const tableSections = ['header', 'row'];
-    if (DEPLOYMENT === 'mz') {
-      tableSections.push('footer');
+    if (controls.fitWidth()) {
+      return null;
     }
 
-    const { controls, onControlsSettingsChange } = this.props;
-    const sizeControl = 'FontSize';
-    const colorControl = 'Color';
-    const backgroundControl = 'Background';
-    const borderControl = 'BorderColor';
-
-    // NOTE(stephen): There is a huge style hack happening in CSS to make this
-    // section look good. We override ALL bootstrap columns and replace it with
-    // flexbox. None of the column values below do anything. There's also a ton
-    // of other overrides that have to be applied.
-
-    return tableSections.map(section => (
-      <ControlsGroup key={section}>
-        <div className="settings-block__inner-title settings-block__title">
-          <Heading size={Heading.Sizes.SMALL}>{TEXT[section]}</Heading>
-        </div>
-        <FontSizeControl
-          className="settings-block__contents"
-          controlKey={`${section}${sizeControl}`}
-          value={controls[`${section}${sizeControl}`]}
-          onValueChange={onControlsSettingsChange}
-          label={TEXT.label.sizeControl}
-          maxFontSize={28}
-          minFontSize={10}
-          colsWrapper={6}
-          colsLabel={6}
-          colsControl={3}
-        />
-        <FontColorControl
-          className="settings-block__contents"
-          controlKey={`${section}${colorControl}`}
-          value={controls[`${section}${colorControl}`]}
-          onValueChange={onControlsSettingsChange}
-          label={TEXT.label.colorControl}
-          colsWrapper={6}
-          colsLabel={6}
-          colsControl={3}
-        />
-        <FontColorControl
-          className="settings-block__contents"
-          controlKey={`${section}${borderControl}`}
-          value={controls[`${section}${borderControl}`]}
-          onValueChange={onControlsSettingsChange}
-          label={TEXT.label.borderControl}
-          colsWrapper={6}
-          colsLabel={6}
-          colsControl={3}
-        />
-        <FontColorControl
-          className="settings-block__contents"
-          controlKey={`${section}${backgroundControl}`}
-          value={controls[`${section}${backgroundControl}`]}
-          onValueChange={onControlsSettingsChange}
-          label={TEXT.label.backgroundControl}
-          colsWrapper={6}
-          colsLabel={6}
-          colsControl={3}
-        />
-        {this.maybeRenderAlternateBackgroundControl(section)}
-      </ControlsGroup>
-    ));
-  }
-
-  renderTableFormatSelector() {
     return (
-      <ControlsGroup>
-        <RadioControl
-          controlKey="tableFormat"
-          onValueChange={this.props.onControlsSettingsChange}
-          value={this.props.controls.tableFormat}
-          label={TEXT.tableFormat}
-          colsWrapper={12}
-          colsLabel={3}
-          colsControl={9}
-        >
-          <RadioItem value="table">{TEXT.table}</RadioItem>
-          <RadioItem value="scorecard">{TEXT.scorecard}</RadioItem>
-        </RadioControl>
-      </ControlsGroup>
+      <InputControl
+        controlKey="maxColumnWidth"
+        initialValue={controls.maxColumnWidth()}
+        onValueChange={onControlsSettingsChange}
+        label={TEXT.maxColumnWidth}
+        type="number"
+      />
     );
   }
 
-  render() {
+  maybeRenderMinColumnWidthInput(): React.Node {
+    const { controls, onControlsSettingsChange } = this.props;
+    if (!DISPLAY_MIN_MAX_INPUTS) {
+      return null;
+    }
+
+    if (controls.fitWidth()) {
+      return null;
+    }
+
     return (
-      <div>
+      <InputControl
+        controlKey="minColumnWidth"
+        initialValue={controls.minColumnWidth()}
+        onValueChange={onControlsSettingsChange}
+        label={TEXT.minColumnWidth}
+        type="number"
+      />
+    );
+  }
+
+  maybeRenderCaseManagementLinkToggle(): React.Node {
+    const { controls, onControlsSettingsChange, groupBySettings } = this.props;
+    if (this.context.canUserViewCaseManagement) {
+      return (
+        <CasePageLinkingControl
+          isEnabled={controls.enableCasePageLinking()}
+          onChange={onControlsSettingsChange}
+          groupBySettings={groupBySettings}
+        />
+      );
+    }
+    return null;
+  }
+
+  renderFitWidthToggle(): React.Node {
+    const { controls, onControlsSettingsChange } = this.props;
+    return (
+      <ToggleSwitchControl
+        controlKey="fitWidth"
+        onValueChange={onControlsSettingsChange}
+        value={controls.fitWidth()}
+        label={TEXT.fitWidth}
+      />
+    );
+  }
+
+  renderMergeCellsToggle(): React.Node {
+    const { controls, onControlsSettingsChange } = this.props;
+
+    return (
+      <ToggleSwitchControl
+        controlKey="mergeTableCells"
+        onValueChange={onControlsSettingsChange}
+        value={controls.mergeTableCells()}
+        label={TEXT.mergeTableCells}
+      />
+    );
+  }
+
+  renderWrapColumnTitlesToggle(): React.Node {
+    const { controls, onControlsSettingsChange } = this.props;
+    return (
+      <ToggleSwitchControl
+        controlKey="wrapColumnTitles"
+        onValueChange={onControlsSettingsChange}
+        value={controls.wrapColumnTitles()}
+        label={TEXT.wrapColumnTitles}
+      />
+    );
+  }
+
+  renderTableFormatSelector(): React.Node {
+    return (
+      <RadioControl
+        controlKey="tableFormat"
+        onValueChange={this.props.onControlsSettingsChange}
+        value={this.props.controls.tableFormat()}
+        label={TEXT.tableFormat}
+      >
+        <RadioGroup.Item value="table">{TEXT.table}</RadioGroup.Item>
+        <RadioGroup.Item value="scorecard">{TEXT.scorecard}</RadioGroup.Item>
+      </RadioControl>
+    );
+  }
+
+  render(): React.Node {
+    return (
+      <Group.Vertical spacing="l">
         {this.renderTableFormatSelector()}
         {this.maybeRenderInvertedIndicatorsDropdown()}
         {this.maybeRenderPaginationToggle()}
+        {this.renderFitWidthToggle()}
+        {this.renderWrapColumnTitlesToggle()}
+        {this.renderMergeCellsToggle()}
+        {this.maybeRenderCaseManagementLinkToggle()}
+        {this.maybeRenderMinColumnWidthInput()}
+        {this.maybeRenderMaxColumnWidthInput()}
         {this.maybeRenderTotalRowToggle()}
-        {this.maybeRenderStyleControls()}
-      </div>
+      </Group.Vertical>
     );
   }
 }

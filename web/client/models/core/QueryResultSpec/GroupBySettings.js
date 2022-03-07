@@ -1,7 +1,7 @@
 // @flow
 import * as Zen from 'lib/Zen';
-import Granularity from 'models/core/wip/Granularity';
 import GroupingDimension from 'models/core/wip/GroupingItem/GroupingDimension';
+import GroupingGranularity from 'models/core/wip/GroupingItem/GroupingGranularity';
 import QueryResultGrouping from 'models/core/QueryResultSpec/QueryResultGrouping';
 import type { GroupingItem } from 'models/core/wip/GroupingItem/types';
 import type { Serializable } from 'lib/Zen';
@@ -11,7 +11,7 @@ type Values = {
 };
 
 type SerializedGroupSettings = {
-  groupings: { [groupById: string]: Zen.Serialized<QueryResultGrouping> },
+  groupings: { [groupById: string]: Zen.Serialized<QueryResultGrouping>, ... },
 };
 
 /**
@@ -25,7 +25,7 @@ type SerializedGroupSettings = {
 class GroupBySettings extends Zen.BaseModel<GroupBySettings, Values>
   implements Serializable<SerializedGroupSettings> {
   /**
-   * This is how a GruopBySettings model is created for AQT. In AQT, users
+   * This is how a GroupBySettings model is created for AQT. In AQT, users
    * explicitly select what groupings they want (dimensions and time
    * granularities). We just have to iterate through those and create a
    * QueryResultGrouping model for each.
@@ -44,7 +44,9 @@ class GroupBySettings extends Zen.BaseModel<GroupBySettings, Values>
     }
 
     // check for potential errors
-    if (groupingItems.filter(g => g instanceof Granularity).size() > 1) {
+    if (
+      groupingItems.filter(g => g instanceof GroupingGranularity).size() > 1
+    ) {
       throw new Error(
         '[GroupBySettings] a QueryResultSpec should not have more than 1 time granularity grouping.',
       );
@@ -52,34 +54,6 @@ class GroupBySettings extends Zen.BaseModel<GroupBySettings, Values>
 
     return GroupBySettings.create({
       groupings: Zen.Map.fromArray(groupings, 'id'),
-    });
-  }
-
-  /**
-   * This is how a GroupBySettings model is created for SQT. In SQT, dimensions
-   * are represented as their raw string IDs.
-   */
-  static fromSimpleQueryGroupings(
-    groupingIds: $ReadOnlyArray<string>,
-  ): Zen.Model<GroupBySettings> {
-    const groupingDimensions = {};
-    groupingIds.forEach(dimensionId => {
-      groupingDimensions[dimensionId] = QueryResultGrouping.create({
-        id: dimensionId,
-        label: undefined, // SQT defaults to labels from the translation file
-        displayValueFormat: 'DEFAULT',
-        type: 'STRING',
-      });
-    });
-
-    // If no grouping is set, use the Nation grouping.
-    if (groupingIds.length === 0) {
-      const nationGrouping = QueryResultGrouping.createNationGrouping();
-      groupingDimensions[nationGrouping.id()] = nationGrouping;
-    }
-
-    return GroupBySettings.create({
-      groupings: Zen.Map.create(groupingDimensions),
     });
   }
 
@@ -119,4 +93,4 @@ class GroupBySettings extends Zen.BaseModel<GroupBySettings, Values>
   }
 }
 
-export default ((GroupBySettings: any): Class<Zen.Model<GroupBySettings>>);
+export default ((GroupBySettings: $Cast): Class<Zen.Model<GroupBySettings>>);

@@ -2,62 +2,12 @@
  * Use cm prefix before every class to prevent CSS naming collisions
  * (cm = case management)
  */
-.case-management-app {
-  background: #f6fafc;
-}
-
 .cm-page-title {
   padding: 16px 16px;
-  .zen-page-title__title {
-    font-size: 28px;
-  }
-}
-
-.cm-main-case-info {
-  padding: $spacing-m $spacing-l 0;
-
-  &__title {
-    font-size: 32px;
-  }
-
-  &__subtitle-row {
-    > * {
-      display: inline-block;
-      margin-left: $spacing-s;
-
-      &:last-child {
-        margin-right: 0;
-      }
-    }
-  }
-
-  &__status-dropdown {
-    margin-left: $spacing-m;
-    position: relative;
-    top: -3px;
-
-    .zen-dropdown__button-content {
-      font-size: 14px;
-    }
-
-    .zen-dropdown__menu {
-      top: 34px;
-    }
-  }
-
-  &__subtitle {
-    font-size: 22px;
-    margin: 0 0 $spacing-l;
-  }
-}
-
-.cm-dossier-col {
-  display: inline-block;
-  width: 40%,
 }
 
 .cm-case-page {
-  // TODO(PABLO): find a more elegant way to do this without nesting so many
+  // TODO(pablo): find a more elegant way to do this without nesting so many
   // selectors. We only want these table styles in the case page, but not when
   // we open it in a modal. There should be an easy way to handle this through
   // a prop that injects a class name
@@ -72,9 +22,42 @@
       }
     }
   }
+
+  &__title {
+    font-size: 32px;
+    font-weight: $bold;
+  }
+
+  &__back-icon {
+    color: $slate;
+    &:hover {
+      color: $slate-hover;
+    }
+  }
+}
+
+.cm-dossier-sub-section {
+  background-color: white;
+  border: 1px solid $gray;
+  border-radius: 2px;
+  height: 100%;
+  width: 100%;
+}
+
+.cm-dossier-col {
+  display: inline-block;
+  width: 40%;
+
+  &--full-width {
+    width: 100%;
+  }
 }
 
 .cm-dossier-core-row {
+  &__label-col {
+    max-width: 300px;
+  }
+
   &__icon {
     color: $dark-gray-5;
     margin-left: $spacing-s;
@@ -132,20 +115,17 @@
   }
 
   &__alert-count {
-    margin: 0 $spacing-s;
     font-size: 28px;
+    margin: 0 $spacing-s;
   }
 }
 
 .cm-timeline {
-  &__header {
-    display: inline-block;
-  }
-
   &__add-event-btn {
     display: inline-block;
-    margin-top: 8px;
+    margin-bottom: $spacing-m;
     margin-left: $spacing-l;
+    margin-top: 8px;
     .glyphicon-plus {
       margin-left: $spacing-xs;
     }
@@ -160,17 +140,13 @@
 
   &__main-line {
     background-color: rgb(179, 190, 195);
-    content: "";
+    content: '';
     display: inline-block;
     height: 2px;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     // width is set through javascript
-  }
-
-  &__add-event-btn {
-    margin-bottom: $spacing-m;
   }
 }
 
@@ -186,14 +162,14 @@
 
 .cm-timeline-item {
   background-color: rgb(160, 201, 233);
-  border-radius: 50%;
   border: 3px solid rgb(51, 98, 139);
+  border-radius: 50%;
   display: inline-block;
   height: 50px;
   line-height: 50px;
-  width: 50px;
   text-align: center;
   transition: background-color 0.4s, transform 0.4s;
+  width: 50px;
 
   &:hover {
     background-color: rgb(199, 222, 242);
@@ -202,10 +178,10 @@
   }
 
   &.cm-timeline-item--is-alert {
-    background-color: #FF7373;
-    border: 3px solid #A82A2A;
+    background-color: #ff7373;
+    border: 3px solid #a82a2a;
     &:hover {
-      background-color: lighten(#FF7373, 5%);
+      background-color: lighten(#ff7373, 5%);
     }
   }
 
@@ -216,16 +192,16 @@
 }
 
 .cm-event-hovercard {
-  margin-top: $spacing-m;
   max-width: 500px;
 
   &__detail-row {
-    margin: $spacing-xs 0;
     white-space: normal;
   }
 
-  .zen-card__heading {
-    white-space: normal;
+  &__title-container {
+    background-color: $gray-light;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
   }
 }
 
@@ -237,8 +213,16 @@
   }
 
   .query-result-view {
+    background-color: $white;
     height: 800px;
     margin-top: $spacing-l;
+    // NOTE(nina): The following lines are imported from the now defunct
+    // query-result-view class under /_query_result.scss. We might be able to
+    // get rid of them if they have no effect
+    padding: 15px;
+    @media (max-width: 940px) {
+      padding-top: 60px;
+    }
   }
 }
 
@@ -266,7 +250,10 @@
     margin-top: -30px;
   }
 
-  // TODO(pablo): extract this into its own component
+  &__all-cases-table-header {
+    font-weight: $bold;
+  }
+
   &__export-row {
     .glyphicon-export {
       margin-left: $spacing-s;
@@ -275,7 +262,6 @@
 
   &__recency-stats {
     font-size: 18px;
-    margin-top: $spacing-xs;
     > * {
       display: inline-block;
       margin-left: $spacing-s;
@@ -287,15 +273,13 @@
 
   &__all-cases-block {
     background-color: $white;
-  }
-
-  &__all-cases-block {
     margin-top: $spacing-m;
   }
 }
 
 .cm-alerts-section {
-  &__alerts-block, &__alerts-summary {
+  &__alerts-block,
+  &__alerts-summary {
     background-color: $white;
   }
 }
@@ -343,8 +327,8 @@
   }
 
   &__num-stat-footer {
-    text-transform: uppercase;
     font-size: 16px;
+    text-transform: uppercase;
   }
 
   &__num-stat {
@@ -362,7 +346,7 @@
     flex: 1;
   }
 
-  &__sub-header{
+  &__sub-header {
     color: $gray-4;
     margin-left: 10px;
   }
@@ -397,8 +381,8 @@
 .cm-alert-card-wrapper {
   // Max 2 items per row.
   flex: 1 1 50%;
-  max-width: 380px;
   margin: $spacing-m;
+  max-width: 380px;
 }
 
 .cm-alert-card {
@@ -433,4 +417,26 @@
   &__label {
     flex: 1;
   }
+}
+
+.cm-redacted-text,
+.cm-non-redacted-text {
+  transition: all 0.2s;
+}
+
+.cm-redacted-text {
+  background: $slate;
+  color: transparent;
+  text-shadow: 0 0 15px rgba(0, 0, 0, 1);
+}
+
+.cm-non-redacted-text {
+  background: none;
+  text-shadow: none;
+}
+
+.cm-widget-field-table {
+  background-color: $white;
+  border: 1px solid $gray;
+  border-radius: 5px;
 }

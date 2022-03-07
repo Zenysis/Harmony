@@ -7,7 +7,7 @@ import autobind from 'decorators/autobind';
 import { asButton } from 'components/Navbar/util';
 import type { CaretDirection } from 'components/ui/Caret';
 
-type Props = {|
+type Props = {
   /** The link text */
   label: string,
   children: React.Node,
@@ -17,14 +17,14 @@ type Props = {|
 
   /** The class name to style the link container when its open */
   openClassName: string,
-|};
+};
 
 type State = {
   isOpen: boolean,
 };
 
 export default class CollapsibleLink extends React.PureComponent<Props, State> {
-  state = {
+  state: State = {
     isOpen: false,
   };
 
@@ -52,7 +52,7 @@ export default class CollapsibleLink extends React.PureComponent<Props, State> {
     );
   }
 
-  render() {
+  render(): React.Node {
     const { className, openClassName } = this.props;
 
     const linkClassName = classNames(className, {

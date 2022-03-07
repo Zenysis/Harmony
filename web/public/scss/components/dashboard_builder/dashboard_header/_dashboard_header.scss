@@ -1,0 +1,50 @@
+.gd-dashboard-header {
+  align-items: center;
+  background-color: $gray-light;
+  border-bottom: 1px solid $gray;
+  display: flex;
+  height: $dashboard-header-height;
+  justify-content: space-between;
+  padding: 0;
+  top: 0;
+  z-index: 1;
+
+  &--collapsed-layout {
+    // Don't pin to top to avoid header taking up limited space on small screens
+    position: static;
+  }
+
+  // NOTE(nina): The reason we add left and right margins to the title and
+  // toggle classes, instead of just adding padding to the header, is because
+  // sometimes the header will change to display a button by its edge. In those
+  // cases, we don't want the padding to awkwardly show when a user hovers
+  // over that button.
+  &__title {
+    margin-left: $space-m-px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__presentation-toggle {
+    margin-right: $space-m-px;
+  }
+}
+
+// HACK(stephen): When we have a text tile that is being edited inline, we want
+// to disable the controls. This is a temporary hack since we don't have a good
+// way right now to send a signal outside of the DashboardGrid tree to the
+// DashboardHeader that editing is happening.
+body.gd-dashboard-editing-mode .gd-dashboard-header {
+  &__controls {
+    opacity: 0.4;
+    pointer-events: none;
+
+    // HACK(stephen): Override the color set on the save/undo buttons to look
+    // disabled.
+    .gd-dashboard-control-button {
+      color: $slate;
+      font-weight: initial;
+    }
+  }
+}

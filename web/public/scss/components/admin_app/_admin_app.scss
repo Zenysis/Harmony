@@ -1,0 +1,160 @@
+// Width breakpoint before the page starts scrolling. This value is specifically
+// chosen such that admin cards don't shrink to a size where the contents
+// position starts changing.
+$min-page-width: 1010px;
+
+// NOTE(yitian): We define a seperate class from admin_app because we
+// want to introduce a horizontal breakpoint specifically to the
+// admin app. In order to do that, we need to define a class at the body level
+// (which is above admin_app) with those breakpoints that we can then
+// pass into the Admin template. This based off of the advanced-query-app-body
+// implementation
+.admin-app-body {
+  min-width: $min-page-width;
+  overflow-x: auto;
+}
+
+.admin-app {
+  margin: 0 auto;
+  max-width: 1128px;
+  padding-top: $space-xxl-px;
+
+  &__tab {
+    background: $white;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    padding: $space-l-px;
+
+    .groups-tab__dropdown {
+      max-height: 60vh !important;
+    }
+  }
+
+  .user-list {
+    background: $white;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    padding: 30px;
+
+    .zen-table {
+      .glyphicon {
+        color: $gray;
+        cursor: pointer;
+        &:hover {
+          color: #333;
+        }
+      }
+
+      &__cell {
+        vertical-align: top;
+      }
+    }
+  }
+}
+
+.user-profile {
+  &__tag {
+    margin-bottom: $space-xxs-px;
+  }
+  &__row {
+    margin-bottom: $space-xs-px;
+    margin-top: $space-xs-px;
+  }
+  &__label {
+    font-weight: $bold;
+  }
+  &__editable-field {
+    margin-bottom: $space-xxs-px;
+    position: relative;
+    top: -$space-xs-px;
+  }
+}
+
+.actions-bar {
+  display: inline-block;
+  position: relative;
+  top: $space-l-px;
+  z-index: 2;
+}
+
+.configuration-tab {
+  &__controls {
+    display: inline-flex;
+    float: right;
+  }
+
+  &__controls:not(:first-child) {
+    margin-left: $space-xs-px;
+  }
+
+  &__row {
+    display: flex;
+    width: 100%;
+  }
+
+  &__button:not(:first-child) {
+    margin-left: $space-xs-px;
+  }
+
+  &__row:not(:first-child) {
+    margin-top: $space-m-px;
+  }
+
+  &__card {
+    border-radius: 5px;
+
+    .zen-card__body {
+      padding: $space-l-px $space-m-px;
+    }
+
+    .table {
+      margin-bottom: 0;
+    }
+  }
+
+  &__user-select {
+    margin-top: -$space-l-px;
+    width: 100%;
+  }
+}
+
+.groups-tab-empty-state {
+  align-items: center;
+  border: 1px solid $gray;
+  border-radius: 5px;
+  display: flex;
+  height: 500px;
+  justify-content: center;
+  width: 1000px;
+
+  &__icon {
+    fill: $gray;
+    height: 184px;
+    width: 184px;
+  }
+
+  &__title {
+    color: $slate-hover;
+    padding-bottom: $space-xxs-px;
+  }
+
+  &__subtitle {
+    color: $slate-hover;
+    font-size: 16px;
+    padding-bottom: $space-m-px;
+  }
+
+  &__description {
+    color: $slate-hover;
+    font-size: 14px;
+    max-width: 450px;
+    padding-bottom: $space-xl-px;
+  }
+}
+
+.data-catalog-control-block {
+  &__section-title {
+    color: $black;
+    font-size: 16px;
+  }
+}

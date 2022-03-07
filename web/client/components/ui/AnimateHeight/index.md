@@ -6,22 +6,20 @@ Creating a slideable container:
 2. Set the `height` in `AnimateHeight` to 0 if we're closed, or 'auto' if we're open.
 
 ```jsx
-initialState = {
-  menuOpen: false,
-};
+import Button from 'components/ui/Button';
+
+const [menuOpen, setMenuOpen] = React.useState(false);
 
 function toggleMenuState() {
-  setState(prevState => (
-    { menuOpen: !prevState.menuOpen }
-  ));
+  setMenuOpen(!menuOpen);
 }
 
 <div>
   <Button onClick={toggleMenuState}>
-    {state.menuOpen ? 'Close' : 'Open'}
+    {menuOpen ? 'Close' : 'Open'}
   </Button>
   <AnimateHeight
-    height={state.menuOpen ? 'auto' : 0}
+    height={menuOpen ? 'auto' : 0}
   >
     My goodness this is
     <br />
@@ -35,22 +33,21 @@ function toggleMenuState() {
 **IMPORTANT:** the `<AnimateHeight>` component uses an `overflow: hidden` attribute which is crucial to the animation. But this also means that if the child you're animating extends outside of the container, it will not be displayed. For example, look at this slideable [`<Card>`](#card):
 
 ```jsx
-initialState = {
-  menuOpen: false,
-};
+import Button from 'components/ui/Button';
+import Card from 'components/ui/Card';
+
+const [menuOpen, setMenuOpen] = React.useState(false);
 
 function toggleMenuState() {
-  setState((prevState) => (
-    { menuOpen: !prevState.menuOpen }
-  ));
+  setMenuOpen(!menuOpen);
 }
 
 <div>
   <Button onClick={toggleMenuState}>
-    {state.menuOpen ? 'Close' : 'Open'}
+    {menuOpen ? 'Close' : 'Open'}
   </Button>
   <AnimateHeight
-    height={state.menuOpen ? 'auto' : 0}
+    height={menuOpen ? 'auto' : 0}
   >
     <Card title="This looks weird.">
       Where is my shadow?
@@ -68,22 +65,21 @@ Cards look weird because they use `box-shadow` in their CSS, which overflows bey
 **SOLUTION:** just wrap the `<Card>` in a div, and use some CSS to make the shadow visible. The exact CSS tinkering will depend on your situation and the surrounding elements you have.
 
 ```jsx
-initialState = {
-  menuOpen: false,
-};
+import Button from 'components/ui/Button';
+import Card from 'components/ui/Card';
+
+const [menuOpen, setMenuOpen] = React.useState(false);
 
 function toggleMenuState() {
-  setState((prevState) => (
-    { menuOpen: !prevState.menuOpen }
-  ));
+  setMenuOpen(!menuOpen);
 }
 
 <div>
   <Button onClick={toggleMenuState}>
-    {state.menuOpen ? 'Close' : 'Open'}
+    {menuOpen ? 'Close' : 'Open'}
   </Button>
   <AnimateHeight
-    height={state.menuOpen ? 'auto' : 0}
+    height={menuOpen ? 'auto' : 0}
   >
     <div style={{ padding: 2 }}>
       <Card title="We have a shadow!">

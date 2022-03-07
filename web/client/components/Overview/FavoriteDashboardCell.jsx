@@ -21,7 +21,7 @@ export default class FavoriteDashboardCell extends React.PureComponent<Props> {
     onClick(dashboard, !dashboard.isFavorite());
   }
 
-  render() {
+  render(): React.Element<typeof Table.Cell> {
     const { dashboard } = this.props;
     const favoriteIconType = dashboard.isFavorite() ? 'star' : 'star-empty';
     return (

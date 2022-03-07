@@ -3,12 +3,10 @@ import Promise from 'bluebird';
 
 import * as Zen from 'lib/Zen';
 import Dimension from 'models/core/wip/Dimension';
-import DimensionService from 'services/wip/DimensionService';
 import QueryFilterUtil from 'models/core/wip/QueryFilter/QueryFilterUtil';
 import { uniqueId } from 'util/util';
 import type { Customizable } from 'types/interfaces/Customizable';
 import type { Displayable } from 'types/interfaces/Displayable';
-import type { JSONRef } from 'services/types/api';
 import type {
   QueryFilter,
   SerializedQueryFilter,
@@ -22,7 +20,7 @@ type RequiredValues = {
    * dimension value's "name" property, the value ID must be unique.
    */
   id: string,
-  dimension: Zen.ReadOnly<Dimension>,
+  dimension: string,
 
   /**
    * The filter represents how this dimension value should be queried for in
@@ -35,8 +33,8 @@ type RequiredValues = {
 };
 
 type DefaultValues = {
-  description: string,
-  subtitle: string,
+  +description: string,
+  +subtitle: string,
 };
 
 type DerivedValues = {
@@ -45,7 +43,7 @@ type DerivedValues = {
 
 type SerializedDimensionValue = {
   id: string,
-  dimension: JSONRef,
+  dimension: string,
   filter: SerializedQueryFilter,
   name: string,
 
@@ -68,14 +66,14 @@ class DimensionValue
     Serializable<SerializedDimensionValue>,
     Customizable<DimensionValue>,
     Displayable {
-  static defaultvalues = {
+  static defaultValues: DefaultValues = {
     description: '',
     subtitle: '',
   };
 
-  static derivedConfig = {
+  static derivedConfig: Zen.DerivedConfig<DimensionValue, DerivedValues> = {
     searchableText: [
-      Zen.hasChanged<DimensionValue>('name', 'subtitle'),
+      Zen.hasChanged('name', 'subtitle'),
       (dim: Zen.Model<DimensionValue>) => `${dim.name()} ${dim.subtitle()}`,
     ],
   };
@@ -83,15 +81,11 @@ class DimensionValue
   static deserializeAsync(
     values: SerializedDimensionValue,
   ): Promise<Zen.Model<DimensionValue>> {
-    const { id, filter, name, description, subtitle } = values;
-    const dimensionURI = values.dimension.$ref;
-    return Promise.all([
-      DimensionService.get(DimensionService.convertURIToID(dimensionURI)),
-      QueryFilterUtil.deserializeAsync(filter),
-    ]).then(([dimension, queryFilter]) =>
+    const { id, filter, name, description, dimension, subtitle } = values;
+    return QueryFilterUtil.deserializeAsync(filter).then(queryFilter =>
       DimensionValue.create({
         id,
-        dimension,
+        dimension: Dimension.deserializeToString(dimension),
         filter: queryFilter,
         name,
         description,
@@ -103,14 +97,11 @@ class DimensionValue
   static UNSAFE_deserialize(
     values: SerializedDimensionValue,
   ): Zen.Model<DimensionValue> {
-    const { id, name, description, subtitle } = values;
-    const dimension = DimensionService.UNSAFE_get(
-      DimensionService.convertURIToID(values.dimension.$ref),
-    );
+    const { id, name, description, dimension, subtitle } = values;
     const filter = QueryFilterUtil.UNSAFE_deserialize(values.filter);
     return DimensionValue.create({
+      dimension: Dimension.deserializeToString(dimension),
       id,
-      dimension,
       filter,
       name,
       description,
@@ -133,7 +124,7 @@ class DimensionValue
       name,
       description,
       subtitle,
-      dimension: this._.dimension().serialize(),
+      dimension: this._.dimension(),
       filter: this._.filter().serialize(),
     };
   }
@@ -145,4 +136,4 @@ class DimensionValue
   }
 }
 
-export default ((DimensionValue: any): Class<Zen.Model<DimensionValue>>);
+export default ((DimensionValue: $Cast): Class<Zen.Model<DimensionValue>>);

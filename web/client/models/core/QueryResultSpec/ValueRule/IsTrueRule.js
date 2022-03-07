@@ -1,7 +1,7 @@
 // @flow
 import * as Zen from 'lib/Zen';
 import type { Serializable } from 'lib/Zen';
-import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/types';
+import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/TestableRule';
 
 type SerializedIsTrueRule = {
   type: 'IS_TRUE',
@@ -39,4 +39,4 @@ class IsTrueRule extends Zen.BaseModel<IsTrueRule, {}>
   }
 }
 
-export default ((IsTrueRule: any): Class<Zen.Model<IsTrueRule>>);
+export default ((IsTrueRule: $Cast): Class<Zen.Model<IsTrueRule>>);

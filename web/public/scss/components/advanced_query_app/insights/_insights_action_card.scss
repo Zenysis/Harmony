@@ -1,0 +1,38 @@
+.insights-action-card {
+  color: $aqt-base-font-color;
+  font-family: $base-font-family;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+
+  &__button {
+    // <Button> defines its `border` styles in a single line. So to override
+    // that single line, we write out our style like this.
+    border: 1px solid $aqt-base-font-color;
+    color: $aqt-base-font-color;
+    min-height: 20px;
+    width: 100%;
+    // Since <Button> defines its border width inline inside the `border` style,
+    // we'll need to override just the border-width property for the hover and
+    // active events.
+    &:active,
+    &:hover {
+      border-width: 1px;
+    }
+  }
+
+  &__icon {
+    height: 20px;
+    width: 20px;
+  }
+
+  &__summary {
+    font-size: $font-s;
+  }
+
+  &__title {
+    font-size: $font-m;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+}

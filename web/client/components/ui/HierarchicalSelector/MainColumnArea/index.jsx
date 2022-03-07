@@ -1,39 +1,49 @@
 // @flow
 import * as React from 'react';
-import { Spring, Transition, animated, config } from 'react-spring';
+import { Spring, Transition, animated, config } from 'react-spring/renderprops';
 
+import * as Zen from 'lib/Zen';
 import AnimatableColumns from 'components/ui/HierarchicalSelector/MainColumnArea/AnimatableColumns';
 import HierarchyColumn from 'components/ui/HierarchicalSelector/MainColumnArea/HierarchyColumn';
 import HierarchyItem from 'models/ui/HierarchicalSelector/HierarchyItem';
 import LoadingSpinner from 'components/ui/LoadingSpinner';
 import SearchResultColumn from 'components/ui/HierarchicalSelector/MainColumnArea/SearchResultColumn';
 import SearchResultColumnData from 'models/ui/HierarchicalSelector/SearchResultColumnData';
-import ZenArray from 'util/ZenModel/ZenArray';
-import autobind from 'decorators/autobind';
+import Spacing from 'components/ui/Spacing';
+import { arrayEquality } from 'util/arrayUtil';
+import { autobind } from 'decorators';
 import type HierarchySearchResults from 'models/ui/HierarchicalSelector/HierarchySearchResults';
 import type { AnimatableColumn } from 'components/ui/HierarchicalSelector/MainColumnArea/AnimatableColumns';
+import type { NamedItem } from 'models/ui/HierarchicalSelector/types';
 import type { StyleObject } from 'types/jsCore';
 
-type Props = {
-  hierarchyItems: ZenArray<HierarchyItem>,
+type SpringAnimatedNumber = $AllowAny;
+
+type DefaultProps<T> = {
+  maxHeight?: number,
+  searchResults?: HierarchySearchResults<T>,
+};
+
+type Props<T> = {
+  ...DefaultProps<T>,
+  hierarchyItems: Zen.Array<HierarchyItem<T>>,
   hierarchyLoaded: boolean,
-  columnTitleGenerator: HierarchyItem => string,
+  columnTitleGenerator: ((HierarchyItem<T>) => React.Node) | void,
   columnWidth: number,
   maxWidth: number,
 
   // callback for when any item is clicked - regardless of whether it's a
   // leaf or a category
   onItemClick: (
-    item: HierarchyItem,
+    item: HierarchyItem<T>,
     event: SyntheticEvent<HTMLElement>,
   ) => void,
-  onColumnRootsChanged: (ZenArray<HierarchyItem>) => void,
 
-  maxHeight?: number,
-  searchResults?: HierarchySearchResults,
+  onColumnRootsChanged: (Zen.Array<HierarchyItem<T>>) => void,
+  testItemSelectable: (HierarchyItem<T>) => boolean,
 };
 
-type State = {
+type State<T> = {
   // boolean flag to tell us when we are animating the scroll container
   animatingScroll: boolean,
   columnHeight?: number,
@@ -41,8 +51,8 @@ type State = {
   // All columns slide in/out as their default transition, *except* when a
   // column is being replaced, in that case it should fade out, and the new
   // one should fade in.
-  columnToFadeIn?: HierarchyItem,
-  columnToFadeOut?: HierarchyItem,
+  columnToFadeIn?: HierarchyItem<T> | SearchResultColumnData<T>,
+  columnToFadeOut?: HierarchyItem<T> | SearchResultColumnData<T>,
 
   // This is where we store the columns to animate. THIS IS NOT THE SAME AS
   // THE HIERARCHYITEM LIST WE GET FROM PROPS. `hierarchyItems` stores only
@@ -55,13 +65,13 @@ type State = {
   // removed yet. Or when we want to show a SearchResultColumn, this is not
   // a part of our hierarchy at all, but we still render it as our last column
   // in the DOM, so it is still an animatable column we need to track.
-  columnsToAnimate: ZenArray<AnimatableColumn>,
-  prevHierarchyItems?: ZenArray<HierarchyItem>,
-  prevSearchResults?: HierarchySearchResults,
+  columnsToAnimate: Zen.Array<AnimatableColumn<T>>,
+  prevHierarchyItems?: Zen.Array<HierarchyItem<T>>,
+  prevSearchResults?: HierarchySearchResults<T>,
 
   // the search result column that represents the current searchResults from
   // props
-  searchColumn?: SearchResultColumnData,
+  searchColumn?: SearchResultColumnData<T>,
 
   // scroll px we want to set our scrollable area to
   scrollLeft: number,
@@ -71,13 +81,18 @@ type State = {
 // to get a small performance boost without harming how the animation looks
 const ANIMATION_CONFIG = { ...config.default, precision: 0.05, clamp: true };
 
-export default class MainColumnArea extends React.PureComponent<Props, State> {
-  static defaultProps = {
+const TEXT = t('ui.HierarchicalSelector.MainColumnArea');
+
+export default class MainColumnArea<T: NamedItem> extends React.PureComponent<
+  Props<T>,
+  State<T>,
+> {
+  static defaultProps: DefaultProps<T> = {
     maxHeight: undefined,
     searchResults: undefined,
   };
 
-  state = {
+  state: State<T> = {
     animatingScroll: false,
     columnHeight: undefined,
     columnToFadeIn: undefined,
@@ -89,12 +104,12 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
     scrollLeft: 0,
   };
 
-  _scrollableContainerElt: $RefObject<'div'> = React.createRef();
+  _scrollableContainerElt: $ElementRefObject<'div'> = React.createRef();
 
-  static getDerivedStateFromProps(
-    nextProps: Props,
-    prevState: State,
-  ): ?$Shape<State> {
+  static getDerivedStateFromProps<V: NamedItem>(
+    nextProps: Props<V>,
+    prevState: State<V>,
+  ): ?$Shape<State<V>> {
     const { hierarchyItems, searchResults } = nextProps;
     const {
       prevSearchResults,
@@ -107,11 +122,26 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
       prevSearchResults: searchResults,
     };
 
-    // if the hierarchy items have changed
-    if (hierarchyItems !== prevHierarchyItems) {
+    // Check if the hierarchy items have changed. We want to change the columns
+    // to animate in this case. The only exception is if the searchColumn is
+    // open, sometimes the hierarchy items array may have changed reference, but
+    // the contents are still the same. So we need to do an O(n) array check to
+    // compare item ids.
+    if (
+      prevHierarchyItems !== hierarchyItems &&
+      !(
+        searchColumn &&
+        prevHierarchyItems !== undefined &&
+        arrayEquality(
+          hierarchyItems.arrayView(),
+          prevHierarchyItems.arrayView(),
+          item => item.id(),
+        )
+      )
+    ) {
       let newColumnsToAnimate = hierarchyItems;
 
-      // if we removed a column, or altered the hierarcy items while we had
+      // if we removed a column, or altered the hierarchy items while we had
       // a search column visible, we need to do something weird:
       // We want our new columnsToAnimate to be equal to the new hierarchy
       // items. BUT we still need to keep columnsToAnimate at the
@@ -186,14 +216,14 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
     return null;
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: Props<T>) {
     this.recalculateHeight(prevProps);
     this.switchFadedItemColumns();
     this.removeSearchColumn(prevProps);
     this.setNewScrollPosition(prevProps);
   }
 
-  recalculateHeight(prevProps: Props) {
+  recalculateHeight(prevProps: Props<T>) {
     this.setState((state, props) => {
       // if the hierarchy items changed, it's possible the height has changed,
       // so we reset it to `undefined` so we can recalculate.
@@ -212,7 +242,7 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
     });
   }
 
-  setNewScrollPosition(prevProps: Props) {
+  setNewScrollPosition(prevProps: Props<T>) {
     // we do this calculation in `componentDidUpdate` because we need access
     // to the scroll container ref. That's why we can't do this in
     // getDerivedStateFromProps.
@@ -279,7 +309,7 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
    * need to remove the searchColumn *after* all fade in/out transitions have
    * been set and calculated.
    */
-  removeSearchColumn(prevProps: Props) {
+  removeSearchColumn(prevProps: Props<T>) {
     if (!this.props.searchResults && prevProps.searchResults) {
       this.setState({ searchColumn: undefined });
     }
@@ -304,11 +334,11 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
     return 0;
   }
 
-  getStartingTransitionStyle(col: AnimatableColumn): StyleObject {
+  getStartingTransitionStyle(col: AnimatableColumn<T>): StyleObject {
     return col === this.state.columnToFadeIn ? { opacity: 0 } : { opacity: 1 };
   }
 
-  getLeavingTransitionStyle(col: AnimatableColumn): StyleObject {
+  getLeavingTransitionStyle(col: AnimatableColumn<T>): StyleObject {
     const { columnWidth } = this.props;
     const { columnToFadeIn, columnToFadeOut, columnsToAnimate } = this.state;
     if (col === columnToFadeOut && columnToFadeIn !== undefined) {
@@ -344,12 +374,12 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
    * (meaning that this will trigger a fade animation), its not enough
    * to just update the selected items, we also need to set things up for
    * the fade in/out animation.
-   * @param {HierarchyItem} hierarchyItem The clicked hierarchy item
+   * @param {HierarchyItem<T>} hierarchyItem The clicked hierarchy item
    * @param {number} columnIndex The index of the column that was clicked
    */
   @autobind
   onHierarchyItemClick(
-    hierarchyItem: HierarchyItem,
+    hierarchyItem: HierarchyItem<T>,
     columnIndex: number,
     event: SyntheticEvent<HTMLElement>,
   ) {
@@ -393,7 +423,7 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
   }
 
   @autobind
-  onSearchColumnCategoryClicked(categoryPath: ZenArray<HierarchyItem>) {
+  onSearchColumnCategoryClicked(categoryPath: Zen.Array<HierarchyItem<T>>) {
     const { hierarchyItems, onColumnRootsChanged } = this.props;
     const newColumnRoots = hierarchyItems.concat(categoryPath.tail());
 
@@ -453,25 +483,13 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
     }
   }
 
-  renderSearchResultColumn(item: SearchResultColumnData) {
-    const { maxHeight, onItemClick } = this.props;
-    const { columnHeight } = this.state;
-    const searchResults = item.searchResults();
-    return (
-      <SearchResultColumn
-        matcher={searchResults.graphSearchResults().matcher}
-        onItemClick={onItemClick}
-        onCategoryClick={this.onSearchColumnCategoryClicked}
-        searchResults={searchResults.resultList()}
-        maxHeight={maxHeight}
-        height={columnHeight}
-      />
-    );
-  }
-
-  renderColumnTitlesRow() {
+  maybeRenderColumnTitlesRow(): React.Node {
     const { columnWidth, columnTitleGenerator } = this.props;
     const { columnsToAnimate } = this.state;
+
+    if (columnTitleGenerator === undefined) {
+      return null;
+    }
 
     // We intentionally render the column titles separately (without putting
     // them inside the <HierarchyColumn /> component, because it caused
@@ -489,8 +507,40 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
     return <div className="hierarchical-selector__title-row">{titles}</div>;
   }
 
-  renderItemColumn(hierarchyItem: HierarchyItem) {
-    const { maxHeight, hierarchyItems } = this.props;
+  renderSearchResultColumn(item: SearchResultColumnData<T>): React.Node {
+    const { maxHeight, onItemClick } = this.props;
+    const { columnHeight } = this.state;
+    const searchResults = item.searchResults();
+    return (
+      <SearchResultColumn
+        matcher={searchResults.graphSearchResults().matcher}
+        onItemClick={onItemClick}
+        onCategoryClick={this.onSearchColumnCategoryClicked}
+        searchResults={searchResults.resultList()}
+        maxHeight={maxHeight}
+        height={columnHeight}
+      />
+    );
+  }
+
+  renderItemColumn(hierarchyItem: HierarchyItem<T>): React.Node {
+    const children = hierarchyItem.children();
+    if (children === undefined) {
+      return null;
+    }
+
+    // TODO(pablo, toshi): expecting an '_mru' id is business-logic dependent
+    // and is unpredictable behavior by just reading the HierarchicalSelector's
+    // props. Make this more generic so user's can know how to work with MRU
+    // items
+    if (hierarchyItem.id() === '__mru' && children.size() === 0) {
+      return (
+        <div className="hierarchical-selector__empty-mru-text">
+          {TEXT.emptyMruText}
+        </div>
+      );
+    }
+    const { maxHeight, hierarchyItems, testItemSelectable } = this.props;
     const { columnHeight } = this.state;
 
     // for this column, figure out if there is a next column. We need
@@ -508,17 +558,18 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
 
     return (
       <HierarchyColumn
-        columnIndex={itemIndex}
-        items={hierarchyItem.children()}
-        onItemClick={this.onHierarchyItemClick}
         activeItem={nextColumn}
-        maxHeight={maxHeight}
+        columnIndex={itemIndex}
         height={columnHeight}
+        items={children}
+        maxHeight={maxHeight}
+        onItemClick={this.onHierarchyItemClick}
+        testItemSelectable={testItemSelectable}
       />
     );
   }
 
-  renderColumns() {
+  renderColumns(): React.Node {
     const { columnWidth, hierarchyLoaded } = this.props;
     const { columnsToAnimate } = this.state;
 
@@ -548,7 +599,11 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
                   : columnWidth,
             }}
           >
-            <LoadingSpinner loading={!hierarchyLoaded} />
+            {!hierarchyLoaded && (
+              <Spacing padding="xs" flex justifyContent="center">
+                <LoadingSpinner />
+              </Spacing>
+            )}
             {column instanceof SearchResultColumnData
               ? this.renderSearchResultColumn(column)
               : this.renderItemColumn(column)}
@@ -558,7 +613,7 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
     );
   }
 
-  renderScrollableArea(scrollLeft: Spring$AnimatedValue<number>) {
+  renderScrollableArea(scrollLeft: SpringAnimatedNumber): React.Node {
     const { animatingScroll, columnsToAnimate } = this.state;
     const { searchResults, hierarchyItems, maxWidth, columnWidth } = this.props;
     const willColumnsOverflow = this.willColumnsOverflowContainer();
@@ -595,14 +650,14 @@ export default class MainColumnArea extends React.PureComponent<Props, State> {
             width: willColumnsOverflow ? viewWindowWidth : undefined,
           }}
         >
-          {this.renderColumnTitlesRow()}
+          {this.maybeRenderColumnTitlesRow()}
           {this.renderColumns()}
         </div>
       </animated.div>
     );
   }
 
-  render() {
+  render(): React.Node {
     const { animatingScroll, scrollLeft } = this.state;
     return (
       <Spring

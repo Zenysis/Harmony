@@ -14,20 +14,20 @@ type DefaultValues = {
   overlapLegendWithChart: boolean,
 };
 
-type SerializedLegendSettings = {
+type SerializedLegendSettings = {|
   legendFontSize?: string,
   legendFontColor?: string,
   legendFontFamily?: string,
   legendPlacement?: LegendPlacement,
   showLegend?: boolean,
   overlapLegendWithChart?: boolean,
-};
+|};
 
 class LegendSettings extends Zen.BaseModel<LegendSettings, {}, DefaultValues> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     legendFontSize: '16px',
     legendFontColor: 'black',
-    legendFontFamily: 'Arial',
+    legendFontFamily: 'Lato',
     legendPlacement: LEGEND_PLACEMENT.BOTTOM,
     showLegend: true,
     overlapLegendWithChart: false,
@@ -37,26 +37,25 @@ class LegendSettings extends Zen.BaseModel<LegendSettings, {}, DefaultValues> {
     viewType: ResultViewType,
   ): Zen.Model<LegendSettings> | void {
     let legendFontSize = '';
+    let showLegend = true;
     switch (viewType) {
-      case RESULT_VIEW_TYPES.CHART:
-        legendFontSize = '16px';
-        break;
       case RESULT_VIEW_TYPES.MAP:
-      case RESULT_VIEW_TYPES.ANIMATED_MAP:
-      case RESULT_VIEW_TYPES.GEOMAP:
-      case RESULT_VIEW_TYPES.TIME:
-        legendFontSize = '14px';
+        legendFontSize = '13px';
+        break;
+      case RESULT_VIEW_TYPES.TABLE:
+        legendFontSize = '13px';
+        showLegend = false;
         break;
       default:
         return undefined;
     }
-    return LegendSettings.create({ legendFontSize });
+    return LegendSettings.create({ legendFontSize, showLegend });
   }
 
   static deserialize(
     values: SerializedLegendSettings,
   ): Zen.Model<LegendSettings> {
-    return LegendSettings.create({ ...values });
+    return LegendSettings.create(values);
   }
 
   serialize(): SerializedLegendSettings {
@@ -64,4 +63,4 @@ class LegendSettings extends Zen.BaseModel<LegendSettings, {}, DefaultValues> {
   }
 }
 
-export default ((LegendSettings: any): Class<Zen.Model<LegendSettings>>);
+export default ((LegendSettings: $Cast): Class<Zen.Model<LegendSettings>>);

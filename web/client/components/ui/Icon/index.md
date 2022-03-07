@@ -1,55 +1,75 @@
 Glyphicon examples:
 
 ```jsx
-<Icon type="search" />
-<Icon type="ok" />
-<Icon type="remove" />
-<Icon type="zoom-in" />
-<Icon type="user" />
+<>
+  <Icon type="search" />
+  <Icon type="ok" />
+  <Icon type="remove" />
+  <Icon type="zoom-in" />
+  <Icon type="user" />
+</>
 ```
 
-SVG icons
+SVG icons. Hover over each icon to see its name.
+
 ```jsx
-<Icon type="svg-analyze" />
-<Icon type="svg-birthday-cake" />
-<Icon type="svg-calendar" />
-<Icon type="svg-drag-indicator" />
-<Icon type="svg-globe" />
-<Icon type="svg-question-mark" />
-<Icon type="svg-repeat" />
-<Icon type="svg-trending-down" />
-<Icon type="svg-trending-up" />
+import Tooltip from 'components/ui/Tooltip';
+import { SVG_MAP } from 'components/ui/Icon/internal/SVGs';
+import { MAP_VISUALIZATION_SVG_MAP } from 'components/ui/Icon/internal/SVGs/MapVisualizationIcons';
+import { VISUALIZATIONS_SVG_MAP } from 'components/ui/Icon/internal/SVGs/VisualizationIcons';
+
+<>
+  {Object.keys(SVG_MAP).map(svgKey => {
+    if (
+      svgKey in MAP_VISUALIZATION_SVG_MAP ||
+      svgKey in VISUALIZATIONS_SVG_MAP
+    ) {
+      return null;
+    }
+
+    return (
+      <Tooltip key={svgKey} content={svgKey}>
+        <Icon
+          style={{ width: '24px', height: '24px', margin: '4px' }}
+          type={svgKey}
+        />
+      </Tooltip>
+    );
+  })}
+</>;
 ```
 
 Visualization SVG icons:
+
 ```jsx
-<Icon type="svg-bar-graph-visualization" />
-<Icon type="svg-bar-line-visualization" />
-<Icon type="svg-heat-tiles-visualization" />
-<Icon type="svg-hierarchy-visualization" />
-<Icon type="svg-line-graph-visualization" />
-<Icon type="svg-map-visualization" />
-<Icon type="svg-ranking-visualization" />
-<Icon type="svg-scatterplot-visualization" />
-<Icon type="svg-stacked-bar-graph-visualization" />
-<Icon type="svg-sunburst-visualization" />
-<Icon type="svg-table-visualization" />
+import Tooltip from 'components/ui/Tooltip';
+import { VISUALIZATIONS_SVG_MAP } from 'components/ui/Icon/internal/SVGs/VisualizationIcons';
+
+<>
+  {Object.keys(VISUALIZATIONS_SVG_MAP).map(svgKey => {
+    return (
+      <Tooltip key={svgKey} content={svgKey}>
+        <Icon style={{ margin: '4px' }} type={svgKey} />
+      </Tooltip>
+    );
+  })}
+</>;
 ```
 
 Visualization SVG icon color can be customized using the `color` style attribute. Here they are in gray:
+
 ```jsx
-const style = { color: '#BFC2C9' };
+import Tooltip from 'components/ui/Tooltip';
+import { VISUALIZATIONS_SVG_MAP } from 'components/ui/Icon/internal/SVGs/VisualizationIcons';
+const style = { color: '#BFC2C9', margin: '4px' };
+
 <>
-  <Icon style={style} type="svg-bar-graph-visualization" />
-  <Icon style={style} type="svg-bar-line-visualization" />
-  <Icon style={style} type="svg-heat-tiles-visualization" />
-  <Icon style={style} type="svg-hierarchy-visualization" />
-  <Icon style={style} type="svg-line-graph-visualization" />
-  <Icon style={style} type="svg-map-visualization" />
-  <Icon style={style} type="svg-ranking-visualization" />
-  <Icon style={style} type="svg-scatterplot-visualization" />
-  <Icon style={style} type="svg-stacked-bar-graph-visualization" />
-  <Icon style={style} type="svg-sunburst-visualization" />
-  <Icon style={style} type="svg-table-visualization" />
-</>
+  {Object.keys(VISUALIZATIONS_SVG_MAP).map(svgKey => {
+    return (
+      <Tooltip key={svgKey} content={svgKey}>
+        <Icon style={style} type={svgKey} />
+      </Tooltip>
+    );
+  })}
+</>;
 ```

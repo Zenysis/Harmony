@@ -1,30 +1,27 @@
 // @flow
 import * as React from 'react';
 
-type Props = {
-  children: React.Node, // Children must be Control, or return Control
-  className: string,
-};
+import Spacing from 'components/ui/Spacing';
 
-const defaultProps = {
-  children: null,
-  className: '',
+type Props = {
+  children: React.Node,
+  className?: string,
 };
 
 /**
- * ControlsGroup represents a row of controls
+ * Thin wrapper around a group of controls to provide a standard box view with a
+ * fixed width, border and padding.
  */
-export default function ControlsGroup(props: Props) {
-  const { children, className } = props;
-  if (!children) {
-    return null;
-  }
-
+export default function ControlsGroup({
+  children,
+  className = '',
+}: Props): React.Node {
   return (
-    <div className={`row controls-group-container ${className}`}>
+    <Spacing
+      className={`settings-modal__controls-group ${className}`}
+      padding="l"
+    >
       {children}
-    </div>
+    </Spacing>
   );
 }
-
-ControlsGroup.defaultProps = defaultProps;

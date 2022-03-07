@@ -1,43 +1,68 @@
 // @flow
 import * as React from 'react';
 
+import * as Zen from 'lib/Zen';
 import Caret from 'components/ui/Caret';
 import HierarchicalSelector from 'components/ui/HierarchicalSelector';
 import HierarchyItem from 'models/ui/HierarchicalSelector/HierarchyItem';
-import MainColumnArea from 'components/ui/HierarchicalSelector/MainColumnArea';
+import LoadingSpinner from 'components/ui/LoadingSpinner';
+import Popover from 'components/ui/Popover';
 import { autobind } from 'decorators';
+import type { NamedItem } from 'models/ui/HierarchicalSelector/types';
 
-type Props = {|
+type DefaultProps<T> = {
   buttonClassName: string,
 
-  hierarchyRoot: HierarchyItem,
+  /**
+   * Generates the title of a column
+   * @param {HierarchyItem<T>} item The HierarchyItem that produced this column
+   * @returns {string} The column title
+   */
+  columnTitleGenerator: (HierarchyItem<T>) => string,
+  columnWidth: number,
+
+  enableSearch: boolean,
 
   /** Used to determine if a loading spinner should be shown. */
   hierarchyLoaded: boolean,
 
+  /** Maximum height for the hierarchical Selector */
+  maxHeight?: number,
+
+  /** Maximum width for the hierarchical Selector */
+  maxWidth: number,
+
   /**
-   * Generates the title of a column
-   * @param {HierarchyItem} item The HierarchyItem that produced this column
-   * @returns {string} The column title
+   * Determines if a loading spinner is shown on the dropdown button when
+   * hierarchyLoaded is False
    */
-  columnTitleGenerator: $Prop<MainColumnArea, 'columnTitleGenerator'>,
-  columnWidth: number,
+  showLoadingSpinnerOnButton: boolean,
+
+  /**
+   * A list of ids that represent items that have already been selected and
+   * cannot be selected again. Unless the parent component maintains a list
+   * of unselectable items, this feature will be ignored due to defaulting to
+   * an empty list.
+   */
+  unselectableHierarchyItems: Zen.Array<string>,
+};
+
+type Props<T> = {
+  ...DefaultProps<T>,
 
   /** Text that appears on the dropdown button when no item has been selected */
   defaultDropdownText: string,
-  enableSearch: boolean,
+  hierarchyRoot: HierarchyItem<T>,
 
   /** Callback for when an item is selected */
-  onItemSelected: (item: HierarchyItem) => void,
-  /** Maximum height for the hierarchical Selector */
-  maxHeight?: number,
-  /** Maximum width for the hierarchical Selector */
-  maxWidth: number,
+  onItemSelected: (item: HierarchyItem<T>) => void,
+
   /** Currently selected dropdown item */
-  selectedItem: HierarchyItem | void,
-|};
+  selectedItem: HierarchyItem<T> | void,
+};
 
 type State = {
+  menuButtonElt: HTMLDivElement | void,
   selectorOpen: boolean,
 };
 
@@ -47,8 +72,10 @@ type State = {
  * controlled by the parent of this component through the selectedItem and
  * onItemSelected props.
  */
-class HierarchicalSelectorDropdown extends React.PureComponent<Props, State> {
-  static defaultProps = {
+export default class HierarchicalSelectorDropdown<
+  T: NamedItem,
+> extends React.PureComponent<Props<T>, State> {
+  static defaultProps: DefaultProps<T> = {
     buttonClassName: '',
     columnTitleGenerator: () => '',
     columnWidth: 400,
@@ -56,86 +83,91 @@ class HierarchicalSelectorDropdown extends React.PureComponent<Props, State> {
     hierarchyLoaded: true,
     maxHeight: undefined,
     maxWidth: 1000,
+    showLoadingSpinnerOnButton: false,
+    unselectableHierarchyItems: Zen.Array.create(),
   };
 
-  state = {
+  state: State = {
+    menuButtonElt: undefined,
     selectorOpen: false,
   };
 
-  _selectorRef: $RefObject<'div'> = React.createRef();
-
-  componentDidUpdate(prevProps: Props, prevState: State) {
-    if (this.state.selectorOpen && !prevState.selectorOpen) {
-      document.addEventListener('click', this.onDocumentClick);
-    } else if (!this.state.selectorOpen && prevState.selectorOpen) {
-      document.removeEventListener('click', this.onDocumentClick);
-    }
+  @autobind
+  onMenuButtonClick(event: SyntheticEvent<HTMLDivElement>) {
+    const menuButtonElt = event.currentTarget;
+    this.setState(prevState => ({
+      menuButtonElt,
+      selectorOpen: !prevState.selectorOpen,
+    }));
   }
 
   @autobind
-  toggleSelectorOpenState() {
-    this.setState(state => ({ selectorOpen: !state.selectorOpen }));
-  }
-
-  @autobind
-  onDocumentClick(e: MouseEvent) {
-    // When we click anywhere in the document we want to check if we clicked
-    // outside a menu so we can close it.
-    const { target } = e;
-    if (target instanceof window.Node) {
-      const { current } = this._selectorRef;
-      const selectorClicked = current && current.contains(target);
-      if (!selectorClicked) {
-        this.setState({ selectorOpen: false });
-      }
-    }
-  }
-
-  @autobind
-  onHierarchyItemClicked(item: HierarchyItem) {
+  onHierarchyItemClicked(item: HierarchyItem<T>) {
     if (item.isLeafItem()) {
       this.setState({ selectorOpen: false }, this.props.onItemSelected(item));
     }
   }
 
   @autobind
-  renderDropdownButton() {
-    const { buttonClassName, selectedItem } = this.props;
-    const text = selectedItem
-      ? selectedItem.name()
-      : this.props.defaultDropdownText;
+  renderDropdownButton(): React.Node {
+    const {
+      buttonClassName,
+      hierarchyLoaded,
+      showLoadingSpinnerOnButton,
+      selectedItem,
+    } = this.props;
+
+    let buttonContent;
+    if (selectedItem) {
+      buttonContent = selectedItem.name();
+    } else if (!hierarchyLoaded && showLoadingSpinnerOnButton) {
+      buttonContent = <LoadingSpinner />;
+    } else {
+      buttonContent = this.props.defaultDropdownText;
+    }
+
     return (
       <div
         role="button"
         className={`hierarchical-selector-dropdown__button ${buttonClassName}`}
-        onClick={this.toggleSelectorOpenState}
+        onClick={this.onMenuButtonClick}
       >
-        {text}
+        {buttonContent}
         <Caret className="hierarchical-selector-dropdown__button-arrow" />
       </div>
     );
   }
 
-  renderHierarchicalSelector() {
+  renderHierarchicalSelector(): React.Node {
     const {
       onItemSelected,
       defaultDropdownText,
+      buttonClassName,
+      selectedItem,
+      showLoadingSpinnerOnButton,
       ...passThroughProps
     } = this.props;
+    const { menuButtonElt, selectorOpen } = this.state;
     return (
-      <div
-        className="hierarchical-selector-dropdown__selector-container"
-        ref={this._selectorRef}
+      <Popover
+        doNotFlip
+        keepInWindow
+        anchorElt={menuButtonElt}
+        anchorOrigin={Popover.Origins.BOTTOM_LEFT}
+        containerType={Popover.Containers.NONE}
+        isOpen={selectorOpen}
+        onRequestClose={() => this.setState({ selectorOpen: false })}
+        popoverOrigin={Popover.Origins.TOP_LEFT}
       >
         <HierarchicalSelector
           onItemClick={this.onHierarchyItemClicked}
           {...passThroughProps}
         />
-      </div>
+      </Popover>
     );
   }
 
-  render() {
+  render(): React.Node {
     return (
       <div>
         {this.renderDropdownButton()}
@@ -144,5 +176,3 @@ class HierarchicalSelectorDropdown extends React.PureComponent<Props, State> {
     );
   }
 }
-
-export default HierarchicalSelectorDropdown;

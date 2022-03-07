@@ -1,7 +1,7 @@
-ARG TAG=master
+ARG TAG
 
-FROM web-client:${TAG} AS client-build
-FROM web-server:${TAG} AS server-build
+FROM gcr.io/zen-1234/web-client:${TAG} AS client-build
+FROM gcr.io/zen-1234/web-server:${TAG} AS server-build
 
 # Copy everything into the distroless python build. Use the debug version so
 # we can still use simple shell tools.
@@ -28,6 +28,14 @@ ENV ZEN_PROD 1
 RUN mkdir -p ${INSTALL_PATH}/web/public
 RUN mkdir -p /data/output
 WORKDIR ${INSTALL_PATH}
+
+COPY --from=server-build \
+  /usr/bin/lz4 \
+  /usr/bin/lz4
+
+COPY --from=server-build \
+  /usr/bin/lz4cat \
+  /usr/bin/lz4cat
 
 # Copy the python third-party requirements.
 COPY --from=server-build \

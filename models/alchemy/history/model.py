@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # pylint: disable=C0103
+from typing import TYPE_CHECKING
 import sqlalchemy as sa
 
 from sqlalchemy.dialects.postgresql import JSONB
@@ -7,6 +8,10 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.types import DateTime
 
 from models.alchemy.base import Base
+
+
+if TYPE_CHECKING:
+    from models.alchemy.user import User
 
 
 class HistoryRecord(Base):

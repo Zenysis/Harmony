@@ -34,6 +34,21 @@ INVITATION_EMAIL_TRANSLATIONS = {
         'help_question_text': 'Besoin d\'aide?',
         'support_text': 'Nous sommes prêts à aider, rejoignez-nous à {support_email}',
     },
+    'pt': {
+        'preheader': 'Estamos entusiasmados por ter você aqui! Prepare-se para mergulhar na sua nova conta.',
+        'email_header': 'Bem vindo {first_name},',
+        'intro': '''
+        Estamos entusiasmados por você começar a usar a {platform_name}.
+        Primeiro, você precisa registrar a sua conta. Basta clicar o botão abaixo.''',
+        'btn_text': 'Registrar Conta',
+        'on_link_failure_text': 'Se isso não funcionar, copie e cole o seguinte link no seu navegador:',
+        'description_text': '''
+        {platform_name} foi feita para tomadores de decisão - analistas, gestores de dados, epidemiologistas e socorristas - que precisam de dados para tomar decisões importantes. Na {platform_name}, você irá encontrar dados selecionados de vários sistemas em silos, disponibilizados para monitoria e análise rápida.''',
+        'signoff_text': 'Seja bem-vindo,',
+        'signoff_team': 'Equipa de Suporte da {platform_name}',
+        'help_question_text': 'Precisa de ajuda para se registrar?',
+        'support_text': 'Estamos prontos para ajudar, envie a sua questão para {support_email}',
+    },
 }
 
 PASSWORD_RESET_TRANSLATIONS = {
@@ -49,6 +64,7 @@ PASSWORD_RESET_TRANSLATIONS = {
         'support_text': 'We\'re ready to assist, email us at {support_email}',
         'signoff_text': 'Thank you,',
         'signoff_team': '{platform_name} Support Team',
+        'donot_reply': 'Do not reply to this message',
     },
     'fr': {
         'preheader': 'Vous avez demandé la réinitialisation du mot de passe',
@@ -62,6 +78,7 @@ PASSWORD_RESET_TRANSLATIONS = {
         'support_text': 'Nous sommes prêts à aider, rejoignez-nous à {support_email}',
         'signoff_text': 'Bienvenue,',
         'signoff_team': 'l’Equipe de Support {platform_name}',
+        'donot_reply': 'Ne répond pas a ce message',
     },
 }
 
@@ -74,8 +91,7 @@ ALERT_EMAIL_TRANSLATIONS = {
         'btn_text': 'Ver Alertas',
         'on_link_failure_text': 'Se isto não funcionar, copie e cole este link:',
         'description_text': 'Novos Alertas',
-        'indicator_td': 'Variável',
-        'rule_td': 'Regra',
+        'title_td': 'Titulo',
         'geography_td': 'Localidades Afetadas',
         'previous_alert_txt': 'Alertas do dia anterior',
         'no_alert_text': ' Nenhum outro alerta hoje',
@@ -83,6 +99,7 @@ ALERT_EMAIL_TRANSLATIONS = {
         'signoff_team': 'Equipe de suported da {platform_name}',
         'help_question_text': 'Preciso de ajuda?',
         'support_text': 'Estamos prontos para ajudar, envie um email para {support_email}',
+        'donot_reply': 'Não responda a esta mensagem',
     },
     'en': {
         'preheader': 'You have new alert notifications! Here is your daily summary.',
@@ -91,8 +108,7 @@ ALERT_EMAIL_TRANSLATIONS = {
         'btn_text': 'View Alerts',
         'on_link_failure_text': 'If that doesn\'t work, copy and paste the following link:',
         'description_text': 'New Alerts:',
-        'indicator_td': 'Indicator',
-        'rule_td': 'Rule',
+        'title_td': 'Title',
         'geography_td': 'Triggered Geographies',
         'previous_alert_txt': 'Previous alerts from today:',
         'no_alert_text': 'No other alerts today',
@@ -100,6 +116,7 @@ ALERT_EMAIL_TRANSLATIONS = {
         'signoff_team': '{platform_name} Support Team',
         'help_question_text': 'Need help?',
         'support_text': 'We\'re ready to assist, email us at {support_email}',
+        'donot_reply': 'Do not reply to this message',
     },
 }
 
@@ -107,13 +124,14 @@ ACCESS_GRANTED_EMAIL_TRANSLATIONS = {
     'en': {
         'preheader': 'You have been granted access! Get ready to dive into your new dashboard.',
         'email_header': 'Hello,',
-        'intro': 'You have been given {granted_permissions} access to the dashboard. Just click the button below to view it.',
+        'intro': 'You have been given {granted_permissions} access to the dashboard {dashboard_name} by {dashboard_owner}. Just click the button below to view it.',
         'btn_text': 'Visit dashboard',
         'on_link_failure_text': 'If that doesn\'t work, copy and paste the following link in your browser:',
         'signoff_text': 'Thank you,',
         'signoff_team': '{platform_name} Support Team',
         'help_question_text': 'Need help?',
         'support_text': 'We\'re ready to assist, email us at {support_email}',
+        'donot_reply': 'Do not reply to this message',
     }
 }
 
@@ -121,19 +139,28 @@ NEW_DASHBOARD_EMAIL_TRANSLATIONS = {
     'en': {
         'preheader': 'Get ready to dive into your new dashboard!',
         'email_header': 'Hello {first_name},',
-        'intro': 'You have created a new dashboard. Click the button below to view it.',
+        'intro': 'You have created a new dashboard, {dashboard_name}. Click the button below to view it.',
         'btn_text': 'Visit dashboard',
         'on_link_failure_text': 'If that doesn\'t work, copy and paste the following link in your browser:',
         'signoff_text': 'Thank you,',
         'signoff_team': '{platform_name} Support Team',
         'help_question_text': 'Need help?',
         'support_text': 'We\'re ready to assist, email us at {support_email}',
+        'donot_reply': 'Do not reply to this message',
     }
 }
 
 SHARE_ANALYSIS_EMAIL_TRANSLATIONS = {
     'en': {
         'btn_text': 'ACCESS QUERY',
+        'help_question_text': 'Need help?',
+        'support_text': 'We\'re ready to assist, email us at {support_email}',
+    }
+}
+
+SHARE_DASHBOARD_EMAIL_TRANSLATIONS = {
+    'en': {
+        'btn_text': 'ACCESS DASHBOARD',
         'help_question_text': 'Need help?',
         'support_text': 'We\'re ready to assist, email us at {support_email}',
     }

@@ -2,6 +2,7 @@
 import Promise from 'bluebird';
 
 import ZenError from 'util/ZenError';
+import ZenHTTPError, { HTTP_STATUS_CODE } from 'util/ZenHTTPError';
 
 // Allow our promises to be cancelable so that their handlers can be cleaned up
 // if a component is unmounted before the promise resolves. Also disable
@@ -9,17 +10,20 @@ import ZenError from 'util/ZenError';
 // significant performance penalty.
 Promise.config({ cancellation: true, longStackTraces: false });
 
-export type APIVersion = 'NONE' | 'V1' | 'V2';
+type APIVersionMap = {
+  NONE: 'NONE',
+  V1: 'V1',
+  V2: 'V2',
+};
 
-type HTTPError =
-  | 'BAD_REQUEST'
-  | 'CONFLICT'
-  | 'FORBIDDEN'
-  | 'INTERNAL_SERVER_ERROR'
-  | 'NOT_FOUND'
-  | 'UNAUTHORIZED';
+type HTTPMethodMap = {
+  GET: 'GET',
+  POST: 'POST',
+  PATCH: 'PATCH',
+  DELETE: 'DELETE',
+};
 
-type HTTPMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+export type APIVersion = $Keys<APIVersionMap>;
 
 export interface HTTPService {
   get<T>(apiVersion: APIVersion, path: string): Promise<T>;
@@ -28,29 +32,20 @@ export interface HTTPService {
   delete<T>(apiVersion: APIVersion, path: string): Promise<T>;
 }
 
-export const API_VERSION: { [APIVersion]: APIVersion } = {
+export const API_VERSION: APIVersionMap = {
   NONE: 'NONE',
   V1: 'V1',
   V2: 'V2',
 };
 
-const HTTP_ERROR: { [HTTPError]: number } = {
-  BAD_REQUEST: 400,
-  UNAUTHORIZED: 401,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  CONFLICT: 409,
-  INTERNAL_SERVER_ERROR: 503,
-};
-
-const HTTP_METHOD: { [HTTPMethod]: HTTPMethod } = {
+const HTTP_METHOD: HTTPMethodMap = {
   GET: 'GET',
   POST: 'POST',
   PATCH: 'PATCH',
   DELETE: 'DELETE',
 };
 
-export const API_VERSION_TO_PREFIX: { [APIVersion]: string } = {
+export const API_VERSION_TO_PREFIX: $ObjMap<APIVersionMap, () => string> = {
   V1: '/api',
   V2: '/api2',
   NONE: '',
@@ -80,7 +75,7 @@ class APIService implements HTTPService {
         timeout: 300 * 1000, // milliseconds
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
-        success(response) {
+        success: response => {
           // TODO(vedant) - Remove this check. Only our legacy APIs even pass
           // this useless value.
           if (response && response.success === false) {
@@ -96,37 +91,54 @@ class APIService implements HTTPService {
           resolve(response);
         },
 
-        error(request) {
+        error: request => {
           const { status, responseText } = request;
-          const details = responseText ? ` More details: ${responseText}` : '';
-          if (status === HTTP_ERROR.CONFLICT) {
-            reject(new ZenError(`That name is already taken.${details}'`));
-          } else if (status === HTTP_ERROR.FORBIDDEN) {
-            reject(
-              new ZenError(
-                `You do not have authorization to perform this action.${details}`,
-              ),
-            );
-          } else if (status === HTTP_ERROR.UNAUTHORIZED) {
-            reject(
-              new ZenError(
-                `You must sign in to perform this action.${details}`,
-              ),
-            );
-          } else if (status === HTTP_ERROR.BAD_REQUEST) {
-            reject(new ZenError(`An invalid input was specified.${details}`));
-          } else if (status === HTTP_ERROR.INTERNAL_SERVER_ERROR) {
-            reject(new ZenError(`An error occurred on the server.${details}'`));
-          } else if (status === HTTP_ERROR.NOT_FOUND) {
-            reject(new ZenError(`Not found.${details}'`));
-          } else {
-            console.error(status, responseText);
-            reject(
-              new ZenError(
-                `An unknown error occurred on the server.${details}`,
-              ),
-            );
+          console.error(`HTTP ERROR CODE: ${String(status)}`, responseText);
+
+          if (status) {
+            if (status === HTTP_STATUS_CODE.CONFLICT) {
+              reject(new ZenHTTPError('That name is already taken.', status));
+            } else if (status === HTTP_STATUS_CODE.FORBIDDEN) {
+              reject(
+                new ZenHTTPError(
+                  'You do not have authorization to perform this action.',
+                  status,
+                ),
+              );
+            } else if (status === HTTP_STATUS_CODE.UNAUTHORIZED) {
+              reject(
+                new ZenHTTPError(
+                  'You must sign in to perform this action.',
+                  status,
+                ),
+              );
+            } else if (status === HTTP_STATUS_CODE.BAD_REQUEST) {
+              reject(
+                new ZenHTTPError('An invalid input was specified.', status),
+              );
+            } else if (status === HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR) {
+              reject(
+                new ZenHTTPError('An error occurred on the server.', status),
+              );
+            } else if (status === HTTP_STATUS_CODE.NOT_FOUND) {
+              reject(new ZenHTTPError('Not found.', status));
+            } else if (status === HTTP_STATUS_CODE.SUCCESS) {
+              reject(
+                new ZenHTTPError(
+                  'The server responded with a success code but the response is not of a valid json format.',
+                  status,
+                ),
+              );
+            }
+            return;
           }
+
+          reject(
+            new ZenHTTPError(
+              'An unknown error occurred on the server.',
+              status,
+            ),
+          );
         },
       });
     });
@@ -153,4 +165,4 @@ class APIService implements HTTPService {
   }
 }
 
-export default new APIService();
+export default (new APIService(): APIService);

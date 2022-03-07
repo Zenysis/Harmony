@@ -56,8 +56,18 @@ export function buildSearchPattern(
     // Build the search pattern by OR-ing all terms together. Replace any
     // regex characters in the search terms since we are constructing a pattern
     // that searches for the terms exactly as they are provided.
+
+    // NOTE(nina): For searches that include accentuation, we want to
+    // remove that accentuation when matching against the actual
+    // search results. EX: 'Gravida' is a valid search result for the
+    // search term 'Grãvida'
     patternString = searchTerms
-      .map(term => term.replace(ESCAPE_SPECIAL_CHAR_PATTERN, '\\$&'))
+      .map(term =>
+        term
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(ESCAPE_SPECIAL_CHAR_PATTERN, '\\$&'),
+      )
       .join('|');
     searchTermCache.set(searchTerms, patternString);
   }

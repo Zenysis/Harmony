@@ -1,0 +1,73 @@
+.user-view-modal {
+  &__tab-contents {
+    padding: $space-xl-px $space-xxl-px;
+  }
+
+  &__add-button {
+    border-style: none;
+    border-width: 0px;
+    color: $blue-primary;
+    font-weight: 700;
+
+    &:hover {
+      color: $blue-primary-hover;
+    }
+  }
+
+  &__table {
+    .zen-table-search-container {
+      float: none;
+      margin-top: $space-m-px;
+      overflow: hidden;
+    }
+  }
+
+  &__access-level-tabs {
+    .zen-tab {
+      overflow-y: hidden;
+    }
+
+    .zen-tabs__header-row {
+      background: white;
+      padding: 0px;
+    }
+
+    .zen-tab-header__outer-container {
+      position: relative;
+      right: 25px;
+    }
+
+    .zen-tab-header__heading {
+      height: 60px;
+      padding-left: 30px;
+    }
+  }
+
+  &__dropdown {
+    .zen-dropdown {
+      width: 100%;
+
+      .zen-dropdown-button {
+        width: 100%;
+      }
+    }
+  }
+
+  &__delete-button {
+    float: right;
+    margin-right: $space-xxs-px;
+  }
+
+  &__tooltip {
+    float: right;
+  }
+
+  &__dashboard-label-link {
+    color: $blue-dark;
+    font-weight: 700;
+
+    &:hover {
+      color: $blue-dark-hover;
+    }
+  }
+}

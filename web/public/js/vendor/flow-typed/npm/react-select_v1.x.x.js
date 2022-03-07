@@ -1,8 +1,8 @@
-// flow-typed signature: ee3e8dcf95fb04312df029d1d40bb803
-// flow-typed version: e3a2ac4257/react-select_v1.x.x/flow_>=v0.53.x
+// flow-typed signature: 772d894f79d4917664ddc31fed4cec56
+// flow-typed version: f41d94d535/react-select_v1.x.x/flow_>=v0.104.x
 
 declare module 'react-select' {
-  declare type OptionType = { [string]: any };
+  declare type OptionType = { [string]: any, ... };
   declare type OptionsType = OptionType[];
 
   declare type Props = {|
@@ -16,7 +16,8 @@ declare module 'react-select' {
     addLabelText?: string,
     // Create drop-down caret element
     arrowRenderer?: React$ComponentType<{
-      onMouseDown?: SyntheticMouseEvent<*>
+      onMouseDown?: SyntheticMouseEvent<*>,
+      ...
     }>,
     // automatically blur the component when an option is selected
     autoBlur?: boolean,
@@ -33,7 +34,7 @@ declare module 'react-select' {
     // title for the "clear" control when multi: true
     clearAllText?: string | React$Element<*>,
     // create clearable x element
-    clearRenderer?: React$ComponentType<{}>,
+    clearRenderer?: React$ComponentType<{ ... }>,
     // title for the "clear" control
     clearValueText?: string | React$Element<*>,
     // should it be possible to reset value
@@ -56,8 +57,8 @@ declare module 'react-select' {
       | ((
           options: OptionsType,
           filterValue: string,
-          excludeOptions: Array<{}>,
-          props: {}
+          excludeOptions: Array<{ ... }>,
+          props: { ... },
         ) => OptionsType),
     // html id to set on the input element for accessibility or tests
     id?: string,
@@ -66,9 +67,9 @@ declare module 'react-select' {
     // whether to perform case-insensitive filtering
     ignoreCase?: boolean,
     // custom attributes for the Input
-    inputProps?: {},
+    inputProps?: { ... },
     // returns a custom input component
-    inputRenderer?: React$ComponentType<{}>,
+    inputRenderer?: React$ComponentType<{ ... }>,
     // set the components instanceId
     instanceId?: string,
     // whether the Select is loading externally or not (such as options being loaded)
@@ -84,11 +85,11 @@ declare module 'react-select' {
     // optional buffer (in px) between the bottom of the viewport and the bottom of the menu
     menuBuffer?: number,
     // optional style to apply to the menu container
-    menuContainerStyle?: {},
+    menuContainerStyle?: { ... },
     // renders a custom menu with options
-    menuRenderer?: React$ComponentType<{}>,
+    menuRenderer?: React$ComponentType<{ ... }>,
     // optional style to apply to the menu
-    menuStyle?: {},
+    menuStyle?: { ... },
     // multi-value input
     multi?: boolean,
     // generates a hidden <input /> tag with this field name for html forms
@@ -128,12 +129,12 @@ declare module 'react-select' {
     // additional class(es) to apply to the <Option /> elements
     optionClassName?: string,
     // option component to render in dropdown
-    optionComponent?: React$ComponentType<{}>,
+    optionComponent?: React$ComponentType<{ ... }>,
     // optionRenderer: function (option) {}
     optionRenderer?: (
       option: OptionType,
       idx: number,
-      inputValue: any
+      inputValue: any,
     ) => React$Node,
     // array of options
     options?: OptionsType,
@@ -156,7 +157,7 @@ declare module 'react-select' {
     // pass the value to onChange as a simple value (legacy pre 1.0 mode), defaults to false
     simpleValue?: boolean,
     // optional style to apply to the control
-    style?: {},
+    style?: { ... },
     // optional tab index of the control
     tabIndex?: number,
     // whether to treat tabbing out while focused to be value selection
@@ -166,14 +167,16 @@ declare module 'react-select' {
     // initial field value
     value?: any,
     // value component to render
-    valueComponent?: React$ComponentType<{}>,
+    valueComponent?: React$ComponentType<{ ... }>,
     // path of the label value in option objects
     valueKey?: string,
     // valueRenderer: function (option) {}
     valueRenderer?: (option: OptionType, idx?: number) => React$Node,
     // optional style to apply to the component wrapper
-    wrapperStyle?: {},
-    isSearchable?: boolean
+    wrapperStyle?: { ... },
+    isSearchable?: boolean,
+    // whether to cache the search results
+    cache?: { ... } | false,
   |};
 
   declare type AsyncProps = {|
@@ -185,12 +188,12 @@ declare module 'react-select' {
     loadOptions: (string, (OptionsType) => void) => Promise<*> | void,
     /* If cacheOptions is truthy, then the loaded data will be cached. The cache
      will remain until `cacheOptions` changes value. */
-    cacheOptions?: any
+    cacheOptions?: any,
   |};
 
   declare export default class Select extends React$Component<Props> {}
   declare export class Async extends React$Component<{|
     ...Props,
-    ...AsyncProps
+    ...AsyncProps,
   |}> {}
 }

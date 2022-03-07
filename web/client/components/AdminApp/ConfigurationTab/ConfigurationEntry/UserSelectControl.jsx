@@ -1,29 +1,35 @@
 // @flow
 import * as React from 'react';
-import Promise from 'bluebird';
+import type Promise from 'bluebird';
 
-import Button from 'components/ui/Button';
+import * as Zen from 'lib/Zen';
 import DirectoryService from 'services/DirectoryService';
 import IdentityRoleMap from 'services/models/IdentityRoleMap';
 import Role from 'services/models/Role';
-import User from 'services/models/User';
 import UserSelect from 'components/common/UserSelect';
-import ZenArray from 'util/ZenModel/ZenArray';
-import ZenMap from 'util/ZenModel/ZenMap';
 import { autobind } from 'decorators';
+import { cancelPromise } from 'util/promiseUtil';
 import { noop } from 'util/util';
+import type Configuration from 'services/models/Configuration';
+import type User from 'services/models/User';
 import type { ChildProps } from 'components/AdminApp/ConfigurationTab/ConfigurationEntry';
 
 type State = {
-  allUsers: ZenArray<User>,
+  allUsers: Zen.Array<User>,
   selectedUsers: IdentityRoleMap,
 };
 
-type Props = ChildProps & {
-  getUsers: () => Promise<ZenArray<User>>,
+type DefaultProps = {
+  onConfigurationUpdated: (updatedValue: Configuration) => void,
+  getUsers: () => Promise<Zen.Array<User>>,
 };
 
-const KEY_TEXT = t('admin_app.configuration.keys');
+type Props = {
+  ...ChildProps,
+  getUsers: () => Promise<Zen.Array<User>>,
+  updateLocalConfiguration: (configuration: Configuration) => void,
+};
+
 const USER_URI_PREFIX = '/api2/user/';
 
 // HACK(vedant) - A way to get a User ID from the URI since most configurations
@@ -40,17 +46,18 @@ export default class UserSelectControl extends React.PureComponent<
   Props,
   State,
 > {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     onConfigurationUpdated: noop,
     getUsers: () =>
-      DirectoryService.getUsers().then(users => ZenArray.create(users)),
+      DirectoryService.getUsers().then(users => Zen.Array.create<User>(users)),
   };
 
-  _userUriToUser: ZenMap<User>;
-  _usernameToUser: ZenMap<User>;
+  _userUriToUser: Zen.Map<User>;
+  _usernameToUser: Zen.Map<User>;
+  _usersPromise: Promise<void> | void = undefined;
 
-  state = {
-    allUsers: ZenArray.create(),
+  state: State = {
+    allUsers: Zen.Array.create(),
     selectedUsers: IdentityRoleMap.create({}),
   };
 
@@ -65,11 +72,17 @@ export default class UserSelectControl extends React.PureComponent<
     }
   }
 
-  fetchUsers() {
-    return this.props.getUsers().then(allUsers => {
+  componentWillUnmount() {
+    if (this._usersPromise !== undefined) {
+      cancelPromise(this._usersPromise);
+    }
+  }
+
+  fetchUsers(): void {
+    this._usersPromise = this.props.getUsers().then(allUsers => {
       this.setState({ allUsers }, () => {
-        this._userUriToUser = ZenMap.fromArray(allUsers, 'uri');
-        this._usernameToUser = ZenMap.fromArray(allUsers, 'username');
+        this._userUriToUser = Zen.Map.fromArray(allUsers, 'uri');
+        this._usernameToUser = Zen.Map.fromArray(allUsers, 'username');
         this.computeSelectedUsers();
       });
     });
@@ -95,15 +108,10 @@ export default class UserSelectControl extends React.PureComponent<
 
   @autobind
   onUsersUpdated(selectedUsers: IdentityRoleMap) {
+    const { configuration, updateLocalConfiguration } = this.props;
     this.setState({
       selectedUsers,
     });
-  }
-
-  @autobind
-  onConfigurationUpdated() {
-    const { configuration, onConfigurationUpdated } = this.props;
-    const { selectedUsers } = this.state;
 
     const userIds = selectedUsers
       .roles()
@@ -115,21 +123,14 @@ export default class UserSelectControl extends React.PureComponent<
         }
         return undefined;
       });
-    onConfigurationUpdated(configuration.value(userIds));
+    updateLocalConfiguration(configuration.value(userIds));
   }
 
-  render() {
+  render(): React.Node {
     const { configuration } = this.props;
     const controlClassName = `
       configuration-tab__user-select
       configuration-tab__user-select__${configuration.key()}`;
-
-    const saveText: string = t(
-      'admin_app.configuration.textConfiguration.saveText',
-      {
-        key: KEY_TEXT[configuration.key()],
-      },
-    );
 
     return (
       <div className={controlClassName}>
@@ -140,14 +141,6 @@ export default class UserSelectControl extends React.PureComponent<
             userToRoles={this.state.selectedUsers}
             onUserRolesUpdated={this.onUsersUpdated}
           />
-        </div>
-        <div className="configuration-tab__row configuration-tab__controls">
-          <Button
-            className="configuration-tab__button"
-            onClick={this.onConfigurationUpdated}
-          >
-            {saveText}
-          </Button>
         </div>
       </div>
     );

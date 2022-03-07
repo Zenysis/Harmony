@@ -1,9 +1,8 @@
 // @flow
 /* eslint-disable react/no-unused-prop-types */
 import * as React from 'react';
-import classNames from 'classnames';
 
-import type { DropdownChildType } from 'components/ui/Dropdown';
+import type { DropdownChildType } from 'components/ui/Dropdown/types';
 
 // NOTE(pablo): <OptionsGroup> intentionally has several props that it never
 // uses. It is intended to be a user-friendly interface to create Dropdown
@@ -13,17 +12,17 @@ import type { DropdownChildType } from 'components/ui/Dropdown';
 // other props (e.g. depth, onSelect, etc.) that can break things in the
 // Dropdown.
 
-type Props<T> = {|
-  /** The value to uniquely represent this group. */
-  id: string,
-
-  /** The label to render for this group */
-  label: string,
+type DefaultProps<T> = {
+  /**
+   * The accessibility name for this group. If none is specified, we will
+   * use the group label.
+   */
+  ariaName: string | void,
 
   /** The `<Option>` components to render in this group */
   children: React.ChildrenArray<?DropdownChildType<T>>,
 
-  /** The class name to add to this div */
+  /** The class name to add to this option */
   className: string,
 
   /**
@@ -43,7 +42,20 @@ type Props<T> = {|
    * rendered in.
    */
   wrapperClassName: string,
-|};
+
+  /** testId used to access the element in tests */
+  testId?: string,
+};
+
+type Props<T> = {
+  ...DefaultProps<T>,
+
+  /** The value to uniquely represent this group. */
+  id: string,
+
+  /** The label to render for this group */
+  label: string,
+};
 
 /**
  * `<Dropdown.OptionsGroup>` should be used in conjunction with
@@ -58,20 +70,17 @@ type Props<T> = {|
  * @visibleName Dropdown.OptionsGroup
  */
 export default class OptionsGroup<T> extends React.PureComponent<Props<T>> {
-  static defaultProps = {
+  static defaultProps: DefaultProps<T> = {
+    ariaName: undefined,
     children: null,
     className: '',
     disableSearch: false,
     searchableText: '',
     wrapperClassName: '',
+    testId: undefined,
   };
 
-  render() {
-    const { className, label } = this.props;
-    const divClassName = classNames(
-      'zen-dropdown-item zen-dropdown-options-group',
-      className,
-    );
-    return <div className={divClassName}>{label}</div>;
+  render(): string {
+    return this.props.label;
   }
 }

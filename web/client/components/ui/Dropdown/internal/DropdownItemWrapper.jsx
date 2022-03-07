@@ -4,20 +4,29 @@ import classNames from 'classnames';
 
 import Icon from 'components/ui/Icon';
 import autobind from 'decorators/autobind';
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
 import { stopDropdownClickEvent } from 'components/ui/Dropdown/util';
 import type { StyleObject } from 'types/jsCore';
 
+type DefaultProps = {
+  ariaName: string | void,
+  contentClassName: string,
+  marginPerLevel: ?string,
+  multiselect: boolean,
+  style: StyleObject | void,
+  title: string | void,
+  unselectable: boolean,
+  wrapperClassName: string,
+  testId: string,
+};
+
 type Props<T> = {
+  ...DefaultProps,
   children: React.Node,
   depth: number, // what level of the dropdown hierarchy this item is in
   isActive: boolean,
   onSelect: (optionValue: T, event: SyntheticEvent<HTMLDivElement>) => void,
   value: T,
-
-  className: string,
-  marginPerLevel: ?string,
-  multiselect: boolean,
-  unselectable: boolean,
 };
 
 // multiply marginPerLevel * depth, and add the unit 'px' or 'em'
@@ -48,19 +57,25 @@ function calculateMargin(marginPerLevel: string, depth: number): ?string {
 export default class DropdownItemWrapper<T> extends React.PureComponent<
   Props<T>,
 > {
-  static defaultProps = {
-    className: '',
+  static defaultProps: DefaultProps = {
+    ariaName: undefined,
+    contentClassName: '',
     marginPerLevel: null,
     multiselect: false,
+    style: undefined,
+    title: undefined,
     unselectable: false,
+    wrapperClassName: '',
+    testId: '',
   };
 
-  getStyle(): ?StyleObject {
-    const { marginPerLevel, depth } = this.props;
+  getStyle(): StyleObject | void {
+    const { marginPerLevel, depth, style } = this.props;
     if (marginPerLevel === undefined || marginPerLevel === null) {
-      return undefined;
+      return style;
     }
     return {
+      ...style,
       marginLeft: calculateMargin(marginPerLevel, depth),
     };
   }
@@ -75,7 +90,7 @@ export default class DropdownItemWrapper<T> extends React.PureComponent<
     }
   }
 
-  maybeRenderCheckbox() {
+  maybeRenderCheckbox(): React.Element<typeof Icon> | null {
     const { isActive, multiselect } = this.props;
     if (!multiselect || !isActive) {
       return null;
@@ -90,18 +105,22 @@ export default class DropdownItemWrapper<T> extends React.PureComponent<
     );
   }
 
-  render() {
+  render(): React.Element<'li'> {
     const {
+      ariaName,
       children,
-      className,
       depth,
       isActive,
       multiselect,
       unselectable,
+      wrapperClassName,
+      contentClassName,
+      title,
+      testId,
     } = this.props;
     const listItemClassName = classNames(
       'zen-dropdown-item-wrapper',
-      className,
+      wrapperClassName,
       {
         'zen-dropdown-item-wrapper--selected': isActive && !multiselect,
         'zen-dropdown-item-wrapper--multiselect-selected':
@@ -110,18 +129,23 @@ export default class DropdownItemWrapper<T> extends React.PureComponent<
       },
     );
 
-    const contentClassName = classNames(
+    const innerClassName = classNames(
       'zen-dropdown-item-wrapper__content',
       `zen-dropdown-item-wrapper__depth-${depth}`,
+      contentClassName,
     );
 
     return (
       <li className={listItemClassName}>
         <div
-          role="button"
-          className={contentClassName}
+          aria-label={normalizeARIAName(ariaName)}
+          role="option"
+          aria-selected={isActive}
+          className={innerClassName}
           onClick={this.onItemClick}
           style={this.getStyle()}
+          title={title}
+          data-testid={testId.replace(/[^a-zA-Z]/g, '')}
         >
           {this.maybeRenderCheckbox()}
           {children}

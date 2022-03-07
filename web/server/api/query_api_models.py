@@ -1,14 +1,13 @@
-from builtins import object
+from typing import List, Any
 from flask import current_app
 from flask_potion import fields
 from flask_potion.routes import Relation, Route
 
-from models.alchemy.query_policy import QueryPolicy
+from models.alchemy.query_policy import QueryPolicy, QUERY_POLICY_TYPES
 from web.server.api.api_models import PrincipalResource
-from web.server.routes.views.query_policy import QueryPolicyManager
 from web.server.security.permissions import principals
 
-EMPTY_LIST = []
+EMPTY_LIST: List[Any] = []
 
 CONFIG_FILTERS = current_app.zen_config.filters
 DIMENSIONS = list(
@@ -62,18 +61,16 @@ class QueryPolicyResource(PrincipalResource):
 
     resource = Relation('resource', io='r')
 
-    class Meta(object):
-        manager = principals(QueryPolicyManager)
+    class Meta:
         model = QueryPolicy
         natural_key = 'name'
         excluded_fields = ('id',)
-        id_attribute = 'resource_id'
 
         permissions = {'view_resource': 'view_resource'}
 
         filters = {'name': True, 'description': True}
 
-    class Schema(object):
+    class Schema:
         name = fields.String(
             description='A unique human-readable name to denote the query policy.'
         )
@@ -88,6 +85,8 @@ class QueryPolicyResource(PrincipalResource):
             'web.server.api.permission_api_models.BackendResource',
             attribute='resource_id',
         )
+
+        queryPolicyTypeId = fields.Integer(attribute='query_policy_type_id')
 
     # pylint: disable=R0201
     # pylint: disable=E1101

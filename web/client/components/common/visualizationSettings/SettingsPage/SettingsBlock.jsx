@@ -2,12 +2,16 @@
 import * as React from 'react';
 
 import Heading from 'components/ui/Heading';
+import Spacing from 'components/ui/Spacing';
 
-type Props = {
-  children: React.Node,
-
+type DefaultProps = {
   className: string,
   title: React.Node,
+};
+
+type Props = {
+  ...DefaultProps,
+  children: React.Node,
 };
 
 /**
@@ -15,31 +19,18 @@ type Props = {
  * within a setting page.
  */
 export default class SettingsBlock extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     className: '',
     title: '',
   };
 
-  maybeRenderTitle() {
-    const { title } = this.props;
-    if (!title) {
-      return null;
-    }
-
+  render(): React.Node {
+    const { className, children, title } = this.props;
     return (
-      <div className="settings-block__title">
-        <Heading size={Heading.Sizes.SMALL}>{title}</Heading>
-      </div>
-    );
-  }
-
-  render() {
-    const { className, children } = this.props;
-    return (
-      <div className={`settings-block ${className}`}>
-        {this.maybeRenderTitle()}
-        <div className="settings-block__contents">{children}</div>
-      </div>
+      <Spacing className={className} marginBottom="l">
+        {title && <Heading.Small>{title}</Heading.Small>}
+        <Spacing marginTop="xs">{children}</Spacing>
+      </Spacing>
     );
   }
 }

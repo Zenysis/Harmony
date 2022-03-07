@@ -1,0 +1,75 @@
+.data-upload-mapping-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+
+  &__table {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+@keyframes group-highlighted-animation {
+  0% {
+    outline: 1px #985afd solid;
+    outline-offset: -1px;
+  }
+
+  // NOTE(abby): Without this, the outline fades to black.
+  99% {
+    outline: 1px rgba(#985afd, 0) solid;
+    outline-offset: -1px;
+  }
+
+  100% {
+    outline: unset;
+    outline-offset: unset;
+  }
+}
+$group-header-height: $space-xxxl-px;
+
+.data-upload-type-groups {
+  background-color: $gray-light;
+  border-left: 1px solid $gray;
+  border-top: 1px solid $gray;
+  overflow: hidden;
+
+  &:first-of-type {
+    border-radius: 5px 0px 0px 0px;
+  }
+
+  &:last-of-type {
+    border-radius: 0px 5px 0px 0px;
+    border-right: 1px solid $gray;
+  }
+
+  &__header {
+    background-color: $white;
+    border-bottom: 1px solid $gray;
+    grid-area: header;
+    height: $group-header-height;
+    padding: 0px $space-s-px 0px $space-l-px;
+  }
+
+  &__cards {
+    height: calc(100% - #{$group-header-height});
+    overflow: auto;
+
+    &--highlighted {
+      animation: group-highlighted-animation 1200ms
+        cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+  }
+
+  &__error-pill {
+    background-color: $error-color;
+    border-radius: 100px;
+    color: $white;
+    margin-left: auto;
+    padding: $space-xxs-px $space-xs-px;
+    width: max-content;
+  }
+}

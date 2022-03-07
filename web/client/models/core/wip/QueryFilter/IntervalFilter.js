@@ -9,7 +9,8 @@ type Values = {
   interval: TimeInterval,
 };
 
-type SerializedIntervalFilter = Zen.Serialized<TimeInterval> & {
+type SerializedIntervalFilter = {
+  ...Zen.Serialized<TimeInterval>,
   type: 'INTERVAL',
 };
 
@@ -46,4 +47,4 @@ class IntervalFilter extends Zen.BaseModel<IntervalFilter, Values>
   }
 }
 
-export default ((IntervalFilter: any): Class<Zen.Model<IntervalFilter>>);
+export default ((IntervalFilter: $Cast): Class<Zen.Model<IntervalFilter>>);

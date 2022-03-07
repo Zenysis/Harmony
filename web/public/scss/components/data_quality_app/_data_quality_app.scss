@@ -1,13 +1,21 @@
-$data-quality-box-shadow: 0 1px 5px $gray;
+$data-quality-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2),
+  1px 0 2px rgba(0, 0, 0, 0.1), -1px 0 2px rgba(0, 0, 0, 0.1);
+$data-quality-border: 1px solid $gray;
 
-.data-quality-badge {
+/*
+ * Use dq prefix before every class to prevent CSS naming collisions
+ * (dql = data quality)
+ */
+.dq-score-summary-badge {
   align-items: center;
-  border: 1px solid #aaa;
+  background-color: $white;
+  border: $data-quality-border;
   border-radius: 3px;
   box-shadow: $data-quality-box-shadow;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  height: 200px;
+  justify-content: space-evenly;
   padding: $spacing-l;
 
   &__beta-tag {
@@ -16,65 +24,28 @@ $data-quality-box-shadow: 0 1px 5px $gray;
 
   &__score {
     font-size: 36px;
+  }
 
-    &--good-quality {
-      color: $success-color;
-    }
+  &__score-explanation:hover {
+    color: $slate-hover;
+  }
 
-    &--medium-quality {
-      color: $warning-color;
-    }
-
-    &--bad-quality {
-      color: $error-color;
-    }
+  &__score-explanation-popover {
+    font-size: 12px;
+    max-width: 400px;
+    text-align: center;
   }
 
   &__title {
-    font-size: 28px
-  }
-
-  &--good-quality {
-    border-top: 5px solid $success-color;
-  }
-
-  &--medium-quality {
-    border-top: 5px solid $warning-color;
-  }
-
-  &--bad-quality {
-    border-top: 5px solid $error-color;
+    font-size: 28px;
   }
 }
 
-.data-quality-badge--legacy {
-  border: 1px solid #aaa;
-  border-radius: 10px;
-  flex-grow: 1;
-  height: 6em;
-  padding: 1em;
-  text-align: center;
-
-  &:not(:first-child) {
-    margin-left: $spacing-l;
-  }
-
-  em {
-    color: #bbb;
-  }
+.dq-dropdown {
+  box-shadow: -1px 2px 2px rgba(0, 0, 0, 0.2);
 }
 
-.data-quality-badge-row {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-}
-
-.data-quality-dropdown {
-  box-shadow: $data-quality-box-shadow;
-}
-
-.data-quality-indicator-selector-container {
+.dq-indicator-selector-container {
   align-items: center;
   display: flex;
   margin: $spacing-m 0;
@@ -87,105 +58,435 @@ $data-quality-box-shadow: 0 1px 5px $gray;
   }
 }
 
-.data-quality-loading-bar {
+.dq-loading-bar {
   margin-bottom: 0;
 }
 
-.data-quality-location-reporting {
-  margin-top: 1.1em;
-}
+.dq-reporting-facilities-table {
+  padding-bottom: 2px;
+  position: relative;
 
-.data-quality-location-table-container {
-  margin-top: 1.1em;
-
-  &__table {
-    font-size: 12px;
-    margin-top: 1em;
-  }
-
-  &__cell--centered {
-    text-align: center;
+  &__search-box {
+    bottom: 0;
+    left: 0;
+    position: absolute;
   }
 }
 
-.data-quality-main-contents {
+.dq-main-contents {
   padding: $spacing-m;
 }
 
-.data-quality-metric-box {
+.dq-metric-box {
+  align-items: center;
+  border: $data-quality-border;
   border-radius: 3px;
   box-shadow: $data-quality-box-shadow;
   display: flex;
+  font-size: 20px;
   padding: 10px;
 
   &__metric-name {
-    color: $slate;
     flex-grow: 1;
     padding-right: 10px;
     text-align: center;
   }
 
   &__metric-value {
+    align-items: center;
     border-left: 1px solid $gray;
+    display: flex;
     font-weight: bold;
+    height: 100%;
     padding-left: 10px;
-
-    &--good-quality {
-      color: $success-color;
-    }
-
-    &--medium-quality {
-      color: $warning-color;
-    }
-
-    &--bad-quality {
-      color: $error-color;
-    }
-  }
-
-  &--good-quality {
-    border-top: 3px solid $success-color;
-  }
-
-  &--medium-quality {
-    border-top: 3px solid $warning-color;
-  }
-
-  &--bad-quality {
-    border-top: 3px solid $error-color;
   }
 }
 
-.data-quality-missing-locations {
-  color: #aaa;
-}
-
-.data-quality-panel {
+.dq-summary {
+  align-items: center;
   background-color: $white;
-  font-size: 16px;
-  padding: 1em 3em;
-}
-
-.data-quality-summary {
+  border: $data-quality-border;
+  border-radius: 5px;
+  box-shadow: $data-quality-box-shadow;
   display: flex;
-  flex-direction: column;
+  padding: 1em 3em;
+
+  &-left-column {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  &__complex-calculation-error {
+    text-align: center;
+    width: 100%;
+  }
 
   &__filter-selector {
     margin-bottom: $spacing-m;
   }
 }
 
-.data-quality-section-subtitle {
-  margin-bottom: $spacing-m;
-  margin-top: -$spacing-m;
-}
+.dq-map-viz {
+  flex-grow: 1;
+  height: 500px;
+  margin: $spacing-m 0 $spacing-m -200px;
+  padding: 0;
+  position: relative;
+  // Ensure the map visualization is at the bottom of the stack.
+  z-index: 0;
 
-.data-quality-trend {
-  &--positive {
-    color: $success-color;
+  &__dimension-selector-dropdown,
+  &__quality-score-selector-dropdown {
+    margin-bottom: $spacing-s;
+    width: 100%;
   }
 
-  &--negative {
-    color: $error-color;
+  &__quality-score-button-dropdown {
+    margin: $spacing-s 0;
+  }
+
+  // HACK(david) hack to make the progress bar smaller so that it doesn't get
+  // hidden behind the score summary badge.
+  .progress {
+    $bar-width: 40%;
+    margin-left: (100 - $bar-width) / 2;
+    width: $bar-width;
+  }
+}
+
+.dq-map-viz-key {
+  background-color: $white;
+  bottom: $spacing-s;
+  margin: 0;
+  padding: $spacing-s;
+  position: absolute;
+  right: $spacing-m;
+
+  width: 270px;
+  z-index: 1;
+  &__dividing-line {
+    border-top: 1px solid $gray-light-active;
+    margin-bottom: $spacing-s;
+  }
+
+  &__label {
+    margin-left: $spacing-s;
+  }
+}
+
+.dq-viz-container {
+  border: $data-quality-border;
+  box-shadow: $data-quality-box-shadow;
+  padding: $spacing-s;
+
+  // HACK(istephen) hack to maintain height for viz containers
+  // while they're loading so the pages don't bounce around.
+  &__progress-bar-wrapper {
+    align-items: center;
+    display: flex;
+    min-height: 400px;
+  }
+}
+
+.dq-viz-title {
+  font-weight: normal;
+  text-align: center;
+}
+
+.dq-helper-text {
+  font-size: 12px;
+  margin-bottom: $spacing-m;
+  margin-top: $spacing-s;
+}
+
+.dq-tabs {
+  .zen-tabs__header-row {
+    width: 100%;
+  }
+
+  &__title {
+    font-size: 28px;
+    font-weight: normal;
+    margin-bottom: $spacing-m;
+    margin-top: $spacing-l;
+  }
+}
+
+.dq-tab {
+  background-color: $white;
+  border-radius: 5px;
+  font-size: 16px;
+  padding: 1em 3em;
+  position: relative;
+
+  &__explainer-section {
+    display: flex;
+    margin-bottom: $spacing-l;
+    margin-top: $spacing-s;
+  }
+
+  &__reports-analyzed-card {
+    border-radius: 4px 0 0 4px !important;
+  }
+
+  &__score-explanation-card {
+    border-radius: 0 4px 4px 0 !important;
+  }
+
+  &__pointer {
+    background-color: $white;
+    border-left: $data-quality-border;
+    border-top: $data-quality-border;
+    height: 30px;
+    position: absolute;
+    top: 0;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 30px;
+  }
+
+  &__header {
+    background-color: $white;
+    flex-grow: 1;
+    font-size: 22px;
+    height: 90px;
+    min-width: 375px;
+
+    &--active {
+      background-color: $white-active;
+      pointer-events: none;
+    }
+
+    &--disabled {
+      color: $gray;
+      pointer-events: none;
+    }
+
+    &:not(:first-child) {
+      margin-left: $spacing-l;
+    }
+
+    &:hover {
+      background-color: $white-hover;
+      cursor: pointer;
+    }
+  }
+
+  &__title {
+    margin-bottom: $spacing-s;
+  }
+}
+
+.dq-indicator-characteristics-tab {
+  display: flex;
+  flex-wrap: wrap;
+
+  &__card {
+    flex-basis: 40%;
+    margin: $spacing-s;
+  }
+}
+
+.dq-card {
+  align-items: center;
+  background-color: $white;
+  border: $data-quality-border;
+  border-radius: 4px;
+  box-shadow: $data-quality-box-shadow;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: center;
+  padding: 20px 15px;
+
+  &__explanation {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  &__icon {
+    $icon-size: 48px;
+    font-size: $icon-size;
+    height: $icon-size;
+    margin: 0;
+    width: $icon-size;
+  }
+
+  &__title {
+    font-size: 22px;
+    margin: $spacing-s 0;
+  }
+
+  &__metric-title {
+    text-align: center;
+  }
+
+  &__metric-description {
+    text-align: center;
+  }
+
+  &__metric-text {
+    font-size: 26px;
+    font-weight: bold;
+    margin-top: $spacing-m;
+    text-transform: capitalize;
+  }
+
+  &__smallprint {
+    font-size: 12px;
+    text-align: center;
+  }
+}
+
+.dq-reporting-completeness-tab {
+  &__time-series-settings {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__time-series-no-data {
+    align-items: center;
+    display: flex;
+    font-size: 18px;
+    justify-content: center;
+    min-height: 400px;
+  }
+
+  &__time-series-setting {
+    &:not(:first-child) {
+      margin-left: $spacing-m;
+    }
+  }
+}
+
+.dq-outlier-analysis-tab {
+  &__box-plot-data-point {
+    cursor: pointer;
+  }
+}
+
+.dq-outliers-line-graph {
+  &__time-series-no-data {
+    align-items: center;
+    display: flex;
+    font-size: 18px;
+    justify-content: center;
+    min-height: 400px;
+  }
+
+  &__no-data-point-selected {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 400px;
+  }
+
+  &__no-data-point-selected-explanation {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  &__no-data-point-selected-header {
+    font-size: 22px;
+    margin: $space-xs-px 0;
+  }
+}
+
+.data-quality-geography-filter-selector {
+  $filter-button-height: 40px;
+  display: flex;
+
+  &__add-filter-button {
+    align-items: center;
+    background-color: $white;
+    border-color: $gray;
+    border-radius: 5px;
+    display: flex;
+    height: $filter-button-height;
+    margin-right: $spacing-s;
+    padding: 0 $spacing-m;
+
+    &:hover {
+      background-color: $white-hover;
+    }
+    &:active {
+      background-color: $white-active;
+    }
+  }
+
+  &__filter-tag {
+    align-items: center;
+    display: flex;
+    height: $filter-button-height;
+  }
+}
+
+.dq-tab-specific-filters-settings {
+  align-items: center;
+  display: flex;
+  margin-bottom: 32px;
+  margin-top: 16px;
+
+  &__label {
+    font-size: 20px;
+    width: 150px;
+  }
+
+  &__content {
+    display: flex;
+    flex-grow: 1;
+  }
+
+  &__left {
+    align-items: center;
+    display: flex;
+    flex-basis: 50%;
+  }
+
+  &__right {
+    align-items: center;
+    display: flex;
+  }
+
+  &__time-slider {
+    margin-bottom: -$spacing-m;
+  }
+}
+
+.dq-outliers-overview-viz-tabs {
+  padding: 0;
+
+  &__contents {
+    padding: $space-xs-px;
+  }
+
+  &__header-row {
+    background-color: #f9f9f9;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+    height: 35px;
+  }
+
+  &__tab-header {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    padding: $space-xs-px;
+
+    &:hover {
+      background-color: white;
+      box-shadow: 0 0 5px 0 rgba(35, 36, 37, 0.2);
+      cursor: pointer;
+      z-index: 1; // so that the drop shadow will show above the other buttons
+    }
+  }
+
+  &__tab-header-icon {
+    height: 15px;
+    width: 15px;
   }
 }

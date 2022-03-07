@@ -3,7 +3,7 @@ import * as Zen from 'lib/Zen';
 import Moment from 'models/core/wip/DateTime/Moment';
 import type { Serializable } from 'lib/Zen';
 
-type Values = {
+type RequiredValues = {
   end: Moment,
   start: Moment,
 };
@@ -17,9 +17,9 @@ type SerializedTimeInterval = {
  * The TimeInterval model represents a datetime range spanning
  * start (inclusive) to end (exclusive).
  */
-class TimeInterval extends Zen.BaseModel<TimeInterval, Values>
+class TimeInterval extends Zen.BaseModel<TimeInterval, RequiredValues>
   implements Serializable<SerializedTimeInterval> {
-  static DEFAULT_DATE_FORMAT = 'YYYY-MM-DD';
+  static DEFAULT_DATE_FORMAT: string = 'YYYY-MM-DD';
 
   /**
    * Create a TimeInterval from start/end date strings.
@@ -48,6 +48,13 @@ class TimeInterval extends Zen.BaseModel<TimeInterval, Values>
     const endStr = this._.end().format(TimeInterval.DEFAULT_DATE_FORMAT);
     return { start: startStr, end: endStr };
   }
+
+  isSame(timeInterval: Zen.Model<TimeInterval>): boolean {
+    return (
+      this._.start() === timeInterval.start() &&
+      this._.end() === timeInterval.end()
+    );
+  }
 }
 
-export default ((TimeInterval: any): Class<Zen.Model<TimeInterval>>);
+export default ((TimeInterval: $Cast): Class<Zen.Model<TimeInterval>>);

@@ -1,17 +1,15 @@
-// @noflow
-import React from 'react';
+// @flow
+import * as React from 'react';
 
+import ElementResizeService from 'services/ui/ElementResizeService';
 import HeatTilesQueryResultData from 'models/visualizations/HeatTiles/HeatTilesQueryResultData';
+import PlotlyTooltip from 'components/visualizations/common/PlotlyTooltip';
 import ProgressBar from 'components/ui/ProgressBar';
-import PropDefs from 'util/PropDefs';
 import QueryResultGrouping, {
   TIMESTAMP_GROUPING_ID,
 } from 'models/core/QueryResultSpec/QueryResultGrouping';
-import ResizeService from 'services/ResizeService';
 import Visualization from 'components/visualizations/common/Visualization';
-import ZenPropTypes from 'util/ZenPropTypes';
 import d3Util from 'components/QueryResult/d3Util';
-import memoizeOne from 'decorators/memoizeOne';
 import withScriptLoader from 'components/common/withScriptLoader';
 import {
   BACKEND_GRANULARITIES,
@@ -23,12 +21,16 @@ import { VENDOR_SCRIPTS } from 'vendor/registry';
 import {
   X_AXIS,
   Y1_AXIS,
-  // eslint-disable-next-line max-len
 } from 'components/visualizations/common/SettingsModal/AxesSettingsTab/constants';
+import { autobind, memoizeOne } from 'decorators';
 import { truncate } from 'util/stringUtil';
-import { uniqueGeoName } from 'components/QueryResult/resultUtil';
-import { visualizationPropDefs } from 'components/visualizations/common/commonPropDefs';
+import { visualizationDefaultProps } from 'components/visualizations/common/commonTypes';
 import type GroupBySettings from 'models/core/QueryResultSpec/GroupBySettings';
+import type { RawTimestamp } from 'models/visualizations/HeatTiles/types';
+import type {
+  VisualizationDefaultProps,
+  VisualizationProps,
+} from 'components/visualizations/common/commonTypes';
 
 const DIVERGENT_COLORS = [
   '#1F4B99',
@@ -63,58 +65,77 @@ const PLOTLY_CONFIG = {
 // for our default date type (Month).
 // TODO(stephen): Remove this when SQT querying style is removed.
 const DEFAULT_DATE_QUERY_RESULT_GROUPING = QueryResultGrouping.create({
-  id: BACKEND_GRANULARITIES.MONTH,
-  type: 'DATE',
   // NOTE(stephen): HeatTiles in SQT defaults to Month.
   displayValueFormat: BACKEND_GRANULARITIES.MONTH,
+  id: BACKEND_GRANULARITIES.MONTH,
   label: BACKEND_GRANULARITIES.MONTH,
+  type: 'DATE',
 });
 
-const propDefs = PropDefs.create('heatTiles').addGroup(
-  visualizationPropDefs
-    .propTypes({
-      queryResult: HeatTilesQueryResultData.type(),
-      resizeService: ZenPropTypes.singleton(ResizeService),
-    })
-    .defaultProps({
-      queryResult: HeatTilesQueryResultData.create(),
-      resizeService: ResizeService,
-    }),
-);
+type HoverData = {
+  fieldId: string,
+  title: string,
+  value: number,
+  x: number,
+  y: number,
+};
 
-class HeatTiles extends React.PureComponent {
-  constructor(props) {
-    super(props);
+type Props = VisualizationProps<'HEATTILES'>;
 
-    this.onResize = this.onResize.bind(this);
+type State = {
+  hoverData: HoverData | void,
+};
 
-    this._resizeSubscription = undefined;
-    this._series = [];
-  }
+class HeatTiles extends React.PureComponent<Props, State> {
+  static defaultProps: VisualizationDefaultProps<'HEATTILES'> = {
+    ...visualizationDefaultProps,
+    queryResult: HeatTilesQueryResultData.create({}),
+  };
+
+  state = {
+    hoverData: undefined,
+  };
+
+  graphElt: ?HTMLDivElement;
+  resizeRegistration = ElementResizeService.register<HTMLDivElement>(
+    this.onResize,
+    (elt: HTMLDivElement | null | void) => {
+      this.graphElt = elt;
+    },
+  );
 
   componentDidMount() {
-    Plotly.newPlot(
-      this._graphElt,
+    this.createPlot();
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (this.props !== prevProps) {
+      this.createPlot();
+    }
+  }
+
+  createPlot() {
+    if (!this.graphElt) {
+      return;
+    }
+
+    window.Plotly.newPlot(
+      this.graphElt,
       this.getGraphData(),
       this.getGraphLayout(),
       PLOTLY_CONFIG,
     );
-    this._resizeSubscription = this.props.resizeService.subscribe(
-      this.onResize,
-    );
-  }
 
-  componentDidUpdate() {
-    Plotly.newPlot(this._graphElt, this.getGraphData(), this.getGraphLayout());
-    this.fixYAxisLabels();
-  }
+    if (this.graphElt) {
+      const { graphElt } = this;
 
-  componentWillUnmount() {
-    // Cancel any outstanding promises
-    if (this._queryPromise && this._queryPromise.isPending()) {
-      this._queryPromise.cancel();
+      // $FlowExpectedError[prop-missing] - plotly event
+      graphElt.on('plotly_hover', this.onHoverStart);
+
+      // $FlowExpectedError[prop-missing] - plotly event
+      graphElt.on('plotly_unhover', this.onHoverEnd);
+      this.fixYAxisLabels();
     }
-    this.props.resizeService.unsubscribe(this._resizeSubscription);
   }
 
   getGraphLayout() {
@@ -126,34 +147,37 @@ class HeatTiles extends React.PureComponent {
       autosize: true,
       margin: {
         b: 160,
-        l: this.props.controls.showTimeOnYAxis ? 130 : 170,
+        l: this.props.controls.showTimeOnYAxis() ? 130 : 170,
         r: 110,
         t: 0,
       },
       xaxis: {
+        showticklabels: true,
+        tickfont: {
+          size: parseInt(xAxis.labelsFontSize(), 10),
+        },
+        ticks: '',
         title: xAxis.title(),
         titlefont: {
           size: parseInt(xAxis.titleFontSize(), 10),
         },
-        showticklabels: true,
-        ticks: '',
-        tickfont: {
-          size: parseInt(xAxis.labelsFontSize(), 10),
-        },
+        type: 'category',
       },
     };
 
-    if (this.props.controls.showTimeOnYAxis) {
+    if (this.props.controls.showTimeOnYAxis()) {
+      // $FlowExpectedError[prop-missing] - its okay to mutate the object here, we're being safe
       layout.yaxis = {
+        showticklabels: true,
+        tickfont: {
+          size: parseInt(yAxis.labelsFontSize(), 10),
+        },
+        ticks: '',
         title: yAxis.title(),
         titlefont: {
           size: parseInt(yAxis.titleFontSize(), 10),
         },
-        showticklabels: true,
-        ticks: '',
-        tickfont: {
-          size: parseInt(yAxis.labelsFontSize(), 10),
-        },
+        type: 'category',
       };
     }
 
@@ -164,14 +188,14 @@ class HeatTiles extends React.PureComponent {
   // wrap the text when it is too long.
   fixYAxisLabels() {
     // Only need to do this if we are showing fields on the y-axis
-    if (this.props.controls.showTimeOnYAxis) {
+    if (this.props.controls.showTimeOnYAxis()) {
       return;
     }
 
     const yAxis = this.props.axesSettings[Y1_AXIS]();
 
-    const subplot = Plotly.d3
-      .select(this._graphElt)
+    const subplot = window.Plotly.d3
+      .select(this.graphElt)
       .select('.main-svg .subplot.xy');
     // The width we have available is how offset the main heat tile is along
     // the x axis.
@@ -190,10 +214,10 @@ class HeatTiles extends React.PureComponent {
 
   getColorScale() {
     const {
+      divergentColoration,
       invertColoration,
       logScaling,
-      divergentColoration,
-    } = this.props.controls;
+    } = this.props.controls.modelValues();
     const colors = divergentColoration ? DIVERGENT_COLORS : SEQUENTIAL_COLORS;
     const scale = logScaling ? LOG_SCALE : SCALE;
     return invertColoration
@@ -202,57 +226,60 @@ class HeatTiles extends React.PureComponent {
   }
 
   @memoizeOne
-  buildDateLabels(
-    dates: $ReadOnlyArray<string>,
-    useEthiopianDates: boolean,
-    groupBySettings: GroupBySettings,
-  ): $ReadOnlyArray<string> {
-    const groupingObject = groupBySettings
+  buildDateGrouping(groupBySettings: GroupBySettings): QueryResultGrouping {
+    return groupBySettings
       .groupings()
       .get(TIMESTAMP_GROUPING_ID, DEFAULT_DATE_QUERY_RESULT_GROUPING);
+  }
 
-    // NOTE(stephen): Disabling simplification of dates since HeatTiles doesn't
-    // look great with that date format. More dates are omitted on HeatTiles
-    // because the y-axis is normally smaller than x-axis (compared to
-    // LineGraph).
-    const labels = groupingObject.formatGroupingValues(
+  getDateGrouping(): QueryResultGrouping {
+    return this.buildDateGrouping(this.props.groupBySettings);
+  }
+
+  @memoizeOne
+  buildDateLabels(
+    dates: $ReadOnlyArray<RawTimestamp>,
+    useEthiopianDates: boolean,
+    grouping: QueryResultGrouping,
+  ): $ReadOnlyArray<string> {
+    const labels = grouping.formatGroupingValues(
       dates,
       true,
       useEthiopianDates,
       false,
     );
 
-    return buildPlotlyDateLabels(labels, true);
+    return buildPlotlyDateLabels(labels);
   }
 
   getDateLabels() {
-    const { controls, groupBySettings, queryResult } = this.props;
+    const { controls, queryResult } = this.props;
     return this.buildDateLabels(
       queryResult.dates(),
-      controls.useEthiopianDates,
-      groupBySettings,
+      controls.useEthiopianDates(),
+      this.getDateGrouping(),
     );
   }
 
   getGraphData() {
     const data = [
       {
+        colorscale: this.getColorScale(),
+        hoverinfo: 'none',
         type: 'heatmap',
         x: [],
         y: [],
         z: [],
-        colorscale: this.getColorScale(),
       },
     ];
 
-    const { controls, queryResult } = this.props;
+    const { controls, queryResult, seriesSettings } = this.props;
     const {
-      fields,
       firstYaxisSelections,
       resultLimit,
       selectedField,
       showTimeOnYAxis,
-    } = controls;
+    } = controls.modelValues();
     if (!queryResult.data().length) {
       return data;
     }
@@ -265,7 +292,7 @@ class HeatTiles extends React.PureComponent {
     const zLabels = [];
     const dates = queryResult.dates();
     const totals = queryResult.totals();
-    const series = queryResult.totals().slice(0, resultLimit);
+    const series = resultLimit === -1 ? totals : totals.slice(0, resultLimit);
     if (showTimeOnYAxis) {
       // HACK(stephen): HeatTiles will request data in the exact date
       // granularity that it needs to display data. This means we should not
@@ -340,16 +367,19 @@ class HeatTiles extends React.PureComponent {
       });
 
       data[0].x = xLabels;
+
+      // $FlowFixMe[incompatible-type]
       data[0].y = this.getDateLabels();
       data[0].z = zLabels;
     } else {
+      const seriesObjects = seriesSettings.seriesObjects();
       firstYaxisSelections.forEach(fieldId => {
         // TODO(nina): Remove this condition when controls are synced with
         // updating query selections
-        if (fields.find(field => field.id() === fieldId) === undefined) {
+        const seriesObject = seriesObjects[fieldId];
+        if (seriesObject === undefined) {
           return;
         }
-        const label = fields.find(field => field.id() === fieldId).label();
 
         const ys = [];
         totals.forEach(bar => {
@@ -357,9 +387,9 @@ class HeatTiles extends React.PureComponent {
             ? bar[`yValue_date_${fieldId}`][0]
             : bar[`yValue_date_${fieldId}`];
           ys.push(pushValue);
-          xLabels.push(uniqueGeoName(bar.key, bar));
+          xLabels.push(bar.key);
         });
-        data[0].y.push(label);
+        data[0].y.push(seriesObject.label());
         data[0].z.push(ys);
       });
 
@@ -369,27 +399,107 @@ class HeatTiles extends React.PureComponent {
     return data;
   }
 
+  @autobind
+  onHoverStart({
+    points,
+  }: {
+    points: $ReadOnlyArray<{
+      curveNumber: number,
+      data: { tooltipData: { fieldId: string, key: string } },
+      pointNumber: [number, number],
+      x: string,
+      y: string,
+      z: number,
+    }>,
+  }) {
+    if (points.length === 0) {
+      return;
+    }
+
+    const { controls } = this.props;
+    const { pointNumber, x, z } = points[0];
+    const showTimeOnYAxis = controls.showTimeOnYAxis();
+    this.setState({
+      hoverData: {
+        fieldId: showTimeOnYAxis
+          ? controls.selectedField()
+          : controls.firstYaxisSelections()[pointNumber[0]],
+        title: x,
+        value: z,
+        x: pointNumber[1],
+        y: pointNumber[0],
+      },
+    });
+  }
+
+  @autobind
+  onHoverEnd() {
+    this.setState({ hoverData: undefined });
+  }
+
+  @autobind
   onResize() {
-    Plotly.Plots.resize(this._graphElt);
+    if (this.graphElt) {
+      window.Plotly.Plots.resize(this.graphElt);
+    }
+  }
+
+  maybeRenderTooltip() {
+    const { hoverData } = this.state;
+    if (hoverData === undefined) {
+      return null;
+    }
+
+    const { controls, queryResult, seriesSettings } = this.props;
+    const { fieldId, title, value, x, y } = hoverData;
+    const seriesObject = seriesSettings.getSeriesObject(fieldId);
+    if (seriesObject === undefined) {
+      return null;
+    }
+
+    const rows = [];
+    if (controls.showTimeOnYAxis()) {
+      const dateGrouping = this.getDateGrouping();
+      rows.push({
+        label: dateGrouping.label() || '',
+        value: dateGrouping.formatGroupingValue(
+          queryResult.dates()[y],
+          true,
+          controls.useEthiopianDates(),
+        ),
+      });
+    }
+    rows.push({
+      label: seriesObject.label(),
+      value: seriesObject.formatFieldValue(value),
+    });
+    return (
+      <PlotlyTooltip
+        plotContainer={this.graphElt}
+        rows={rows}
+        title={title}
+        x={x}
+        y={y}
+      />
+    );
   }
 
   render() {
     return (
       <Visualization loading={this.props.loading}>
         <div
+          ref={this.resizeRegistration.setRef}
           className="heattile-visualization"
-          ref={ref => {
-            this._graphElt = ref;
-          }}
         />
+        {this.maybeRenderTooltip()}
       </Visualization>
     );
   }
 }
 
-PropDefs.setComponentProps(HeatTiles, propDefs);
-
-export default withScriptLoader(HeatTiles, {
-  scripts: [VENDOR_SCRIPTS.plotly],
+export default (withScriptLoader(HeatTiles, {
   loadingNode: <ProgressBar enabled />,
-});
+  scripts: [VENDOR_SCRIPTS.plotly],
+}): React.AbstractComponent<
+  React.Config<Props, VisualizationDefaultProps<'HEATTILES'>>,
+>);

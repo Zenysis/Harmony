@@ -1,0 +1,7 @@
+#!/bin/bash -eu
+set -o pipefail
+
+echo '[info] Running 00_fetch_raw'
+"${PIPELINE_SRC_ROOT}/data/datasource_delta/diff_datasource.py" \
+    --deployment_name=${ZEN_ENV} \
+    --output_filename="${PIPELINE_TMP_DIR}/feed_raw_signals.json"

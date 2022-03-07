@@ -12,7 +12,7 @@ export default class UnauthorizedPage extends React.Component<{}> {
     }
   }
 
-  render() {
+  render(): React.Node {
     return (
       <div className="unauthorized-page min-full-page-height">
         <div className="unauthorized-page__main-container">{TEXT.mainText}</div>

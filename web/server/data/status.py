@@ -114,4 +114,4 @@ class SourceStatus(object):
     def date_from_timestamp(timestamp):
         """Return a python datetime object from unix epoch time in ms.
         """
-        return datetime.fromtimestamp(timestamp / 1000.0)
+        return datetime.utcfromtimestamp(timestamp / 1000.0)

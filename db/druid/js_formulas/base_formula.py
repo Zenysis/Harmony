@@ -5,7 +5,7 @@ from pydruid.utils.postaggregator import Postaggregator
 # For some reason, pydruid doesn't have a JS post aggregator.
 class JSPostaggregator(Postaggregator):
     def __init__(self, name, fields, post_aggregate_fn):
-        # Stupid pydruid library uses old style classes
+        # pydruid uses old style classes
         Postaggregator.__init__(self, None, None, name)
         self.post_aggregator = {
             'type': 'javascript',

@@ -17,6 +17,8 @@ export default class GraphSearchResults<ParentValue, LeafValue> {
   // all leaves that match the search terms
   +leavesThatMatchSearch: $ReadOnlySet<LeafValue> = new Set();
 
+  +matchScores: $ReadOnlyMap<LeafValue | ParentValue, number> = new Map();
+
   static fromSearchText<_ParentValue, _LeafValue, Node, Children>(
     NodeView: SearchableNodeView<_ParentValue, _LeafValue, Node, Children>,
     searchText: string,
@@ -32,6 +34,7 @@ export default class GraphSearchResults<ParentValue, LeafValue> {
       leavesThatMatchSearch,
       parentsThatMatchSearch,
       parentsWithChildrenThatMatchSearch,
+      matchScores,
     } = deepSearch(NodeView, matcher, children);
 
     return new GraphSearchResults(
@@ -40,6 +43,7 @@ export default class GraphSearchResults<ParentValue, LeafValue> {
       parentsThatMatchSearch,
       parentsWithChildrenThatMatchSearch,
       leavesThatMatchSearch,
+      matchScores,
     );
   }
 
@@ -49,12 +53,22 @@ export default class GraphSearchResults<ParentValue, LeafValue> {
     parentsThatMatchSearch?: $ReadOnlySet<ParentValue> = new Set(),
     parentsWithChildrenThatMatch?: $ReadOnlySet<ParentValue> = new Set(),
     leavesThatMatchSearch?: $ReadOnlySet<LeafValue> = new Set(),
+    matchScores?: $ReadOnlyMap<ParentValue | LeafValue, number> = new Map(),
   ) {
     this.searchText = searchText;
     this.matcher = matcher;
     this.parentsThatMatchSearch = parentsThatMatchSearch;
     this.parentsWithChildrenThatMatchSearch = parentsWithChildrenThatMatch;
     this.leavesThatMatchSearch = leavesThatMatchSearch;
+    this.matchScores = matchScores;
+  }
+
+  /**
+   * Get a node value's match score, which measures how well this node's
+   * searchableText matched against the search text.
+   */
+  getMatchScore(value: ParentValue | LeafValue): number {
+    return this.matchScores.get(value) || 0;
   }
 
   someLeafMatchesValue(value: LeafValue): boolean {

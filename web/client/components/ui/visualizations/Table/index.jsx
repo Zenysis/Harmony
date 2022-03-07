@@ -1,337 +1,294 @@
 // @flow
 import * as React from 'react';
-import classNames from 'classnames';
-import {
-  Column,
-  SortIndicator,
-  Table as VirtualizedTable,
-} from 'react-virtualized';
 
-import InputText from 'components/ui/InputText';
-import PageSelector from 'components/ui/PageSelector';
-import autobind from 'decorators/autobind';
-import { updateSortFromEvent } from 'components/ui/visualizations/Table/util';
-
-// TODO(stephen): Move this import to somewhere else.
-import type { ChartSize } from 'components/visualizations/BumpChart/types';
+import Columns from 'components/ui/visualizations/Table/internal/Columns';
+import Footer from 'components/ui/visualizations/Table/internal/Footer';
+import Row from 'components/ui/visualizations/Table/internal/Row';
+import calculateTableBodyHeight from 'components/ui/visualizations/Table/calculateTableBodyHeight';
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
+import usePagination from 'components/ui/visualizations/Table/hooks/usePagination';
+import useTableRow from 'components/ui/visualizations/Table/hooks/useTableRow';
+import useTableSort from 'components/ui/visualizations/Table/hooks/useTableSort';
+import useTableStyling from 'components/ui/visualizations/Table/hooks/useTableStyling';
+import useVisibleRowCount from 'components/ui/visualizations/Table/hooks/useVisibleRowCount';
+import { noop } from 'util/util';
 import type {
   ColumnSpec,
+  RowDivider,
   SortState,
   TableCellProps,
 } from 'components/ui/visualizations/Table/types';
+import type { DataRow } from 'models/visualizations/Table/types';
 import type { StyleObject } from 'types/jsCore';
 
-type Props<RowData, CellData, ColData = void> = {
-  cellRenderer:
-    | void
-    | ((TableCellProps<RowData, CellData, ColData>) => React.Node),
-  className: string,
-  columnSpecs: $ReadOnlyArray<ColumnSpec<RowData, CellData, ColData>>,
-  enablePagination: boolean,
-  enableSearch: boolean,
-  footerHeight: number,
-  headerHeight: number,
-  initialSearchText: string,
-  onSearchTextChange: (searchText: string) => void,
-  onSortChange: (newSortState: SortState) => void,
-  rowHeight: number,
-  rowStyle: void | StyleObject | (({ index: number }) => StyleObject | void),
+type Props<RowData, ColData> = {
+  columnSpecs: $ReadOnlyArray<ColumnSpec<RowData, ColData>>,
+  height: number,
   rows: $ReadOnlyArray<RowData>,
   sortState: $ReadOnly<SortState>,
-} & ChartSize;
+  width: number,
+  wrapColumnTitles: boolean,
 
-type PaginationState = {
-  currentPage: number,
-  pageCount: number,
-  pageSize: number,
+  /** The accessibility name for this table. Defaults to 'Table'. */
+  ariaName?: string,
+
+  /** Optional method to render the contents of a cell */
+  cellRenderer?: void | ((TableCellProps<RowData, ColData>) => React.Node),
+  enablePagination?: boolean,
+  fitWidth?: boolean,
+
+  /**
+   * Whether or not to show a search box below the table. The actual search
+   * filtering is owned by the parent component using the onSearchTextChange
+   * and rows props.
+   */
+  enableSearch?: boolean,
+
+  /** Get the style for a worksheet cell wrapper */
+  getCellWrapperStyle?:
+    | ((ColumnSpec<RowData, ColData>) => StyleObject | void)
+    | void,
+
+  /** Get the style for a header cell */
+  getHeaderCellStyle?:
+    | ((ColumnSpec<RowData, ColData>) => StyleObject | void)
+    | void,
+
+  /**
+   * Get the style for a cell in the table body. This does not include header
+   * cells.
+   */
+  getRowCellStyle?:
+    | ((rowData: RowData, index: number) => StyleObject | void)
+    | void,
+  headerRowStyle?: StyleObject,
+  initialSearchText?: string,
+  maxColumnWidth?: number,
+  minColumnWidth?: number,
+  minHeaderHeight?: number,
+  onRowClick?: (rowData: RowData) => void,
+  onSearchTextChange?: (searchText: string) => void,
+  onSortChange?: (newSortState: SortState) => void,
+
+  /**
+   * If set, this function will return an element with which to wrap
+   * the contents of the row. The element you return must be the same height
+   * as the `rowHeight` prop otherwise the table's layout will be messed up.
+   * @param {React$Element.div} rowElement The row element to wrap. You
+   * shouldn't do anything with this other than pass it down as the child
+   * of the element returned by this function.
+   * @param {DataRow} rowData The row's data
+   * @returns {React$MixedElement} The wrapped row element
+   */
+  rowContentWrapper?:
+    | void
+    | ((
+        cellElements: React.Element<'div'>,
+        rowData: DataRow,
+        index: number,
+      ) => React.MixedElement),
+
+  rowDivider?: RowDivider | void,
+  rowHeight?: number,
+  rowStyle?: void | StyleObject | (number => StyleObject | void),
+  tableClassName?: string,
+  tableContentsStyle?: StyleObject | void,
+  ...
 };
-
-type State = $ReadOnly<PaginationState>;
 
 const TEXT = t('ui.visualizations.Table');
 
-function getRowClass({ index }: { index: number }): string {
-  if (index < 0) {
-    return 'ui-table-visualization__header';
-  }
-  return index % 2 === 0
-    ? 'ui-table-visualization__row ui-table-visualization__row--even'
-    : 'ui-table-visualization__row ui-table-visualization__row--odd';
-}
-
-// Calculate the available height for the table's rows, excluding header and
-// footer.
-function calculateTableBodyHeight<RowData, CellData, ColData>({
-  enablePagination,
-  enableSearch,
-  footerHeight,
-  headerHeight,
+// TODO(stephen): This component was originally built around the constructs and
+// requirements of `react-virtualized`'s Table implementation. This is why many
+// of the callbacks operate the way they do: the virtualized table would make a
+// callback for each cell with the correct data. On 2020-06-02, we refactored
+// the table to use the newer and more lightweight `react-window`
+// implementation. All the styles that react-virtualized Table provided to us
+// were migrated to our internal code, so there is no change in look. However,
+// the structure of this component is a bit convoluted to someone coming in to
+// use it. Refactor it to be cleaner and more straightforward to use.
+export default function Table<RowData: DataRow, ColData = void>({
+  columnSpecs,
   height,
-}: Props<RowData, CellData, ColData>): number {
-  const actualFooterHeight =
-    enablePagination || enableSearch ? footerHeight : 0;
+  rows,
+  sortState,
+  width,
+  wrapColumnTitles,
+  ariaName = TEXT.title,
+  cellRenderer = undefined,
+  enablePagination = false,
+  enableSearch = true,
+  fitWidth = true,
+  getCellWrapperStyle = undefined,
+  getHeaderCellStyle = undefined,
+  getRowCellStyle = undefined,
+  headerRowStyle = undefined,
+  initialSearchText = '',
+  maxColumnWidth = 500,
+  minColumnWidth = 150,
+  minHeaderHeight = 30,
+  onRowClick = noop,
+  onSearchTextChange = noop,
+  onSortChange = noop,
+  rowContentWrapper = undefined,
+  rowDivider = {
+    color: '#d9d9d9',
+    thickness: 1,
+  },
+  rowHeight = 30,
+  rowStyle = undefined,
+  tableClassName = '',
+  tableContentsStyle = undefined,
+}: Props<RowData, ColData>): React.Node {
+  const [headerHeight, setHeaderHeight] = React.useState(minHeaderHeight);
+  const [scrollbarHeight, setScrollbarHeight] = React.useState(0);
 
-  return Math.max(height - headerHeight - actualFooterHeight, 0);
-}
+  const rowCount = rows.length;
 
-export default class Table<
-  RowData: { +[string]: mixed },
-  CellData,
-  ColData = void,
-> extends React.PureComponent<Props<RowData, CellData, ColData>, State> {
-  static defaultProps = {
-    cellRenderer: undefined,
-    className: '',
-    enablePagination: false,
-    enableSearch: true,
-    footerHeight: 30,
-    headerHeight: 30,
-    initialSearchText: '',
-    onSearchTextChange: () => undefined,
-    onPageChange: () => undefined,
-    rowHeight: 30,
-    rowStyle: undefined,
-  };
+  const [currentPage, pageCount, pageSize, setCurrentPage] = usePagination(
+    enablePagination,
+    headerHeight,
+    rowCount,
+    rowHeight,
+    scrollbarHeight,
+    height,
+  );
 
-  state = {
-    currentPage: 1,
-    pageCount: 1,
-    pageSize: 20,
-  };
+  const visibleRowCount = useVisibleRowCount(
+    currentPage,
+    enablePagination,
+    pageCount,
+    pageSize,
+    rowCount,
+  );
 
-  // If the Table dimensions have changed, we must invalidate the current
-  // pagination state to ensure the page size matches the number of rows that
-  // can be displayed within the Table's dimensions.
-  static getDerivedStateFromProps(
-    nextProps: Props<CellData, ColData>,
-    nextState: State,
-  ): ?State {
-    const { enablePagination, height, rowHeight, rows } = nextProps;
-    const rowCount = rows.length;
-    if (rowCount === 0 || height === 0) {
-      return {
-        currentPage: 1,
-        pageCount: 1,
-        pageSize: 20,
-      };
-    }
+  const [getCellStyle, getRowStyle] = useTableStyling(
+    fitWidth,
+    getCellWrapperStyle,
+    getRowCellStyle,
+    maxColumnWidth,
+    minColumnWidth,
+    rowDivider,
+    rowStyle,
+    visibleRowCount,
+  );
 
-    // If pagination is disabled, we should show all rows on a single page.
-    if (!enablePagination) {
-      // If the enablePagination prop has stayed the same for multiple calls,
-      // the page state should already be set to show all rows.
-      if (nextState.pageSize === rowCount && nextState.currentPage === 1) {
-        return null;
+  const onSortClick = useTableSort(columnSpecs, onSortChange, sortState);
+
+  const getRow = useTableRow(currentPage, pageSize, rows);
+
+  const renderTableCell = React.useCallback(
+    (
+      columnSpec: ColumnSpec<RowData, ColData>,
+      rowData: RowData,
+      rowIndex: number,
+      isMergedCell: boolean,
+    ) => {
+      const { cellDataGetter, columnData, dataKey } = columnSpec;
+
+      const cellData = cellDataGetter({ columnData, dataKey, rowData });
+
+      if (cellRenderer === undefined) {
+        return cellData;
       }
 
-      // With pagination disabled, only one page will be displayed containing
-      // all rows.
-      return {
-        currentPage: 1,
-        pageCount: 1,
-        pageSize: rowCount,
-      };
-    }
+      return cellRenderer({
+        cellData,
+        columnData,
+        dataKey,
+        isMergedCell,
+        rowData,
+        rowIndex,
+      });
+    },
+    [cellRenderer],
+  );
 
-    const bodyHeight = calculateTableBodyHeight(nextProps);
-    const pageSize = Math.floor(bodyHeight / rowHeight);
+  const renderTableRow = React.useCallback(
+    ({ index, style }) => {
+      const rowData = getRow(index);
+      const prevRowData = index > 0 ? getRow(index - 1) : undefined;
+      const nextRowData =
+        index < rows.length - 1 ? getRow(index + 1) : undefined;
 
-    // If page size and count has not changed, we are safe to preserve the
-    // current state.
-    const pageCount = Math.ceil(rowCount / pageSize) || 1;
-    if (pageSize === nextState.pageSize && pageCount === nextState.pageCount) {
-      return null;
-    }
+      const fullStyle = { ...style, ...getRowStyle(index) };
 
-    // If a change in data length or component height has changed the number of
-    // possible pages, reset the current page to the first page. This is less
-    // confusing to the user than trying to guess hich page they should be sent
-    // to.
-    return {
-      currentPage: 1,
-      pageCount,
-      pageSize,
-    };
-  }
-
-  getVisibleRowCount(): number {
-    const { enablePagination, rows } = this.props;
-    const fullRowCount = rows.length;
-
-    // If pagination is disabled, we will be displaying all rows in the table.
-    if (!enablePagination || fullRowCount === 0) {
-      return fullRowCount;
-    }
-
-    // If the currently selected page is the last page in the range, return the
-    // compute the exact number of results for that final page since it might be
-    // different than pageSize (i.e. a partially filled page).
-    const { currentPage, pageCount, pageSize } = this.state;
-    if (currentPage === pageCount) {
-      const leftover = fullRowCount % pageSize;
-      if (leftover !== 0) {
-        return leftover;
-      }
-    }
-
-    return pageSize;
-  }
-
-  @autobind
-  getRow({ index }: { index: number }): RowData {
-    const { currentPage, pageSize } = this.state;
-    const rowIndex = index + pageSize * (currentPage - 1);
-    return this.props.rows[rowIndex];
-  }
-
-  @autobind
-  onSortClick({ event, sortBy }: { event: MouseEvent, sortBy: string }) {
-    const { sortColumns, sortDirectionMap } = this.props.sortState;
-    this.props.onSortChange(
-      updateSortFromEvent(event, sortBy, sortColumns, sortDirectionMap),
-    );
-  }
-
-  @autobind
-  onPageChange(newPage: number) {
-    this.setState({ currentPage: newPage });
-  }
-
-  maybeRenderPagination() {
-    if (!this.props.enablePagination) {
-      return null;
-    }
-
-    const { currentPage, pageSize } = this.state;
-    return (
-      <PageSelector
-        currentPage={currentPage}
-        onPageChange={this.onPageChange}
-        pageSize={pageSize}
-        resultCount={this.props.rows.length}
-      />
-    );
-  }
-
-  maybeRenderSearchBox() {
-    const { enableSearch, initialSearchText, onSearchTextChange } = this.props;
-    if (!enableSearch) {
-      return null;
-    }
-
-    return (
-      <InputText.Uncontrolled
-        className="ui-table-visualization__search-box hide-on-export"
-        debounce
-        debounceTimeoutMs={30}
-        initialValue={initialSearchText}
-        onChange={onSearchTextChange}
-        placeholder={TEXT.searchPlaceholder}
-      />
-    );
-  }
-
-  maybeRenderTable() {
-    const { headerHeight, rowHeight, rowStyle, width } = this.props;
-    const height = calculateTableBodyHeight(this.props) + headerHeight;
-
-    return (
-      <VirtualizedTable
-        className="ui-table-visualization__virtualized-table"
-        width={width}
-        height={height}
-        headerHeight={headerHeight}
-        noRowsRenderer={this.renderNoRowsMessage}
-        rowHeight={rowHeight}
-        rowClassName={getRowClass}
-        rowCount={this.getVisibleRowCount()}
-        rowGetter={this.getRow}
-        sort={this.onSortClick}
-        rowStyle={rowStyle}
-      >
-        {this.renderColumns()}
-      </VirtualizedTable>
-    );
-  }
-
-  maybeRenderFooter() {
-    const { enablePagination, enableSearch, footerHeight } = this.props;
-    if (!enablePagination && !enableSearch) {
-      return null;
-    }
-
-    const style = { height: `${footerHeight}px` };
-    return (
-      <div className="ui-table-visualization__footer" style={style}>
-        {this.maybeRenderSearchBox()}
-        {this.maybeRenderPagination()}
-      </div>
-    );
-  }
-
-  @autobind
-  renderHeaderItem({ dataKey, label }: ColumnSpec<RowData, CellData, ColData>) {
-    const { sortColumns, sortDirectionMap } = this.props.sortState;
-    const showSortIndicator = sortColumns.includes(dataKey);
-
-    const cellClassName = classNames('ui-table-visualization__header-cell', {
-      'ui-table-visualization__header-cell--sorted': showSortIndicator,
-    });
-    const sortIndicator = showSortIndicator ? (
-      <SortIndicator sortDirection={sortDirectionMap.get(dataKey)} />
-    ) : null;
-
-    return (
-      <React.Fragment>
-        <span className={cellClassName} data-content={label}>
-          {label}
-        </span>
-        {sortIndicator}
-      </React.Fragment>
-    );
-  }
-
-  @autobind
-  renderTableCell(cellProps: TableCellProps<RowData, CellData, ColData>) {
-    const { cellData, columnData, dataKey, rowData } = cellProps;
-    const { cellRenderer } = this.props;
-    if (cellRenderer === undefined) {
-      return rowData[dataKey];
-    }
-
-    return cellRenderer({ cellData, columnData, dataKey, rowData });
-  }
-
-  renderColumns(): $ReadOnlyArray<React.Element<typeof Column>> {
-    return this.props.columnSpecs.map(
-      ({ label, columnData, dataKey, cellDataGetter }) => (
-        <Column
-          key={dataKey}
-          headerRenderer={this.renderHeaderItem}
-          flexGrow={1}
-          width={20}
-          cellRenderer={this.renderTableCell}
-          label={label}
-          dataKey={dataKey}
-          cellDataGetter={cellDataGetter}
-          columnData={columnData}
+      return (
+        <Row
+          columns={columnSpecs}
+          getCellStyle={getCellStyle}
+          style={fullStyle}
+          onRowClick={onRowClick}
+          nextRowData={nextRowData}
+          prevRowData={prevRowData}
+          renderTableCell={renderTableCell}
+          rowContentWrapper={rowContentWrapper}
+          rowData={rowData}
+          rowIndex={index}
         />
-      ),
-    );
-  }
+      );
+    },
+    [
+      columnSpecs,
+      getCellStyle,
+      getRow,
+      getRowStyle,
+      onRowClick,
+      renderTableCell,
+      rowContentWrapper,
+      rows,
+    ],
+  );
 
-  @autobind
-  renderNoRowsMessage() {
-    return <div className="ui-table-visualization__no-rows">{TEXT.noRows}</div>;
-  }
+  const bodyHeight = calculateTableBodyHeight(height, headerHeight);
 
-  render() {
-    const className = `${this.props.className} ui-table-visualization`;
-    return (
-      <div className={className}>
-        {this.maybeRenderTable()}
-        {this.maybeRenderFooter()}
+  return (
+    <div className="ui-table-visualization" style={{ height }}>
+      <div className="ui-table-visualization__table-wrapper">
+        <div
+          role="table"
+          aria-label={normalizeARIAName(ariaName)}
+          className={`${tableClassName} ui-table-visualization__table`}
+          style={tableContentsStyle}
+        >
+          <Columns
+            bodyHeight={bodyHeight}
+            columnSpecs={columnSpecs}
+            enablePagination={enablePagination}
+            fitWidth={fitWidth}
+            getHeaderCellStyle={getHeaderCellStyle}
+            maxColumnWidth={maxColumnWidth}
+            minColumnWidth={minColumnWidth}
+            minHeaderHeight={minHeaderHeight}
+            onHeaderHeightUpdate={setHeaderHeight}
+            onScrollbarHeightUpdate={setScrollbarHeight}
+            onSortClick={onSortClick}
+            renderTableRow={renderTableRow}
+            rowHeight={rowHeight}
+            scrollbarHeight={scrollbarHeight}
+            sortState={sortState}
+            headerRowStyle={headerRowStyle}
+            width={width}
+            wrapColumnTitles={wrapColumnTitles}
+            visibleRowCount={visibleRowCount}
+          />
+        </div>
+        {visibleRowCount === 0 && (
+          <div className="ui-table-visualization__no-rows">{TEXT.noRows}</div>
+        )}
       </div>
-    );
-  }
+      {(enablePagination || enableSearch) && (
+        <Footer
+          currentPage={currentPage}
+          enablePagination={enablePagination}
+          enableSearch={enableSearch}
+          initialSearchText={initialSearchText}
+          onPageChange={setCurrentPage}
+          onSearchTextChange={onSearchTextChange}
+          pageSize={pageSize}
+          resultCount={rows.length}
+        />
+      )}
+    </div>
+  );
 }

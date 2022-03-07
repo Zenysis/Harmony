@@ -5,19 +5,19 @@ for(let i = 0; i <= 10; i++) {
   values.push(i);
 }
 
-initialState = {
+const [range, setRange] = React.useState({
   end: 10,
   start: 0,
-};
+});
 
 function onRangeChange(start, end) {
-  setState({ start, end });
+  setRange({ start, end });
 }
 
 
 <RangeSlider
-  initialStart={state.start}
-  initialEnd={state.end}
+  initialStart={range.start}
+  initialEnd={range.end}
   onRangeChange={onRangeChange}
   values={values}
 />
@@ -25,7 +25,7 @@ function onRangeChange(start, end) {
 
 Custom objects:
 ```jsx
-const values = [
+const [values, setValues] = React.useState([
   { color: 'red' },
   { color: 'orange' },
   { color: 'yellow' },
@@ -35,16 +35,22 @@ const values = [
   { color: 'violet' },
   { color: 'white' },
   { color: 'black' }
-];
+]);
 
-initialState = {
-  values,
+const [range, setRange] = React.useState({
   end: values[values.length - 1],
   start: values[0],
-};
+});
+
+React.useEffect(() => {
+  setRange({
+    end: values[values.length - 1],
+    start: values[0],
+  });
+}, [values]);
 
 function onRangeChange(start, end) {
-  setState({ start, end });
+  setRange({ start, end });
 }
 
 function valueFormatter(value) {
@@ -52,10 +58,10 @@ function valueFormatter(value) {
 }
 
 <RangeSlider
-  initialStart={state.start}
-  initialEnd={state.end}
+  initialStart={range.start}
+  initialEnd={range.end}
   onRangeChange={onRangeChange}
   valueFormatter={valueFormatter}
-  values={state.values}
+  values={values}
 />
 ```

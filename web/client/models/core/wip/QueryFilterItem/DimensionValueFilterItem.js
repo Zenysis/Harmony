@@ -3,15 +3,15 @@ import Promise from 'bluebird';
 import invariant from 'invariant';
 
 import * as Zen from 'lib/Zen';
-import DimensionService from 'services/wip/DimensionService';
+import Dimension from 'models/core/wip/Dimension';
 import DimensionValue from 'models/core/wip/Dimension/DimensionValue';
 import NotFilter from 'models/core/wip/QueryFilter/NotFilter';
 import OrFilter from 'models/core/wip/QueryFilter/OrFilter';
 import memoizeOne from 'decorators/memoizeOne';
 import { uniqueId } from 'util/util';
-import type Dimension from 'models/core/wip/Dimension';
 import type { Customizable } from 'types/interfaces/Customizable';
 import type { Displayable } from 'types/interfaces/Displayable';
+import type { NamedItem } from 'models/ui/HierarchicalSelector/types';
 import type { QueryFilter } from 'models/core/wip/QueryFilter/types';
 import type { Serializable } from 'lib/Zen';
 
@@ -20,19 +20,19 @@ type RequiredValues = {
   // dimension values to filter on. These dimension values all cover the same
   // dimension. This assumption likely will not hold in the future when complex
   // filters are supported.
-  dimension: Zen.ReadOnly<Dimension>,
+  dimension: string,
   id: string,
 };
 
 type DefaultValues = {
-  dimensionValues: Zen.Array<DimensionValue>,
-  invert: boolean,
+  +dimensionValues: Zen.Array<DimensionValue>,
+  +invert: boolean,
 };
 
-type SerializedDimensionValueFilterItem = {
-  id: string,
-  dimension: Zen.Serialized<Dimension>,
+export type SerializedDimensionValueFilterItem = {
+  dimension: string,
   dimensionValues: $ReadOnlyArray<Zen.Serialized<DimensionValue>>,
+  id: string,
   invert: boolean,
 };
 
@@ -41,12 +41,18 @@ class DimensionValueFilterItem
   implements
     Serializable<SerializedDimensionValueFilterItem>,
     Customizable<DimensionValueFilterItem>,
-    Displayable {
-  static defaultValues = {
+    Displayable,
+    NamedItem {
+  tag: 'DIMENSION_VALUE_FILTER_ITEM' = 'DIMENSION_VALUE_FILTER_ITEM';
+  static defaultValues: DefaultValues = {
     dimensionValues: Zen.Array.create(),
     invert: false,
   };
 
+  /**
+   * Create a DimensionValueFilterItem from a series of dimension values.
+   * All the dimension values must be of the same dimension.
+   */
   static createFromDimensionValues(
     ...dimensionValues: $ReadOnlyArray<DimensionValue>
   ): Zen.Model<DimensionValueFilterItem> {
@@ -61,26 +67,39 @@ class DimensionValueFilterItem
     const dimension = dimensions[0];
     return DimensionValueFilterItem.create({
       dimension,
-      id: `${dimension.id()}__${uniqueId()}`,
       dimensionValues: Zen.Array.create(dimensionValues),
+      id: `${dimension}__${uniqueId()}`,
     });
   }
 
   static deserializeAsync(
     values: SerializedDimensionValueFilterItem,
   ): Promise<Zen.Model<DimensionValueFilterItem>> {
-    const dimensionURI = values.dimension.$ref;
-    return Promise.all([
-      DimensionService.get(DimensionService.convertURIToID(dimensionURI)),
-      ...values.dimensionValues.map(DimensionValue.deserializeAsync),
-    ]).then(([dimension, ...dimensionValues]) =>
+    const { dimension, id, invert } = values;
+    return Promise.all(
+      values.dimensionValues.map(DimensionValue.deserializeAsync),
+    ).then(dimensionValues =>
       DimensionValueFilterItem.create({
-        dimension,
+        id,
+        invert,
+        dimension: Dimension.deserializeToString(dimension),
         dimensionValues: Zen.Array.create(dimensionValues),
-        id: values.id,
-        invert: values.invert,
       }),
     );
+  }
+
+  static UNSAFE_deserialize(
+    values: SerializedDimensionValueFilterItem,
+  ): Zen.Model<DimensionValueFilterItem> {
+    const dimensionValues = values.dimensionValues.map(
+      DimensionValue.UNSAFE_deserialize,
+    );
+    return DimensionValueFilterItem.create({
+      dimension: Dimension.deserializeToString(values.dimension),
+      dimensionValues: Zen.Array.create(dimensionValues),
+      id: values.id,
+      invert: values.invert,
+    });
   }
 
   customize(): Zen.Model<DimensionValueFilterItem> {
@@ -113,9 +132,13 @@ class DimensionValueFilterItem
     });
   }
 
+  /**
+   * Return the fully built filter, which wraps in a NotFilter if `invert` is
+   * set
+   */
   @memoizeOne
-  filter(): QueryFilter | void {
-    if (this._.dimensionValues().isEmpty()) {
+  getFullyBuiltFilter(): QueryFilter | void {
+    if (this.isEmpty()) {
       return undefined;
     }
 
@@ -128,9 +151,44 @@ class DimensionValueFilterItem
     return filter;
   }
 
+  isSame(
+    dimensionValueFilterItem: Zen.Model<DimensionValueFilterItem>,
+  ): boolean {
+    if (
+      this._.dimensionValues().size() !==
+      dimensionValueFilterItem.dimensionValues().size()
+    ) {
+      return false;
+    }
+
+    return this._.dimensionValues().every(
+      (dimensionValue, index) =>
+        dimensionValue.id() ===
+        dimensionValueFilterItem
+          .dimensionValues()
+          .get(index)
+          .id(),
+      true,
+    );
+  }
+
+  /**
+   * Report if the current DimensionValueFilterItem has no values selected and
+   * would produce an empty QueryFilter if added to a query.
+   */
+  isEmpty(): boolean {
+    return this._.dimensionValues().isEmpty();
+  }
+
+  // This function is necessary to use this model in our AQT FilterSelector
+  // without getting a type error
+  name(): string {
+    return this._.id();
+  }
+
   serialize(): SerializedDimensionValueFilterItem {
     return {
-      dimension: this._.dimension().serialize(),
+      dimension: this._.dimension(),
       dimensionValues: Zen.serializeArray(this._.dimensionValues()),
       id: this._.id(),
       invert: this._.invert(),
@@ -138,6 +196,6 @@ class DimensionValueFilterItem
   }
 }
 
-export default ((DimensionValueFilterItem: any): Class<
+export default ((DimensionValueFilterItem: $Cast): Class<
   Zen.Model<DimensionValueFilterItem>,
 >);

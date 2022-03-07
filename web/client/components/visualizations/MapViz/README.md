@@ -1,0 +1,11 @@
+The Map visualization is built on top of the [react-map-gl](https://uber.github.io/react-map-gl/) library. This library provides useful components that abstract away the underlying mapping library: [mapbox-gl](https://docs.mapbox.com/mapbox-gl-js/). Our previous map implementation (using Leaflet + Mapbox) became very difficult to maintain because the library we were using did not interface well with React. This meant we had to handle the complex state interactions ourselves, and the component evolved into a monolith that was difficult to refactor.
+
+**Layers**
+A layer is simply an arrangement of points and shapes on a map with styling. This layer can have complex interactions (displaying popups, changing highlighting based on hover state, and more), and it can draw multiple sub-layers. The `QueryResultLayer` and `EntityLayer` are two examples that follow this pattern right now. Each of these layers are standalone components, and they are designed to not need cross-layer interaction. By making these components standalone, the code becomes much more focused, and you can handle specialized behavior in the place that most makes sense.
+
+**Styling**
+There are two primary ways to style layer features (like coloring dots, hiding/filtering points, changing sizes), and they come with different tradeoffs.
+
+The recommend approach is to build the style in a declarative way using a [MapboxGL Style Specification](https://docs.mapbox.com/mapbox-gl-js/style-spec/). This style is compiled by Mapbox and is applied to the layer after it is rendered. This style specification is very powerful, so there are likely ways to reach your goals using just this tool (although you will need to learn the syntax first. The styles can reference properties of your shapes (like dimension values), which means you can still apply dynamic styling rules. There are plenty of [examples](https://docs.mapbox.com/mapbox-gl-js/examples/) you can follow). `QueryResultLayer/HeatLayer` is a good example of a complex style that is applied purely through the declarative.
+
+The simplest, though less recommended approach, is to set the style iteratively on the shape being drawn and then reference this property from a style specification. This is how the `QueryResultLayer/ShapeLayer` applies its style. A `color` property is added to each shape and then referenced by the style spec.

@@ -1,5 +1,5 @@
 // @flow
-import type { PropertyDescriptor } from 'types/jsCore';
+import type { DataDescriptor, AccessorDescriptor } from 'types/jsCore';
 
 /**
  * Auto-bind any function to the class instance:
@@ -16,11 +16,11 @@ import type { PropertyDescriptor } from 'types/jsCore';
  * NOTE: this may break in IE due to an infinite recursion bug. If we add
  * IE support add the fix that's included in the autobind-decorator repo.
  */
-export default function autobind<Func:() => mixed>(
-  target: Object,
+export default function autobind<Func: () => mixed>(
+  target: $AllowAny,
   funcName: string,
-  descriptor: PropertyDescriptor<Func>,
-): $Shape<PropertyDescriptor<Func>> {
+  descriptor: DataDescriptor<Func>,
+): AccessorDescriptor<Func> {
   const func = descriptor.value;
   if (typeof func !== 'function') {
     throw new SyntaxError('@autobind can only be used on functions');
@@ -33,7 +33,6 @@ export default function autobind<Func:() => mixed>(
       if (
         // accessing func directly on the prototype, so no need to bind
         this === target ||
-
         // accessing func directly on a prototype, but it was found up the
         // chain, not defined directly on it. Also no need to bind.
         (this.constructor !== target.constructor &&
@@ -49,6 +48,8 @@ export default function autobind<Func:() => mixed>(
         writable: true,
         enumerable: false, // not enumerable when it's a bound method
       });
+
+      // $FlowIssue[incompatible-return] boundFunc is still of same type as func
       return boundFunc;
     },
     set(newFunc) {

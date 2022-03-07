@@ -1,5 +1,5 @@
 from pydruid.utils.aggregators import (
-    count,
+    doublemax,
     doublesum,
     filtered as filtered_aggregator,
     longmax,
@@ -10,7 +10,6 @@ from pydruid.utils.filters import Filter
 
 from db.druid.aggregations.time_interval_aggregation import TimeIntervalAggregation
 from db.druid.calculations.base_calculation import BaseCalculation
-from db.druid.js_formulas.last_value import LAST_VALUE_FORMULA
 
 # Most common calculation used. Creates a sum aggregator for a given field.
 class SumCalculation(BaseCalculation):
@@ -140,35 +139,40 @@ class AverageOverTimeBucketCalculation(AverageOverSequenceCalculation):
 
     def __init__(self, dimension, field):
         super(AverageOverTimeBucketCalculation, self).__init__(
-            dimension, field, '__time', self.MILLISECOND_IN_DAY
+            dimension, field, f'{field}__time', self.MILLISECOND_IN_DAY
         )
+        # Unlike the parent class, we do want to filter the time aggregation to only
+        # find the min/max time when this specific field has reported data. Replace the
+        # aggregations that the parent calculation will build over the __time dimension
+        # with our own filtered variant.
+        # TODO(stephen): Refactor the flow of this class because it is convoluted.
+        self.aggregations[self.min_key] = self.build_filtered_time_aggregation(
+            longmin, dimension, field
+        )
+        self.aggregations[self.max_key] = self.build_filtered_time_aggregation(
+            longmax, dimension, field
+        )
+
+    def build_filtered_time_aggregation(self, agg_type, dimension, sequence_field):
+        dimension_filter = Filter(dimension=dimension, value=sequence_field)
+        return filtered_aggregator(filter=dimension_filter, agg=agg_type('__time'))
 
 
 # Only sum a field when the timestamp equals the max timestamp seen for
-# that field. Uses a javascript aggregator HACK to compute this.
+# that field.
 class LastValueCalculation(BaseCalculation):
-    SUFFIX = '_for_last_value'
-
-    def __init__(self, dimension, field):
-        # The order of these fields are very important. The JS aggregator
-        # can only receive function arguments in the order defined.
-        # TODO(stephen): Add a way to validate and enforce rules that the
-        # js aggregator requires
-        aggregation_fields = ['__time', 'sum']
-        js_aggregator = LAST_VALUE_FORMULA.build_aggregator(aggregation_fields)
-        cur_filter = Filter(dimension=dimension, value=field)
-        aggregation = filtered_aggregator(filter=cur_filter, agg=js_aggregator)
-
-        js_aggregation_key = '%s%s' % (field, self.SUFFIX)
-        aggregations = {js_aggregation_key: aggregation}
-
-        post_aggregation = LAST_VALUE_FORMULA.build_post_aggregator(
-            name=field, fields=[js_aggregation_key]
-        )
-
-        post_aggregations = {field: post_aggregation}
-
-        super(LastValueCalculation, self).__init__(aggregations, post_aggregations)
+    def __init__(self, dimension, field, aggregation_suffix=''):
+        self.key = '%s%s' % (field, aggregation_suffix)
+        self.dimension = dimension
+        self.dimension_filter = Filter(dimension=dimension, value=field)
+        inner_agg = {
+            'type': 'aggregateLast',
+            'aggregator': {**doublesum('sum'), 'name': self.key},
+        }
+        aggregations = {
+            self.key: filtered_aggregator(filter=self.dimension_filter, agg=inner_agg)
+        }
+        super(LastValueCalculation, self).__init__(aggregations=aggregations)
 
 
 # Scale an aggregated field by an integer constant
@@ -215,3 +219,16 @@ class TimeIntervalCalculation(BaseCalculation):
             filter=dimension_filter, agg=doublesum('sum')
         )
         return cls(field, base_aggregation, interval_creator)
+
+
+class MaxCalculation(BaseCalculation):
+    def __init__(self, dimension, field, aggregation_suffix=''):
+        self.max_key = '%s%s' % (field, aggregation_suffix)
+        self.dimension_filter = Filter(dimension=dimension, value=field)
+        aggregations = {
+            self.max_key: filtered_aggregator(
+                filter=self.dimension_filter, agg=doublemax('max')
+            )
+        }
+
+        super(MaxCalculation, self).__init__(aggregations=aggregations)

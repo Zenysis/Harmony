@@ -1,93 +1,53 @@
-from builtins import object
 import os
 
 import global_config
 
-class BaseDruidConfig(object):
-    ####### HOSTS #######
-    DRUID_HOST = global_config.DEFAULT_DRUID_HOST
+class BaseDruidConfig:
+    def __init__(self, druid_host: str, always_use_router: bool = False):
+        self._druid_host = druid_host
+        self._always_use_router = always_use_router
 
-    @classmethod
-    def base_endpoint(cls):
-        return cls.DRUID_HOST
+    def base_endpoint(self):
+        return self._druid_host
 
-    @classmethod
-    def build_endpoint(cls, port):
-        return '%s:%s' % (cls.base_endpoint(), port)
+    def build_endpoint(self, port):
+        base_endpoint = self.base_endpoint()
 
-    @classmethod
-    def query_endpoint(cls):
+        # If the router is available, send all requests through the router. The router
+        # will proxy the request to the correct server.
+        if self._always_use_router:
+            return self.router_endpoint()
+
+        return f'{base_endpoint}:{port}'
+
+    def query_endpoint(self):
         # Queries should be routed through the broker
-        return cls.build_endpoint(cls.BROKER_PORT)
+        return self.build_endpoint(8082)
 
-    @classmethod
-    def indexing_endpoint(cls):
-        # Indexing tasks are managed by the overlord
-        return cls.build_endpoint(cls.OVERLORD_PORT)
+    def indexing_endpoint(self):
+        # Indexing tasks are managed by the overlord which runs inside the coordinator.
+        return self.build_endpoint(8081)
 
-    @classmethod
-    def segment_metadata_endpoint(cls):
-        return cls.build_endpoint(cls.COORDINATOR_PORT)
+    def router_endpoint(self):
+        return f'{self.base_endpoint()}:8888'
 
-
-class TlsDruidConfig(BaseDruidConfig):
-    ####### PORTS #######
-    # The Druid coordinator node is primarily responsible for segment
-    # management and distribution
-    # http://druid.io/docs/latest/design/coordinator.html
-    COORDINATOR_PORT = 8481
-
-    # The Broker is the node to route queries to if you want to run a
-    # distributed cluster
-    # http://druid.io/docs/latest/design/broker.html
-    BROKER_PORT = 8482
-
-    # Historical nodes load up historical segments and expose them for querying
-    # http://druid.io/docs/latest/design/historical.html
-    HISTORICAL_PORT = 8483
-
-    # The overlord node is responsible for accepting tasks, coordinating
-    # task distribution, creating locks around tasks, and returning
-    # statuses to callers.
-    # http://druid.io/docs/latest/design/indexing-service.html#overlord-node
-    # NOTE(stephen): The coordinator server is handling coordinator and overlord
-    # duties using the druid.coordinator.asOverlord.enabled property. That is
-    # why we use the coordinator's port here.
-    OVERLORD_PORT = 8481
-
-    # The middle manager node is a worker node that executes submitted tasks
-    # http://druid.io/docs/latest/design/middlemanager.html
-    MIDDLEMANAGER_PORT = 8491
+    def segment_metadata_endpoint(self):
+        return self.build_endpoint(8081)
 
 
-class PlaintextDruidConfig(BaseDruidConfig):
-    ####### PORTS #######
-    # The Druid coordinator node is primarily responsible for segment
-    # management and distribution
-    # http://druid.io/docs/latest/design/coordinator.html
-    COORDINATOR_PORT = 8081
+def guess_druid_host():
+    env_druid_host = os.getenv('DRUID_HOST')
+    if env_druid_host:
+        return env_druid_host
 
-    # The Broker is the node to route queries to if you want to run a
-    # distributed cluster
-    # http://druid.io/docs/latest/design/broker.html
-    BROKER_PORT = 8082
+    try:
+        from config.druid import DRUID_HOST
 
-    # Historical nodes load up historical segments and expose them for querying
-    # http://druid.io/docs/latest/design/historical.html
-    HISTORICAL_PORT = 8083
+        return DRUID_HOST
+    except ImportError:
+        pass
 
-    # The overlord node is responsible for accepting tasks, coordinating
-    # task distribution, creating locks around tasks, and returning
-    # statuses to callers.
-    # http://druid.io/docs/latest/design/indexing-service.html#overlord-node
-    # NOTE(stephen): The coordinator server is handling coordinator and overlord
-    # duties using the druid.coordinator.asOverlord.enabled property. That is
-    # why we use the coordinator's port here.
-    OVERLORD_PORT = 8081
-
-    # The middle manager node is a worker node that executes submitted tasks
-    # http://druid.io/docs/latest/design/middlemanager.html
-    MIDDLEMANAGER_PORT = 8091
+    return None
 
 
 def construct_druid_configuration(druid_host=None):
@@ -95,23 +55,14 @@ def construct_druid_configuration(druid_host=None):
     # static dependencies. The goal of this method should be to remove all these
     # hacky static checks. Unfortunately it along with the DruidConfig singleton
     # is nescessary for now.
+    druid_host = druid_host or guess_druid_host()
 
-    try:
-        if not druid_host:
-            from config.druid import DRUID_HOST
+    # If no druid host can be derived, return the default config with the default druid
+    # host set.
+    if not druid_host:
+        return BaseDruidConfig(global_config.DEFAULT_DRUID_HOST)
 
-            druid_host = os.getenv('DRUID_HOST', DRUID_HOST)
-
-        output = None
-        if druid_host.startswith('https://'):
-            output = TlsDruidConfig
-        else:
-            output = PlaintextDruidConfig
-        output.DRUID_HOST = druid_host
-        return output
-    except ImportError:
-        # Default to Tls Druid config without a ZEN_ENV.
-        return PlaintextDruidConfig
+    return BaseDruidConfig(druid_host)
 
 
 DruidConfig = construct_druid_configuration()

@@ -1,5 +1,6 @@
 // @flow
-import type { AnyModel, Model, ModelValueKeys } from 'lib/Zen/ZenModel';
+import type { AnyModel } from 'lib/Zen/ZenModel';
+import type { ModelValueKeys } from 'lib/Zen/ZenModel/coreHelpers';
 
 interface ForEachable<T> {
   forEach(func: (value: T) => mixed): void;
@@ -31,7 +32,7 @@ const ZenModelUtil = {
   modelArrayToObject<M: AnyModel>(
     models: ForEachable<M>,
     accessor: ModelValueKeys<M> | ((model: M) => string),
-  ): { [string]: Model<M> } {
+  ): { [string]: M, ... } {
     const result = {};
     if (typeof accessor !== 'string' && typeof accessor !== 'function') {
       throw new Error(
@@ -41,7 +42,7 @@ const ZenModelUtil = {
 
     models.forEach(model => {
       if (typeof accessor === 'string') {
-        // $FlowIndexerIssue - allow accessing a ZenModel with an indexer
+        // $FlowExpectedError[incompatible-use]
         result[model[accessor]()] = model;
       } else {
         result[accessor(model)] = model;

@@ -10,15 +10,15 @@ MODULE_PATHS = [
     'aggregation_rules',
     'aggregation',
     'calculated_indicators',
+    'case_management',
     'chat',
-    'dashboard',
     'data_status',
     'datatypes',
     'druid',
     'filters',
     'general',
     'indicators',
-    'postgres_indicators',
+    'pipeline_sources',
     'ui',
 ]
 

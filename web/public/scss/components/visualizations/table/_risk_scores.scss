@@ -1,0 +1,34 @@
+.risk-score-summary-section {
+  align-items: center;
+  display: flex;
+
+  &__details {
+    align-items: center;
+    border: 1px solid $black;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: $space-m-px;
+  }
+
+  &__details > p {
+    display: block;
+    font-size: $font-xl;
+    font-weight: bold;
+  }
+
+  &__summary {
+    flex: 3;
+  }
+}
+
+.risk-score-factors-section {
+  display: flex;
+
+  &__table {
+    border-radius: 5px;
+    box-shadow: 0 0 20px 0px rgba(0, 0, 0, 0.1);
+    padding: $space-l-px;
+  }
+}

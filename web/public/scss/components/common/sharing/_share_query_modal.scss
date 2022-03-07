@@ -1,0 +1,123 @@
+.download-query-tab-block {
+  margin-bottom: 27px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &__label {
+    display: inline-block;
+    font-size: 16px;
+    position: relative;
+    top: 5px;
+    width: 50%;
+  }
+
+  &__stacked-label {
+    font-size: 16px;
+    margin-bottom: 11px;
+  }
+
+  &__options {
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  &__filter-checkbox {
+    margin-bottom: 24px;
+  }
+}
+
+textarea[name='share-message-panel'] {
+  font-size: 14px;
+  resize: none;
+}
+
+.email-attachment-dropdown {
+  .zen-dropdown__menu--open {
+    bottom: 40px;
+  }
+}
+
+.share-message-label {
+  // NOTE(solo): Quentin wants more spacing here that is greater
+  // than value of  $spacing-m
+  margin-bottom: $spacing-m;
+  margin-top: 20px;
+
+  &__medium {
+    font-size: 16px;
+  }
+}
+
+.recipient-input-search-results-popover {
+  max-height: 300px;
+  overflow-x: hidden;
+
+  &__group-icon {
+    color: $gray;
+    margin-left: $space-xxs-px;
+  }
+
+  &__options-list {
+    min-width: 200px;
+  }
+}
+
+.email-recipient-tag {
+  border-radius: 15px;
+
+  // NOTE(stephen): Explicitly setting padding here since there is a desire
+  // to make sure the tags in the email receipient box do not change the height
+  // of the input box IF the tags all fit on one line.
+  margin-bottom: 1.5px;
+  margin-top: 1.5px;
+  padding-bottom: 5px;
+  padding-top: 5px;
+
+  // NOTE(stephen): Need to tweak the inner style of the pieces of the tag.
+  // These classes are not overridable in the ui component.
+  .zen-tag__content-container {
+    // Prevent extra padding from being added to the text since we are
+    // controlling the padding at the container level.
+    line-height: 1;
+
+    // Use a flex display to force the icon to show up at the correct level when
+    // the line height is changed.
+    & > span {
+      display: flex;
+    }
+  }
+}
+
+.download-image-tab {
+  &__body {
+    display: flex;
+    height: 100%;
+  }
+
+  &__custom-image {
+    &--inputs-wrapper {
+      border: 1px solid #bfc2c9;
+      border-radius: 5px;
+    }
+  }
+
+  &__first-col {
+    padding-right: $spacing-m;
+    width: 33.33%;
+  }
+
+  &__second-col {
+    align-items: center;
+    background-color: $gray;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    // Ignore margins of container so that this element can take up
+    // the full height of the container
+    margin-bottom: -30px;
+    margin-top: -30px;
+    width: 66.66%;
+  }
+}

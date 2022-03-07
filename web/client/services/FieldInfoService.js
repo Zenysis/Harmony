@@ -3,23 +3,26 @@ import Promise from 'bluebird';
 
 import ZenClient from 'util/ZenClient';
 import autobind from 'decorators/autobind';
-import { pick } from 'util/util';
+import { pick } from 'util/objUtil';
 
 export type FieldInfo = {
   count: number,
-  endDate: string,
+  endDate: string | null,
+  formula: string | null,
   humanReadableFormulaHtml: string,
-  startDate: string,
+  startDate: string | null,
 };
 
 class FieldInfoService {
-  _fieldInfoCache: { [string]: FieldInfo };
+  _fieldInfoCache: { [string]: FieldInfo, ... };
   constructor() {
     this._fieldInfoCache = {};
   }
 
   @autobind
-  fetchMultiple(fieldIds: Array<string>): Promise<{ [string]: FieldInfo }> {
+  fetchMultiple(
+    fieldIds: Array<string>,
+  ): Promise<{ [string]: FieldInfo, ... }> {
     // Only request fieldIds that we haven't queried yet.
     const fieldIdsToQuery = fieldIds.filter(
       fieldId => !this._fieldInfoCache[fieldId],
@@ -48,4 +51,4 @@ class FieldInfoService {
   }
 }
 
-export default new FieldInfoService();
+export default (new FieldInfoService(): FieldInfoService);

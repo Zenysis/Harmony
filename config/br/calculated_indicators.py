@@ -6,7 +6,9 @@ import re
 
 from collections import defaultdict, OrderedDict
 
-from config.br.calculated_indicator_defs import CALCULATED_INDICATORS
+from config.br.calculated_indicator_defs.calculated_indicator_defs import (
+    CALCULATED_INDICATOR_GROUP_DEFINITIONS,
+)
 
 CALCULATED_INDICATOR_FORMULAS = OrderedDict()
 
@@ -77,7 +79,7 @@ def get_constituents_for_indicator(ind_id):
     return CALCULATED_INDICATOR_CONSTITUENTS.get(ind_id, set())
 
 
-for indicator in CALCULATED_INDICATORS:
+for indicator in CALCULATED_INDICATOR_GROUP_DEFINITIONS:
     base_id = indicator['id']
     _set_exports_for_indicator(
         base_id,

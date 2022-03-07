@@ -1,49 +1,85 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 
-import TitleSettings from 'models/core/QueryResultSpec/TitleSettings';
+import QueryScalingContext from 'components/common/QueryScalingContext';
+import type TitleSettings from 'models/core/QueryResultSpec/TitleSettings';
+import type { StyleObject } from 'types/jsCore';
 
-const propTypes = {
-  settings: TitleSettings.type().isRequired,
-  isMobile: PropTypes.bool,
+const TEXT = t('visualizations.common.Title');
+
+type Props = {
+  displayTitle: string,
+  settings: TitleSettings,
+  isMobile?: boolean,
+  numExtraFields?: number,
 };
 
-const defaultProps = {
-  isMobile: false,
+type TitleStyles = {
+  graphSubtitle: StyleObject,
+  graphTitle: StyleObject,
+  graphTitleBlock: StyleObject,
 };
 
-export default function GraphTitle({ isMobile, settings }) {
-  const {
-    titleFontSize,
-    subtitleFontSize,
-    title,
-    subtitle,
-    titleFontFamily,
-    titleFontColor,
-  } = settings.modelValues();
-  const subtitleStyle = {
-    fontSize: isMobile ? '10px' : subtitleFontSize,
-    color: titleFontColor,
-    fontFamily: titleFontFamily,
-  };
-  const titleStyle = {
-    fontSize: isMobile ? '12px' : titleFontSize,
-    lineHeight: isMobile ? '16px' : '',
-    marginTop: isMobile ? '12px' : '',
-    color: titleFontColor,
-    fontFamily: titleFontFamily,
-  };
+// TODO(stephen, anyone): This component has not received love for a very long
+// time and should be refactored.
+function GraphTitle({
+  displayTitle,
+  settings,
+  isMobile = false,
+  numExtraFields = 0,
+}: Props) {
+  const queryScalingContext = React.useContext(QueryScalingContext);
+  const scaleFactor =
+    queryScalingContext !== undefined ? queryScalingContext.scaleFactor : 1;
+  const color = settings.titleFontColor();
+  const fontFamily = settings.titleFontFamily();
+  const titleFontSize = !isMobile
+    ? Number.parseInt(settings.titleFontSize(), 10)
+    : 17;
+  const subtitleFontSize = !isMobile
+    ? Number.parseInt(settings.subtitleFontSize(), 10)
+    : 15;
+
+  // HACK(stephen): Build the scaled graph title sizing by hand because query
+  // result scaling is hard to apply when the styles are set through css.
+  const styles = React.useMemo<TitleStyles>(
+    () => ({
+      graphSubtitle: {
+        color,
+        fontFamily,
+        fontSize: subtitleFontSize * scaleFactor,
+      },
+      graphTitle: {
+        color,
+        fontFamily,
+        fontSize: titleFontSize * scaleFactor,
+      },
+      graphTitleBlock: {
+        paddingBottom: 8 * scaleFactor,
+      },
+    }),
+    [color, fontFamily, scaleFactor, subtitleFontSize, titleFontSize],
+  );
+  const extraFields =
+    numExtraFields > 0 ? `+ ${numExtraFields.toString()} ${TEXT.more}` : '';
+
+  // TODO(nina): We could probably combine the two outer divs
   return (
-    <div className="graph-title-block">
-      <div className="graph-title" style={titleStyle}>
-        {title}
-      </div>
-      <div className="date-range" style={subtitleStyle}>
-        {subtitle}
+    <div className="title">
+      <div className="graph-title-block" style={styles.graphTitleBlock}>
+        <div className="graph-title-block__title" style={styles.graphTitle}>
+          {displayTitle}{' '}
+          <span className="title-extra-fields">{extraFields}</span>
+        </div>
+        <div
+          className="graph-title-block__subtitle"
+          style={styles.graphSubtitle}
+        >
+          {settings.subtitle()}
+        </div>
       </div>
     </div>
   );
 }
 
-GraphTitle.propTypes = propTypes;
-GraphTitle.defaultProps = defaultProps;
+export default (React.memo(GraphTitle): React.AbstractComponent<Props>);

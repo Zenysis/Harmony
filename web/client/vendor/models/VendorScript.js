@@ -1,40 +1,56 @@
 // @flow
 import Promise from 'bluebird';
-import PropTypes from 'prop-types';
 
+import * as Zen from 'lib/Zen';
 import CachedScriptLoaderService from 'vendor/services/CachedScriptLoaderService';
-import ZenModel, { def } from 'util/ZenModel';
-import { noop } from 'util/util';
 // eslint-disable-next-line import/extensions
 import { VENDOR_SCRIPT_PATH } from 'backend_config.js';
+import { noop } from 'util/util';
+import type DependentVendorScript from 'vendor/models/DependentVendorScript';
 
-export default class VendorScript extends ZenModel.withTypes({
-  scriptPath: def(PropTypes.string.isRequired),
-  before: def(PropTypes.func, noop),
-  after: def(PropTypes.func, noop),
+type RequiredValues = {
+  scriptFile: string,
+};
 
-  loadFn: def(
-    PropTypes.func.isRequired, // f(script: string).then()
-    CachedScriptLoaderService.fetchScript,
-    ZenModel.PRIVATE,
-  ),
-}) {
-  static create(scriptFile: string) {
-    return new this({
-      scriptPath: this.resolvePath(scriptFile),
-    });
-  }
+type DefaultValues = {
+  after: () => void,
+  before: () => void,
+  loadFn: string => Promise<void>,
+};
 
-  static resolvePath(scriptFile: string): string {
-    return `${VENDOR_SCRIPT_PATH}/${scriptFile}`;
-  }
+type DerivedValues = {
+  scriptPath: string,
+};
 
-  static loadAll(vendorScripts: Array<VendorScript>): Promise<Array<void>> {
+class VendorScript extends Zen.BaseModel<
+  VendorScript,
+  RequiredValues,
+  DefaultValues,
+  DerivedValues,
+> {
+  static defaultValues: DefaultValues = {
+    after: noop,
+    before: noop,
+    loadFn: CachedScriptLoaderService.fetchScript,
+  };
+
+  static derivedConfig: Zen.DerivedConfig<VendorScript, DerivedValues> = {
+    scriptPath: [
+      Zen.hasChanged('scriptFile'),
+      vendorScript => `${VENDOR_SCRIPT_PATH}/${vendorScript._.scriptFile()}`,
+    ],
+  };
+
+  static loadAll(
+    vendorScripts: $ReadOnlyArray<VendorScript | DependentVendorScript>,
+  ): Promise<Array<void>> {
     return Promise.all(vendorScripts.map(s => s.load()));
   }
 
   load(): Promise<void> {
-    this.before()();
-    return this.loadFn()(this.scriptPath()).then(this.after());
+    this._.before()();
+    return this._.loadFn()(this._.scriptPath()).then(this._.after());
   }
 }
+
+export default ((VendorScript: $Cast): Class<Zen.Model<VendorScript>>);

@@ -16,7 +16,7 @@ type Values = {
 
 class BumpChartTheme extends Zen.BaseModel<BumpChartTheme, Values> {}
 
-export const DARK_THEME = BumpChartTheme.create({
+export const DARK_THEME: Zen.Model<BumpChartTheme> = BumpChartTheme.create({
   axisTextColor: 'white',
   backgroundColor: '#272b4d',
   heatTilesColorRange: Zen.Array.create(['#272b4d', '#21d4fd']),
@@ -27,7 +27,7 @@ export const DARK_THEME = BumpChartTheme.create({
   strokeColor: '#f7f7f3',
 });
 
-export const LIGHT_THEME = BumpChartTheme.create({
+export const LIGHT_THEME: Zen.Model<BumpChartTheme> = BumpChartTheme.create({
   axisTextColor: 'black',
   backgroundColor: '#faf7e9',
   heatTilesColorRange: Zen.Array.create(['#272b4d', '#21d4fd']),
@@ -38,9 +38,9 @@ export const LIGHT_THEME = BumpChartTheme.create({
   strokeColor: '#c4c3cb',
 });
 
-export const THEMES = {
+export const THEMES: { [string]: Zen.Model<BumpChartTheme>, ... } = {
   [DARK_THEME.id()]: DARK_THEME,
   [LIGHT_THEME.id()]: LIGHT_THEME,
 };
 
-export default ((BumpChartTheme: any): Class<Zen.Model<BumpChartTheme>>);
+export default ((BumpChartTheme: $Cast): Class<Zen.Model<BumpChartTheme>>);

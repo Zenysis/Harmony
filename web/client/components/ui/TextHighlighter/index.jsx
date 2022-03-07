@@ -7,25 +7,32 @@ import type { StyleObject } from 'types/jsCore';
 // highlighted in a string.
 type Position = [number, number];
 
-type Props = {|
-  text: string,
-
+type DefaultProps = {
   className: string,
   highlightPositions: $ReadOnlyArray<Position>,
   style?: StyleObject,
-|};
+};
+
+type Props = {
+  ...DefaultProps,
+  text: string,
+};
 
 /**
  * Highlight the text substrings based on the highlight positions provided.
  */
 export default class TextHighlighter extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     className: '',
     highlightPositions: [],
     style: undefined,
   };
 
-  renderTextSlice(start: number, end: number, highlighted: boolean = false) {
+  renderTextSlice(
+    start: number,
+    end: number,
+    highlighted: boolean = false,
+  ): React.Node {
     const key = `${start}-${end}`;
     const className = highlighted
       ? 'ui-text-highlighter__line--highlighted'
@@ -33,12 +40,12 @@ export default class TextHighlighter extends React.PureComponent<Props> {
 
     return (
       <span key={key} className={`ui-text-highlighter__line ${className}`}>
-        {this.props.text.slice(start, end)}
+        {this.props.text.substring(start, end)}
       </span>
     );
   }
 
-  renderFormattedText() {
+  renderFormattedText(): React.Node {
     const { highlightPositions, text } = this.props;
     const textLength = text.length;
     if (textLength === 0 || highlightPositions.length === 0) {
@@ -67,7 +74,7 @@ export default class TextHighlighter extends React.PureComponent<Props> {
     return output;
   }
 
-  render() {
+  render(): React.Element<'span'> {
     const { className, style } = this.props;
     return (
       <span className={`${className} ui-text-highlighter`} style={style}>

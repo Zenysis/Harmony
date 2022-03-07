@@ -8,25 +8,26 @@
 
 // sharp, small elevation
 @mixin zen-elevation-1() {
-  @include box-shadow(0 2px 2px 0 rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.14));
+  box-shadow: (0 2px 2px 0 rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.14));
 }
 
 @mixin zen-elevation-2() {
-  @include box-shadow(0 2px 2px 0 rgba(0,0,0,0.24), 0 0 0 1px rgba(0,0,0,0.08));
+  box-shadow: (0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(0, 0, 0, 0.08));
 }
 
 @mixin zen-elevation-3() {
-  @include box-shadow(0 2px 2px 0 rgba(0,0,0,0.32), 0 0 0 1px rgba(0,0,0,0.16));
+  box-shadow: (0 2px 2px 0 rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(0, 0, 0, 0.16));
 }
 
 // soft, larger elevation
 @mixin zen-elevation-4() {
-  @include box-shadow(0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08));
+  box-shadow: (0 3px 8px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08));
 }
 
-// sharper, larger elevation (good for a transition from elevation-4 to 5 on hover)
+// sharper, larger elevation. Good for a transition from elevation-4 to
+// elevation-5 on hover.
 @mixin zen-elevation-5() {
-  @include box-shadow(0 3px 8px 0 rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.16));
+  box-shadow: (0 3px 8px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.16));
 }
 
 @mixin tooltip-body-base($whitespace: initial) {
@@ -48,16 +49,16 @@
   @include tooltip-body-base();
 
   border-top-left-radius: 1px;
-  top: 33px;
   right: 0;
+  top: 33px;
 }
 
 // Designed to be used as :before
 @mixin tooltip-arrow() {
-  content: '';
+  border-bottom: 5px solid #3a3a3a;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-bottom: 5px solid #3a3a3a;
+  content: '';
   position: absolute;
   top: 28px;
   z-index: 100;
@@ -79,12 +80,12 @@
 // that the tooltip only appears if the user lingers long enough on the element.
 @mixin tooltip-top($whitespace: initial, $delay: 0.5s) {
   &:before {
-    content: '';
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
     border-top: 5px solid #3a3a3a;
-    position: absolute;
     bottom: 18px;
+    content: '';
+    position: absolute;
     z-index: 100;
   }
 
@@ -95,12 +96,14 @@
     left: 5px;
   }
 
-  &:before, &:after {
+  &:before,
+  &:after {
     transition: 0s visibility;
     visibility: hidden;
   }
   &:hover {
-    &:before, &:after {
+    &:before,
+    &:after {
       transition-delay: $delay;
       visibility: visible;
     }

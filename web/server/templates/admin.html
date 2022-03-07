@@ -1,4 +1,5 @@
 {% extends 'layout.html' %}
+{% set body_class="condensed-navbar admin-app-body"%}
 
 {% block content %}
   <!-- React app -->
@@ -13,6 +14,6 @@
 
 {% block tracking_event %}
 <script>
-analytics.track('User admin view', {nonInteraction: 1});
+analytics.track('User admin view', { nonInteraction: 1 });
 </script>
 {% endblock %}

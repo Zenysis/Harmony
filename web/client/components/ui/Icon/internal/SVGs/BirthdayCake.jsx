@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import type { SVGProps } from 'components/ui/Icon/internal/SVGs/types';
 
-export default function BirthdayCake(props: SVGProps) {
+export default function BirthdayCake(props: SVGProps): React.Element<'svg'> {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

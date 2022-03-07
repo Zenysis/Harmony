@@ -1,17 +1,42 @@
-import pandas as pd
+from datetime import datetime, timezone
+from typing import Dict
+
 from pydruid.query import Query as PydruidQuery, QueryBuilder as DruidQueryBuilder
 from pydruid.utils.dimensions import DimensionSpec
-from pydruid.utils.filters import Bound as BoundFilter, Dimension, Filter
+from pydruid.utils.filters import Dimension, Filter
 
 from db.druid.aggregations.query_dependent_aggregation import QueryDependentAggregation
 from db.druid.aggregations.query_modifying_aggregation import QueryModifyingAggregation
 from db.druid.calculations.base_calculation import BaseCalculation
-from db.druid.util import build_query_filter_from_aggregations, EmptyFilter
+from db.druid.query_builder_util.optimization import apply_optimizations
+from db.druid.util import (
+    build_query_filter_from_aggregations,
+    EmptyFilter,
+    unpack_time_interval,
+)
 from log import LOG
 
 NAN = float('NaN')
 POS_INFINITY = float('Infinity')
 NEG_INFINITY = -POS_INFINITY
+
+
+# NOTE(stephen): Parsing and formatting dates is a very slow operation in python. We
+# want to cache any date values seen so we can quickly return the date string. The
+# range of possible timestamps we will see is low, so this cache should not grow too
+# large.
+_DATE_CACHE: Dict[float, str] = {}
+
+
+def _timestamp_to_date_str(timestamp_ms):
+    if timestamp_ms not in _DATE_CACHE:
+        utc_timestamp = int(timestamp_ms / 1000)
+        date_str = datetime.utcfromtimestamp(utc_timestamp).strftime(
+            '%Y-%m-%dT00:00:00.000Z'
+        )
+        _DATE_CACHE[timestamp_ms] = date_str
+    return _DATE_CACHE[timestamp_ms]
+
 
 # Simple base class storing the common fields for all druid queries
 # we care about (GroupBy, TopN, Time Series, Select)
@@ -100,6 +125,7 @@ class GroupByQueryBuilder(BaseDruidQuery):
         optimize=True,
         subtotal_dimensions=None,
         subtotal_result_label='TOTAL',
+        filter_non_aggregated_rows=True,
     ):
         super(GroupByQueryBuilder, self).__init__(datasource, granularity, intervals)
         self.dimensions = grouping_fields
@@ -176,7 +202,18 @@ class GroupByQueryBuilder(BaseDruidQuery):
 
         # Combine the aggregation filters and the dimension filters in to the
         # full query filter to use.
-        self.query_filter = self.aggregation_filter & self.dimension_filter
+        # NOTE(stephen): If the user has chosen *not* to filter non-aggregated rows,
+        # then we will only apply the dimension filter. This will have serious
+        # performance implications and may lead to both enormous query result size
+        # and/or slow query speed. The default behavior is to filter for rows that match
+        # any of the calculations being computed. This significantly improves
+        # performance since rows that would not contribute to the query result values
+        # (and would always result in `null`) are not processed by Druid.
+        self.query_filter = (
+            self.aggregation_filter & self.dimension_filter
+            if filter_non_aggregated_rows
+            else self.dimension_filter
+        )
 
         # Remove RegionName = 'Nation' from national level query in the ET database.
         # When nation is selected and no dimension filters are set.
@@ -188,25 +225,7 @@ class GroupByQueryBuilder(BaseDruidQuery):
             and datasource.startswith('et')
         ):
             self.query_filter &= Dimension('RegionName') != 'Nation'
-
-        # HACK(stephen): There appears to be a bug in how Druid produces
-        # subtotals. Events produced by the first GroupBy pass inside Druid
-        # are *reevaluated* against the original query filter. If the events
-        # do not pass the original filter (and most of the time they do not for
-        # us because we use filtered aggregations), then the event is *dropped*
-        # from the final result. This happens even if the subtotals being
-        # computed match the input dimensions exactly. To overcome this, we add
-        # an extra filter that will only be valid on the computed events and
-        # won't include any extra rows in the intermediate result (inside
-        # Druid). This provides a filter that all events will pass while
-        # subtotals are computed and will also ensure the non-subtotal events
-        # accurate.
-        # NOTE(stephen): This is fixed (Druid issue #7820) and can be removed
-        # when the release containing the fix is live.
-        if self.subtotals:
-            # Use the first aggregation as the dimension to filter on.
-            extra_filter = BoundFilter(list(self.aggregations.keys())[0], 0, None)
-            self.query_filter |= extra_filter
+        self.having = None
         self.optimize = optimize
 
     @property
@@ -235,6 +254,14 @@ class GroupByQueryBuilder(BaseDruidQuery):
             post_aggregations = {}
         self['post_aggregations'] = post_aggregations
 
+    @property
+    def having(self):
+        return self['having']
+
+    @having.setter
+    def having(self, having):
+        self['having'] = having
+
     def prepare(self):
         if self.query_modifier:
             self.query_modifier.modify_query(self)
@@ -242,22 +269,12 @@ class GroupByQueryBuilder(BaseDruidQuery):
         # Automatically optimize certain queries when we are confident the
         # optimizations will improve performance and produce the same results
         elif self.optimize:
-            # If this is an aribtrary granularity and there is only one
-            # interval to bucket the query by, then we can convert the
-            # granularity into an ALL granularity type and set the query
-            # interval to match the granularity bucket.
-            granularity = self.granularity
-            if (
-                isinstance(granularity, dict)
-                and granularity['type'] == 'arbitrary'
-                and len(granularity['intervals']) == 1
-            ):
-                self.intervals[0] = granularity['intervals'][0]
-                self.granularity = 'all'
+            apply_optimizations(self)
 
             # If we don't have any dimensions to group by, we can use a
-            # timeseries query
-            if not self.dimensions:
+            # timeseries query. Timeseries queries do not support `having` clauses,
+            # though.
+            if not self.dimensions and not self.having:
                 # Note: not calling query_builder.timeseries because
                 # we don't need to perform their validation step which
                 # only allows specific fields in the query (I just don't
@@ -267,9 +284,6 @@ class GroupByQueryBuilder(BaseDruidQuery):
                 # timeseries query behaves the same as the groupby query. If the
                 # user has explicitly marked to not skip the empty buckets, do
                 # not override this choice.
-                # TODO(stephen): Need to figure out how to include intermediary date
-                # buckets for both groupby and timeseries that are *between* data points
-                # with data.
                 if not self.context or 'skipEmptyBuckets' not in self.context:
                     # Initialize context if it is currently missing.
                     if not self.context:
@@ -278,6 +292,13 @@ class GroupByQueryBuilder(BaseDruidQuery):
                 return PydruidQueryWrapper(
                     self._druid_query_builder.build_query('timeseries', self)
                 )
+
+        # HACK(stephen): For deployments that are on Druid 0.16.0, we need to use the
+        # array based result format to fix backwards compatibility. See comment in
+        # parse code below.
+        if not self.context:
+            self.context = {}
+        self.context['resultAsArray'] = True
 
         # Wrap the pydruid query with our own class so we can add enhancements.
         query = PydruidQueryWrapper(self._druid_query_builder.groupby(self))
@@ -310,19 +331,84 @@ class GroupByQueryBuilder(BaseDruidQuery):
         # response format.
         key = 'event' if 'event' in result[0] else 'result'
 
+        # HACK(stephen): GIANT HACK. Druid 0.16.0 has CHANGED the groupby response
+        # format. Previously, dimension values that were null would be included in the
+        # response. Now, they are omitted:
+        # https://github.com/apache/incubator-druid/issues/8631
+        # To work around this and provide a consistent interface, we have switched the
+        # response format to array based rows. These rows will receive the full list
+        # of values and nothing will be omitted.
+        # TODO(stephen): Eventually use this array result to improve performance of
+        # exporting to pandas.
+        array_based_result = isinstance(result[0], list)
+        header = []
+        first_timestamp_ms = None
+        if array_based_result:
+            key = 'event'
+
+            # When the granularity is "all", there will be no timestamp returned in the
+            # Druid rows. For backwards compatibility reasons, we need to still populate
+            # a timestamp. Use the first date of the query intervals as the
+            # representative timestamp.
+            first_date = unpack_time_interval(self.intervals[0])[0]
+            first_timestamp_ms = (
+                datetime(
+                    first_date.year,
+                    first_date.month,
+                    first_date.day,
+                    tzinfo=timezone.utc,
+                ).timestamp()
+                * 1000
+            )
+            if self.granularity != 'all':
+                header.append('timestamp')
+
+            for dimension in self.dimensions:
+                if isinstance(dimension, DimensionSpec):
+                    header.append(dimension._output_name)
+                else:
+                    header.append(dimension)
+
+            header.extend(list(self.aggregations.keys()))
+            header.extend(list(self.post_aggregations.keys()))
+
         # Create a copy of the result data with our modifications applied.
         output = []
         for row in result:
-            # Clone the row since we will be modifying it.
-            event = dict(row[key])
-            output_row = dict(row)
-            output_row[key] = event
+            if array_based_result:
+                # TODO(stephen): It would be a lot faster to just leave results in an
+                # array format. Refactor call sites to either explicitly ask for a dict
+                # representation, migrate to just using pandas, or call a different
+                # method. Also handle timeseries differences.
+                event = dict(zip(header, row))
+                # The timestamp returned in the array based result is in milliseconds
+                # since epoch.
+                timestamp_ms = event.pop('timestamp', first_timestamp_ms)
+                # Parse and convert the timestamp into the date format we expect from
+                # the non-array based results.
+                parsed_timestamp = _timestamp_to_date_str(timestamp_ms)
+            else:
+                event = row[key]
+                parsed_timestamp = row['timestamp']
+
+            # Store timestamp directly on event to make pandas dataframe parsing simpler
+            # later.
+            event['timestamp'] = parsed_timestamp
+
+            # Build the non-array based druid result format since pydruid wants it.
+            output_row = {
+                'event': event,
+                'timestamp': parsed_timestamp,
+                'version': 'v1',
+            }
 
             # If subtotals are computed, we need to attach special information
             # to the event so the user knows the result was a subtotal
             # computation.
             if self.subtotals:
-                subtotal_dimension = self.subtotals.get_subtotal_dimension(event)
+                subtotal_dimension = self.subtotals.get_subtotal_dimension(
+                    output_row, output[-1] if output else None
+                )
                 if subtotal_dimension:
                     event[subtotal_dimension] = self.subtotals.subtotal_result_label
 
@@ -407,10 +493,9 @@ class SubtotalConfig:
             else dimension
             for dimension in dimensions
         ]
-        (self.subtotal_spec, self.subtotal_groups) = self._parse_requested_subtotals(
-            requested_subtotals
-        )
+        self.subtotal_spec = self._parse_requested_subtotals(requested_subtotals)
         self.subtotal_result_label = subtotal_result_label
+        self.current_subtotal_level = None
 
     # Parse a list of requested subtotal dimensions.
     # NOTE(stephen): At this time, we don't allow the user to specify the groups
@@ -420,11 +505,8 @@ class SubtotalConfig:
     # the query dimensions (like dimensions: [A, B, C] and subtotal: [A, C]) and
     # add that functionality if it is useful.
     def _parse_requested_subtotals(self, requested_subtotals):
-        # Always include the requested dimensions as a subtotal group, otherwise
-        # druid will not return events for that groupin. The subtotal groups
-        # take priority over the dimensions list.
-        subtotal_spec = [self.dimensions]
-        subtotal_groups = {}
+        subtotal_spec = []
+
         for subtotal_dimension in requested_subtotals:
             if subtotal_dimension not in self.dimensions:
                 LOG.error(
@@ -438,24 +520,108 @@ class SubtotalConfig:
             idx = self.dimensions.index(subtotal_dimension)
             subtotal_dimensions = self.dimensions[:idx]
             subtotal_spec.append(subtotal_dimensions)
-            subtotal_groups[tuple(subtotal_dimensions)] = subtotal_dimension
-        return (subtotal_spec, subtotal_groups)
 
-    # For an individual query result event, find the subtotal dimension that
-    # this event is calculated for. Druid does not provide an easy way to
-    # detect that an event is computed for a subtotal. It just *omits* the
-    # dimensions that were not needed for that subtotal.
-    def get_subtotal_dimension(self, event):
-        subtotal_dimensions = []
-        for dimension in self.dimensions:
-            if dimension not in event:
-                break
-            subtotal_dimensions.append(dimension)
+        # Always include the requested dimensions as a subtotal group, otherwise
+        # druid will not return events for that groupin. The subtotal groups
+        # take priority over the dimensions list.
+        subtotal_spec.append(self.dimensions)
 
-        if len(subtotal_dimensions) == len(self.dimensions):
+        # Reverse the subtotal_spec dimensions before returning so we have the full
+        # grouping result first, then subtotal, subtotal, subtotal ...This allows us
+        # to parse the result and detect subtotals more cleanly.
+        # Example: [ [R, Z, W], [R, Z], [R], []]
+        return subtotal_spec[::-1]
+
+    def get_subtotal_dimension(self, row, prev_row):
+        '''Determine which subtotal dimension this row represents. If the row is not
+        a subtotal row, the subtotal dimension returned will be None.
+
+        Druid does not provide an easy way to determine which rows are subtotal rows
+        and which are regular rows. We rely on the ordering of the query result rows to
+        deduce if the row is part of the subtotal section or not. The query result rows
+        will follow this order:
+            - self.subtotalspec[0] - Non subtotal rows representing the full grouping
+                result
+            - self.subtotalspec[1] - Subtotal rows representing the first subtotal
+                level requested.
+            - ...
+            - self.subtotalspec[n - 1] - The final subtotal grouping.
+
+        The rows in each block are sorted in ascending order by dimension values (with
+        the dimension ordering following the order of dimensions queried). We use this
+        sorting guarantee to reliably detect when one block ends and the next block
+        begins.
+
+        NOTE(stephen): Previously (Druid < 0.16.0) the result row format Druid produced
+        would *omit* the dimension key completely for each subtotal row. We could use
+        this to detect more easily if the row was a subtotal row or not. Starting with
+        Druid 0.16.0, the row format changed and the events we receive now contain an
+        entry for all dimensions even if the row is a subtotal row. I hope Druid adds
+        a more reliable way to detect subtotals in the future.
+        '''
+        # Subtotals will always come after the normal groupby result in the full
+        # result list.
+        if not prev_row:
             return None
 
-        return self.subtotal_groups[tuple(subtotal_dimensions)]
+        event = row['event']
+        prev_event = prev_row['event']
+
+        # Quick test to see if we are at the start of the subtotal section. The subtotal
+        # section will start with the final dimension value being None.
+        # NOTE(stephen): This check is not exhaustive but works for a majority of
+        # queries. It is useful to avoid the slightly slower path of parsing each
+        # dimension value and then making a decision.
+        if (
+            self.current_subtotal_level is None
+            and event.get(self.dimensions[-1]) is not None
+        ):
+            return None
+
+        # From the outside in, determine if this event is alphabetically sorted
+        # after the previous event or before. If the event is alphabetically sorted
+        # before the previous event, then we have entered a new subtotal section.
+        section_start = False
+        all_equal = True
+        for dimension in self.dimensions:
+            # NOTE(stephen): Using `or ''` to convert None values to strings for
+            # easier comparison.
+            dimension_value = event.get(dimension) or ''
+            prev_dimension_value = prev_event.get(dimension) or ''
+            if dimension_value == prev_dimension_value:
+                continue
+
+            all_equal = False
+            section_start = (
+                dimension_value < prev_dimension_value
+                and row['timestamp'] <= prev_row['timestamp']
+            )
+            break
+
+        # Handle edge case where all the dimension values are the same between the
+        # current and previous rows. This can happen if a query filter produces only
+        # one unique grouping of dimension values AND the most granular dimension is
+        # null. In the raw query result, there will be two identical rows back to back.
+        # If this happens, we can assume that we are entering a new subtotal group since
+        # otherwise druid would not have returned identical rows. Need to include a
+        # timestamp comparison as well since grouping by a non-all time granularity can
+        # produce rows with the same dimension values but not the same timestamp.
+        if all_equal and row['timestamp'] <= prev_row['timestamp']:
+            section_start = True
+
+        # If we are starting a new section, update the current subtotal level. By
+        # storing the current subtotal level, we can correctly return the
+        if section_start:
+            if self.current_subtotal_level is None:
+                self.current_subtotal_level = len(self.dimensions)
+            self.current_subtotal_level -= 1
+
+        # If the current subtotal level is not initialized, then we have not yet entered
+        # the subtotal section of the query response.
+        if self.current_subtotal_level is None:
+            return None
+
+        return self.dimensions[self.current_subtotal_level]
 
 
 class PydruidQueryWrapper(PydruidQuery):
@@ -476,18 +642,25 @@ class PydruidQueryWrapper(PydruidQuery):
         dimension groupings to ensure all groups have results for all timestamps that
         have values.
         '''
+        # NOTE(stephen): Deferring pandas import since this is library code that might
+        # not get called by all users.
+        import pandas as pd
 
-        df = super().export_pandas()
+        # NOTE(stephen): Pydruid's default pandas parsing behavior makes a ton of
+        # unnecesesary copies of data elements. It can really slow down with large
+        # queries. Only use it if we are using an unsupported query type here.
+        if self.query_type not in ('timeseries', 'groupBy'):
+            return super().export_pandas()
+
+        # NOTE(stephen): The event format is slightly tweaked from Druid's normal format
+        # since the timestamp is stored directly on the event (during the `parse` method
+        # of GroupByQueryBuilder).
+        df = pd.DataFrame(row['event'] for row in self.result)
         granularity = self.query_dict.get('granularity')
 
         # Don't try to fill in missing dates if we don't need to. Grouping by the
-        # `all` granularity means there are no intermediary timestamps to fill. Also,
-        # if the query type is not a grouping style query, we don't need to fill.
-        if (
-            not fill_intermediate_dates
-            or granularity == 'all'
-            or self.query_type not in ('timeseries', 'groupBy', 'topN')
-        ):
+        # `all` granularity means there are no intermediary timestamps to fill.
+        if df.empty or not fill_intermediate_dates or granularity == 'all':
             return df
 
         # Build a list of dates between the first reported value and the last reported
@@ -518,10 +691,6 @@ class PydruidQueryWrapper(PydruidQuery):
             # NOTE(stephen): This dataframe must be constructed differently because
             # slicing a df on an empty list causes issues.
             unique_dimension_values = pd.DataFrame([1], columns=['merge_key'])
-
-        # If we only have one result, we do not need to fill intermediate dates.
-        if len(unique_dimension_values) < 2:
-            return df
 
         # Quick check to see if the dataframe already has all possible timestamps for
         # all possible unique dimension values.
@@ -555,6 +724,30 @@ class PydruidQueryWrapper(PydruidQuery):
         last_timestamp = df.timestamp.max()
         granularity = self.query_dict['granularity']
         if isinstance(granularity, dict):
+            # NOTE(stephen): We can handle a limited set of period granularities right
+            # now. Currently week is the only one supported.
+            # TODO(stephen): It would be cool to have a generalized version of this one
+            # day. Right now it is not needed.
+            if granularity['type'] == 'period':
+                if granularity['period'] != 'P1W':
+                    return []
+
+                # Determine which day of the week the week starts on.
+                # HACK(stephen): Defining the lookup inline here as a tuple. This should
+                # ideally be defined as a constant somewhere else, however this file is
+                # growing way too large. It needs to be refactored!
+                # NOTE(stephen): These are the *anchored offsets* defined by Pandas for
+                # the week granularity. They represent the day that the week *ends*, not
+                # the day that the week *starts*. It's less intuitive.
+                # NOTE(stephen): Introspecting the dataframe first timestamp instead of
+                # parsing the granularity period's origin since it might not exist.
+                # https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#anchored-offsets
+                first_date = datetime.strptime(first_timestamp[:10], '%Y-%m-%d')
+                freq = ('W-SUN', 'W-MON', 'W-TUE', 'W-WED', 'W-THU', 'W-FRI', 'W-SAT')[
+                    first_date.weekday()
+                ]
+                return self._build_date_range(first_timestamp, last_timestamp, freq)
+
             # Can only handle `arbitrary` complex granularity type.
             if granularity['type'] != 'arbitrary':
                 return []
@@ -567,12 +760,21 @@ class PydruidQueryWrapper(PydruidQuery):
             return dates[start_idx : last_idx + 1]
 
         # We can only build date ranges for certain granularities with pandas.
-        if granularity not in ('day', 'month', 'quarter'):
+        if granularity not in ('day', 'week', 'month', 'quarter'):
             return []
 
         # Convenience mapping to pandas frequency string.
-        # day -> d, month -> m, quarter -> q
-        freq = granularity[0]
+        # day -> d, week -> w, month -> m, quarter -> q
+        # NOTE(stephen): Week starts on Monday for both pandas and druid, so we are safe
+        # here.
+        return self._build_date_range(first_timestamp, last_timestamp, granularity[0])
+
+    def _build_date_range(self, first_timestamp, last_timestamp, freq):
+        # NOTE(stephen): Deferring pandas import since this is library code that might
+        # not get called by all users.
+        # pylint: disable=import-outside-toplevel
+        import pandas as pd
+
         return [
             d.start_time.strftime('%Y-%m-%dT00:00:00.000Z')
             for d in pd.period_range(first_timestamp, last_timestamp, freq=freq)

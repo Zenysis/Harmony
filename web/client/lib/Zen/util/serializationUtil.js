@@ -1,11 +1,20 @@
 // @flow
-import ZenArray from 'util/ZenModel/ZenArray';
-import ZenMap from 'util/ZenModel/ZenMap';
+import Promise from 'bluebird';
+
+import ZenArray from 'lib/Zen/ZenArray';
+import ZenMap from 'lib/Zen/ZenMap';
 import type { AnyModel } from 'lib/Zen/ZenModel';
+
+export interface Deserializable<
+  // eslint-disable-next-line no-unused-vars
+  SerializedValue,
+  // eslint-disable-next-line no-unused-vars
+  DeserializationConfig = $AllowAny,
+> {}
 
 export interface Serializable<
   SerializedValue,
-  DeserializationConfig = any, // eslint-disable-line no-unused-vars
+  DeserializationConfig = $AllowAny, // eslint-disable-line no-unused-vars
 > {
   /**
    * Convert this instance into its SerializedValue
@@ -14,26 +23,38 @@ export interface Serializable<
   serialize(): SerializedValue;
 }
 
-type AnySerializable = Serializable<any, any>;
+type AnySerializable = Serializable<$AllowAny, $AllowAny>;
+type AnyDeserializable = Deserializable<$AllowAny, $AllowAny>;
 
-export type Serialized<T: AnySerializable> = $Call<
-  <SV>(Serializable<SV, any>) => SV,
+export type Serialized<T: AnySerializable | AnyDeserializable> = $Call<
+  (<SV>(Serializable<SV, any>) => SV) & (<SV>(Deserializable<SV, any>) => SV),
   T,
 >;
 
-export type DeserializationConfig<T: AnySerializable> = $Call<
-  <DC>(Serializable<any, DC>) => DC,
+export type DeserializationConfig<
+  T: AnySerializable | AnyDeserializable,
+> = $Call<
+  (<DC>(Serializable<any, DC>) => DC) & (<DC>(Deserializable<any, DC>) => DC),
   T,
 >;
 
-export type DeserializableClass<M> = Class<M> & {
+export type DeserializableModel<M: AnyModel & AnyDeserializable> = Class<M> & {
   +deserialize: (
     values: Serialized<M>,
     extraConfig: DeserializationConfig<M>,
   ) => M,
+  ...
 };
 
-export type DeserializableModel<M: AnyModel> = DeserializableClass<M>;
+export type DeserializableAsyncModel<
+  M: AnyModel & AnyDeserializable,
+> = Class<M> & {
+  +deserializeAsync: (
+    values: Serialized<M>,
+    extraConfig: DeserializationConfig<M>,
+  ) => Promise<M>,
+  ...
+};
 
 /**
  * Convert an array or ZenArray to an array of serialized values.
@@ -51,16 +72,16 @@ export function serializeArray<M: AnySerializable>(
  * Convert a map or ZenMap to a map of serialized values.
  */
 /* ::
-declare function serializeMap<M: AnySerializable>(models: ZenMap<M>): {
-  [string]: Serialized<M>,
-};
-declare function serializeMap<T, M: AnySerializable>(models: { +[T]: M }): {
-  [T]: Serialized<M>,
-};
+declare function serializeMap<M: AnySerializable>(
+  models: ZenMap<M>
+): { [string]: Serialized<M>, ... };
+declare function serializeMap<T, M: AnySerializable>(
+  models: { +[T]: M, ... }
+): { [T]: Serialized<M>, ... };
 */
 export function serializeMap<T, M: AnySerializable>(
-  models: { +[T]: M } | ZenMap<M>,
-): { [T]: Serialized<M> } {
+  models: { +[T]: M, ... } | ZenMap<M>,
+): { [T]: Serialized<M>, ... } {
   const result = {};
   if (models instanceof ZenMap) {
     models.forEach((model, key) => {
@@ -75,57 +96,59 @@ export function serializeMap<T, M: AnySerializable>(
 }
 
 /**
- * Convert a serialized representation of this model to an instantiated model.
- * This will throw a runtime error unless it's overridden.
- * Sometimes deserialization requires extra values to be passed to fully
- * deserialize the model. These can be passed as the `extraConfig` parameter.
- * @param {SerializedModel} values The serialized representation of this model
- * @param {DeserializationConfig} extraConfig Extra values for deserialization
+ * Deserialize an array of objects by calling `deserialize` on each one.
+ * You can also pass an `extraConfig` to be passed to each `deserialize`
+ * call.
+ * @param {DeserializableModel<M>} ModelClass The model class to use for
+ * deserialization.
+ * @param {Array<SerializedModel>} modelObjects Array of serialized objects
+ * @param {DeserializationConfig} extraConfig
+ *   An object with extra information used in deserialization.
+ * @returns {Array<Self>}
  */
-export function deserialize<M: AnyModel & AnySerializable>(
+export function deserializeArray<M: AnyModel & AnyDeserializable>(
   ModelClass: DeserializableModel<M>,
-  values: Serialized<M>,
+  modelObjects: $ReadOnlyArray<Serialized<M>>,
   extraConfig: DeserializationConfig<M>,
-): M {
-  return ModelClass.deserialize(values, extraConfig);
+): Array<M> {
+  return modelObjects.map(obj => ModelClass.deserialize(obj, extraConfig));
 }
 
 /**
- * Deserialize an array of objects by calling `deserialize` on each one.
- * You can also pass an `extraConfig` to be passed to each `deserialize`
- * call. If you need a different extraConfig per model, you can use a function
- * instead that will take the model's index and return a config object.
+ * Deserialize an array of objects by calling `deserializeAsync` on each one.
+ * You can also pass an `extraConfig` to be passed to each `deserializeAsync`
+ * call.
+ * @param {DeserializableModel<M>} ModelClass The model class to use for
+ * deserialization.
  * @param {Array<SerializedModel>} modelObjects Array of serialized objects
- * @param {DeserializationConfig | (idx) => DeserializationConfig} extraConfig
- *   An object, or function, with extra information used in deserialization.
+ * @param {DeserializationConfig} extraConfig
+ *   An object with extra information used in deserialization.
  * @returns {Array<Self>}
  */
-export function deserializeArray<M: AnyModel & AnySerializable>(
-  ModelClass: DeserializableModel<M>,
+export function deserializeAsyncArray<M: AnyModel & AnyDeserializable>(
+  ModelClass: DeserializableAsyncModel<M>,
   modelObjects: $ReadOnlyArray<Serialized<M>>,
-  extraConfig: DeserializationConfig<M> | (number => DeserializationConfig<M>),
-): Array<M> {
-  return modelObjects.map((obj, i) =>
-    extraConfig && typeof extraConfig === 'function'
-      ? deserialize(ModelClass, obj, extraConfig(i))
-      : deserialize(ModelClass, obj, extraConfig),
+  extraConfig: DeserializationConfig<M>,
+): Promise<Array<M>> {
+  return Promise.all(
+    modelObjects.map(obj => ModelClass.deserializeAsync(obj, extraConfig)),
   );
 }
 
 /**
  * Deserialize an array of objects by calling `deserialize` on each one.
  * You can also pass an `extraConfig` to be used on each `deserialize` call.
- * If you need a different `extraConfig` per model, you can use a function
- * instead that will take the model's index and return a config object.
+ * @param {DeserializableModel<M>} ModelClass The model class to use for
+ * deserialization.
  * @param {Array<SerializedModel>} modelObjects Array of serialized objects
- * @param {DeserializationConfig | (idx) => DeserializationConfig} extraConfig
- *   An object, or function, with extra information used in deserialization.
+ * @param {DeserializationConfig} extraConfig
+ *   An object with extra information used in deserialization.
  * @returns {ZenArray<Self>}
  */
-export function deserializeToZenArray<M: AnyModel & AnySerializable>(
+export function deserializeToZenArray<M: AnyModel & AnyDeserializable>(
   ModelClass: DeserializableModel<M>,
-  modelObjects: Array<Serialized<M>>,
-  extraConfig: DeserializationConfig<M> | (number => DeserializationConfig<M>),
+  modelObjects: $ReadOnlyArray<Serialized<M>>,
+  extraConfig: DeserializationConfig<M>,
 ): ZenArray<M> {
   return ZenArray.create(
     deserializeArray(ModelClass, modelObjects, extraConfig),
@@ -135,33 +158,24 @@ export function deserializeToZenArray<M: AnyModel & AnySerializable>(
 /**
  * Deserialize a map of objects by calling `deserialize` on each one.
  * You can also pass an `extraConfig` to be used on each `deserialize` call.
- * If you need a different `extraConfig` per model, you can use a function
- * instead that will take the model's key and return a config object.
+ * @param {DeserializableModel<M>} ModelClass The model class to use for
+ * deserialization.
  * @param {Object<SerializedModel>} modelObjects Map of objects to deserialize
- * @param {DeserializationConfig | (key) => DeserializationConfig} extraConfig
- *   An object, or function, with extra information used in deserialization.
+ * @param {DeserializationConfig} extraConfig
+ *   An object with extra information used in deserialization.
  * @returns {Object<Self>}
  */
-export function deserializeMap<M: AnyModel & AnySerializable>(
+export function deserializeMap<M: AnyModel & AnyDeserializable>(
   ModelClass: DeserializableModel<M>,
-  modelObjects: { [string]: Serialized<M> },
-  extraConfig: DeserializationConfig<M> | (string => DeserializationConfig<M>),
-): { [string]: M } {
+  modelObjects: { +[string]: Serialized<M>, ... },
+  extraConfig: DeserializationConfig<M>,
+): { [string]: M, ... } {
   const deserializedObj = {};
   Object.keys(modelObjects).forEach(key => {
-    if (extraConfig && typeof extraConfig === 'function') {
-      deserializedObj[key] = deserialize(
-        ModelClass,
-        modelObjects[key],
-        extraConfig(key),
-      );
-    } else {
-      deserializedObj[key] = deserialize(
-        ModelClass,
-        modelObjects[key],
-        extraConfig,
-      );
-    }
+    deserializedObj[key] = ModelClass.deserialize(
+      modelObjects[key],
+      extraConfig,
+    );
   });
   return deserializedObj;
 }
@@ -169,17 +183,17 @@ export function deserializeMap<M: AnyModel & AnySerializable>(
 /**
  * Deserialize a map of objects by calling `deserialize` on each one.
  * You can also pass an `extraConfig` to be used on each `deserialize` call.
- * If you need a different `extraConfig` per model, you can use a function
- * instead that will take the model's key and return a config object.
+ * @param {DeserializableModel<M>} ModelClass The model class to use for
+ * deserialization.
  * @param {Object<SerializedModel>} modelObjects Map of objects to deserialize
- * @param {DeserializationConfig | (key) => DeserializationConfig} extraConfig
- *   An object, or function, with extra information used in deserialization.
+ * @param {DeserializationConfig} extraConfig
+ *   An object with extra information used in deserialization.
  * @returns {ZenMap<Self>}
  */
-export function deserializeToZenMap<M: AnyModel & AnySerializable>(
+export function deserializeToZenMap<M: AnyModel & AnyDeserializable>(
   ModelClass: DeserializableModel<M>,
-  modelObjects: { [string]: Serialized<M> },
-  extraConfig: DeserializationConfig<M> | (string => DeserializationConfig<M>),
+  modelObjects: { +[string]: Serialized<M>, ... },
+  extraConfig: DeserializationConfig<M>,
 ): ZenMap<M> {
   return ZenMap.create(deserializeMap(ModelClass, modelObjects, extraConfig));
 }

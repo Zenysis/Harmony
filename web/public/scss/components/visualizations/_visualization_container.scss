@@ -1,10 +1,8 @@
 .visualization-container {
   background-color: white;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 15px;
-  @media (max-width: 940px) { padding-top: 60px; }
+  height: 100%;
 
   .controls {
     margin-bottom: 20px;
@@ -15,18 +13,18 @@
     }
 
     .control-checkbox {
-      position: relative;
       bottom: 1px;
-      margin-left: 5px;
       display: inline-block;
+      margin-left: 5px;
+      position: relative;
     }
 
     .bootstrap-select > .dropdown-toggle {
       border: none;
       font-size: 15px;
       font-weight: $bold;
+      left: 3px;
       position: relative;
-      left: 3px
     }
 
     label {
@@ -34,13 +32,14 @@
       line-height: 7px;
     }
 
-    label, select {
-      margin-right: .5em;
+    label,
+    select {
+      margin-right: 0.5em;
     }
 
     .form-group {
-      margin-right: 3em;
       line-height: 2;
+      margin-right: 3em;
     }
   }
 
@@ -48,12 +47,16 @@
     .settings-modal-button {
       color: $gray-light;
       cursor: pointer;
-      font-size: 21px;
       float: right;
+      font-size: 21px;
       position: relative;
       top: -50px;
-      @media (min-width: 800px) { right: 50px; }
-      @media (max-width: 800px) { right: 10px; }
+      @media (min-width: 800px) {
+        right: 50px;
+      }
+      @media (max-width: 800px) {
+        right: 10px;
+      }
       &:hover {
         color: $gray;
         &:before {
@@ -70,21 +73,23 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    overflow: hidden;
 
     .visualization {
       // Force the visualization to fill the remaining space in the container
       flex: 1;
 
-      // Plotly visualizations need to have height/width set on the nested
-      // divs inside the visualization block
-      .js-plotly-plot, .plot-container, .heattile-visualization {
-        height: 100%;
-        width: 100%;
-      }
-
       // Need a minimum height to be set so that the element reflows correctly
       // when an adjacent elements size changes
       min-height: 10px;
+
+      // Plotly visualizations need to have height/width set on the nested
+      // divs inside the visualization block
+      .plot-container,
+      .heattile-visualization {
+        height: 100%;
+        width: 100%;
+      }
     }
   }
 }

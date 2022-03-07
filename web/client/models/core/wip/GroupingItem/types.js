@@ -1,13 +1,15 @@
 // @flow
 import * as Zen from 'lib/Zen';
-import type Granularity from 'models/core/wip/Granularity';
 import type GroupingDimension, {
   SerializedGroupingDimensionForQuery,
 } from 'models/core/wip/GroupingItem/GroupingDimension';
+import type GroupingGranularity, {
+  SerializedGroupingGranularityForQuery,
+} from 'models/core/wip/GroupingItem/GroupingGranularity';
 
 type GroupingItemMap = {
   GROUPING_DIMENSION: GroupingDimension,
-  GRANULARITY: Granularity,
+  GROUPING_GRANULARITY: GroupingGranularity,
 };
 
 export type GroupingItemType = $Keys<GroupingItemMap>;
@@ -17,8 +19,8 @@ export type GroupingItem = $Values<GroupingItemMap>;
 // (so it can be reconstructed again in a dashboard)
 export type SerializedGroupingItem =
   | {
-      type: 'GRANULARITY',
-      item: Zen.Serialized<Granularity>,
+      type: 'GROUPING_GRANULARITY',
+      item: Zen.Serialized<GroupingGranularity>,
     }
   | {
       type: 'GROUPING_DIMENSION',
@@ -27,8 +29,9 @@ export type SerializedGroupingItem =
 
 // This is the type we use to serialize a grouping item for a query.
 // It no longer needs the {type, item} tuple, because the backend can identify
-// that on its own with the JSONRef that's a part of these serialized values.
-// Only the fields that are explicitly needed for querying are included.
+// that on its own based on the existence of `dimension` or `granularity`
+// properties. Only the fields that are explicitly needed for querying are
+// included.
 export type SerializedGroupingItemForQuery =
   | SerializedGroupingDimensionForQuery
-  | Zen.Serialized<Granularity>;
+  | SerializedGroupingGranularityForQuery;

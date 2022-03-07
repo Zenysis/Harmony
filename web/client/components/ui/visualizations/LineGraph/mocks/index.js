@@ -46,9 +46,11 @@ export function createSampleData(
     const groupData = generateGroupData(numberOfDataPoints).sort(
       (a, b) => a.date - b.date,
     );
+    const groupDimensions = { RegionName: 'Example Region' };
     data.push({
       name: groupName,
       data: groupData,
+      dimensions: groupDimensions,
     });
   }
   return data;

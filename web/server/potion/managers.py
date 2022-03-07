@@ -1,8 +1,8 @@
-from builtins import str
 from abc import ABCMeta, abstractmethod
 import collections
 
 from flask import current_app
+from flask_login import current_user
 from psycopg2.errorcodes import UNIQUE_VIOLATION
 from sqlalchemy.orm import class_mapper
 from sqlalchemy.exc import IntegrityError
@@ -17,7 +17,6 @@ from flask_potion.utils import get_value
 from web.server.data.data_access import Transaction
 
 from models.alchemy.base import Base, Pagination as SAPagination
-from future.utils import with_metaclass
 
 POSTGRES_ERROR_ATTRIBUTE = 'pgcode'
 
@@ -57,7 +56,7 @@ class SQLAlchemyManager(potion_alchemy.SQLAlchemyManager):
         return query.paginate(page=page, per_page=per_page)
 
 
-class AuthorizationResourceManager(with_metaclass(ABCMeta, SQLAlchemyManager)):
+class AuthorizationResourceManager(SQLAlchemyManager, metaclass=ABCMeta):
     '''
     An abstract manager implementation for SQLAlchemy models that ties CRUD operations on resources
     to an authorization model that lives alongside the parent model. It is responsible for managing
@@ -74,7 +73,7 @@ class AuthorizationResourceManager(with_metaclass(ABCMeta, SQLAlchemyManager)):
         # TODO(vedant) - Come up with a better way to set this
         # We will eventually move away from some of the contributed Potion
         # and write our own SQLAlchemy Manager and Principals Mixin
-        self.debug_mode = current_app.debug
+        self.debug_mode = current_app.debug if current_app else False
 
     def _init_authorization_layer(self, meta):
         self.authorization_model = meta.authorization_model
@@ -304,3 +303,23 @@ class AuthorizationResourceManager(with_metaclass(ABCMeta, SQLAlchemyManager)):
             added to `transaction`.
         '''
         pass
+
+
+class RoleResourceManager(SQLAlchemyManager):
+    def _query(self):
+        query = super()._query()
+        user = current_user
+        if not user.is_superuser():
+            role_ids = [role.id for role in user.get_all_roles()]
+            return query.filter(getattr(self.model, 'id').in_(role_ids))
+        return query
+
+
+class GroupResourceManager(SQLAlchemyManager):
+    def _query(self):
+        query = super()._query()
+        user = current_user
+        if not user.is_superuser():
+            group_ids = [group.id for group in user.groups]
+            return query.filter(getattr(self.model, 'id').in_(group_ids))
+        return query

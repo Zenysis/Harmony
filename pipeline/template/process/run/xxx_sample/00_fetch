@@ -5,7 +5,9 @@ source "${PIPELINE_UTILS_DIR}/bash/common.sh"
 
 pushd "${PIPELINE_FEED_DIR}" &> /dev/null
 
-# latest_dir=$(GetLatestDirectory 's3/zenysis-SITECODE/foo' 'somefile.xlsx')
-# FetchFiles "${latest_dir}/*.csv.lz4" .
+rm -rf "${PIPELINE_FEED_DIR}"/*
+
+latest_dir=$(GetLatestDirectory 's3/zenysis-SITECODE/foo' '*.csv')
+FetchFiles "${latest_dir}/*.csv" .
 
 popd &> /dev/null

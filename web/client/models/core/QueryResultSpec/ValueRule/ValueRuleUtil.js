@@ -11,88 +11,64 @@ import InValueRangeRule from 'models/core/QueryResultSpec/ValueRule/InValueRange
 import IsFalseRule from 'models/core/QueryResultSpec/ValueRule/IsFalseRule';
 import IsTrueRule from 'models/core/QueryResultSpec/ValueRule/IsTrueRule';
 import TopRule from 'models/core/QueryResultSpec/ValueRule/TopRule';
-import type { FilterRule } from 'components/QueryResult/QueryResultActionButtons/FilterColorModal/types';
-import type { ValueRule } from 'models/core/QueryResultSpec/ValueRule/types';
+import type {
+  SerializedValueRule,
+  ValueRule,
+} from 'models/core/QueryResultSpec/ValueRule/types';
+import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/TestableRule';
 
 export default class ValueRuleUtil {
-  static createFromLegacyFilterRule(
-    filterModalRule: FilterRule,
-  ): ValueRule | void {
-    const { actionOption, actionValue } = filterModalRule;
-    if (actionOption === undefined) {
-      return undefined;
-    }
-
-    switch (actionOption) {
-      case 'remove_top':
-      case 'color_top':
-        return actionValue !== undefined && actionValue !== ''
-          ? TopRule.create({ n: Number(actionValue) })
-          : undefined;
-
-      case 'remove_bottom':
-      case 'color_bottom':
-        return actionValue !== undefined && actionValue !== ''
-          ? BottomRule.create({ n: Number(actionValue) })
-          : undefined;
-
-      case 'remove_above':
-      case 'color_above':
-        return actionValue !== undefined && actionValue !== ''
-          ? AboveValueRule.create({ value: Number(actionValue) })
-          : undefined;
-
-      case 'remove_below':
-      case 'color_below':
-        return actionValue !== undefined && actionValue !== ''
-          ? BelowValueRule.create({ value: Number(actionValue) })
-          : undefined;
-
-      case 'remove_above_average':
-      case 'color_above_average':
+  static deserialize(rule: SerializedValueRule): ValueRule {
+    switch (rule.type) {
+      case 'ABOVE_AVERAGE':
         return AboveAverageRule.create({});
-
-      case 'remove_below_average':
-      case 'color_below_average':
+      case 'ABOVE_VALUE':
+        return AboveValueRule.create({ value: rule.value });
+      case 'BELOW_AVERAGE':
         return BelowAverageRule.create({});
-
-      case 'remove_values_equal_to_zero':
-        return EqualToZeroRule.create({});
-
-      case 'remove_values_equal_to_null':
-      case 'values_equal_to_null':
+      case 'BELOW_VALUE':
+        return BelowValueRule.create({ value: rule.value });
+      case 'BOTTOM':
+        return BottomRule.create({ n: rule.n });
+      case 'EQUAL_TO_NULL':
         return EqualToNullRule.create({});
-
-      case 'true':
-        return IsTrueRule.create({});
-
-      case 'false':
-        return IsFalseRule.create({});
-
-      case 'preset_ranges': {
-        if (actionValue === undefined || actionValue === '') {
-          return undefined;
-        }
-        const [percentile, n] = actionValue.split(',');
+      case 'EQUAL_TO_ZERO':
+        return EqualToZeroRule.create({});
+      case 'IN_QUANTILE':
         return InQuantileRule.create({
-          percentile: Number(percentile),
-          n: Number(n),
+          percentile: rule.percentile,
+          n: rule.n,
         });
-      }
-
-      case 'custom_ranges': {
-        if (actionValue === undefined || actionValue === '') {
-          return undefined;
-        }
-        const [startValue, endValue] = actionValue.split(',');
+      case 'IN_VALUE_RANGE':
         return InValueRangeRule.create({
-          startValue: Number(startValue),
-          endValue: Number(endValue),
+          startValue: rule.startValue,
+          endValue: rule.endValue,
         });
-      }
-
+      case 'IS_FALSE':
+        return IsFalseRule.create({});
+      case 'IS_TRUE':
+        return IsTrueRule.create({});
+      case 'TOP':
+        return TopRule.create({ n: rule.n });
       default:
-        throw new Error(`[ValueRuleUtil] ${actionOption} is not yet supported`);
+        throw new Error(
+          `Invalid rule type found when deserializing: ${rule.type}`,
+        );
     }
+  }
+
+  static testValue(
+    rule: TestableRule,
+    val: ?number,
+    allValues: $ReadOnlyArray<?number>,
+  ): boolean {
+    return rule.testValue(val, allValues);
+  }
+
+  static getRuleString(
+    rule: TestableRule,
+    allValues: $ReadOnlyArray<?number>,
+  ): string {
+    return rule.getRuleString(allValues);
   }
 }

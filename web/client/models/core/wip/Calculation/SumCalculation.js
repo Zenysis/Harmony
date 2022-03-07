@@ -1,11 +1,11 @@
 // @flow
 import * as Zen from 'lib/Zen';
 import QueryFilterUtil from 'models/core/wip/QueryFilter/QueryFilterUtil';
-import type { Serializable } from 'lib/Zen';
 import type {
   QueryFilter,
   SerializedQueryFilter,
 } from 'models/core/wip/QueryFilter/types';
+import type { Serializable } from 'lib/Zen';
 
 type Values = {
   filter: QueryFilter,
@@ -61,4 +61,4 @@ class SumCalculation extends Zen.BaseModel<SumCalculation, Values>
   }
 }
 
-export default ((SumCalculation: any): Class<Zen.Model<SumCalculation>>);
+export default ((SumCalculation: $Cast): Class<Zen.Model<SumCalculation>>);

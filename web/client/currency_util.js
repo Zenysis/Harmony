@@ -1,3 +1,5 @@
+// @flow
+
 // Via: https://github.com/bengourley/currency-symbol-map
 // eslint-disable-next-line import/prefer-default-export
 export const CURRENCY_LOOKUP = {

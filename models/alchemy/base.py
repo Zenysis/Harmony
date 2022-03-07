@@ -1,5 +1,6 @@
 from builtins import object
 from math import ceil
+from typing import Optional
 
 from sqlalchemy import orm
 from sqlalchemy.ext.declarative import declarative_base
@@ -124,7 +125,7 @@ class ModelBase(object):
 
     #: an instance of `query_class`. Can be used to query the
     #: database for instances of this model.
-    query = None
+    query: BaseQuery
 
 
 def set_query_property(model_class, session):

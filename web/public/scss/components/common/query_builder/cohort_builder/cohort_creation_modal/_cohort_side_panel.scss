@@ -1,0 +1,132 @@
+.ca-cohort-side-panel {
+  background-color: #f4f4f4;
+  border-right: 1px solid #b3bcbd;
+  flex-basis: 336px;
+  overflow: auto;
+}
+
+.ca-cohort-diagram {
+  &__groups-container {
+    background-color: $gray-light;
+    border: 1px solid $gray;
+    border-radius: 5px;
+  }
+
+  &__set-operation-row {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    position: relative;
+  }
+
+  &__group-operation-pill {
+    z-index: 1;
+  }
+
+  &__divider-line {
+    border-bottom: 1px dashed $gray;
+    position: absolute;
+    width: 100%;
+  }
+}
+
+.ca-cohort-group-diagram {
+  display: grid;
+  font-size: 12px;
+  padding-top: $space-xxxs-px;
+
+  &__horizontal-line {
+    border-bottom: 1px solid $gray;
+    margin-top: auto;
+    width: 100%;
+  }
+
+  &__vertical-line {
+    border-left: 1px solid $gray;
+    height: 100%;
+    margin-right: auto;
+  }
+
+  &__segment-label {
+    margin-bottom: auto;
+    margin-left: auto;
+    margin-right: $space-xs-px;
+    margin-top: auto;
+  }
+
+  &__segment-value {
+    margin-bottom: auto;
+    margin-left: auto;
+    margin-right: $space-xs-px;
+    margin-top: auto;
+  }
+
+  &__summary-value {
+    background-color: $gray-light;
+    margin-bottom: auto;
+    margin-left: auto;
+    margin-top: auto;
+    padding-left: $space-xs-px;
+  }
+
+  &__set-operation-pill {
+    background-color: $gray-light;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    color: $gray;
+    padding: $space-xxxs-px;
+    text-align: center;
+    white-space: pre;
+    z-index: 1;
+
+    &--borderless {
+      background: transparent;
+      border: none;
+    }
+  }
+}
+
+.ca-cohort-header-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: $space-m-px auto $space-xs-px;
+
+  &--no-operator {
+    grid-template-rows: 0 auto $space-xs-px;
+  }
+
+  &__operator-line {
+    border-right: 1px dashed $gray;
+    grid-column: 1 / 3;
+    grid-row: 1 / 4;
+
+    // Center the line horizontally. It should fill all vertical space.
+    margin: 0 auto;
+  }
+
+  &__set-operation {
+    grid-column: 1 / 3;
+    grid-row: 2;
+
+    // Center the set operation horizontally and baseline align the box with the
+    // bottom of the summary number.
+    margin: auto auto 0 auto;
+  }
+
+  &__summary-number {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+.ca-cohort-group-section {
+  &__summary {
+    border-bottom: 1px solid $gray;
+    display: flex;
+    padding-bottom: $space-xxs-px;
+  }
+
+  &__group-name {
+    flex: 1;
+  }
+}

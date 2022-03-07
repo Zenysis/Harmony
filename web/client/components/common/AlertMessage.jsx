@@ -1,37 +1,38 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 
-import PropDefs from 'util/PropDefs';
-
-export const ALERT_TYPE = {
+type AlertType = 'success' | 'info' | 'warning' | 'danger';
+type AlertTypeMap = {
   SUCCESS: 'success',
   INFO: 'info',
   WARNING: 'warning',
   ERROR: 'danger',
 };
 
-const ALERT_TYPES = [
-  ALERT_TYPE.SUCCESS,
-  ALERT_TYPE.INFO,
-  ALERT_TYPE.WARNING,
-  ALERT_TYPE.ERROR,
-];
+export const ALERT_TYPE: AlertTypeMap = {
+  SUCCESS: 'success',
+  INFO: 'info',
+  WARNING: 'warning',
+  ERROR: 'danger',
+};
 
-const propDefs = PropDefs.create('alertMessage')
-  .propTypes({
-    children: PropTypes.node.isRequired,
-    type: PropTypes.oneOf(ALERT_TYPES).isRequired,
+type Props = {
+  children: React.Node,
+  type: AlertType,
 
-    className: PropTypes.string,
-    onRequestDismiss: PropTypes.func, // f(event)
-  })
-  .defaultProps({
-    className: '',
-    onRequestDismiss: null,
-  });
+  className: string,
+  onRequestDismiss?: (SyntheticMouseEvent<HTMLButtonElement>) => void,
+};
+
+const defaultProps = {
+  className: '',
+  onRequestDismiss: undefined,
+};
 
 // Only render the dismiss button if an event handler is defined
-function maybeRenderDismissButton(onRequestDismiss = null) {
+function maybeRenderDismissButton(
+  onRequestDismiss?: (SyntheticMouseEvent<HTMLButtonElement>) => void,
+) {
   if (!onRequestDismiss) {
     return null;
   }
@@ -49,12 +50,9 @@ function maybeRenderDismissButton(onRequestDismiss = null) {
 }
 
 // Simple component for displaying a message to the user in a block
-export default function AlertMessage({
-  children,
-  type,
-  className,
-  onRequestDismiss,
-}) {
+// TODO(pablo): change CSS class names to be `zen-` prefixed and use BEM
+export default function AlertMessage(props: Props): React.Element<'div'> {
+  const { children, type, className, onRequestDismiss } = props;
   const fullClassName = `alert alert-message alert-${type} ${className}`;
   return (
     <div className={fullClassName} role="alert">
@@ -64,4 +62,4 @@ export default function AlertMessage({
   );
 }
 
-PropDefs.setComponentProps(AlertMessage, propDefs);
+AlertMessage.defaultProps = defaultProps;

@@ -1,14 +1,20 @@
 // @flow
-import type ZenArray from 'util/ZenModel/ZenArray';
-import type ZenMap from 'util/ZenModel/ZenMap';
+import * as Zen from 'lib/Zen';
 
-export type SortDirection = 'ASC' | 'DESC';
-export type SortState = {
-  sortColumns: ZenArray<string>,
-  sortDirectionMap: ZenMap<SortDirection>,
+export type SortDirectionMap = {
+  ASC: 'ASC',
+  DESC: 'DESC',
 };
 
-export type ColumnSpec<RowData, CellData, ColData = void> = {
+export type SortDirection = $Keys<SortDirectionMap>;
+export type SortState = {
+  sortColumns: Zen.Array<string>,
+  sortDirectionMap: Zen.Map<SortDirection>,
+};
+
+type CellData = string | number | null;
+
+export type ColumnSpec<RowData, ColData = void> = {
   label: string,
   dataKey: string,
   columnData: ColData,
@@ -17,11 +23,21 @@ export type ColumnSpec<RowData, CellData, ColData = void> = {
     dataKey: string,
     rowData: RowData,
   }) => CellData,
+  alwaysSort?: boolean,
+  mergeCells?: boolean,
+  rotateHeader?: boolean,
 };
 
-export type TableCellProps<RowData, CellData, ColData = void> = {
+export type TableCellProps<RowData, ColData = void> = {
   cellData: CellData,
   columnData: ColData,
   dataKey: string,
+  isMergedCell: boolean,
   rowData: RowData,
+  rowIndex: number,
+};
+
+export type RowDivider = {
+  color: string,
+  thickness: number,
 };

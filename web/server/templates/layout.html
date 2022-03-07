@@ -9,7 +9,6 @@
     <link rel="icon" href="{{ favicon_path }}" type="image/x-icon" />
     <link rel="apple-touch-icon" href="{{ home_icon_path }}" />
 
-    <link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="{{ bundle_resource_url('bundle.css') }}">
     {% block css %}{% endblock %}
   </head>
@@ -29,9 +28,6 @@
     <script>
       window.__JSON_FROM_BACKEND = {{ pass_to_js|safe }};
     </script>
-    {% if not lightweight_js_only %}
-    <script src="/api/backend_config" type="text/javascript"></script>
-    {% endif %}
     {% endif %}
 
     <script src="{{config.VENDOR_SCRIPT_PATH}}/jquery-1.9.1.js"></script>
@@ -44,6 +40,7 @@
         };
         analytics.track('js error', errlog);
       });
+      window.testing = {};
     </script>
 
     <script src="{{ bundle_resource_url('vendor.bundle.js') }}"></script>
@@ -55,7 +52,9 @@
         {% if messages %}
           {% for category, message in messages %}
             {% if category=='success' %}
+              {% if message != 'You have signed in successfully.' %}
               <script>window.toastr.success("{{ message|safe }}");</script>
+              {% endif %}
             {% elif category=='error' %}
               <script>window.toastr.error("{{ message|safe }}");</script>
             {% else %}

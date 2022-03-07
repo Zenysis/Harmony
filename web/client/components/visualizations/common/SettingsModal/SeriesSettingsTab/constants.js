@@ -1,14 +1,5 @@
 // @flow
-import type { TableHeader } from 'components/ui/Table';
-
-export type SeriesRowData = {
-  seriesId: string,
-  idx: number,
-};
-
-export type SeriesTableHeader = TableHeader<SeriesRowData> & {
-  propKey: string,
-};
+import I18N from 'lib/I18N';
 
 // Set display text for headers
 const TEXT = t(
@@ -21,63 +12,73 @@ export const IS_VISIBLE = 'isVisible';
 export const SERIES_LABEL = 'seriesLabel';
 export const DATA_LABEL_FORMAT = 'dataLabelFormat';
 export const DATA_LABEL_FONT_SIZE = 'dataLabelFontSize';
-export const SHOW_CONSTITUENTS = 'showConstituents';
 export const SHOW_VALUE = 'showSeriesValue';
 export const Y_AXIS = 'yAxis';
+export const DATA_ACTIONS = 'dataActions';
+export const BAR_LABEL_POSITION = 'barLabelPosition';
+export const VISUAL_DISPLAY_SHAPE = 'visualDisplayShape';
 
-export const TABLE_HEADERS: $ReadOnlyArray<SeriesTableHeader> = [
+export type SeriesSettingsType =
+  | 'order'
+  | 'color'
+  | 'isVisible'
+  | 'seriesLabel'
+  | 'dataLabelFormat'
+  | 'dataLabelFontSize'
+  | 'showSeriesValue'
+  | 'yAxis'
+  | 'colorActions'
+  | 'barLabelPosition'
+  | 'visualDisplayShape';
+
+export type SeriesSettingConfig = {
+  type: SeriesSettingsType,
+  headerName: string,
+};
+
+export const SERIES_SETTINGS_CONFIG: $ReadOnlyArray<SeriesSettingConfig> = [
   {
-    id: ORDER,
-    propKey: 'canEditOrder',
-    headerClassName: 'order',
-    displayContent: '',
+    type: 'order',
+    headerName: '',
   },
   {
-    id: COLOR,
-    propKey: 'canEditColor',
-    headerClassName: 'color',
-    displayContent: '',
+    type: 'color',
+    headerName: '',
   },
   {
-    id: IS_VISIBLE,
-    propKey: 'canToggleVisibility',
-    headerClassName: 'isVisible',
-    displayContent: '',
+    type: 'isVisible',
+    headerName: '',
   },
   {
-    id: SERIES_LABEL,
-    propKey: 'canEditSeriesLabel',
-    headerClassName: 'seriesLabel',
-    displayContent: TEXT[SERIES_LABEL],
+    type: 'seriesLabel',
+    headerName: TEXT.seriesLabel,
   },
   {
-    id: SHOW_CONSTITUENTS,
-    propKey: 'canToggleConstituents',
-    headerClassName: 'showConstituents',
-    displayContent: TEXT[SHOW_CONSTITUENTS],
+    type: 'showSeriesValue',
+    headerName: TEXT.showSeriesValue,
   },
   {
-    id: SHOW_VALUE,
-    propKey: 'canToggleSeriesValue',
-    headerClassName: 'showSeriesValue',
-    displayContent: TEXT[SHOW_VALUE],
+    type: 'dataLabelFormat',
+    headerName: TEXT.dataLabelFormat,
   },
   {
-    id: DATA_LABEL_FORMAT,
-    propKey: 'canEditDataLabelFormat',
-    headerClassName: 'dataLabelFormat',
-    displayContent: TEXT[DATA_LABEL_FORMAT],
+    type: 'dataLabelFontSize',
+    headerName: TEXT.dataLabelFontSize,
   },
   {
-    id: DATA_LABEL_FONT_SIZE,
-    propKey: 'canEditDataLabelFontSize',
-    headerClassName: 'dataLabelFontSize',
-    displayContent: TEXT[DATA_LABEL_FONT_SIZE],
+    type: 'yAxis',
+    headerName: TEXT.yAxis,
   },
   {
-    id: Y_AXIS,
-    propKey: 'canEditYAxis',
-    headerClassName: 'yAxis',
-    displayContent: TEXT[Y_AXIS],
+    type: 'visualDisplayShape',
+    headerName: TEXT.visualDisplay,
+  },
+  {
+    type: 'colorActions',
+    headerName: I18N.text('Add rules', 'colorActions'),
+  },
+  {
+    type: 'barLabelPosition',
+    headerName: TEXT.barLabelPosition,
   },
 ];

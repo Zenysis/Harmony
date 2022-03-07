@@ -1,72 +1,30 @@
 // @flow
-import * as Zen from 'lib/Zen';
-import Field from 'models/core/Field';
-import Query from 'components/visualizations/common/Query/Query';
-import { BACKEND_GRANULARITIES } from 'components/QueryResult/timeSeriesUtil';
-import { DruidFilter } from 'components/visualizations/util/druid';
-import {
-  buildBaseRequest,
-  buildQueryFilterFromSelections,
-  getDimensionsForQuery,
-} from 'components/visualizations/common/Query/util';
-import type HeatTilesQueryResultData from 'models/visualizations/HeatTiles/HeatTilesQueryResultData';
-import type QueryResultSpec from 'models/core/QueryResultSpec';
-import type SimpleQuerySelections from 'models/core/SimpleQuerySelections';
-import type { QueryEngine } from 'models/core/QueryResultState/interfaces/QueryEngine';
+import type Promise from 'bluebird';
 
-type HeatTilesQueryRequest = {
-  dimensions: $ReadOnlyArray<string>,
-  endDate: string,
-  fields: $ReadOnlyArray<string>,
-  granularity: string,
-  labelDimensions: $ReadOnlyArray<string>,
-  queryFilter: DruidFilter,
-  startDate: string,
-  valueGroups: { [string]: string },
-};
+import * as Zen from 'lib/Zen';
+import Query from 'components/visualizations/common/Query/Query';
+import unsetGroupTotalSetting from 'models/visualizations/common/unsetGroupTotalSetting';
+import { API_VERSION } from 'services/APIService';
+import type HeatTilesQueryResultData from 'models/visualizations/HeatTiles/HeatTilesQueryResultData';
+import type QuerySelections from 'models/core/wip/QuerySelections';
+import type { QueryEngine } from 'models/core/QueryResultState/interfaces/QueryEngine';
 
 const ENDPOINT = 'query/line_graph';
 
-function buildRequest(
-  querySelections: SimpleQuerySelections,
-  queryResultSpec: QueryResultSpec, // eslint-disable-line no-unused-vars
-): HeatTilesQueryRequest {
-  const denominator = querySelections.denominator();
-  const denominatorId = denominator ? denominator.id() : undefined;
-  const fieldIds = Field.pullIds(querySelections.fields());
-  if (denominatorId) {
-    fieldIds.push(denominatorId);
-  }
-  const dimensions = getDimensionsForQuery(querySelections);
-  const labelDimensions =
-    dimensions.length > 0 ? [querySelections.granularity()] : [];
-
-  return buildBaseRequest(
-    dimensions,
-    fieldIds,
-    BACKEND_GRANULARITIES.MONTH,
-    buildQueryFilterFromSelections(querySelections),
-    querySelections.startDate(),
-    querySelections.endDate(),
-    labelDimensions,
-    denominatorId,
-  );
-}
-
-// prettier-ignore
-class HeatTilesQueryEngine implements QueryEngine<
-  SimpleQuerySelections,
-  Zen.Serialized<HeatTilesQueryResultData>,
-> {
+class HeatTilesQueryEngine
+  implements QueryEngine<Zen.Serialized<HeatTilesQueryResultData>> {
   run(
-    querySelections: SimpleQuerySelections,
-    queryResultSpec: QueryResultSpec,
+    querySelections: QuerySelections,
   ): Promise<Zen.Serialized<HeatTilesQueryResultData>> {
+    // The HeatTiles visualization would show distorted values if dimension
+    // and granularity subtotals were included in the query result.
+    const groups = unsetGroupTotalSetting(querySelections.groups());
     return Query.create(
       ENDPOINT,
-      buildRequest(querySelections, queryResultSpec),
+      querySelections.groups(groups).serializeForQuery(),
+      API_VERSION.V2,
     ).run();
   }
 }
 
-export default new HeatTilesQueryEngine();
+export default (new HeatTilesQueryEngine(): HeatTilesQueryEngine);

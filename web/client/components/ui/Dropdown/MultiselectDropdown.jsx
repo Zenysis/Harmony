@@ -11,60 +11,41 @@ import type { StyleObject } from 'types/jsCore';
 
 const TEXT = t('ui.Dropdown');
 
-type MultiselectControlledProps<T> = {|
+type DefaultProps<T> = {
   /**
-   * **Multiselect prop:** determines if `selectAll` option should be displayed.
+   * The accessibility name for this dropdown that will be assigned to the
+   * main button.
    */
-  enableSelectAll: boolean,
+  ariaName?: string,
 
   /**
-   * **Multiselect prop:** the label to show when multiple options are selected.
-   * The dropdown will produce a string like '2 selected' where `selected` is
-   * the `multiselectSelectionLabel`.
+   * The currently selected options for a dropdown. Used for async search
+   * dropdowns to render the selected options when no search text is specified.
+   * It is also used to render the button label when the selected option does
+   * not match the current search and is therefore not in the children prop.
    */
-  multiselectSelectionLabel: string,
+  asyncSelectedOptions?: $ReadOnlyArray<React.Element<Class<Option<T>>>>,
 
   /**
-   * **Multiselect prop:** a render prop that returns the contents to display
-   * in the dropdown button. **NOTE:** this function will never receive an
-   * empty array. If no selections are made, the content to render is handled
-   * by the `defaultDisplayContent` prop.
+   * This prop should be used sparringly, only when you want to change the way
+   * a dropdown blur should trigger. Read the `blurType` prop explanation in
+   * [Popover](#popover) to understand what this does.
    */
-  renderButtonLabel?: (selectedValues: $ReadOnlyArray<T>) => React.Node,
+  blurType?: 'overlay' | 'document',
 
-  /**
-   * **Multiselect prop:** if `selectedOptions` are provided then these will be
-   * shown at the top of the dropdown. They will be separated by a dividing line
-   * and will be shown regardless of the search term.
-   */
-  selectedOptions: $ReadOnlyArray<React.Element<Class<Option<T>>>>,
-
-  /**
-   * **Required for a controlled Dropdown.** An array of selected values. The
-   * array is empty if there is no selection.
-   */
-  value: $ReadOnlyArray<T>,
-
-  /**
-   * **Required for a controlled Dropdown.**
-   * Callback for when the selection changes.
-   */
-  onSelectionChange: (
-    selectedValues: $ReadOnlyArray<T>,
-    event: SyntheticEvent<HTMLElement>,
-  ) => void,
-|};
-
-type BaseProps<T> = {|
   /** CSS class name for the dropdown button */
   buttonClassName: string,
 
   /** Minimum width (in pixels) for the dropdown button */
   buttonMinWidth?: number,
 
-  /** Changes the color of the dropdown button based on intent */
+  /**
+   * Changes the color of the dropdown button based on intent. Can be specified
+   * using `Dropdown.Intents`
+   */
   buttonIntent:
     | 'default'
+    | 'plain'
     | 'primary'
     | 'success'
     | 'danger'
@@ -80,14 +61,8 @@ type BaseProps<T> = {|
     ?React.Element<Class<Option<T>>> | ?React.Element<Class<OptionsGroup<T>>>,
   >,
 
-  /** The class name to give to the top-level dropdown div */
+  /** The class name for the dropdown container */
   className: string,
-
-  /**
-   * Whether or not dropdown position should be auto-controlled based on if
-   * it will overflow past the window dimensions.
-   */
-  controlDropDownPosition: boolean,
 
   /** Used to show tooltips on the dropdown.  */
   dataContent?: string,
@@ -115,6 +90,11 @@ type BaseProps<T> = {|
   enableSearch: boolean,
 
   /**
+   * **Multiselect prop:** determines if `selectAll` option should be displayed.
+   */
+  enableSelectAll: boolean,
+
+  /**
    * Auto-expands the search results, so any option groups that contain
    * results that pass the search text will auto-expand to show the children
    * options. If false, the user would have to manually click on the group
@@ -126,6 +106,13 @@ type BaseProps<T> = {|
   hideCaret: boolean,
 
   /**
+   * Function to check for value equality. Is used to work which options are
+   * selected. Should be provided if we cannot guarantee that selectedValues and
+   * values reference the same objects.
+   */
+  isSameValue: (valA: T, valB: T) => boolean,
+
+  /**
    * The margin-left to add at each level off the dropdown hierarchy, if we
    * have OptionGroups. This is useful so that each nested level can be
    * indented. The margin must be in 'em' or 'px'.
@@ -135,14 +122,27 @@ type BaseProps<T> = {|
   /** Align the menu to the right or left */
   menuAlignment: 'left' | 'right',
 
+  /** The class name to give to the dropdown menu div */
+  menuClassName: string,
+
   /** The maximum height (in pixels) for the dropdown menu. */
   menuMaxHeight?: number,
+
+  /** The maximum width for the dropdown menu. */
+  menuMaxWidth?: string | number,
 
   /** The minimum width for the dropdown menu. */
   menuMinWidth?: string | number,
 
   /** The width to set on the dropdown menu. */
   menuWidth?: string | number,
+
+  /**
+   * **Multiselect prop:** the label to show when multiple options are selected.
+   * The dropdown will produce a string like '2 selected' where `selected` is
+   * the `multiselectSelectionLabel`.
+   */
+  multiselectSelectionLabel: string,
 
   /** Dropdown contents to show when there are no options to render. */
   noOptionsContent: React.Node,
@@ -156,6 +156,22 @@ type BaseProps<T> = {|
   /** Callback for when the dropdown menu is opened */
   onOpenDropdownClick?: () => void,
 
+  /**
+   * If set to true then the selected options will be pinned at the top of the
+   * dropdown. The pinned items are updated when the dropdown is closed and
+   * reopened. This only works for dropdowns with a flat array of options (no
+   * options groups)
+   */
+  pinSelectedOptions: boolean,
+
+  /**
+   * **Multiselect prop:** a render prop that returns the contents to display
+   * in the dropdown button. **NOTE:** this function will never receive an
+   * empty array. If no selections are made, the content to render is handled
+   * by the `defaultDisplayContent` prop.
+   */
+  renderButtonLabel?: (selectedValues: $ReadOnlyArray<T>) => React.Node,
+
   /** Debounce time (in ms) for the search input */
   searchDebounceTimeoutMs: number,
 
@@ -164,11 +180,49 @@ type BaseProps<T> = {|
 
   /** CSS styles to set on the dropdown button content */
   valueStyle?: StyleObject,
-|};
+
+  /**
+   * Show the full button contents on hover. This is useful for dropdowns that
+   * have very long options, and when selected they get cut off by an ellipsis
+   * because they don't fit in the dropdown button. Setting this to true allows
+   * the user to hover over the button to see the full contents. This only works
+   * if your options are strings or numbers and not more complex React Nodes.
+   */
+  showButtonContentsOnHover: boolean,
+
+  /** testId used to access the element in tests */
+  testId?: string,
+
+  /**
+   * An object mapping window edges to their thresholds, meaning how close
+   * the dropdown is allowed to get to a window edge before adjusting its
+   * position.
+   */
+  windowEdgeThresholds?: {
+    bottom?: number,
+    left?: number,
+    right?: number,
+    top?: number,
+  },
+};
 
 type Props<T> = {
-  ...MultiselectControlledProps<T>,
-  ...BaseProps<T>,
+  ...DefaultProps<T>,
+
+  /**
+   * **Required for a controlled Dropdown.** An array of selected values. The
+   * array is empty if there is no selection.
+   */
+  value: $ReadOnlyArray<T>,
+
+  /**
+   * **Required for a controlled Dropdown.**
+   * Callback for when the selection changes.
+   */
+  onSelectionChange: (
+    selectedValues: $ReadOnlyArray<T>,
+    event: SyntheticEvent<HTMLElement>,
+  ) => void,
 };
 
 /**
@@ -187,9 +241,10 @@ type Props<T> = {
 export default class MultiselectDropdown<T> extends React.PureComponent<
   Props<T>,
 > {
-  static Uncontrolled = MultiselectUncontrolledDropdown;
-
-  static defaultProps = {
+  static defaultProps: DefaultProps<T> = {
+    ariaName: undefined,
+    asyncSelectedOptions: undefined,
+    blurType: 'document',
     buttonClassName: '',
     buttonMinWidth: undefined,
     buttonIntent: 'default',
@@ -197,7 +252,6 @@ export default class MultiselectDropdown<T> extends React.PureComponent<
     caretType: Caret.Types.TRIANGLE,
     children: null,
     className: '',
-    controlDropDownPosition: true,
     dataContent: undefined,
     debounceSearch: false,
     defaultDisplayContent: null,
@@ -208,9 +262,12 @@ export default class MultiselectDropdown<T> extends React.PureComponent<
     enableSelectAll: false,
     expandSearchResults: true,
     hideCaret: false,
+    isSameValue: (valA: mixed, valB: mixed) => valA === valB,
     marginPerLevel: '1.25em',
     menuAlignment: 'left',
+    menuClassName: '',
     menuMaxHeight: undefined,
+    menuMaxWidth: undefined,
     menuMinWidth: undefined,
     menuWidth: undefined,
     multiselectSelectionLabel: TEXT.selected,
@@ -218,14 +275,19 @@ export default class MultiselectDropdown<T> extends React.PureComponent<
     noAsyncSearchContent: TEXT.noSearch,
     onAsyncSearch: undefined,
     onOpenDropdownClick: undefined,
+    pinSelectedOptions: false,
     renderButtonLabel: undefined,
     searchDebounceTimeoutMs: 300,
     searchInputPlaceholder: TEXT.searchPlaceholder,
-    selectedOptions: [],
+    showButtonContentsOnHover: false,
     valueStyle: undefined,
+    windowEdgeThresholds: undefined,
+    testId: undefined,
   };
 
-  render() {
+  static Uncontrolled: typeof MultiselectUncontrolledDropdown = MultiselectUncontrolledDropdown;
+
+  render(): React.Element<typeof BaseDropdown> {
     return <BaseDropdown isControlled isMultiselect {...this.props} />;
   }
 }

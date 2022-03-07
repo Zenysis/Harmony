@@ -1,29 +1,48 @@
 // @flow
 import * as Zen from 'lib/Zen';
+import type { Serializable } from 'lib/Zen';
 
-type Required = {
+type RequiredValues = {
   name: string,
 };
 
-type Optional = {
-  livesLeft: Zen.ReadOnly<number>,
+type DefaultValues = {
+  +livesLeft: number,
 };
 
-type Derived = {
+type DerivedValues = {
   properName: string,
 };
 
-class Cat extends Zen.BaseModel<Cat, Required, Optional, Derived> {
-  static defaultValues = {
+type SerializedCat = {
+  name: string,
+  livesLeft: number,
+};
+
+class Cat
+  extends Zen.BaseModel<Cat, RequiredValues, DefaultValues, DerivedValues>
+  implements Serializable<SerializedCat> {
+  static defaultValues: DefaultValues = {
     livesLeft: 9,
   };
 
-  static derivedConfig = {
+  static derivedConfig: Zen.DerivedConfig<Cat, DerivedValues> = {
     properName: [
       Zen.hasChanged<Cat>('name'),
-      cat => `Your Royal Highness ${cat.name()}`,
+      cat => `Their Royal Highness ${cat.name()}`,
     ],
   };
+
+  static deserialize({ name, livesLeft }: SerializedCat): Zen.Model<Cat> {
+    return Cat.create({ name, livesLeft });
+  }
+
+  serialize(): SerializedCat {
+    return {
+      name: this._.name(),
+      livesLeft: this._.livesLeft(),
+    };
+  }
 }
 
-export default ((Cat: any): Class<Zen.Model<Cat>>);
+export default ((Cat: $Cast): Class<Zen.Model<Cat>>);

@@ -22,30 +22,11 @@
 
 .ui-drag-handle {
   cursor: grab;
-  display: inline-block;
+  display: flex;
   margin-right: 3px;
 
-  &__icon {
-    // Since we are using 2 glyphicons to draw the full icon, we need to reduce
-    // the space between each character. Unfortunately, this is baked into the
-    // font itself, so we approximate it for the sizes we support.
-    &--small {
-      font-size: 11px;
-      margin-left: -3px;
-      margin-right: -3px;
-    }
-
-    &--medium {
-      font-size: 14px;
-      margin-left: -4px;
-      margin-right: -4px;
-    }
-
-    &--large {
-      font-size: 17px;
-      margin-left: -5px;
-      margin-right: -5px;
-    }
+  &--disabled {
+    cursor: initial;
   }
 }
 

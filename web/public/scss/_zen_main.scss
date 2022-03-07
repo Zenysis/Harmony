@@ -9,12 +9,16 @@
   outline: none;
 }
 
-[role="button"] {
+[role='button'],
+[role='tab'] {
   cursor: pointer;
 }
 
-select {
-  cursor: pointer;
+label {
+  display: inline-block;
+  // Force IE8 to wrap long content (see
+  // https://github.com/twbs/bootstrap/issues/13141)
+  max-width: 100%;
 }
 
 .zen-style {
@@ -44,187 +48,16 @@ select {
   }
 }
 
-/* Query App. */
-.query-app {
-  background: $site-background;
-  padding-top: 15px;
-
-  // Stretch query form to fill width of page
-  .widget-container {
-    margin-left: -$content-vertical-padding;
-    margin-right: -$content-vertical-padding;
-    margin-top: -$content-horizontal-padding;
-  }
-
-  .zen-page-title {
-    padding-left: 18px;
-  }
-}
-
-/* Bootstrap plugins. */
-
-/* Multiselect */
-.multiselect-container {
-  max-height: 40em;
-  overflow-y: scroll;
-}
-
-.first-selected {
-  background: gold;
-}
-
-.dropdown-menu.inner {
-  max-width: 600px;
-  text-overflow: ellipsis;
-}
-
-.dropdown-menu.inner > li:hover {
-  background-color: #d6dde7;
-}
-
-.dropdown-menu.inner > li.divider {
-  padding: 0;
-  margin: 0;
-}
-
-.dropdown-header {
-  padding: 1em;
-  margin: 0;
-
-  color: #404040;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* Page-specific stuff. */
-
-.loader {
-  margin-left: 6px;
-}
-
-@media (max-width: 960px) {
-  .clear-selection {
-    display: none;
-  }
-}
-
-.form-filters .btn-show-more {
-  margin-bottom: 20px;
-}
-
-// Todo(kyle) make this less dumb
-.form-filters {
-  .col-md-3 {
-    padding-left: 0px;
-  }
-  .form-group {
-    padding-right: 0px;
-  }
-}
-
-.controls-group-container label {
-  font-weight: normal;
-  color: #4e4e4e;
-}
-
-.calendar-input {
-  cursor: pointer;
-}
-
-.view-toggle-buttons {
-  margin-left: 1em;
-}
-
-.glyphicon-graph-remove {
-  &:before {
-    content: "\e014";
-    margin: 0px 0px 0px 0px;
-  }
-  padding-top: 2px;
-}
-
-/* Login page */
-.login-form-container {
-  padding-top: 50px;
-}
-
-/* Upload page */
-.upload-button {
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-.btn-file {
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-file input[type=file] {
-  position: absolute;
-  top: 0;
-  right: 0;
-  min-width: 100%;
-  min-height: 100%;
-  font-size: 100px;
-  text-align: right;
-  filter: alpha(opacity=0);
-  opacity: 0;
-  outline: none;
-  background: white;
-  cursor: inherit;
-  display: block;
-}
-
-.auth-button-container {
-  position: absolute;
-  right: 0px;
-}
-.remember-me-container {
-  float: left;
-}
-
-.auth-help {
-  margin-top: 70px;
-}
-
-.alert .auth-alert {
-  margin-bottom: 0;
-}
-
-.relative {
-  position: relative;
-}
-
-// Style for button in upper right corner of layout
-.auth-button {
-    padding-left: 0;
-    margin-top: 14px;
-    margin-left: 10px;
-}
-
-.auth-button span a {
-  color: white;
-  vertical-align: middle;
-}
-
-.auth-alert {
-  margin-bottom: 0px;
-}
-
-/* Intercom */
-#intercom-container .intercom-launcher {
-  bottom: 60px !important;
-}
-
 // Apply font styles that we know we'll need so that the browser downloads
 // them on page load instead of deferring it and causing a stutter in the
 // critical rendering path.
 body:after {
-  font-weight: 300;
   content: ' ';
+  font-weight: 300;
 }
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -237,21 +70,8 @@ body {
   position: relative;
 }
 
-.panel-header {
-  display: inline-block;
-  margin: 0;
-}
-
-.data-status-body {
-  padding: 25px;
-}
-
 .min-full-page-height {
   min-height: var(--main-height);
-}
-
-.full-page-height {
-  height: var(--main-height);
 }
 
 #main {
@@ -265,31 +85,29 @@ body {
     display: none;
   }
 
+  .hide-on-export {
+    visibility: hidden;
+  }
+
   #main {
     top: 0;
   }
 }
 
-.datepicker.datepicker-dropdown {
-  margin-top: 10px;
-}
-
-#toast-container {
-  left: 12px;
-}
-
+// TODO(david): This is currently only used in the legacy RawDataUploadApp and
+// ReviewAdminApp. Remove it when we remove those apps.
 .page-container {
   background-color: $site-background;
-  max-width: calc(100vw - 64px);
   margin-left: $spacing-l;
   margin-right: $spacing-l;
-  top: $spacing-l;
+  max-width: calc(100vw - 64px);
   position: relative;
+  top: $spacing-l;
   &__inner {
     background: white;
-    box-shadow: 0 0 8px rgba(0,0,0,.25);
-    max-width: 1000px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.25);
     margin: auto;
+    max-width: 1000px;
     width: 100%;
     @media (min-width: $navbar-transition-width) {
       min-height: calc(100vh - #{$navbar-height} - 64px);
@@ -300,8 +118,15 @@ body {
   }
 }
 
-// HACK(stephen): Customize the Crisp icon to be much smaller. NEED A BETTER
-// WAY TO DO THIS.
-#crisp-chatbox a[data-maximized="false"] {
-  transform: translate3d(25px, 25px, 0) scale(0.6) !important;
+// HACK(nina): We need to make the chatbox invisible, but still have it exist
+#crisp-chatbox a[data-visible='false'],
+#crisp-chatbox a[data-maximized='false'],
+#crisp-chatbox a[data-visible='false'] > span:first-child > span:first-child {
+  display: none !important;
+}
+
+// HACK(nina): We need to make the chat visible when opened
+#crisp-chatbox a[data-visible='true'],
+#crisp-chatbox a[data-visible='true'] > span:first-child > span:first-child {
+  display: inherit !important;
 }

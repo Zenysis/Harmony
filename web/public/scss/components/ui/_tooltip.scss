@@ -1,0 +1,11 @@
+.zen-tooltip {
+  display: inline-block;
+
+  &__popover {
+    background-color: #3a3a3a;
+    color: $white;
+    font-size: 12px;
+    max-width: 250px;
+    position: relative;
+  }
+}

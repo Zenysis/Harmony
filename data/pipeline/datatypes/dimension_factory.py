@@ -8,6 +8,7 @@ from data.pipeline.datatypes.full_dimension_data_collector import (
 )
 from util.file.unicode_csv import UnicodeDictReader
 
+
 # Create a customized subclass of the DimensionCollector.
 def _subclass_dimension_collector(hierarchical_dimensions, non_hierarchical_dimensions):
     class ChildDimensionCollector(DimensionCollector):
@@ -68,6 +69,7 @@ class DimensionFactory(object):
     ):
         self.hierarchical_dimensions = hierarchical_dimensions
         self.non_hierarchical_dimensions = non_hierarchical_dimensions
+        self.matched_dimensions = hierarchical_dimensions + non_hierarchical_dimensions
         self.raw_prefix = raw_prefix
         self.clean_prefix = clean_prefix
         self.canonical_prefix = canonical_prefix
@@ -161,10 +163,12 @@ class DimensionFactory(object):
             )
         return self._default_canonical_metadata_collector_cls
 
-    # NOTE(stephen): This might need to be extended to allow multiple mapped
-    # dimension files when non-hierarchical dimensions show up.
+    # TODO(all): Implement non-hierarchical dimension metadata collection
     def create_metadata_collector(
-        self, metadata_filename=None, mapped_dimensions_filename=None
+        self,
+        metadata_filename=None,
+        mapped_locations_filename=None,
+        mapped_non_hierarchical_filename=None,
     ):
         '''Instantiate a new FullRowDimensionDataCollector instance based on the
         stored CanonicalAndMetadataCollector class. Initialize the instance by
@@ -178,9 +182,18 @@ class DimensionFactory(object):
                 for row in metadata_reader:
                     collector.collect_metadata(row)
 
-        if mapped_dimensions_filename:
-            with open(mapped_dimensions_filename) as mapped_locations_file:
+        if mapped_locations_filename:
+            with open(mapped_locations_filename) as mapped_locations_file:
                 mapped_locations_reader = UnicodeDictReader(mapped_locations_file)
                 for row in mapped_locations_reader:
-                    collector.collect_canonical_dimensions(row)
+                    collector.collect_hierarchical_canonical_dimensions(row)
+
+        if mapped_non_hierarchical_filename:
+            with open(mapped_non_hierarchical_filename) as mapped_non_hierarchical_file:
+                mapped_non_hierarchical_reader = UnicodeDictReader(
+                    mapped_non_hierarchical_file
+                )
+                for row in mapped_non_hierarchical_reader:
+                    collector.collect_non_hierarchical_canonical_dimensions(row)
+
         return collector

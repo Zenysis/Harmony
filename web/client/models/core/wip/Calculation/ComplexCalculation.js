@@ -1,11 +1,13 @@
 // @flow
+import Promise from 'bluebird';
+
 import * as Zen from 'lib/Zen';
 import QueryFilterUtil from 'models/core/wip/QueryFilter/QueryFilterUtil';
-import type { Serializable } from 'lib/Zen';
 import type {
   QueryFilter,
   SerializedQueryFilter,
 } from 'models/core/wip/QueryFilter/types';
+import type { Serializable } from 'lib/Zen';
 
 type Values = {
   calculationId: string,
@@ -20,7 +22,7 @@ type SerializedComplexCalculation = {
   // cause issues with flow if the type is defined with it. Choosing to define
   // an object with an optional type property so we can get flow to properly
   // refine during deserialization. It will never be used.
-  filter: SerializedQueryFilter | { type?: void } | null,
+  filter: SerializedQueryFilter | { type?: void, ... } | null,
 };
 
 /**
@@ -38,10 +40,12 @@ class ComplexCalculation extends Zen.BaseModel<ComplexCalculation, Values>
     values: SerializedComplexCalculation,
   ): Promise<Zen.Model<ComplexCalculation>> {
     if (values.filter === null || values.filter.type === undefined) {
-      return Promise.resolve(ComplexCalculation.create({
-        calculationId: values.calculation_id,
-        filter: null,
-      }));
+      return Promise.resolve(
+        ComplexCalculation.create({
+          calculationId: values.calculation_id,
+          filter: null,
+        }),
+      );
     }
 
     return QueryFilterUtil.deserializeAsync(values.filter).then(filter =>
@@ -78,6 +82,6 @@ class ComplexCalculation extends Zen.BaseModel<ComplexCalculation, Values>
   }
 }
 
-export default ((ComplexCalculation: any): Class<
+export default ((ComplexCalculation: $Cast): Class<
   Zen.Model<ComplexCalculation>,
 >);

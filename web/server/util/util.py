@@ -13,15 +13,16 @@ from wtforms.validators import ValidationError
 
 from log import LOG
 from models.alchemy.user import User
+from web.server.data.data_access import Transaction
 
 # Attribute names to ignore when doing dictionary conversions of SQLAlchemy Objects.
-IGNORABLE_ATTRIBUTES = set(['_sa_instance_state'])
+IGNORABLE_ATTRIBUTES = {'_sa_instance_state'}
 
 EMAIL_PATTERN = r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)'
 EMAIL_REGEX = re.compile(EMAIL_PATTERN)
 
 LOCALHOST_WHITELIST = ['http://localhost:5000/']
-TRUE_VALUES = set(['true', '1', 't', 'y', 'yes', 'yarp'])
+TRUE_VALUES = {'true', '1', 't', 'y', 'yes', 'yarp'}
 UNAUTHORIZED_ERROR = 'UNAUTHORIZED'
 INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR'
 ISO_DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
@@ -30,6 +31,7 @@ DATE_TIME_NOW = '@now'
 REMEMBER_COOKIE_NAME = 'remember_token'
 
 Node = collections.namedtuple('Node', ['original_dictionary', 'new_dictionary', 'key'])
+
 
 # Common response type from the backend
 class Response(dict):
@@ -61,11 +63,11 @@ def unauthorized_error(required_permission):
     )
 
 
-def generic_error():
+def generic_error(uid='not provided'):
     return Error(
         {
             'code': INTERNAL_SERVER_ERROR,
-            'message': 'An internal server error has occurred.',
+            'message': f'An internal server error has occurred. [Error uid: {uid}]',
         }
     )
 
@@ -89,6 +91,20 @@ def get_user_string(user, include_ip=True):
     return 'Anonymous (IP:%s)' % (remote_ip_address)
 
 
+def get_dashboard_title(specification):
+    # HACK(vedant) - The whole point of implementing versioning is to ensure
+    # that there's only one way to get data out of a specification. We need to
+    # actually support upgrading old specifications automagically so we can
+    # just pull the data exactly as it is expected.
+    options_dictionary = (
+        specification.get('options', {})
+        if 'options' in specification
+        else specification.get('dashboardOptions', {})
+    )
+    title = options_dictionary.get('title')
+    return title
+
+
 def get_resource_string(resource_name, resource_type):
     if resource_name:
         return 'resource \'%s\' of type: \'%s\'' % (resource_name, resource_type)
@@ -105,6 +121,10 @@ def validate_email(form, field):
 
     if not re.match(EMAIL_PATTERN, message_data):
         raise ValidationError('Please enter a valid email address')
+
+
+def is_zenysis_user(username: str):
+    return username.endswith('@zenysis.com')
 
 
 def get_enum_values(enum_class):
@@ -288,8 +308,6 @@ def assert_string(value, argument_name=None, pattern=None):
     _assert_type(value, basestring, argument_name=argument_name)
 
     pattern_is_string = isinstance(pattern, basestring)
-    # Yucky Hack until we move to Python 3
-    # see: https://stackoverflow.com/questions/6102019/type-of-compiled-regex-object-in-python
     if pattern and (pattern_is_string or hasattr(pattern, 'pattern')):
         pattern_value = pattern if pattern_is_string else pattern.pattern
 
@@ -303,6 +321,12 @@ def assert_string(value, argument_name=None, pattern=None):
                 '{prefix} does not match pattern ' '\'{pattern_string}\''
             ).format(prefix=value_string, pattern_string=pattern_value)
             raise ValueError(message)
+
+
+def assert_optional_string(value, argument_name=None, pattern=None):
+    '''Asserts that a value is a string or a None type'''
+    if value is not None:
+        assert_string(value, argument_name, pattern)
 
 
 def assert_integer(value, argument_name=None, lower_bound=None, upper_bound=None):
@@ -612,9 +636,10 @@ def try_parse_enum(value, enum_type, argument_name=None, value_converter_functio
 def assert_users_exist(value):
     undefined_users = []
     for user_id in value:
-        user = User.query.filter(User.id == user_id).first()
-        if not user:
-            undefined_users.append(user_id)
+        with Transaction() as transaction:
+            user = transaction.find_by_id(User, user_id)
+            if not user:
+                undefined_users.append(user_id)
 
     if undefined_users:
         raise ValueError('Users with ids %s do not exist' % undefined_users)

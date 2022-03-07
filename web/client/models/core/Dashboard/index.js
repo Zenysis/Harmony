@@ -1,27 +1,97 @@
 // @flow
-import PropTypes from 'prop-types';
-
+import * as Zen from 'lib/Zen';
 import DashboardMeta from 'models/core/Dashboard/DashboardMeta';
 import DashboardSpecification from 'models/core/Dashboard/DashboardSpecification';
 import Moment from 'models/core/wip/DateTime/Moment';
-import ZenModel, { def } from 'util/ZenModel';
-import override from 'decorators/override';
-import type { SerializedDashboardSpecification } from 'models/core/Dashboard/DashboardSpecification';
+import type { Deserializable } from 'lib/Zen';
 
-// The dashboard format we receive from the backend
-export type SerializedDashboard = {
+type RequiredValues = {
+  /**
+   * The username of the author who created this dashboard.
+   */
+  author: string,
+
+  /**
+   * The unique uri that can be used to look up the authorization resource
+   * corresponding to this dashboard.
+   */
+  authorizationUri: string,
+
+  /** The time at which this dashboard was created. */
+  created: Moment,
+
+  /**
+   * Indicates whether or not the dashboard has been favorited by the current
+   * user.
+   */
+  isFavorite: boolean,
+
+  /**
+   * Indicates whether or not an administrator has flagged the dashboard as
+   * "official" or not.
+   */
+  isOfficial: boolean,
+
+  /**
+   * The last time the dashboard was accessed (if ever) by the current user.
+   * If it has never been accessed by the current user, the Moment will be
+   * invalid. This can be checked with date.isValid()
+   */
+  lastAccessedByCurrentUser: Moment,
+
+  /**
+   * The last time the dashboard was modified (if ever) by the current user.
+   * If it has never been modified by the current user, the Moment will be
+   * invalid. This can be checked with date.isValid()
+   */
+  lastModifiedByCurrentUser: Moment,
+
+  /**
+   * The time at which any attribute of the Dashboard model was last modified.
+   */
+  lastModified: Moment,
+
+  /**
+   * The short-name of the dashboard that the user can use to navigate
+   * directly to the UI representation of the dashboard.
+   */
+  slug: string,
+
+  /** The dashboard specification object. */
+  specification: DashboardSpecification,
+
+  /** The title of the dashboard. */
+  title: string,
+
+  /**
+   * The number of times the dashboard has been view.
+   */
+  totalViews: number,
+
+  /**
+   * The number of times the dashboard has been view by the current user.
+   */
+  totalViewsByUser: number,
+
+  /**
+   * The unique uri that can be used to locate this dashboard on the server
+   */
+  uri: string,
+};
+
+type SerializedDashboard = {
   $uri: string,
   authorUsername: string,
   created: string,
   isOfficial: boolean,
   isFavorite: boolean,
-  lastAccessedByCurrentUser: string,
-  lastModified: string,
+  lastAccessedByCurrentUser: string | null,
+  lastModified: string | null,
   lastModifiedByCurrentUser: string,
   resource: string,
   slug: string,
   title: string,
-  specification: SerializedDashboardSpecification,
+  specification: Zen.Serialized<DashboardSpecification>,
   totalViewsByUser: number,
   totalViews: number,
 };
@@ -30,103 +100,11 @@ export type SerializedDashboard = {
  * The Dashboard model is used by the `DashboardService` to
  * represent all the data required to load and render a Dashboard.
  */
-export default class Dashboard extends ZenModel.withTypes({
-  /**
-   * @readonly
-   * The username of the author who created this dashboard.
-   */
-  author: def(PropTypes.string, '', ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The unique uri that can be used to look up the authorization resource
-   * corresponding to this dashboard.
-   */
-  authorizationUri: def(PropTypes.string, undefined, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The time at which this dashboard was created.
-   */
-  created: def(PropTypes.instanceOf(Moment), undefined, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * Indicates whether or not an administrator has flagged the dashboard as
-   * "official" or not.
-   */
-  isOfficial: def(PropTypes.bool, false, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * Indicates whether or not the dashboard has been favorited by the current
-   * user.
-   */
-  isFavorite: def(PropTypes.bool, false, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The last time the dashboard was accessed (if ever) by the current user.
-   */
-  lastAccessedByCurrentUser: def(
-    PropTypes.instanceOf(Moment),
-    undefined,
-    ZenModel.PRIVATE,
-  ),
-
-  /**
-   * @readonly
-   * The last time the dashboard was modified (if ever) by the current user.
-   */
-  lastModifiedByCurrentUser: def(
-    PropTypes.instanceOf(Moment),
-    undefined,
-    ZenModel.PRIVATE,
-  ),
-
-  /**
-   * @readonly
-   * The number of times the dashboard has been view by the current user.
-   */
-  totalViewsByUser: def(PropTypes.number, 0, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The number of times the dashboard has been view.
-   */
-  totalViews: def(PropTypes.number, 0, ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The time at which any attribute of the Dashboard model was last modified.
-   */
-  lastModified: def(PropTypes.instanceOf(Moment), undefined, ZenModel.PRIVATE),
-
-  /**
-   * The short-name of the dashboard that the user can use to navigate
-   * directly to the UI representation of the dashboard.
-   */
-  slug: def(PropTypes.string.isRequired, ''),
-
-  /**
-   * The dashboard specification object.
-   */
-  specification: def(DashboardSpecification.type(), undefined),
-
-  /**
-   * @readonly
-   * The title of the dashboard.
-   */
-  title: def(PropTypes.string, '', ZenModel.PRIVATE),
-
-  /**
-   * @readonly
-   * The unique uri that can be used to locate this dashboard on the server
-   */
-  uri: def(PropTypes.string, undefined, ZenModel.PRIVATE),
-}) {
-  @override
-  static deserializeAsync(dashboard: SerializedDashboard): Promise<Dashboard> {
+class Dashboard extends Zen.BaseModel<Dashboard, RequiredValues>
+  implements Deserializable<SerializedDashboard> {
+  static deserializeAsync(
+    dashboard: SerializedDashboard,
+  ): Promise<Zen.Model<Dashboard>> {
     const {
       $uri,
       authorUsername,
@@ -144,15 +122,13 @@ export default class Dashboard extends ZenModel.withTypes({
       totalViews,
     } = dashboard;
 
-    const specificationPromise = specification
-      ? DashboardSpecification.deserializeAsync(specification)
-      : Promise.resolve(undefined);
-
-    return specificationPromise.then(
-      (dashboardSpec: DashboardSpecification | void) =>
+    // all dates should be processed in UTC timezones, then converted to the
+    // user's local timezone.
+    return DashboardSpecification.deserializeAsync(specification).then(
+      (dashboardSpec: DashboardSpecification) =>
         Dashboard.create({
           author: authorUsername || '',
-          created: Moment.create(created),
+          created: Moment.utc(created).local(),
           slug,
           title,
           uri: $uri,
@@ -161,9 +137,13 @@ export default class Dashboard extends ZenModel.withTypes({
           isFavorite,
           totalViewsByUser,
           totalViews,
-          lastAccessedByCurrentUser: Moment.create(lastAccessedByCurrentUser),
-          lastModified: Moment.create(lastModified),
-          lastModifiedByCurrentUser: Moment.create(lastModifiedByCurrentUser),
+          lastAccessedByCurrentUser: Moment.utc(
+            lastAccessedByCurrentUser,
+          ).local(),
+          lastModified: Moment.utc(lastModified).local(),
+          lastModifiedByCurrentUser: Moment.utc(
+            lastModifiedByCurrentUser,
+          ).local(),
           authorizationUri: resource,
         }),
     );
@@ -202,18 +182,20 @@ export default class Dashboard extends ZenModel.withTypes({
     });
   }
 
-  @override
-  serialize(): $Shape<SerializedDashboard> {
+  /**
+   * Serialize this dashboard specifically for API calls that only update
+   * its specification.
+   */
+  serializeForSpecUpdate(): {
+    slug: string,
+    specification: Zen.Serialized<DashboardSpecification>,
+  } {
     const { slug, specification } = this.modelValues();
-    const output = {
+    return {
       slug,
       specification: specification.serialize(),
     };
-
-    return output;
-  }
-
-  getTitle(): string {
-    return this.specification().getTitle();
   }
 }
+
+export default ((Dashboard: $Cast): Class<Zen.Model<Dashboard>>);

@@ -3,58 +3,75 @@ import * as React from 'react';
 import Modal from 'react-modal';
 
 import Button from 'components/ui/Button';
+import Group from 'components/ui/Group';
 import Heading from 'components/ui/Heading';
 import Intents from 'components/ui/Intents';
-import ResizeService from 'services/ResizeService';
-import autobind from 'decorators/autobind';
-import { debounce, noop } from 'util/util';
+import ResizeService from 'services/ui/ResizeService';
+import Tooltip from 'components/ui/Tooltip';
+import { noop } from 'util/util';
 import type { StyleObject } from 'types/jsCore';
-import type { SubscriptionObject } from 'services/ResizeService';
+import type { SubscriptionId } from 'services/ui/types';
 
-type Props = {
-  /**
-   * Whether or not to show the modal. If false, the modal will remain mounted,
-   * it just won't render. If you needed to re-mount the modal (which clears all
-   * state), then you should have the modal's parent render `null` instead.
-   */
-  show: boolean,
+/**
+ * Check if the current userAgent is that of a mobile device
+ */
+function isMobileDevice(): boolean {
+  return /mobile/i.test(navigator.userAgent);
+}
 
+type DefaultProps = {
   /** The class name to apply at the top level of the modal */
   className: string,
+
+  /**
+   * The accessibility name for the close button. If none is specified, we will
+   * use the button contents.
+   */
+  closeButtonARIAName?: string,
 
   /** The text to show on the Close button */
   closeButtonText: string,
 
   /** Optional content to render after the action buttons. */
+  // TODO(pablo): convert this to a render prop
   contentAfterActionButtons: React.Node,
 
   /** Optional content to render before the action buttons. */
+  // TODO(pablo): convert this to a render prop
   contentBeforeActionButtons: React.Node,
 
   /** Override the default footer with your own */
+  // TODO(pablo): convert this to a render prop
   customFooter: React.Node,
+
+  /** Override the default header with your own */
+  // TODO(pablo): convert this to a render prop
+  customHeader: React.Node,
 
   /** Children will render in the modal body */
   children: React.Node,
 
-  /**
-   * The default modal height (in pixels) until the window becomes too small to
-   * fit it. At that point this number will be ignored and the modal height will
-   * shrink to fit in the window.
-   */
-  defaultHeight: number | string,
-
-  /**
-   * The default percent away from the top of the window to render the modal.
-   * When the window becomes too small, this number will be ignored and the
-   * modal will always be centered.
-   */
-  defaultPercentTop: number,
   disablePrimaryButton: boolean,
   disableSecondaryButton: boolean,
 
   /** Make the modal take up the entire screen */
   fullScreen: boolean,
+
+  /**
+   * The fixed height of the modal. Optional. If specified, modal will always
+   * take up this much space. If unspecified, modal will take up the height of
+   * the rendered content.
+   */
+  height: number | string | void,
+
+  /** The max height of the modal */
+  maxHeight: number | string | void,
+
+  /** The max width of the modal */
+  maxWidth: number | string | void,
+
+  /** The min width of the modal */
+  minWidth: number | string | void,
 
   /** Event handler for when the primary action button is clicked */
   onPrimaryAction: (SyntheticMouseEvent<HTMLButtonElement>) => void,
@@ -73,22 +90,37 @@ type Props = {
   /** Event handler for when the secondary action button is clicked */
   onSecondaryAction: (SyntheticMouseEvent<HTMLButtonElement>) => void,
 
+  /**
+   * The accessibility name for the primary button. If none is specified, we
+   * will use the button contents if it is a string.
+   */
+  primaryButtonARIAName?: string,
+
   /** The primary action button intent */
   primaryButtonIntent: 'primary' | 'danger' | 'success',
 
   /** Render the primary action button as a button outline */
   primaryButtonOutline: boolean,
-  primaryButtonText: string,
+  primaryButtonText: React.Node,
+
+  /** Content to show in the primary button's tooltip */
+  primaryButtonTooltip?: string,
+
+  /**
+   * The accessibility name for the secondary button. If none is specified, we
+   * will use the button contents if it is a string.
+   */
+  secondaryButtonARIAName?: string,
 
   /** The secondary action button intent */
   secondaryButtonIntent: 'primary' | 'danger' | 'success',
 
   /** Render the secondary action button as a button outline */
   secondaryButtonOutline: boolean,
-  secondaryButtonText: string,
+  secondaryButtonText: React.Node,
 
-  /** Something optional to render after the modal title */
-  secondaryTitleContent: React.Node,
+  /** Content to show in the secondary button's tooltip */
+  secondaryButtonTooltip?: string,
 
   /** Should this modal close when we click the overlay? */
   shouldCloseOnOverlayClick: boolean,
@@ -109,24 +141,36 @@ type Props = {
   showXButton: boolean,
 
   /** The modal title to render in the header */
-  title: string,
+  title: React.Node,
 
   /** An optional tooltip to render next to the title */
   titleTooltip: string,
 
-  /** The exact pixel width of the modal */
-  width: number,
+  /**
+   * The width of the modal. Set width to `"auto"` to make the modal's width
+   * automatically adjust to the contents.
+   */
+  width: number | string,
+};
+
+type Props = {
+  ...DefaultProps,
+  /**
+   * Whether or not to show the modal. If false, the modal will remain mounted,
+   * it just won't render. If you needed to re-mount the modal (which clears all
+   * state), then you should have the modal's parent render `null` instead.
+   */
+  show: boolean,
 };
 
 type State = {
-  footerHeight: number,
-  headerHeight: number,
+  // this value is only needed if we are on a mobile device. This value is
+  // not updated on desktop, because we do not need it there. Only use this
+  // value to make necessary adjustments for mobile devices.
   windowHeight: number,
-  windowWidth: number,
 };
 
 const TEXT = t('ui.BaseModal');
-const WINDOW_RESIZE_DEBOUNCE_TIMEOUT = 100;
 
 /**
  * A basic modal with a lot of configuration options.
@@ -135,36 +179,41 @@ const WINDOW_RESIZE_DEBOUNCE_TIMEOUT = 100;
  * more customization on what buttons to show in the footer, you should set
  * a `customFooter`, which will override the default modal footer.
  *
- * If you needed increased customization on what to render after the modal's
- * title, you should use the `secondaryTitleContent` prop to pass a render
+ * If you needed increased customization on what to render in the modal's
+ * header, you should use the `customHeader` prop to pass a render
  * function.
  *
  */
 export default class BaseModal extends React.PureComponent<Props, State> {
-  static Intents = Intents;
-
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     className: '',
+    closeButtonARIAName: undefined,
     closeButtonText: TEXT.closeText,
     children: null,
     contentAfterActionButtons: null,
     contentBeforeActionButtons: null,
     customFooter: null,
-    defaultHeight: 400,
-    defaultPercentTop: 10,
+    customHeader: null,
     disablePrimaryButton: false,
     disableSecondaryButton: false,
     fullScreen: false,
+    height: undefined,
+    maxHeight: undefined,
+    maxWidth: undefined,
+    minWidth: undefined,
     onRequestClose: noop,
     onPrimaryAction: noop,
     onSecondaryAction: noop,
+    primaryButtonARIAName: undefined,
+    primaryButtonIntent: Intents.PRIMARY,
     primaryButtonOutline: false,
     primaryButtonText: TEXT.primaryText,
-    primaryButtonIntent: Intents.PRIMARY,
-    secondaryTitleContent: null,
+    primaryButtonTooltip: undefined,
+    secondaryButtonARIAName: undefined,
+    secondaryButtonIntent: Intents.DANGER,
     secondaryButtonOutline: false,
     secondaryButtonText: TEXT.secondaryText,
-    secondaryButtonIntent: Intents.DANGER,
+    secondaryButtonTooltip: undefined,
     shouldCloseOnOverlayClick: true,
     showCloseButton: true,
     showFooter: true,
@@ -174,165 +223,118 @@ export default class BaseModal extends React.PureComponent<Props, State> {
     showXButton: true,
     title: '',
     titleTooltip: '',
-    width: 600,
+    width: '70%',
   };
 
-  state = {
-    footerHeight: this.props.showFooter ? 60 : 0,
-    headerHeight: this.props.showHeader ? 70 : 0,
+  static Intents: typeof Intents = Intents;
+
+  state: State = {
     windowHeight: window.innerHeight,
-    windowWidth: window.innerWidth,
   };
 
-  _headerElt: $RefObject<'div'> = React.createRef();
-  _footerElt: $RefObject<'div'> = React.createRef();
-  _resizeSubscription: SubscriptionObject | void = undefined;
+  _resizeSubscription: SubscriptionId | void = undefined;
 
   componentDidMount() {
-    // Watch for resize events so we can adjust the modal's positioning.
-    this._resizeSubscription = ResizeService.subscribe(
-      debounce(this.onWindowResize, WINDOW_RESIZE_DEBOUNCE_TIMEOUT),
-    );
-    this.resetHeaderFooterHeight();
-  }
-
-  componentDidUpdate() {
-    this.resetHeaderFooterHeight();
+    // NOTE(pablo): mobile browsers (e.g. Safari and Chrome on iOS) have a very
+    // annoying behavior where their address bars are expanded when you first
+    // load a page, but after you scroll enough, the address bar shrinks. There
+    // is no easy way to detect when this address bar has changed size. The
+    // problem is that our modal's CSS depends on 100vh to set a max-height,
+    // but the vh unit doesn't play nice with this changing address bar size.
+    // So the only reliable way to set a max-height on mobile is to set a resize
+    // listener, and get the current window height. When the address bar shrinks
+    // or contracts, a resize event is triggered, allowing us to set the correct
+    // max-height for the modal.
+    if (isMobileDevice()) {
+      this._resizeSubscription = ResizeService.subscribe((e, dimensions) => {
+        this.setState({ windowHeight: dimensions.height });
+      });
+    }
   }
 
   componentWillUnmount() {
-    if (this._resizeSubscription) {
-      ResizeService.unsubscribe(this._resizeSubscription);
-    }
+    ResizeService.unsubscribe(this._resizeSubscription);
   }
 
-  resetHeaderFooterHeight(): void {
-    // check the header height on the DOM and set this value in the state,
-    // so that we can know the correct positioning of the modal body
-    if (this._headerElt.current) {
-      this.setState({ headerHeight: this._headerElt.current.offsetHeight });
-    }
-
-    // now do the same for the footer
-    if (this._footerElt.current) {
-      this.setState({ footerHeight: this._footerElt.current.offsetHeight });
-    }
-  }
-
-  getModalBodyStyle(): StyleObject {
-    const { headerHeight, footerHeight } = this.state;
-    return {
-      top: headerHeight,
-      bottom: footerHeight,
-    };
-  }
-
-  getTransitionHeight(): number {
-    const { defaultHeight, defaultPercentTop } = this.props;
-    if (typeof defaultHeight === 'number') {
-      return (50 * defaultHeight) / (50 - defaultPercentTop);
-    }
-    throw new Error(
-      '[BaseModal] getTransitionHeight: cannot perform numeric calculations because defaultHeight is not a number',
-    );
-  }
-
-  shouldCenter(): boolean {
-    if (typeof this.props.defaultHeight === 'number') {
-      return this.state.windowHeight < this.getTransitionHeight();
-    }
-    return false;
-  }
-
-  getWidthSensitiveStyles() {
-    const { defaultHeight, defaultPercentTop, fullScreen } = this.props;
-
-    if (fullScreen) {
-      return {
-        height: '100vh',
-        left: 0,
-        marginTop: 0,
-        top: 0,
-        transform: 'translate(0px)',
-        width: '100vw',
-      };
-    }
-
-    const shouldCenter = this.shouldCenter();
-    const centeredMargins =
-      typeof defaultHeight === 'number'
-        ? this.getTransitionHeight() - defaultHeight
-        : 0;
-    const percentTop = shouldCenter ? 50 : defaultPercentTop;
-    const width = Math.min(this.props.width, this.state.windowWidth - 30);
-
-    return {
+  getModalStyles(): { content: StyleObject, overlay: StyleObject, ... } | void {
+    const {
+      fullScreen,
+      height,
+      show,
       width,
-      height: shouldCenter
-        ? `calc(100vh - ${centeredMargins}px)`
-        : defaultHeight,
-      left: '50%',
-      marginTop: shouldCenter ? `calc(-50vh + ${centeredMargins / 2}px)` : 0,
-      top: `${percentTop}vh`,
-      transform: `translate(-${width / 2}px)`,
-    };
-  }
+      maxWidth,
+      minWidth,
+      maxHeight,
+    } = this.props;
+    const { windowHeight } = this.state;
 
-  getModalStyles(): { content: StyleObject, overlay: StyleObject } | void {
-    if (!this.props.show) {
+    if (!show) {
       return undefined;
     }
 
-    const widthSensitiveStyles = this.getWidthSensitiveStyles();
+    const maxHeightToSet =
+      isMobileDevice() && maxHeight === undefined
+        ? windowHeight - 30
+        : maxHeight;
+
     const content = {
+      maxWidth,
+      minWidth,
+      height,
+      width,
+      maxHeight: maxHeightToSet,
       background: '#ffffff',
       border: 'solid 1px #f3f4f6',
       borderRadius: 5,
       boxShadow:
         '0 2px 10px 0 rgba(0, 0, 0, 0.25), -10px 10px 20px 0 rgba(30, 30, 30, 0.05)',
-      height: widthSensitiveStyles.height,
-      top: widthSensitiveStyles.top,
-      marginTop: widthSensitiveStyles.marginTop,
-      left: widthSensitiveStyles.left,
-      transform: widthSensitiveStyles.transform,
       outline: 'none',
-      overflow: 'auto',
-      padding: 0,
-      position: 'absolute',
-      WebkitOverflowScrolling: 'touch',
-      width: widthSensitiveStyles.width,
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'relative',
     };
 
+    if (fullScreen) {
+      content.borderRadius = 0;
+      content.maxHeight = 'initial';
+      content.width = '100vw';
+      content.height = '100vh';
+    }
+
     const overlay = {
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      position: 'fixed',
       bottom: 0,
       left: 0,
-      position: 'fixed',
       right: 0,
       top: 0,
+
+      backgroundColor: '#0000004d',
       zIndex: 9999,
+
+      alignItems: 'center',
+      display: 'flex',
+      justifyContent: 'center',
     };
 
     return { content, overlay };
   }
 
-  @autobind
-  onWindowResize(event: Event, dimensions: { width: number, height: number }) {
-    const { width, height } = dimensions;
-    this.setState({
-      windowHeight: height,
-      windowWidth: width,
-    });
-  }
+  maybeRenderCloseButton(): React.Node {
+    const {
+      showCloseButton,
+      closeButtonText,
+      closeButtonARIAName,
+      onRequestClose,
+    } = this.props;
 
-  maybeRenderCloseButton() {
-    const { showCloseButton, closeButtonText, onRequestClose } = this.props;
     if (!showCloseButton) {
       return null;
     }
+
     return (
       <Button
         outline
+        ariaName={closeButtonARIAName}
         onClick={onRequestClose}
         size={Button.Sizes.MEDIUM}
         testId="zen-modal-close-button"
@@ -342,31 +344,31 @@ export default class BaseModal extends React.PureComponent<Props, State> {
     );
   }
 
-  maybeRenderContentBeforeActionButtons() {
+  maybeRenderContentBeforeActionButtons(): React.Node {
     const { contentBeforeActionButtons } = this.props;
-    if (contentBeforeActionButtons) {
-      return (
-        <div className="zen-modal-footer__content-before-action-btns">
-          {contentBeforeActionButtons}
-        </div>
-      );
+    if (!contentBeforeActionButtons) {
+      return null;
     }
-    return null;
+    return (
+      <div className="zen-modal-footer__content-before-action-btns">
+        {contentBeforeActionButtons}
+      </div>
+    );
   }
 
-  maybeRenderContentAfterActionButtons() {
+  maybeRenderContentAfterActionButtons(): React.Node {
     const { contentAfterActionButtons } = this.props;
-    if (contentAfterActionButtons) {
-      return (
-        <div className="zen-modal-footer__content-after-action-btns">
-          {contentAfterActionButtons}
-        </div>
-      );
+    if (!contentAfterActionButtons) {
+      return null;
     }
-    return null;
+    return (
+      <div className="zen-modal-footer__content-after-action-btns">
+        {contentAfterActionButtons}
+      </div>
+    );
   }
 
-  maybeRenderModalFooter() {
+  maybeRenderModalFooter(): React.Node {
     if (!this.props.showFooter) {
       return null;
     }
@@ -374,59 +376,44 @@ export default class BaseModal extends React.PureComponent<Props, State> {
     let footerContents = this.props.customFooter;
     if (!footerContents) {
       footerContents = (
-        <div className="zen-modal-footer__button-row">
+        <Group.Horizontal spacing="m">
           {this.maybeRenderContentBeforeActionButtons()}
           {this.maybeRenderPrimaryButton()}
           {this.maybeRenderSecondaryButton()}
           {this.maybeRenderCloseButton()}
           {this.maybeRenderContentAfterActionButtons()}
-        </div>
+        </Group.Horizontal>
       );
     }
 
-    return (
-      <div className="zen-modal-footer" ref={this._footerElt}>
-        {footerContents}
-      </div>
-    );
+    return <div className="zen-modal-footer">{footerContents}</div>;
   }
 
-  maybeRenderSecondaryTitleContent() {
-    const { secondaryTitleContent } = this.props;
-    if (secondaryTitleContent) {
-      return (
-        <div className="zen-modal-header__secondary-content">
-          {secondaryTitleContent}
-        </div>
-      );
-    }
-    return null;
-  }
-
-  maybeRenderModalHeader() {
+  maybeRenderModalHeader(): React.Node {
     const { showHeader, title, titleTooltip } = this.props;
     if (!showHeader) {
       return null;
     }
 
-    return (
-      <div
-        className="zen-modal-header"
-        ref={this._headerElt}
-        zen-test-id="base-modal-header"
-      >
+    let headerContents = this.props.customHeader;
+    if (!headerContents) {
+      headerContents = (
         <Heading.Small
           className="zen-modal-header__title"
           infoTooltip={titleTooltip}
         >
           {title}
         </Heading.Small>
-        {this.maybeRenderSecondaryTitleContent()}
+      );
+    }
+    return (
+      <div className="zen-modal-header" data-testid="base-modal-header">
+        {headerContents}
       </div>
     );
   }
 
-  maybeRenderPrimaryButton() {
+  maybeRenderPrimaryButton(): React.Node {
     const {
       showPrimaryButton,
       primaryButtonIntent,
@@ -434,13 +421,16 @@ export default class BaseModal extends React.PureComponent<Props, State> {
       onPrimaryAction,
       disablePrimaryButton,
       primaryButtonText,
+      primaryButtonTooltip,
+      primaryButtonARIAName,
     } = this.props;
     if (!showPrimaryButton) {
       return null;
     }
 
-    return (
+    const button = (
       <Button
+        ariaName={primaryButtonARIAName}
         disabled={disablePrimaryButton}
         outline={primaryButtonOutline}
         intent={primaryButtonIntent}
@@ -451,9 +441,18 @@ export default class BaseModal extends React.PureComponent<Props, State> {
         {primaryButtonText}
       </Button>
     );
+
+    if (primaryButtonTooltip) {
+      return (
+        <Tooltip tooltipPlacement="top" content={primaryButtonTooltip}>
+          {button}
+        </Tooltip>
+      );
+    }
+    return button;
   }
 
-  maybeRenderSecondaryButton() {
+  maybeRenderSecondaryButton(): React.Node {
     const {
       showSecondaryButton,
       secondaryButtonOutline,
@@ -461,13 +460,16 @@ export default class BaseModal extends React.PureComponent<Props, State> {
       secondaryButtonIntent,
       onSecondaryAction,
       secondaryButtonText,
+      secondaryButtonTooltip,
+      secondaryButtonARIAName,
     } = this.props;
     if (!showSecondaryButton) {
       return null;
     }
 
-    return (
+    const button = (
       <Button
+        ariaName={secondaryButtonARIAName}
         disabled={disableSecondaryButton}
         outline={secondaryButtonOutline}
         intent={secondaryButtonIntent}
@@ -478,9 +480,18 @@ export default class BaseModal extends React.PureComponent<Props, State> {
         {secondaryButtonText}
       </Button>
     );
+
+    if (secondaryButtonTooltip) {
+      return (
+        <Tooltip tooltipPlacement="top" content={secondaryButtonTooltip}>
+          {button}
+        </Tooltip>
+      );
+    }
+    return button;
   }
 
-  maybeRenderXButton() {
+  maybeRenderXButton(): React.Node {
     // render the top-right x button to close
     if (!this.props.showXButton) {
       return null;
@@ -496,21 +507,18 @@ export default class BaseModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderModalBody() {
-    return (
-      <div className="zen-modal__body" style={this.getModalBodyStyle()}>
-        {this.props.children}
-      </div>
-    );
+  renderModalBody(): React.Node {
+    return <div className="zen-modal__body">{this.props.children}</div>;
   }
 
-  render() {
+  render(): React.Element<typeof Modal> {
     const {
       className,
       show,
       onRequestClose,
       shouldCloseOnOverlayClick,
     } = this.props;
+
     return (
       <Modal
         className={`zen-modal ${className}`}
@@ -518,7 +526,9 @@ export default class BaseModal extends React.PureComponent<Props, State> {
         isOpen={show}
         onRequestClose={onRequestClose}
         shouldCloseOnOverlayClick={shouldCloseOnOverlayClick}
-        style={(this.getModalStyles(): any)}
+        // using $AllowAny here only because the type annotation for react
+        // modal is incorrect
+        style={(this.getModalStyles(): $AllowAny)}
       >
         {this.maybeRenderModalHeader()}
         {this.renderModalBody()}
@@ -538,4 +548,11 @@ if (document.getElementById('main')) {
 } else if (document.getElementById('rsg-root')) {
   // if we're rendering in styleguidist
   Modal.setAppElement('#rsg-root');
+} else {
+  const modalRoot = document.createElement('div');
+  modalRoot.setAttribute('id', 'modal-root');
+  if (document.body) {
+    document.body.appendChild(modalRoot);
+    Modal.setAppElement('#modal-root');
+  }
 }

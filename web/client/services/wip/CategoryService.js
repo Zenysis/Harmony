@@ -3,6 +3,8 @@ import type Promise from 'bluebird';
 
 import APIService, { API_VERSION } from 'services/APIService';
 import CachedMapService from 'services/wip/CachedMapService';
+// No way to avoid this circular dependency unfortunately.
+// eslint-disable-next-line import/no-cycle
 import LinkedCategory from 'models/core/wip/LinkedCategory';
 import { convertIDToURI, convertURIToID } from 'services/wip/util';
 import type { APIVersion, HTTPService } from 'services/APIService';
@@ -44,7 +46,10 @@ function _buildCategoryTreeHelper(
   );
 
   // Deserialize the raw category now that we have the full parent object.
-  const category = LinkedCategory.fromObject(curRawCategory, parentCategory);
+  const category = LinkedCategory.create({
+    ...curRawCategory,
+    parent: parentCategory,
+  });
 
   // Memoize our work as we go.
   // eslint-disable-next-line no-param-reassign
@@ -75,7 +80,7 @@ function buildCategoryTree(rawCategoryMapping) {
 class CategoryService extends CachedMapService<LinkedCategory>
   implements URIConverter {
   apiVersion: APIVersion = API_VERSION.V2;
-  endpoint: string = 'wip/categories';
+  endpoint: string = 'query/categories';
   _httpService: HTTPService;
 
   constructor(httpService: HTTPService) {
@@ -83,7 +88,6 @@ class CategoryService extends CachedMapService<LinkedCategory>
     this._httpService = httpService;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   buildCache(
     resolve: ResolveFn<LinkedCategory>,
     reject: RejectFn,
@@ -113,5 +117,5 @@ class CategoryService extends CachedMapService<LinkedCategory>
   }
 }
 
-const CategoryServiceImpl = new CategoryService(APIService);
+const CategoryServiceImpl: CategoryService = new CategoryService(APIService);
 export default CategoryServiceImpl;

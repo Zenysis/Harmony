@@ -1,0 +1,5 @@
+.date-filter-customization-module {
+  &__date-picker {
+    @include zen-elevation-4;
+  }
+}

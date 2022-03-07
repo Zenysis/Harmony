@@ -3,16 +3,28 @@
 import type {
   AnyModel,
   Model,
-  SettableValues,
   StatefulComputeDerivedValueFn,
 } from 'lib/Zen/ZenModel';
 
 /**
- * This is a collection of core helper functions that we expose to
- * users. This is different from ZenModelUtil in that these are not
- * optional utilities, but actually core functions for the correct usage
- * of a ZenModel.
+ * This is a collection of core helper functions and types that we expose to
+ * users. This is different from ZenModelUtil in that these are not optional
+ * utilities, but actually core functions for the correct usage of parts
+ * of ZenModel's API.
  */
+
+export type ModelValues<M: AnyModel> = {
+  ...$PropertyType<M, '_modelValues'>,
+  ...$PropertyType<M, '_derivedValues'>,
+};
+export type ModelValueKeys<M: AnyModel> = $Keys<ModelValues<M>>;
+export type ModelValueType<M: AnyModel, K> = $ElementType<ModelValues<M>, K>;
+export type SettableValues<M: AnyModel> = $PropertyType<M, '_modelValues'>;
+export type SettableValueKeys<M: AnyModel> = $Keys<SettableValues<M>>;
+export type SettableValueType<M: AnyModel, K> = $ElementType<
+  SettableValues<M>,
+  K,
+>;
 
 /**
  * Helper function that returns a function that compare two models
@@ -25,13 +37,13 @@ import type {
  * ^ This will create a derived property that recomputes when `name` or
  * `lastName` changes.
  *
- * @param {...Array<$Keys<SettableValues>>} valueKeys The keys to compare
+ * @param {...Array<SettableValueKeys>} valueKeys The keys to compare
  * @returns {(Model, Model) => boolean} Function that compares the `valueKeys`
  * of two models and returns true if they have changed.
  */
 export function hasChanged<M: AnyModel>(
-  ...valueKeys: $ReadOnlyArray<$Keys<SettableValues<M>>>
-): (prevModel: Model<M>, nextModel: Model<M>) => boolean {
+  ...valueKeys: $ReadOnlyArray<SettableValueKeys<M>>
+): (prevModel: M, nextModel: M) => boolean {
   return hasChangedDeep(...valueKeys);
 }
 
@@ -57,8 +69,8 @@ export function hasChanged<M: AnyModel>(
  */
 export function hasChangedDeep<M: AnyModel>(
   ...valueKeys: $ReadOnlyArray<string>
-): (prevModel: Model<M>, nextModel: Model<M>) => boolean {
-  return (prevModel: Model<M>, nextModel: Model<M>) =>
+): (prevModel: M, nextModel: M) => boolean {
+  return (prevModel: M, nextModel: M) =>
     valueKeys.some(key => {
       const [prevVal, nextVal] = key
         .split('.')
@@ -73,7 +85,7 @@ export function hasChangedDeep<M: AnyModel>(
  * If you don't wrap it with `statefulCompute` then the function cannot
  * take a `prevModel` as an argument.
  * @param {(currModel, prevModel) => T} computeFunc The function to recompute a
- *   derived value. It's parameters are the current model and the previous model
+ *   derived value. Its parameters are the current model and the previous model
  * @returns {(currModel, prevModel) => T} The same function, but now
  *   recognizable by a ZenModel as a stateful compute function.
  */

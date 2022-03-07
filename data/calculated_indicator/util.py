@@ -87,3 +87,14 @@ def build_calculated_indicator_calculation(ind_id, constituents_calculation, for
     )
     calculation.add_post_aggregation_from_formula(ind_id, formula)
     return calculation
+
+
+# Build a formula calculation and list of constituent fields the composite indicator
+# needs.
+def get_exports_for_composite_indicator(indicator):
+    assert 'children' in indicator, (
+        'Somehow received a non-composite indicator: %s' % indicator
+    )
+    constituents = set(indicator['children'])
+    formula = ' + '.join(constituents).strip()
+    return (formula, constituents)

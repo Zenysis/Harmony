@@ -1,11 +1,8 @@
 // @flow
 import * as Zen from 'lib/Zen';
-import {
-  sortValuesAsc,
-  twoDecimalPlaces,
-} from 'models/core/QueryResultSpec/ValueRule/rulesUtil';
+import { sortValuesAsc } from 'models/core/QueryResultSpec/ValueRule/rulesUtil';
 import type { Serializable } from 'lib/Zen';
-import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/types';
+import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/TestableRule';
 
 type Values = {
   n: number,
@@ -16,7 +13,7 @@ type SerializedTopRule = {
   n: number,
 };
 
-const TEXT = t('models.core.QueryResultSpec.ValueRule');
+const TEXT_PATH = 'models.core.QueryResultSpec.ValueRule';
 
 /**
  * Test if a value is in the top N values of its array.
@@ -47,9 +44,11 @@ class TopRule extends Zen.BaseModel<TopRule, Values>
     return val >= this._getTopValue(allValues);
   }
 
-  getRuleString(allValues: $ReadOnlyArray<?number>): string {
-    const topVal = twoDecimalPlaces(this._getTopValue(allValues));
-    return `${TEXT.values} >= ${topVal}`;
+  getRuleString(): string {
+    return t('top', {
+      scope: TEXT_PATH,
+      num: this._.n().toString(),
+    });
   }
 
   serialize(): SerializedTopRule {
@@ -60,4 +59,4 @@ class TopRule extends Zen.BaseModel<TopRule, Values>
   }
 }
 
-export default ((TopRule: any): Class<Zen.Model<TopRule>>);
+export default ((TopRule: $Cast): Class<Zen.Model<TopRule>>);

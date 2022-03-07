@@ -115,6 +115,7 @@ from config.br.indicator_groups.tipo_causa_obstetr_obitos_maternos import (
 from config.br.indicator_groups.tipo_causa_obstetr_obitos_mulheres_idade_fertil import (
     TIPO_CAUSA_OBSTETR_OBITOS_MULHERES_IDADE_FERTIL_GROUPS,
 )
+from config.br.indicator_groups.tabnet_translations import TRANSLATION_OVERRIDES
 from data.aqt_datasources import build_data_source
 
 GROUP_DEFINITIONS = []
@@ -185,8 +186,15 @@ ID_LOOKUP = {
 DATA_SOURCES = []
 
 for group in GROUP_DEFINITIONS:
+    # HACK(ian): Override a bunch of tabnet texts with their translated values.
+    group['groupText'] = TRANSLATION_OVERRIDES.get(group['groupId'], group['groupText'])
     DATA_SOURCES.append(
         build_data_source(group['groupId'], group['groupText'], [group])
     )
+
+    for indicator in group['indicators']:
+        translation_text = TRANSLATION_OVERRIDES.get(indicator['id'])
+        if translation_text:
+            indicator['text'] = translation_text
 
 REMOVED_INDICATORS = []

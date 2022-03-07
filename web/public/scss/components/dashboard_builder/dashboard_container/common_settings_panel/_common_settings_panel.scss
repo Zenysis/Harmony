@@ -1,0 +1,114 @@
+.gd-dashboard-common-settings-panel {
+  &__section-title {
+    // NOTE(kalyani, david): After the designs system upgrade we should
+    // transition these to using a standard header component. For now, we are
+    // copying the titles we use in AQT.
+    @extend .selection-block__title-block;
+  }
+
+  &__elements-block {
+    margin-bottom: $space-xl-px;
+    margin-top: $space-l-px;
+    width: 100%;
+  }
+
+  &__pill-block {
+    column-gap: $space-xs-px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: $space-xs-px;
+  }
+
+  &__open-close-button {
+    bottom: $space-m-px;
+    margin: 0;
+    position: absolute;
+    right: $space-m-px;
+  }
+
+  &--left-aligned {
+    background-color: $white;
+    border-right: 1px solid $gray;
+    grid-row: 1;
+    margin-bottom: 0;
+    padding: $space-m-px $space-m-px $space-m-px $space-m-px;
+    position: -webkit-sticky; // stylelint-disable
+    position: sticky;
+    top: $dashboard-header-height;
+    width: 308px;
+  }
+
+  &--closed {
+    width: 32px;
+
+    .gd-dashboard-common-settings-panel__main-content {
+      display: none;
+    }
+
+    .gd-dashboard-common-settings-panel__open-close-button {
+      right: 0;
+    }
+  }
+}
+
+.gd-query-section {
+  display: flex;
+  margin-top: $space-m-px;
+  position: relative;
+
+  .selection-block {
+    width: 100%;
+  }
+
+  &--collapsed-layout {
+    display: block;
+  }
+
+  &--horizontal {
+    .query-part-selector {
+      background-color: #fafafb;
+      border: none;
+    }
+  }
+
+  &__selector-btn {
+    background-color: $white;
+    border-color: $gray;
+    border-radius: 5px;
+    padding: $space-xs-px $space-m-px;
+
+    &:hover {
+      background-color: $white-hover;
+    }
+    &:active {
+      background-color: $white-active;
+    }
+  }
+
+  &__tag-list {
+    align-self: center;
+    display: flex;
+    flex-wrap: wrap;
+
+    & > div {
+      margin-right: 0.5em;
+
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+  }
+
+  &__tag {
+    margin-bottom: 5px;
+  }
+
+  &__grouping-tag {
+    @extend .aqt-customizable-grouping-tag;
+    border: 1px solid $gray;
+  }
+
+  &__filter-tag {
+    @extend .aqt-customizable-filter-tag;
+  }
+}

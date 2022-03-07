@@ -4,9 +4,10 @@ import type {
   DimensionID,
 } from 'components/ui/visualizations/BarGraph/types';
 
-export type LinearScale = any;
+export type LinearScale = $FlowTODO;
 
 export type LevelSpec = {
+  angle: 'diagonal' | 'horizontal' | 'vertical',
   comparator: (a: DataPoint, b: DataPoint) => number,
   dimensionID: DimensionID,
 };
@@ -23,6 +24,7 @@ export type LayerValue = {
 };
 
 export type LayerData = {
+  angle: 'diagonal' | 'horizontal' | 'vertical',
   layerDimensions: $ReadOnlyArray<DimensionID>,
   layerValues: $ReadOnlyArray<LayerValue>,
 };

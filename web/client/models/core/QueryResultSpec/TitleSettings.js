@@ -1,9 +1,8 @@
 // @flow
 import * as Zen from 'lib/Zen';
-import type Field from 'models/core/Field';
 import type { Serializable } from 'lib/Zen';
 
-type Values = {
+type DefaultValues = {
   title: string,
   titleFontSize: string,
   subtitle: string,
@@ -25,31 +24,16 @@ type SerializedTitleSettings = {
  * TitleSettings represents the Title metadata for a QueryResultSpec.
  * A query result can have a title, subtitle, and font sizes for each of these.
  */
-class TitleSettings extends Zen.BaseModel<TitleSettings, {}, Values>
+class TitleSettings extends Zen.BaseModel<TitleSettings, {}, DefaultValues>
   implements Serializable<SerializedTitleSettings> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     title: '',
-    titleFontSize: '24px',
+    titleFontSize: '17px',
     subtitle: '',
-    subtitleFontSize: '16px',
+    subtitleFontSize: '15px',
     titleFontFamily: 'Arial',
     titleFontColor: 'black',
   };
-
-  static fromFields(fields: Array<Field>, denominator?: Field): TitleSettings {
-    let title = '';
-    if (fields.length > 0) {
-      // Title defaults to first indicator
-      title = fields[0].getCanonicalName();
-      if (denominator) {
-        // TODO(stephen): Translate this, solicit feedback and change the
-        // wording if it is ambiguous or confusing
-        title += `\nscaled by ${denominator.getCanonicalName()}`;
-      }
-      title = title.trim();
-    }
-    return TitleSettings.create({ title });
-  }
 
   static deserialize({
     title,
@@ -74,4 +58,4 @@ class TitleSettings extends Zen.BaseModel<TitleSettings, {}, Values>
   }
 }
 
-export default ((TitleSettings: any): Class<Zen.Model<TitleSettings>>);
+export default ((TitleSettings: $Cast): Class<Zen.Model<TitleSettings>>);

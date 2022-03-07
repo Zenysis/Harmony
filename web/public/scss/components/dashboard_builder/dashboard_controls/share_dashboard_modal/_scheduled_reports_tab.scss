@@ -1,0 +1,64 @@
+.gd-scheduled-reports-tab {
+  &__title {
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  &__cadence {
+    margin-bottom: 0;
+    text-transform: capitalize;
+  }
+
+  &__report-recipients {
+    color: $gray;
+    font-size: 12px;
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+  }
+
+  &__list-item {
+    border-bottom: 1px solid $gray;
+    list-style: none;
+    padding: $space-m-px $space-xs-px;
+
+    &--details {
+      align-items: center;
+      display: flex;
+      justify-content: center;
+    }
+  }
+
+  &__schedule {
+    flex-grow: 1;
+  }
+
+  &__edit-button {
+    align-items: center;
+    border-radius: 5px;
+    display: flex;
+    font-size: 18px;
+    height: 30px;
+    justify-content: center;
+    width: 30px;
+
+    &:hover {
+      background-color: rgba($blue-primary-hover, 0.4);
+      cursor: pointer;
+
+      .gd-scheduled-reports-tab__edit-button--icon {
+        color: $blue-primary;
+      }
+    }
+
+    &:active {
+      background-color: rgba($blue-primary-hover, 0.6);
+    }
+
+    &--icon {
+      color: $gray-active;
+    }
+  }
+}

@@ -17,8 +17,8 @@
   }
 
   .landing-cta {
-    width: 500px;
     float: right;
+    width: 500px;
 
     .review-link-button {
       margin-top: -40px;
@@ -37,21 +37,14 @@
     padding: 30px 40px 10px 40px;
   }
 
-  .location-matching-container {
-    border: 2px solid $well-border;
-    background: $white;
-    padding: 20px;
-    margin: 10px 40px 30px 40px;
-  }
-
   .location-title {
     font-size: 30px;
-    width: 100%;
     text-align: center;
+    width: 100%;
 
     .ancestor {
-      font-size: 15px;
       color: #707070;
+      font-size: 15px;
     }
   }
 
@@ -60,41 +53,13 @@
     height: 100%;
     padding: 20px;
     text-align: center;
-
-    .zen-dropdown-item {
-      .location-name {
-        font-weight: bold;
-        padding-right: 5px;
-        float: left;
-      }
-
-      .location-subtitle {
-        color: grey;
-        font-size: 12px;
-      }
-    }
-    .zen-dropdown-item-wrapper:hover {
-      color: #fff;
-      background-image: linear-gradient(to right, #2fa4e2, #3c8ae6);
-      .location-subtitle {
-        color: #fff;
-      }
-    }
-
-    .zen-dropdown-item-wrapper--selected {
-      color: #fff;
-      background-image: linear-gradient(to right, #2fa4e2, #3c8ae6);
-      .location-subtitle {
-        color: #fff;
-      }
-    }
   }
 
   .mfr {
     .expando-tree {
-      height: calc(100vh - 82px);
-      width: 100hw;
       background: #fff;
+      height: calc(100vh - 82px);
+      width: 100vw;
     }
 
     .export-mfr-btn {
@@ -122,110 +87,149 @@
 
   .review {
     bottom: 0;
-    position: fixed;
     left: 0;
+    position: fixed;
     width: 100%;
   }
 
   .review-link-button {
-    min-width: 220px;
     float: right;
-    margin-top: -60px;
     margin-right: 40px;
+    margin-top: -60px;
+    min-width: 220px;
 
     .button-number {
-      width: 15%;
       background: #fff;
-      color: #2fa4e2;
       border-radius: 8px;
+      color: #2fa4e2;
       float: left;
+      width: 15%;
     }
 
     .button-text {
-      width: 80%;
       float: left;
+      width: 80%;
     }
   }
 
-  .review-admin {
-    .u-heading-large {
-      padding-left: calc((100% - 1000px)/2);
-      padding-top: 30px;
-      padding-bottom: 10px;
-    }
+  .suggestions {
+    min-height: 300px;
+    width: 63%;
   }
 
-  .review-tabs {
-    .zen-tabs__header-row {
-      padding-left: calc((100% - 1000px)/2);
-    }
-  }
-
-  .selectable-location {
+  .right-buttons {
+    height: 65px;
+    margin: 10px;
     width: 100%;
-    height: 55px;
+  }
+  .flag-button {
+    background: #f9ce89;
+  }
+}
+
+.location-matching-container {
+  background: $white;
+  border: 2px solid $light-gray-4;
+  margin: 10px 40px 30px 40px;
+  padding: 20px;
+
+  &__selectable-location-btn {
     border: 0px;
-    border-bottom: 1px solid $well-border;
+    border-bottom: 1px solid $light-gray-4;
     font-size: 20px;
+    height: 55px;
+    width: 100%;
 
     .ancestor {
-      font-size: 10px;
       color: #707070;
+      font-size: 12px;
     }
 
-    .zen-dropdown-button__main-btn:hover {
+    &:hover {
+      background-image: linear-gradient(to right, #2fa4e2, #3c8ae6);
       border: none;
       border-radius: 0;
+      color: #fff;
+
+      .ancestor {
+        color: #fff;
+      }
+    }
+
+    .zen-dropdown-button__caret {
+      font-size: 13px;
     }
 
     .zen-dropdown-button__button-content {
       text-align: center;
     }
 
-    .zen-dropdown-button__caret {
-      font-size: 13px;
-    }
-  }
-
-  .selectable-location:hover {
-    background-image: linear-gradient(to right, #2fa4e2, #3c8ae6);
-    color: #fff;
-
-    .ancestor {
+    &--selected {
+      background-image: linear-gradient(to right, #2fa4e2, #3c8ae6);
+      border: none;
+      border-radius: 0;
       color: #fff;
-    }
-  }
+      text-align: center;
 
-  .selected {
-    background-image: linear-gradient(to right, #2fa4e2, #3c8ae6);
-    color: #fff;
-    text-align: center;
+      .ancestor {
+        color: #fff;
+      }
 
-    .ancestor {
-      color: #fff;
-    }
-
-    .zen-dropdown-button__main-btn {
       .location-name {
-        width: 100%;
         font-size: 20px;
         font-weight: normal !important;
+        width: 100%;
       }
 
       .location-subtitle {
         color: #fff;
-        font-size: 10px;
+        font-size: 12px;
       }
     }
   }
 
-  .suggestions {
-    width: 63%;
-    min-height: 300px;
+  &__selectable-location-dropdown {
+    .location-name {
+      display: inline-block;
+      font-weight: bold;
+      padding-right: 5px;
+    }
+
+    .location-subtitle {
+      color: grey;
+      display: inline-block;
+      font-size: 12px;
+    }
+
+    .zen-dropdown-item-wrapper:hover {
+      background-image: linear-gradient(to right, #2fa4e2, #3c8ae6);
+      color: #fff;
+      .location-subtitle {
+        color: #fff;
+      }
+    }
+
+    .zen-dropdown-item-wrapper--selected {
+      background-image: linear-gradient(to right, #2fa4e2, #3c8ae6);
+      color: #fff;
+      .location-subtitle {
+        color: #fff;
+      }
+    }
+  }
+}
+
+.review-admin {
+  .u-heading-large {
+    padding-bottom: 10px;
+    padding-left: calc((100% - 1000px) / 2);
+    padding-top: 30px;
   }
 
-  .tab-footer {
-    padding: 20px;
+  .review-tabs {
+    .zen-tabs__header-row {
+      padding-left: calc((100% - 1000px) / 2);
+    }
   }
 
   .zen-review {
@@ -245,16 +249,11 @@
       color: $gray-active;
     }
     &__selected {
-      color: #B22222;
+      color: #b22222;
     }
   }
 
-  .right-buttons {
-    width: 100%;
-    margin: 10px;
-    height: 65px;
-  }
-  .flag-button {
-    background: #f9ce89;
+  .tab-footer {
+    padding: 20px;
   }
 }

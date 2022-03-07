@@ -1,0 +1,75 @@
+.dc-directory-table-container-header {
+  align-items: center;
+  display: flex;
+
+  // NOTE(yitian): Set a fixed height so that the different ways buttons are
+  // shown (batch vs action buttons) will not cause the page to move around.
+  height: 32px;
+
+  &__action-buttons {
+    align-items: center;
+    display: flex;
+    margin-left: auto;
+  }
+
+  &__batch-buttons {
+    align-items: center;
+    display: flex;
+    margin-left: $space-m-px;
+
+    & > *:not(:first-child) {
+      margin-left: $space-s-px;
+    }
+  }
+
+  &__label {
+    &--batch {
+      border-right: 1px $gray solid;
+      padding-right: $space-m-px;
+    }
+  }
+}
+
+.dc-action-button {
+  color: $blue-primary;
+  fill: $blue-primary;
+  margin-left: $space-m-px;
+
+  &:hover {
+    color: $blue-primary-hover;
+    fill: $blue-primary-hover;
+  }
+
+  &--disabled {
+    color: $gray;
+    cursor: not-allowed;
+    fill: $gray;
+
+    &:hover {
+      color: $gray;
+      fill: $gray;
+    }
+  }
+}
+
+.dc-batch-button {
+  align-items: center;
+  background-color: $white;
+  border: 1px $gray-light-active solid;
+  border-radius: 6px;
+  display: flex;
+  height: 32px;
+  padding: $space-xs-px;
+
+  &:hover {
+    background-color: $white-hover;
+  }
+
+  &:active {
+    background-color: $white-active;
+  }
+
+  &__icon {
+    margin-right: $space-xs-px !important;
+  }
+}

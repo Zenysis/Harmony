@@ -1,70 +1,49 @@
 // @flow
 import * as React from 'react';
 
-import type { ColumnCounts } from 'components/visualizations/common/controls/commonTypes';
+import LabelWrapper from 'components/ui/LabelWrapper';
 
-type Props = ColumnCounts & {
+type Props = {
   children: React.Node,
 
-  className: string,
+  className?: string,
   htmlFor?: string,
-  label?: string,
+  label?: React.Node,
+  labelAfter?: boolean,
+  labelInline?: boolean,
   labelClassName?: string,
-};
-
-const defaultColumnCounts = {
-  colsControl: 9,
-  colsLabel: 3,
-  colsWrapper: 12,
-};
-
-const defaultProps = {
-  ...defaultColumnCounts,
-  className: '',
-  labelClassName: '',
-  displayInline: true,
-  htmlFor: undefined,
-  label: undefined,
+  testId?: string,
 };
 
 /**
  * <Control> represents a single control (e.g. InputText, Dropdown, etc.)
- * grouped together with its label. Controls are placed within a ControlsGroup
- * component. <Control> should not be placed outside a <ControlsGroup> otherwise
- * the css cols will get thrown off.
+ * grouped together with its label.
  */
-export default function Control(props: Props) {
-  const {
-    children,
-    label,
-    className,
-    colsControl,
-    colsLabel,
-    colsWrapper,
-    htmlFor,
-    labelClassName,
-  } = props;
-
-  let labelCol = null;
+export default function Control({
+  children,
+  label = undefined,
+  className = '',
+  htmlFor = undefined,
+  labelAfter = false,
+  labelInline = false,
+  labelClassName = '',
+  testId = undefined,
+}: Props): React.Node {
   if (label) {
-    labelCol = (
-      <div className={`col-xs-${colsLabel} label-col`}>
-        <label htmlFor={htmlFor} className={labelClassName}>
-          {label}
-        </label>
-      </div>
+    return (
+      <LabelWrapper
+        className={className}
+        htmlFor={htmlFor}
+        inline={labelInline}
+        label={label}
+        labelAfter={labelAfter}
+        labelClassName={`settings-modal__control-label ${labelClassName}`}
+        testId={testId}
+      >
+        {children}
+      </LabelWrapper>
     );
   }
 
-  return (
-    <div className={`col-xs-${colsWrapper} control ${className}`}>
-      <div className="row">
-        {labelCol}
-        <div className={`col-xs-${colsControl} control-col`}>{children}</div>
-      </div>
-    </div>
-  );
+  return <div className={className}>{children}</div>;
 }
-
-Control.defaultProps = defaultProps;
-Control.defaultColumnCounts = defaultColumnCounts;

@@ -1,7 +1,7 @@
 # pylint: disable=C0103
 from werkzeug.exceptions import NotFound
 
-from models.alchemy.permission import Resource, ResourceType, Role
+from models.alchemy.permission import Resource, ResourceRole, ResourceType
 from web.server.data.data_access import find_one_by_fields
 
 
@@ -43,9 +43,12 @@ def try_get_role_and_resource(
         mismatch between resource types for `role` and `resource` (e.g. if `role` is `group_admin`
         and `resource` is `jsc-dashboard`).
     '''
-
+    # NOTE(toshi): All references to `role` actually refers to a ResourceRole
     role = find_one_by_fields(
-        Role, case_sensitive=False, search_fields={'name': role_name}, session=session
+        ResourceRole,
+        case_sensitive=False,
+        search_fields={'name': role_name},
+        session=session,
     )
     resource_type_entity = find_one_by_fields(
         ResourceType,
@@ -93,7 +96,12 @@ def try_get_role_and_resource(
             }
         )
 
-    if resource and role and resource.resource_type_id != role.resource_type_id:
+    role_permission_resource_type = role.permissions[0].resource_type
+    if (
+        resource
+        and role
+        and resource.resource_type_id != role_permission_resource_type.id
+    ):
         errors.append(
             {
                 'fields': ['resourceType', 'roleName'],
@@ -103,7 +111,7 @@ def try_get_role_and_resource(
                 )
                 % (
                     role.name,
-                    role.resource_type.name,
+                    role_permission_resource_type.name,
                     resource.name,
                     resource.resource_type.name,
                 ),

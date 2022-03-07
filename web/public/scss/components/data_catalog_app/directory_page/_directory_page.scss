@@ -1,0 +1,11 @@
+.dc-directory-page {
+  margin: 0 auto;
+  padding-bottom: $space-xl-px;
+  padding-top: $space-xxl-px;
+  width: 1126px;
+
+  &__breadcrumb-section {
+    display: flex;
+    margin-bottom: $space-l-px;
+  }
+}

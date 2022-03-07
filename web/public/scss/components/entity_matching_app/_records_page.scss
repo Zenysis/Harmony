@@ -1,0 +1,50 @@
+.em-records-page {
+  margin: auto;
+  max-width: 1700px;
+  padding: $space-xxl-px $space-l-px 0 $space-l-px;
+
+  &__tooltip-popover {
+    max-width: 400px;
+    white-space: pre-wrap;
+  }
+}
+
+.em-tabs__header-row {
+  border-bottom: 1px solid $gray;
+}
+
+.em-tab-header {
+  margin-right: $space-xxl-px;
+  padding-bottom: $space-m-px;
+  padding-top: 0;
+
+  // NOTE(abby): padding here changes to account for the bottom border on
+  // active tabs and to mantain the same overall height.
+  &:hover {
+    padding-bottom: 13px;
+  }
+
+  &--active {
+    padding-bottom: 13px;
+  }
+
+  &__title {
+    color: $slate-hover;
+  }
+
+  &__caption {
+    color: $slate-hover;
+    font-size: 12px;
+  }
+
+  &__loading-spinner {
+    text-align: center;
+  }
+}
+
+.em-queued-pill {
+  background: #f0dfa7;
+  border-radius: 100px;
+  display: inline-block;
+  padding: $space-xxs-px $space-xs-px;
+}

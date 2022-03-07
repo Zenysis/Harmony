@@ -1,60 +1,46 @@
 // @flow
 import * as React from 'react';
 
-import TableCell from 'components/ui/Table/TableCell';
+import type { TableRowChildren } from 'components/ui/Table/types';
 
-type ComponentThatRendersTableCell = Class<
-  React.Component<any, any> & {
-    +render: () => null | React.Element<typeof TableCell>,
-  },
->;
-
-type ComponentThatRendersTableCellArray = Class<
-  React.Component<any, any> & {
-    +render: () => null | $ReadOnlyArray<
-      | null
-      | React.Element<typeof TableCell>
-      | React.Element<ComponentThatRendersTableCell>
-      | React.Element<ComponentThatRendersTableCellArray>,
-    >,
-  },
->;
-
-type Props = {|
+type Props = {
   /**
    * A row's children can be a TableCell, a component that renders a TableCell,
    * or a component that renders an array of TableCells.
    */
-  children: React.ChildrenArray<
-    | null
-    | React.Element<typeof TableCell>
-    | React.Element<ComponentThatRendersTableCell>
-    | React.Element<ComponentThatRendersTableCellArray>,
-  >,
+  children: TableRowChildren,
 
-  className: string, // eslint-disable-line react/no-unused-prop-types
+  /**
+   * The row's ID, which will be used as the React key when rendering the table
+   */
+  id: React.Key, // eslint-disable-line react/no-unused-prop-types
+
+  className?: string, // eslint-disable-line react/no-unused-prop-types
 
   /**
    * If the `<Table>` component has `onRowClick` set, all rows become clickable.
    * If you need any rows to be unclickable, then set their `disableClick` prop
    * to `true`
    */
-  disableClick: boolean, // eslint-disable-line react/no-unused-prop-types
+  disableClick?: boolean, // eslint-disable-line react/no-unused-prop-types
 
   /**
-   * The row's ID, which will be used as the React key when rendering the table
+   * Enables editing for this row.
    */
-  id?: React.Key, // eslint-disable-line react/no-unused-prop-types
+  enableEdit?: boolean, // eslint-disable-line react/no-unused-prop-types
 
   /** Whether or not this row should be styled as selected */
-  isSelected: boolean, // eslint-disable-line react/no-unused-prop-types
-|};
+  isSelected?: boolean, // eslint-disable-line react/no-unused-prop-types
 
-const defaultProps = {
-  className: '',
-  disableClick: false,
-  id: undefined,
-  isSelected: false,
+  /**
+   * The cancel action for editing.
+   */
+  onEditCancel?: () => void, // eslint-disable-line react/no-unused-prop-types
+
+  /**
+   * The save action for editing.
+   */
+  onEditSave?: () => void, // eslint-disable-line react/no-unused-prop-types
 };
 
 // NOTE(pablo): this component is intentionally a very thin wrapper around a
@@ -69,8 +55,6 @@ const defaultProps = {
  *
  * @visibleName Table.Row
  */
-export default function TableRow(props: Props) {
-  return <React.Fragment>{props.children}</React.Fragment>;
+export default function TableRow({ children }: Props): React.Node {
+  return <React.Fragment>{children}</React.Fragment>;
 }
-
-TableRow.defaultProps = defaultProps;

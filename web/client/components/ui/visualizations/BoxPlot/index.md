@@ -1,87 +1,62 @@
 Sample Usage:
 
 <style>
-  .inline {
-    display: inline-block;
-  }
-
-  .radio-item {
-    margin-left: 10px;
-  }
-
-  .controls {
-    padding-bottom: 10px;
-  }
-
   .violin-patterns-container {
     display: inline-flex;
     align-items: center;
-  }
-
-  .violin-patterns-container > strong {
-    padding: 0 5px;
   }
 </style>
 
 ```jsx
 import BoxPlotTheme from 'components/ui/visualizations/BoxPlot/models/BoxPlotTheme';
 import Dropdown from 'components/ui/Dropdown';
+import Group from 'components/ui/Group';
 import InputText from 'components/ui/InputText';
+import LabelWrapper from 'components/ui/LabelWrapper';
 import LegacyButton from 'components/ui/LegacyButton';
-import RadioGroup, { RadioItem } from 'components/common/RadioGroup';
+import RadioGroup from 'components/ui/RadioGroup';
 import { generateBoxPlotData } from 'components/ui/visualizations/BoxPlot/mocks';
 
-initialState = {
-  showOutliers: true,
-  groups: generateBoxPlotData(10),
-  theme: 'dark',
-  showViolinPlot: true,
-  numberOfGroups: 10,
-  showViolinPatternLines: true,
-  violinPattern: 'horizontal'
-};
+const [showOutliers, setShowOutliers] = React.useState(true);
+const [theme, setTheme] = React.useState('dark');
+const [showViolinPlot, setShowViolinPlot] = React.useState(true);
+const [numberOfGroups, setNumberOfGroups] = React.useState(10);
+const [showViolinPatternLines, setShowViolinPatternLines] = React.useState(
+true,
+);
+const [violinPattern, setViolinPattern] = React.useState('horizontal');
 
-function formatTooltipValues(value) {
+const groups = React.useMemo(
+  () => generateBoxPlotData(numberOfGroups),
+  [numberOfGroups],
+);
+
+function metricValueFormatter(value) {
   return Number(value).toFixed(3);
 }
 
 function onToggleOutliers() {
-  setState(prevState => ({ showOutliers: !prevState.showOutliers }));
+  setShowOutliers(!showOutliers);
 }
 
 function onToggleViolinPlot() {
-  setState(prevState => ({ showViolinPlot: !prevState.showViolinPlot }));
+  setShowViolinPlot(!showViolinPlot);
 }
 
 function onToggleViolinPatternLines(){
-  setState(prevState => ({
-    showViolinPatternLines: !prevState.showViolinPatternLines
-  }))
-}
-
-function onGroupsNumberChange(numberOfGroups) {
-  setState({ groups: generateBoxPlotData(numberOfGroups), numberOfGroups });
-}
-
-function onThemeChange(theme, value){
-  setState({ theme })
-}
-
-function onSelectViolinPattern(violinPattern){
-  setState({ violinPattern })
+  setShowViolinPatternLines(!showViolinPatternLines);
 }
 
 function maybeRenderViolinPatternsDropdown(){
-  if(!state.showViolinPatternLines || !state.showViolinPlot){
+  if(!showViolinPatternLines || !showViolinPlot){
     return null
   }
 
   return (
-    <div className="violin-patterns-container">
-      <strong>Select Violin Patterns:</strong>
+    <LabelWrapper inline boldLabel label="Select Violin Patterns:">
       <Dropdown
-        value={state.violinPattern}
-        onSelectionChange={onSelectViolinPattern}
+        value={violinPattern}
+        onSelectionChange={setViolinPattern}
         defaultDisplayContent="Select A violin pattern"
       >
         <Dropdown.Option value="horizontal">Horizontal</Dropdown.Option>
@@ -100,12 +75,12 @@ function maybeRenderViolinPatternsDropdown(){
           Vertical, Horizontal And Diagonal
         </Dropdown.Option>
       </Dropdown>
-    </div>
+    </LabelWrapper>
   )
 }
 
 function maybeRenderViolinPatternLinesToggleButton(){
-  if(!state.showViolinPlot){
+  if(!showViolinPlot){
     return null
   }
 
@@ -115,66 +90,68 @@ function maybeRenderViolinPatternLinesToggleButton(){
       onClick={onToggleViolinPatternLines}
       style={{ marginBottom: '10px', verticalAlign: 'top' }}
     >
-      {`${state.showViolinPatternLines ? 'Hide' : 'Show'} Violin Pattern Lines`}
+      {`${showViolinPatternLines ? 'Hide' : 'Show'} Violin Pattern Lines`}
     </LegacyButton>
   )
 }
 
-<div>
-  <div className="controls">
+<Group.Vertical spacing="l">
+  <Group.Horizontal>
     <LegacyButton
       type={LegacyButton.Intents.PRIMARY}
       onClick={onToggleOutliers}
       style={{ marginBottom: '10px', verticalAlign: 'top' }}
     >
-      {`${state.showOutliers ? 'Hide' : 'Show'} Outliers`}
-    </LegacyButton>{' '}
+      {`${showOutliers ? 'Hide' : 'Show'} Outliers`}
+    </LegacyButton>
     <LegacyButton
       type={LegacyButton.Intents.PRIMARY}
       onClick={onToggleViolinPlot}
       style={{ marginBottom: '10px', verticalAlign: 'top' }}
     >
-      {`${state.showViolinPlot ? 'Hide' : 'Show'} Violin Plot`}
-    </LegacyButton>{' '}
+      {`${showViolinPlot ? 'Hide' : 'Show'} Violin Plot`}
+    </LegacyButton>
+
     {maybeRenderViolinPatternLinesToggleButton()}{' '}
     {maybeRenderViolinPatternsDropdown()}
+
     <RadioGroup
-      onChange={onThemeChange}
+      onChange={setTheme}
       name="theme-radio-group"
-      value={state.theme}
+      value={theme}
       className="inline"
+      direction="horizontal"
     >
-      <RadioItem value="dark" className="inline radio-item">
+      <RadioGroup.Item value="dark">
         Dark Theme
-      </RadioItem>
-      <RadioItem value="light" className="inline radio-item">
+      </RadioGroup.Item>
+      <RadioGroup.Item value="light">
         Light Theme
-      </RadioItem>
+      </RadioGroup.Item>
     </RadioGroup>
-    {' '}
-    <LabelWrapper label="Number of Box Plots" inline className="inline">
+
+    <LabelWrapper label="Number of Box Plots" inline>
       <InputText
         type="number"
         min="0"
         max="50"
-        onChange={onGroupsNumberChange}
-        value={''+state.numberOfGroups}
+        onChange={setNumberOfGroups}
+        value={''+numberOfGroups}
       />
     </LabelWrapper>
-  </div>
+  </Group.Horizontal>
   <BoxPlotCore
-    showOutliers={state.showOutliers}
+    showOutliers={showOutliers}
     yAxisLabel="Temperature"
     xAxisLabel="Regions"
     height={600}
     width={900}
-    groups={state.groups}
-    theme={BoxPlotTheme.THEMES[state.theme]}
-    showViolinPlot={state.showViolinPlot}
-    tooltipValueFormatter={formatTooltipValues}
-    showViolinPatternLines={state.showViolinPatternLines}
-    violinPatternName={state.violinPattern}
+    groups={groups}
+    theme={BoxPlotTheme.Themes[theme]}
+    showViolinPlot={showViolinPlot}
+    metricValueFormatter={metricValueFormatter}
+    showViolinPatternLines={showViolinPatternLines}
+    violinPatternName={violinPattern}
   />
-</div>
-
+</Group.Vertical>
 ```

@@ -1,79 +1,53 @@
 // @flow
 import * as React from 'react';
 
-import Button from 'components/ui/Button';
 import InputText from 'components/ui/InputText';
-import { autobind } from 'decorators';
-import { noop } from 'util/util';
-import type { ChildProps } from 'components/AdminApp/ConfigurationTab/ConfigurationEntry';
+import LabelWrapper from 'components/ui/LabelWrapper';
+import { uniqueId } from 'util/util';
+import type Configuration from 'services/models/Configuration';
 
-const KEY_TEXT = t('admin_app.configuration.keys');
-
-type State = {
-  inputtedText: string,
+type Props = {
+  configuration: Configuration,
+  updateLocalConfiguration: (configuration: Configuration) => void,
+  label?: string,
+  width?: string | number,
 };
 
-export default class TextControl extends React.PureComponent<
-  ChildProps,
-  State,
-> {
-  static defaultProps = {
-    onConfigurationUpdated: noop,
-  };
+export default function TextControl({
+  configuration,
+  updateLocalConfiguration,
+  label = undefined,
+  width = '50%',
+}: Props): React.Element<'div'> {
+  const onTextEntered = React.useCallback(
+    (inputtedText: string) => {
+      updateLocalConfiguration(configuration.value(inputtedText));
+    },
+    [configuration, updateLocalConfiguration],
+  );
 
-  state = {
-    inputtedText: this.props.configuration.value(),
-  };
+  const controlClassName = `configuration-tab__text configuration-tab__text__${configuration.key()}`;
+  const inputId = `text_control__${uniqueId()}`;
 
-  componentDidUpdate(prevProps: ChildProps) {
-    const currentValue = this.props.configuration.value();
-    if (prevProps.configuration.value() !== currentValue) {
-      this.setState({
-        inputtedText: currentValue,
-      });
-    }
-  }
+  const inputElt = (
+    <InputText
+      className={controlClassName}
+      id={inputId}
+      onChange={onTextEntered}
+      value={configuration.value()}
+      width={width}
+    />
+  );
 
-  @autobind
-  onTextEntered(inputtedText: string) {
-    this.setState({
-      inputtedText,
-    });
-  }
-
-  @autobind
-  onConfigurationUpdated() {
-    const { configuration, onConfigurationUpdated } = this.props;
-    onConfigurationUpdated(configuration.value(this.state.inputtedText));
-  }
-
-  render() {
-    const { configuration } = this.props;
-    const controlClassName = `configuration-tab__text configuration-tab__text__${configuration.key()}`;
-    const saveText: string = t(
-      'admin_app.configuration.textConfiguration.saveText',
-      {
-        key: KEY_TEXT[configuration.key()],
-      },
-    );
-
-    return (
-      <div className="configuration-tab__row">
-        <InputText
-          className={controlClassName}
-          value={this.state.inputtedText}
-          onChange={this.onTextEntered}
-          width="50%"
-        />
-        <div className="configuration-tab__controls">
-          <Button
-            className="configuration-tab__button"
-            onClick={this.onConfigurationUpdated}
-          >
-            {saveText}
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  return (
+    <div className="configuration-tab__row">
+      {label !== undefined ? (
+        <LabelWrapper label={label} inline htmlFor={inputId}>
+          {inputElt}
+        </LabelWrapper>
+      ) : (
+        inputElt
+      )}
+    </div>
+  );
 }

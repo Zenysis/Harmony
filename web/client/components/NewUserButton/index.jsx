@@ -1,42 +1,45 @@
-import React from 'react';
+// @flow
+import * as React from 'react';
 import ReactDOM from 'react-dom';
+import invariant from 'invariant';
 
 import BaseModal from 'components/ui/BaseModal';
 import LegacyButton from 'components/ui/LegacyButton';
+import autobind from 'decorators/autobind';
 import { getQueryParam } from 'util/util';
 
 const REGISTRATION_URL = window.__JSON_FROM_BACKEND.ui.feedbackRegistration;
 
-function openRegistrationForm() {
+function openRegistrationForm(): void {
   window.location.href = REGISTRATION_URL;
 }
 
-export default class NewUserButton extends React.PureComponent {
-  static renderToDOM(elementId = 'app') {
-    ReactDOM.render(<NewUserButton />, document.getElementById(elementId));
+type State = {
+  showRegistrationModal: boolean,
+};
+
+export default class NewUserButton extends React.PureComponent<{}, State> {
+  static renderToDOM(elementId?: string = 'app') {
+    const elt: ?HTMLElement = document.getElementById(elementId);
+    invariant(elt, `Element ID does not exist: ${elementId}`);
+    ReactDOM.render(<NewUserButton />, elt);
   }
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      showRegistrationModal: false,
-    };
+  state: State = {
+    showRegistrationModal: false,
+  };
 
-    this.openRegistrationModal = this.changeRegistrationModalVisibility.bind(
-      this,
-      true,
-    );
-    this.closeRegistrationModal = this.changeRegistrationModalVisibility.bind(
-      this,
-      false,
-    );
+  @autobind
+  openRegistrationModal() {
+    this.setState({ showRegistrationModal: true });
   }
 
-  changeRegistrationModalVisibility(showRegistrationModal) {
-    this.setState({ showRegistrationModal });
+  @autobind
+  closeRegistrationModal() {
+    this.setState({ showRegistrationModal: false });
   }
 
-  getFooterButtons() {
+  getFooterButtons(): React.Element<'div'> {
     return (
       <div className="row">
         <div className="col-xs-12">
@@ -54,7 +57,7 @@ export default class NewUserButton extends React.PureComponent {
     );
   }
 
-  maybeRenderRegistrationModal() {
+  maybeRenderRegistrationModal(): React.Node {
     if (this.state.showRegistrationModal) {
       return (
         <BaseModal
@@ -82,7 +85,7 @@ export default class NewUserButton extends React.PureComponent {
     return null;
   }
 
-  maybeRenderRegistrationButton() {
+  maybeRenderRegistrationButton(): React.Node {
     const param = getQueryParam('timeout');
     if (REGISTRATION_URL && !param) {
       return (
@@ -98,7 +101,7 @@ export default class NewUserButton extends React.PureComponent {
     return null;
   }
 
-  render() {
+  render(): React.Node {
     return (
       <div className="row">
         <div className="container col-sm-12">

@@ -2,42 +2,22 @@
 import * as React from 'react';
 
 import CheckboxControl from 'components/visualizations/common/controls/CheckboxControl';
-import ControlsGroup from 'components/visualizations/common/controls/ControlsGroup';
+import Group from 'components/ui/Group';
 import MultipleFieldSelectionControl from 'components/visualizations/common/controls/MultipleFieldSelectionControl';
 import ResultLimitControl from 'components/visualizations/common/controls/ResultLimitControl';
 import SingleFieldSelectionControl from 'components/visualizations/common/controls/SingleFieldSelectionControl';
 import SortOrderControl from 'components/visualizations/common/controls/SortOrderControl';
-import { SORT_DESCENDING } from 'components/QueryResult/graphUtil';
-import type { ControlsBlockProps } from 'components/visualizations/common/commonTypes';
-import type { ViewTypeConfig } from 'models/core/QueryResultSpec/VisualizationSettings';
+import type { ControlsBlockProps } from 'components/visualizations/common/types/controlsBlockProps';
 
 type Props = ControlsBlockProps<'HEATTILES'>;
-type Controls = $PropertyType<Props, 'controls'>;
 
-const DEFAULT_RESULT_LIMIT = 100;
 const TXT_CONTROLS = t('query_result.controls');
-
+const RESULT_LIMIT_OPTIONS = [20, 50, 100, 250, 500];
 export default class HeatTilesControlsBlock extends React.PureComponent<Props> {
-  static getDefaultControls(viewTypeConfig: ViewTypeConfig): Controls {
-    const { fields } = viewTypeConfig;
-    return {
-      showTimeOnYAxis: true,
-      logScaling: true,
-      sortOn: fields[0],
-      selectedField: fields[0],
-      resultLimit: DEFAULT_RESULT_LIMIT,
-      sortOrder: SORT_DESCENDING,
-      firstYaxisSelections: fields,
-      useEthiopianDates: false,
-      invertColoration: false,
-      divergentColoration: true,
-    };
-  }
-
-  maybeRenderEthiopianDatesControl() {
+  maybeRenderEthiopianDatesControl(): React.Node {
     if (
       !window.__JSON_FROM_BACKEND.timeseriesUseEtDates ||
-      !this.props.controls.showTimeOnYAxis
+      !this.props.controls.showTimeOnYAxis()
     ) {
       return null;
     }
@@ -46,17 +26,15 @@ export default class HeatTilesControlsBlock extends React.PureComponent<Props> {
       <CheckboxControl
         controlKey="useEthiopianDates"
         onValueChange={this.props.onControlsSettingsChange}
-        value={this.props.controls.useEthiopianDates}
+        value={this.props.controls.useEthiopianDates()}
         label={TXT_CONTROLS.et_checkbox}
-        colsLabel={3}
-        colsControl={9}
       />
     );
   }
 
-  maybeRenderFieldOptions() {
+  maybeRenderFieldOptions(): React.Node {
     const { controls, fields, onControlsSettingsChange } = this.props;
-    if (controls.showTimeOnYAxis || fields.length <= 1) {
+    if (controls.showTimeOnYAxis() || fields.length <= 1) {
       return null;
     }
 
@@ -64,37 +42,30 @@ export default class HeatTilesControlsBlock extends React.PureComponent<Props> {
       <MultipleFieldSelectionControl
         controlKey="firstYaxisSelections"
         onValueChange={onControlsSettingsChange}
-        value={controls.firstYaxisSelections}
+        value={controls.firstYaxisSelections()}
         fields={fields}
       />
     );
   }
 
-  maybeRenderResultLimitDropdown() {
-    const {
-      controls,
-      selections,
-      onControlsSettingsChange,
-      queryResult,
-    } = this.props;
-    if (selections.granularity === 'nation') {
-      return null;
-    }
+  maybeRenderResultLimitDropdown(): React.Node {
+    const { controls, onControlsSettingsChange, groupBySettings} = this.props;
 
-    const resultLimitOptions = [20, 50, 100, 250, 500];
+    if (groupBySettings.hasOnlyDateGrouping()) {
+      return null
+    }
     return (
       <ResultLimitControl
         controlKey="resultLimit"
         onValueChange={onControlsSettingsChange}
-        value={controls.resultLimit}
-        maxResults={queryResult.data().length}
-        resultLimitOptions={resultLimitOptions}
+        value={controls.resultLimit()}
+        resultLimitOptions={RESULT_LIMIT_OPTIONS}
       />
     );
   }
 
-  maybeRenderSelectedField() {
-    if (!this.props.controls.showTimeOnYAxis) {
+  maybeRenderSelectedField(): React.Node {
+    if (!this.props.controls.showTimeOnYAxis()) {
       return null;
     }
 
@@ -102,14 +73,14 @@ export default class HeatTilesControlsBlock extends React.PureComponent<Props> {
       <SingleFieldSelectionControl
         controlKey="selectedField"
         onValueChange={this.props.onControlsSettingsChange}
-        value={this.props.controls.selectedField}
+        value={this.props.controls.selectedField()}
         fields={this.props.fields}
       />
     );
   }
 
-  maybeRenderSortOn() {
-    if (this.props.controls.showTimeOnYAxis) {
+  maybeRenderSortOn(): React.Node {
+    if (this.props.controls.showTimeOnYAxis()) {
       return null;
     }
 
@@ -117,94 +88,82 @@ export default class HeatTilesControlsBlock extends React.PureComponent<Props> {
       <SingleFieldSelectionControl
         controlKey="sortOn"
         onValueChange={this.props.onControlsSettingsChange}
-        value={this.props.controls.sortOn}
+        value={this.props.controls.sortOn()}
         label={TXT_CONTROLS.sort_on}
         fields={this.props.fields}
       />
     );
   }
 
-  renderInvertColorationControl() {
+  renderInvertColorationControl(): React.Node {
     return (
       <CheckboxControl
         controlKey="invertColoration"
-        value={this.props.controls.invertColoration}
+        value={this.props.controls.invertColoration()}
         onValueChange={this.props.onControlsSettingsChange}
         label={TXT_CONTROLS.invert_coloration}
-        colsLabel={3}
-        colsControl={9}
       />
     );
   }
 
-  renderLogScalingControl() {
+  renderLogScalingControl(): React.Node {
     return (
       <CheckboxControl
         controlKey="logScaling"
         onValueChange={this.props.onControlsSettingsChange}
-        value={this.props.controls.logScaling}
+        value={this.props.controls.logScaling()}
         label={TXT_CONTROLS.log_checkbox}
-        colsLabel={3}
-        colsControl={9}
       />
     );
   }
 
-  renderDivergentColorationControl() {
+  renderDivergentColorationControl(): React.Node {
     return (
       <CheckboxControl
         controlKey="divergentColoration"
         onValueChange={this.props.onControlsSettingsChange}
-        value={this.props.controls.divergentColoration}
+        value={this.props.controls.divergentColoration()}
         label={TXT_CONTROLS.divergent_coloration}
-        colsLabel={3}
-        colsControl={9}
       />
     );
   }
 
-  renderSortOrder() {
+  renderSortOrder(): React.Node {
     return (
       <SortOrderControl
         controlKey="sortOrder"
         onValueChange={this.props.onControlsSettingsChange}
-        value={this.props.controls.sortOrder}
+        value={this.props.controls.sortOrder()}
         includeAlphabetical
       />
     );
   }
 
-  renderTimeControl() {
+  renderTimeControl(): React.Node {
     return (
       <CheckboxControl
         controlKey="showTimeOnYAxis"
         onValueChange={this.props.onControlsSettingsChange}
-        value={this.props.controls.showTimeOnYAxis}
+        value={this.props.controls.showTimeOnYAxis()}
         label={TXT_CONTROLS.value_display_time_checkbox}
-        colsLabel={3}
-        colsControl={9}
       />
     );
   }
 
-  render() {
+  render(): React.Node {
     return (
-      <div>
-        <ControlsGroup>
-          {this.maybeRenderSelectedField()}
-          {this.maybeRenderFieldOptions()}
-          {this.maybeRenderSortOn()}
-          {this.renderSortOrder()}
-          {this.maybeRenderResultLimitDropdown()}
-        </ControlsGroup>
-        <ControlsGroup>
-          {this.renderTimeControl()}
-          {this.maybeRenderEthiopianDatesControl()}
-          {this.renderLogScalingControl()}
-          {this.renderInvertColorationControl()}
-          {this.renderDivergentColorationControl()}
-        </ControlsGroup>
-      </div>
+      <Group.Vertical spacing="l">
+        {this.maybeRenderSelectedField()}
+        {this.maybeRenderFieldOptions()}
+        {this.maybeRenderSortOn()}
+        {this.renderSortOrder()}
+        {this.maybeRenderResultLimitDropdown()}
+        {this.renderTimeControl()}
+        {this.maybeRenderEthiopianDatesControl()}
+        {this.renderLogScalingControl()}
+        {this.renderInvertColorationControl()}
+        {this.renderDivergentColorationControl()}
+      </Group.Vertical>
     );
   }
 }

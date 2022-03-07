@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import type { SVGProps } from 'components/ui/Icon/internal/SVGs/types';
 
-export default function TrendingUp(props: SVGProps) {
+export default function TrendingUp(props: SVGProps): React.Element<'svg'> {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

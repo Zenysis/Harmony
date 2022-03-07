@@ -22,9 +22,9 @@ type DefaultValues = {
 };
 
 class DefaultRole extends Zen.BaseModel<DefaultRole, Values, DefaultValues> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     applyToUnregistered: false,
   };
 }
 
-export default ((DefaultRole: any): Class<Zen.Model<DefaultRole>>);
+export default ((DefaultRole: $Cast): Class<Zen.Model<DefaultRole>>);

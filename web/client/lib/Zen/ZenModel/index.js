@@ -2,16 +2,12 @@
 /* eslint-disable no-use-before-define */
 import PropTypes from 'prop-types';
 
-import attachAccessors from 'lib/Zen/ZenModel/attachAccessors';
 import cast from 'lib/Zen/util/cast';
-import deepUpdate from 'util/ZenModel/deepUpdate';
-import {
-  hasChanged,
-  hasChangedDeep,
-  statefulCompute,
-} from 'lib/Zen/ZenModel/coreHelpers';
-import type ZenArray, { DeepUpdateZenArrayAPI } from 'util/ZenModel/ZenArray';
-import type ZenMap, { DeepUpdateZenMapAPI } from 'util/ZenModel/ZenMap';
+import deepUpdate from 'lib/Zen/ZenModel/deepUpdate';
+import type {
+  DeepUpdateGetters,
+  DeepUpdateSetters,
+} from 'lib/Zen/ZenModel/deepUpdate';
 
 /**
  * ZenModel represents an immutable data model. It is immutable intentionally so
@@ -58,21 +54,20 @@ import type ZenMap, { DeepUpdateZenMapAPI } from 'util/ZenModel/ZenMap';
  *     }
  *   }
  *
- *   // USAGE NOTE: you *must* export your class by wrapping with our
+ *   // USAGE NOTE: you *must* export your class by casting it with our
  *   // Zen.Model<> utility type
- *   export default ((Dog: any): Class<Zen.Model<Dog>>);
+ *   export default ((Dog: $Cast): Class<Zen.Model<Dog>>);
  *
  *   ^ This creates a Dog model with two value types: `name` and `dogdad`
  *
- *   We can make things more interesting by using Zen.ReadOnly<> types and
- *   derived values:
+ *   We can make things more interesting by using derived values:
  *
  *   type RequiredValues = {
  *     name: string,
  *   };
  *
  *   type DefaultValues = {
- *     livesLeft: Zen.ReadOnly<number>,
+ *     livesLeft: number,
  *   };
  *
  *   type DerivedValues = {
@@ -85,18 +80,18 @@ import type ZenMap, { DeepUpdateZenMapAPI } from 'util/ZenModel/ZenMap';
  *     DefaultValues,
  *     DerivedValues,
  *   > {
- *     static defaultValues = {
+ *      static defaultValues: DefaultValues = {
  *       livesLeft: 9,
  *     };
  *
- *     static derivedConfig = {
+ *     static derivedConfig: Zen.DerivedConfig<Cat, DerivedValues> = {
  *       properName: [
- *         Zen.hasChanged<Cat>('name'),
- *         cat => `Your Royal Highness ${cat.name()}`
+ *         Zen.hasChanged('name'),
+ *         cat => `Her Royal Highness ${cat.name()}`
  *        ],
  *     };
  *   }
- *   export default ((Cat: any): Class<Zen.Model<Cat>>);
+ *   export default ((Cat: $Cast): Class<Zen.Model<Cat>>);
  *
  *   MODEL USAGE:
  *
@@ -113,46 +108,35 @@ import type ZenMap, { DeepUpdateZenMapAPI } from 'util/ZenModel/ZenMap';
  *   // resetting the name will cause the derived value `properName` to
  *   // recompute the next time we try to access it
  *   const newCat = cat.name('Cookie');
- *   const fullName = cat.properName(); // 'Your Royal Highness Cookie'
- *
- *   // Can't set a readOnly value after initialization! Throws a type error.
- *   const errCat = newCat.livesLeft(8); // TYPE ERROR. This cat lives forever.
+ *   const fullName = cat.properName(); // 'Her Royal Highness Cookie'
  *
  */
 
-// Wrapper type to annotate a value on a ZenModel as ReadOnly
-export opaque type ReadOnly<T>: T = T;
+// Helper type to represent a model of any type
+export type AnyModel = ZenModel<$AllowAny, $AllowAny, $AllowAny, $AllowAny>;
 
 // Helper type to make all keys in an object optional.
-// $Shape<> should do the same thing but for some reason it wasn't working
-// the way we expected in the `static create` function.
-type _Optional<Obj: {}> = { ...$Rest<Obj, {}> };
-
-// Helper type to merge two objects into a new one. This is different from
-// using the intersection operator `&`. We use the spread operator to create
-// an entirely new object type.
-type _Merge<A: {}, B: {}> = { ...$Exact<A>, ...$Exact<B> };
+type _Optional<Obj> = $Exact<{ ...$Rest<Obj, { ... }> }>;
 
 type _AllValuesExtractor = <RequiredVals, DefaultVals, DerivedVals>(
-  ZenModel<any, RequiredVals, DefaultVals, DerivedVals>,
+  ZenModel<$AllowAny, RequiredVals, DefaultVals, DerivedVals>,
 ) => {
-  ...$Exact<RequiredVals>,
-  ...$Exact<DefaultVals>,
-  ...$Exact<DerivedVals>,
+  ...RequiredVals,
+  ...DefaultVals,
+  ...DerivedVals,
 };
-
-// Open up all the values from a given Values object (meaning if there are any
-// `ReadOnly<T>` wrappers we extract the wrapped type)
-type Open<Vals> = $ObjMap<Vals, (<V>(ReadOnly<V>) => V) & (<V>(V) => V)>;
 
 // All the value types of a ZenModel merged together
 export type AllValues<M: AnyModel> = $Call<_AllValuesExtractor, M>;
 
-type _SettableValuesExtractor = <RequiredVals, DefaultVals, DerivedVals>(
-  ZenModel<any, RequiredVals, DefaultVals, DerivedVals>,
-) => _Merge<RequiredVals, DefaultVals>;
-
-export type SettableValues<M: AnyModel> = $Call<_SettableValuesExtractor, M>;
+// Object containing all settable values in a ZenModel. This a merge of all
+// RequiredValues and DefaultValues.
+export type SettableValuesObject<M> = $Call<
+  <RequiredVals, DefaultVals>(
+    ZenModel<$AllowAny, RequiredVals, DefaultVals, $AllowAny>,
+  ) => { ...RequiredVals, ...DefaultVals },
+  M,
+>;
 
 type DerivedCalculationThunk<V, M: AnyModel> = {
   (): StatefulComputeDerivedValueFn<V, M>,
@@ -171,16 +155,17 @@ type InternalDerivedValues<DerivedValueTypes, M: AnyModel> = $Shape<
 // Helper type that represents the value types that are expected when
 // instantiating a new instance of a model. We do some type magic to
 // enforce the required values, while keeping the optional values optional.
-type ModelCreationValues<RequiredValues, DefaultValues> = $Exact<
-  Open<_Merge<RequiredValues, _Optional<DefaultValues>>>,
->;
+type ModelCreationValues<RequiredValues, DefaultValues> = $ReadOnly<{
+  ...RequiredValues,
+  ..._Optional<DefaultValues>,
+}>;
 
 type _RequiredValuesExtractor = <RequiredVals>(
-  ZenModel<any, RequiredVals, any, any>,
+  ZenModel<$AllowAny, RequiredVals, $AllowAny, $AllowAny>,
 ) => RequiredVals;
 
 type _DefaultValuesExtractor = <DefaultVals>(
-  ZenModel<any, any, DefaultVals, any>,
+  ZenModel<$AllowAny, $AllowAny, DefaultVals, $AllowAny>,
 ) => DefaultVals;
 
 // Helper type to reconstruct the ModelCreationValues accepted by
@@ -204,32 +189,19 @@ type _AttachGetters<M: AnyModel> = $ObjMapi<
 
 // Helper type to create getters and setters for the values that support both
 type _AttachGettersAndSetters<M: AnyModel> = $ObjMapi<
-  SettableValues<M>,
+  SettableValuesObject<M>,
   <K, V>(K, V) => Getter<M, K> & Setter<M, K>,
 >;
 
 // Helper type to create all the accessor functions on a model.
-// NOTE: we wanted to just intersect getters with setters, the way we do for
-// DeepUpdate<>, but for some reason that wasn't working well. So we went
-// with this merged object approach instead.
-type AttachAccessors<M: AnyModel> = _Merge<
-  _AttachGetters<M>,
-  _AttachGettersAndSetters<M>,
->;
-
-// Helper type to represent a model of any type
-export type AnyModel = ZenModel<any, any, any, any>;
+type AttachAccessors<M: AnyModel> = {
+  ..._AttachGetters<M>,
+  ..._AttachGettersAndSetters<M>,
+};
 
 // Magic wrapper type to allow ZenModels to access their values using accessor
 // methods. e.g. `model.name()` instead of `model.get('name')`
-// export type Model<M: AnyModel> = M & AttachAccessors<M>;
 export type Model<M: AnyModel> = M & AttachAccessors<M>;
-
-// Helper type to extract all value keys from a model (values and
-// derived values)
-export type ModelValueKeys<M: AnyModel> = $Keys<
-  $PropertyType<M, '_modelValues'> & $PropertyType<M, '_derivedValues'>,
->;
 
 export type ShouldRecomputeFn<M: AnyModel> = (
   prevModel: Model<M>,
@@ -248,42 +220,70 @@ type DerivedConfigElementValue<M: AnyModel, V> = [
   ComputeDerivedValueFn<V, M> | StatefulComputeDerivedValueFn<V, M>,
 ];
 
-type DerivedConfig<
+export type DerivedConfig<
   M: AnyModel,
-  DerivedValueTypes: { +[string]: mixed },
+  DerivedValueTypes: { +[string]: mixed, ... },
 > = $ObjMap<DerivedValueTypes, <V>(V) => DerivedConfigElementValue<M, V>>;
 
-type DeepUpdateGetters<M: AnyModel, FinalReturn: AnyModel> = $ObjMapi<
-  SettableValues<M>,
-  <K, ChildModel: AnyModel | ZenArray<any> | ZenMap<any>>(
-    K,
-    ChildModel,
-  ) => () => DeepUpdate<ChildModel, FinalReturn>,
->;
+/**
+ * Attach all the getter and setter accessors to a ZenModel class.
+ * Given that all type definitions live in type land, the way we figure out
+ * what all the keys are is by looking at the required values, default values
+ * and derived config. By merging all of these we can get a set of all keys.
+ */
+function attachAccessors<M: AnyModel>(
+  ModelClass: Class<M>,
+  values: $Call<_RequiredValuesExtractor, M>,
+  defaultValues: $PropertyType<Class<M>, 'defaultValues'>,
+  derivedConfig: $PropertyType<Class<M>, 'derivedConfig'>,
+): void {
+  const derivedValueKeys = new Set(Object.keys(derivedConfig));
+  const allValueKeys = new Set(derivedValueKeys);
+  const nonDerivedValues = { ...values, ...defaultValues };
 
-type DeepUpdateSetters<
-  M: AnyModel | ZenArray<any> | ZenMap<any>,
-  FinalReturn: AnyModel,
-> = $Call<
-  (<T>(ZenArray<T>) => DeepUpdateZenArrayAPI<T, FinalReturn>) &
-    (<T>(ZenMap<T>) => DeepUpdateZenMapAPI<T, FinalReturn>) &
-    (AnyModel => $ObjMapi<
-      SettableValues<M>,
-      <K, V>(K, V) => ($ElementType<SettableValues<M>, K>) => FinalReturn,
-    >),
-  M,
->;
+  // get all the value keys and keep track of which names have collisions
+  const collidedTypes = new Set();
+  Object.keys(nonDerivedValues).forEach(key => {
+    if (derivedValueKeys.has(key)) {
+      collidedTypes.add(key);
+    }
+    allValueKeys.add(key);
+  });
 
-type DeepUpdate<
-  M: AnyModel | ZenArray<any> | ZenMap<any>,
-  FinalReturn: AnyModel,
-> = $Call<
-  ((ZenArray<any>) => DeepUpdateSetters<M, FinalReturn>) &
-    ((ZenMap<any>) => DeepUpdateSetters<M, FinalReturn>) &
-    (AnyModel => DeepUpdateGetters<M, FinalReturn> &
-      DeepUpdateSetters<M, FinalReturn>),
-  M,
->;
+  if (collidedTypes.size > 0) {
+    const names = Array.from(collidedTypes).join(', ');
+    throw new Error(
+      `[ZenModel] Your model cannot have values and derived values of the same name. These names have collisions: ${names}`,
+    );
+  }
+
+  // now create all the accessor methods and attach to the ModelClass
+  allValueKeys.forEach(valueKey => {
+    // intentionally using `function` keyword instead of an arrow function,
+    // because an arrow function would maintain the wrong `this`
+    function accessor(val) {
+      // getter
+      if (arguments.length === 0) {
+        return this.get(valueKey);
+      }
+
+      // setter
+      if (derivedValueKeys.has(valueKey)) {
+        const className = this.constructor.classDisplayName();
+        throw new Error(
+          `[${className}] Cannot set '${valueKey}' because it is a derived value. Derived values cannot be set.`,
+        );
+      }
+      return this.set(valueKey, val);
+    }
+
+    Object.defineProperty(accessor, 'name', {
+      value: valueKey,
+      configurable: true,
+    });
+    Object.defineProperty(ModelClass.prototype, valueKey, { value: accessor });
+  });
+}
 
 /**
  * Wrap a stateful calculation around a thunk so as to defer the evaluation.
@@ -299,31 +299,28 @@ function _createDerivedCalculationThunk<V, M: AnyModel>(
 ): DerivedCalculationThunk<V, M> {
   const thunk = () => statefulCalculation.computeFunc(thisModel, prevModel);
   thunk.isDerivedCalculation = true;
-  return (thunk: any);
+  return (thunk: $Cast);
 }
 
 export default class ZenModel<
   Self: AnyModel,
-  RequiredValueTypes: any = {},
-  DefaultValueTypes: any = {},
-  DerivedValueTypes: any = {},
+  RequiredValueTypes: $AllowAny = {},
+  DefaultValueTypes: $AllowAny = {},
+  DerivedValueTypes: $AllowAny = {},
 > {
-  static defaultValues: $ReadOnly<
-    $Exact<Open<DefaultValueTypes>>,
-  > | void = undefined;
-
-  static derivedConfig: DerivedConfig<Self, DerivedValueTypes> = {};
-  static displayName: string | void = undefined;
+  static +defaultValues: $ReadOnly<DefaultValueTypes> | void = undefined;
+  static +derivedConfig: DerivedConfig<Self, DerivedValueTypes> = {};
+  static +displayName: string | void = undefined;
 
   // boolean flag to notify us if a model spec has been fully built (meaning
   // that it has had all its getter and setter accessors attached)
   static _isFullyBuilt: boolean = false;
 
-  _modelValues: RequiredValueTypes & DefaultValueTypes;
+  _modelValues: { ...RequiredValueTypes, ...DefaultValueTypes };
   _derivedValues: InternalDerivedValues<DerivedValueTypes, Self>;
 
   // hacky way for a model to refer to its fully built model internally
-  +_: Model<Self> = (this: any);
+  +_: Model<Self> = (this: $Cast);
 
   static create(
     values: ModelCreationValues<RequiredValueTypes, DefaultValueTypes>,
@@ -337,7 +334,7 @@ export default class ZenModel<
       );
       this._isFullyBuilt = true;
     }
-    return (new this(values): any);
+    return (new this(values): $Cast);
   }
 
   /**
@@ -378,16 +375,16 @@ export default class ZenModel<
   }
 
   _cloneWith(
-    values: $Shape<RequiredValueTypes & DefaultValueTypes>,
+    values: $Shape<{ ...RequiredValueTypes, ...DefaultValueTypes }>,
   ): Model<Self> {
     const newVals = { ...this._modelValues, ...values };
     const output = new this.constructor(newVals, this);
-    return ((output: any): Model<Self>);
+    return ((output: $Cast): Model<Self>);
   }
 
   _setupModelValues(
     values: ModelCreationValues<RequiredValueTypes, DefaultValueTypes>,
-  ): RequiredValueTypes & DefaultValueTypes {
+  ): { ...RequiredValueTypes, ...DefaultValueTypes } {
     const { defaultValues } = this.constructor;
     const modelValues = { ...values };
 
@@ -423,10 +420,6 @@ export default class ZenModel<
     prevModel?: Self,
   ): InternalDerivedValues<DerivedValueTypes, Self> {
     const { derivedConfig } = this.constructor;
-    if (!derivedConfig) {
-      return {};
-    }
-
     const castedThis = cast<Self>(this); // to avoid flow errors
     const derivedValues = {};
     Object.keys(derivedConfig).forEach(valueKey => {
@@ -471,14 +464,14 @@ export default class ZenModel<
     return computeFunc(cast<Self>(this));
   }
 
-  constructError(msg: string): Error {
-    const name = this.constructor.classDisplayName();
-    return new Error(`[${name}] ${msg}`);
+  clone(): Model<Self> {
+    const output = new this.constructor(this._modelValues, this);
+    return ((output: $Cast): Model<Self>);
   }
 
-  set<K: $Keys<RequiredValueTypes & DefaultValueTypes>>(
+  set<O: SettableValuesObject<Self>, K: $Keys<O>>(
     key: K,
-    value: $ElementType<RequiredValueTypes & DefaultValueTypes, K>,
+    value: $ElementType<O, K>,
   ): Model<Self> {
     return this._cloneWith({ [key]: value });
   }
@@ -501,15 +494,17 @@ export default class ZenModel<
   // because babel cannot parse multiple definitions of the same property.
   /* ::
   +modelValues: ((
-    values: $Exact<_Optional<_Merge<RequiredValueTypes, DefaultValueTypes>>>,
+    values: _Optional<{ ...RequiredValueTypes, ...DefaultValueTypes }>,
   ) => Model<Self>) &
-    (() => RequiredValueTypes & DefaultValueTypes & DerivedValueTypes);
+    (() => {|
+      ...RequiredValueTypes,
+      ...DefaultValueTypes,
+      ...DerivedValueTypes
+    |});
   */
   modelValues(
-    values?: $Exact<_Optional<_Merge<RequiredValueTypes, DefaultValueTypes>>>,
-  ):
-    | Model<Self>
-    | (RequiredValueTypes & DefaultValueTypes & DerivedValueTypes) {
+    values?: _Optional<{ ...RequiredValueTypes, ...DefaultValueTypes }>,
+  ): mixed {
     if (arguments.length === 0) {
       // collect all the values and return them
       const { derivedConfig } = this.constructor;
@@ -517,9 +512,11 @@ export default class ZenModel<
       Object.keys(derivedConfig).forEach(key => {
         result[key] = this.get(key);
       });
-      return ((result: any): RequiredValueTypes &
-        DefaultValueTypes &
-        DerivedValueTypes);
+      return ((result: $Cast): {
+        ...RequiredValueTypes,
+        ...DefaultValueTypes,
+        ...DerivedValueTypes,
+      });
     }
 
     // do nothing if values is undefined or null
@@ -534,9 +531,8 @@ export default class ZenModel<
    * This method provides a way to have nested setters bubble up their changes
    * to the parent instances.
    */
-  deepUpdate(): DeepUpdate<Model<Self>, Model<Self>> {
-    return deepUpdate(this);
+  deepUpdate(): DeepUpdateGetters<Model<Self>, Model<Self>> &
+    DeepUpdateSetters<Model<Self>, Model<Self>> {
+    return deepUpdate(((this: $Cast): Self));
   }
 }
-
-export { hasChanged, hasChangedDeep, statefulCompute };

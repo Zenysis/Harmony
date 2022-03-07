@@ -1,0 +1,661 @@
+- table:
+    schema: public
+    name: alert_definitions
+  array_relationships:
+  - name: alert_notifications
+    using:
+      foreign_key_constraint_on:
+        column: alert_definition_id
+        table:
+          schema: public
+          name: alert_notifications
+- table:
+    schema: public
+    name: alert_notifications
+  object_relationships:
+  - name: alert_definition
+    using:
+      foreign_key_constraint_on: alert_definition_id
+  - name: case
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: case
+        column_mapping:
+          id: alert_notification_id
+- table:
+    schema: public
+    name: case
+  object_relationships:
+  - name: alert_notification
+    using:
+      foreign_key_constraint_on: alert_notification_id
+  - name: case_status_type
+    using:
+      foreign_key_constraint_on: case_status_type_id
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+  array_relationships:
+  - name: case_events
+    using:
+      foreign_key_constraint_on:
+        column: case_id
+        table:
+          schema: public
+          name: case_event
+  - name: case_metadata
+    using:
+      foreign_key_constraint_on:
+        column: case_id
+        table:
+          schema: public
+          name: case_metadata
+- table:
+    schema: public
+    name: case_event
+  object_relationships:
+  - name: case
+    using:
+      foreign_key_constraint_on: case_id
+  array_relationships:
+  - name: case_type_default_events
+    using:
+      foreign_key_constraint_on:
+        column: case_event_id
+        table:
+          schema: public
+          name: case_type_default_event
+- table:
+    schema: public
+    name: case_metadata
+  object_relationships:
+  - name: case
+    using:
+      foreign_key_constraint_on: case_id
+  - name: case_metadata_type
+    using:
+      foreign_key_constraint_on: case_metadata_type_id
+- table:
+    schema: public
+    name: case_metadata_type
+  object_relationships:
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+  array_relationships:
+  - name: case_metadata
+    using:
+      foreign_key_constraint_on:
+        column: case_metadata_type_id
+        table:
+          schema: public
+          name: case_metadata
+- table:
+    schema: public
+    name: case_status_type
+  array_relationships:
+  - name: case_type_default_statuses
+    using:
+      foreign_key_constraint_on:
+        column: case_status_type_id
+        table:
+          schema: public
+          name: case_type_default_status
+  - name: case_types
+    using:
+      foreign_key_constraint_on:
+        column: default_case_status_type_id
+        table:
+          schema: public
+          name: case_type
+  - name: cases
+    using:
+      foreign_key_constraint_on:
+        column: case_status_type_id
+        table:
+          schema: public
+          name: case
+- table:
+    schema: public
+    name: case_type
+  object_relationships:
+  - name: caseTypeMetadataFromDruidDimensionByNamingDruidDimensionId
+    using:
+      foreign_key_constraint_on: naming_druid_dimension_id
+  - name: case_status_type
+    using:
+      foreign_key_constraint_on: default_case_status_type_id
+  - name: case_type_metadata_from_druid_dimension
+    using:
+      foreign_key_constraint_on: primary_druid_dimension_id
+  array_relationships:
+  - name: case_metadata_types
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_metadata_type
+  - name: case_type_default_events
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_type_default_event
+  - name: case_type_default_fields
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_type_default_field
+  - name: case_type_default_statuses
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_type_default_status
+  - name: case_type_metadata_from_druid_dimensions
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_type_metadata_from_druid_dimension
+  - name: case_type_metadata_from_druid_fields
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_type_metadata_from_druid_field
+  - name: cases
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case
+  - name: external_alert_types
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: external_alert_type
+- table:
+    schema: public
+    name: case_type_default_event
+  object_relationships:
+  - name: case_event
+    using:
+      foreign_key_constraint_on: case_event_id
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+- table:
+    schema: public
+    name: case_type_default_field
+  object_relationships:
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+- table:
+    schema: public
+    name: case_type_default_status
+  object_relationships:
+  - name: case_status_type
+    using:
+      foreign_key_constraint_on: case_status_type_id
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+- table:
+    schema: public
+    name: case_type_metadata_from_druid_dimension
+  object_relationships:
+  - name: caseTypeById
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: case_type
+        column_mapping:
+          id: primary_druid_dimension_id
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+  array_relationships:
+  - name: case_types
+    using:
+      foreign_key_constraint_on:
+        column: naming_druid_dimension_id
+        table:
+          schema: public
+          name: case_type
+- table:
+    schema: public
+    name: case_type_metadata_from_druid_field
+  object_relationships:
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+- table:
+    schema: public
+    name: category
+  object_relationships:
+  - name: parent
+    using:
+      foreign_key_constraint_on: parent_id
+  array_relationships:
+  - name: children
+    using:
+      foreign_key_constraint_on:
+        column: parent_id
+        table:
+          schema: public
+          name: category
+  - name: field_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: category_id
+        table:
+          schema: public
+          name: field_category_mapping
+  - name: unpublished_field_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: category_id
+        table:
+          schema: public
+          name: unpublished_field_category_mapping
+- table:
+    schema: public
+    name: dashboard
+  array_relationships:
+  - name: dashboard_sessions
+    using:
+      foreign_key_constraint_on:
+        column: dashboard_id
+        table:
+          schema: public
+          name: dashboard_session
+- table:
+    schema: public
+    name: dashboard_session
+  object_relationships:
+  - name: dashboard
+    using:
+      foreign_key_constraint_on: dashboard_id
+- table:
+    schema: public
+    name: data_upload_file_summary
+  array_relationships:
+  - name: self_serve_sources
+    using:
+      foreign_key_constraint_on:
+        column: file_summary_id
+        table:
+          schema: public
+          name: self_serve_source
+- table:
+    schema: public
+    name: dataprep_flow
+  array_relationships:
+  - name: dataprep_jobs
+    using:
+      foreign_key_constraint_on:
+        column: dataprep_flow_id
+        table:
+          schema: public
+          name: dataprep_job
+  - name: self_serve_sources
+    using:
+      foreign_key_constraint_on:
+        column: dataprep_flow_id
+        table:
+          schema: public
+          name: self_serve_source
+- table:
+    schema: public
+    name: dataprep_job
+  object_relationships:
+  - name: dataprep_flow
+    using:
+      foreign_key_constraint_on: dataprep_flow_id
+- table:
+    schema: public
+    name: non_hierarchical_dimension
+  object_relationships:
+  - name: dimension
+    using:
+      foreign_key_constraint_on: id
+- table:
+    schema: public
+    name: dimension
+  array_relationships:
+  - name: dimension_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: dimension_id
+        table:
+          schema: public
+          name: dimension_category_mapping
+  - name: field_dimension_mappings
+    using:
+      foreign_key_constraint_on:
+        column: dimension_id
+        table:
+          schema: public
+          name: field_dimension_mapping
+  - name: geoDimensionMetadataByLatId
+    using:
+      foreign_key_constraint_on:
+        column: lat_id
+        table:
+          schema: public
+          name: geo_dimension_metadata
+  - name: geoDimensionMetadataByLonId
+    using:
+      foreign_key_constraint_on:
+        column: lon_id
+        table:
+          schema: public
+          name: geo_dimension_metadata
+  - name: geo_dimension_metadata
+    using:
+      foreign_key_constraint_on:
+        column: id
+        table:
+          schema: public
+          name: geo_dimension_metadata
+  - name: hierarchicalDimensionMetadataByUniqueIdentifierDimensionId
+    using:
+      foreign_key_constraint_on:
+        column: unique_identifier_dimension_id
+        table:
+          schema: public
+          name: hierarchical_dimension_metadata
+  - name: hierarchical_dimension_metadata
+    using:
+      foreign_key_constraint_on:
+        column: dimension_id
+        table:
+          schema: public
+          name: hierarchical_dimension_metadata
+  - name: non_hierarchical_dimensions
+    using:
+      foreign_key_constraint_on:
+        column: id
+        table:
+          schema: public
+          name: non_hierarchical_dimension
+  - name: unpublished_field_dimension_mappings
+    using:
+      foreign_key_constraint_on:
+        column: dimension_id
+        table:
+          schema: public
+          name: unpublished_field_dimension_mapping
+- table:
+    schema: public
+    name: dimension_category
+  object_relationships:
+  - name: parent
+    using:
+      foreign_key_constraint_on: parent_id
+  array_relationships:
+  - name: children
+    using:
+      foreign_key_constraint_on:
+        column: parent_id
+        table:
+          schema: public
+          name: dimension_category
+  - name: dimension_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: category_id
+        table:
+          schema: public
+          name: dimension_category_mapping
+- table:
+    schema: public
+    name: dimension_category_mapping
+  object_relationships:
+  - name: dimension
+    using:
+      foreign_key_constraint_on: dimension_id
+  - name: dimension_category
+    using:
+      foreign_key_constraint_on: category_id
+- table:
+    schema: public
+    name: external_alert_activity_to_ignore
+  object_relationships:
+  - name: external_alert_type
+    using:
+      foreign_key_constraint_on: external_alert_type_id
+- table:
+    schema: public
+    name: external_alert_type
+  object_relationships:
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+  array_relationships:
+  - name: external_alert_activity_to_ignores
+    using:
+      foreign_key_constraint_on:
+        column: external_alert_type_id
+        table:
+          schema: public
+          name: external_alert_activity_to_ignore
+- table:
+    schema: public
+    name: feed_update
+  object_relationships:
+  - name: feed_update_type
+    using:
+      foreign_key_constraint_on: feed_update_type_id
+- table:
+    schema: public
+    name: feed_update_type
+  array_relationships:
+  - name: feed_updates
+    using:
+      foreign_key_constraint_on:
+        column: feed_update_type_id
+        table:
+          schema: public
+          name: feed_update
+- table:
+    schema: public
+    name: field
+  object_relationships:
+  - name: copied_from_field
+    using:
+      foreign_key_constraint_on: copied_from_field_id
+  array_relationships:
+  - name: field_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: field_id
+        table:
+          schema: public
+          name: field_category_mapping
+  - name: field_copies
+    using:
+      foreign_key_constraint_on:
+        column: copied_from_field_id
+        table:
+          schema: public
+          name: field
+  - name: field_dimension_mappings
+    using:
+      foreign_key_constraint_on:
+        column: field_id
+        table:
+          schema: public
+          name: field_dimension_mapping
+  - name: field_pipeline_datasource_mappings
+    using:
+      foreign_key_constraint_on:
+        column: field_id
+        table:
+          schema: public
+          name: field_pipeline_datasource_mapping
+- table:
+    schema: public
+    name: field_category_mapping
+  object_relationships:
+  - name: category
+    using:
+      foreign_key_constraint_on: category_id
+  - name: field
+    using:
+      foreign_key_constraint_on: field_id
+- table:
+    schema: public
+    name: field_dimension_mapping
+  object_relationships:
+  - name: dimension
+    using:
+      foreign_key_constraint_on: dimension_id
+  - name: field
+    using:
+      foreign_key_constraint_on: field_id
+- table:
+    schema: public
+    name: field_pipeline_datasource_mapping
+  object_relationships:
+  - name: field
+    using:
+      foreign_key_constraint_on: field_id
+  - name: pipeline_datasource
+    using:
+      foreign_key_constraint_on: pipeline_datasource_id
+- table:
+    schema: public
+    name: geo_dimension_metadata
+  object_relationships:
+  - name: dimension
+    using:
+      foreign_key_constraint_on: id
+  - name: dimensionByLatId
+    using:
+      foreign_key_constraint_on: lat_id
+  - name: dimensionByLonId
+    using:
+      foreign_key_constraint_on: lon_id
+- table:
+    schema: public
+    name: hierarchical_dimension_metadata
+  object_relationships:
+  - name: dimension
+    using:
+      foreign_key_constraint_on: dimension_id
+  - name: dimensionByUniqueIdentifierDimensionId
+    using:
+      foreign_key_constraint_on: unique_identifier_dimension_id
+  - name: hierarchical_dimension_metadatum
+    using:
+      foreign_key_constraint_on: parent_id
+  array_relationships:
+  - name: hierarchical_dimension_metadata
+    using:
+      foreign_key_constraint_on:
+        column: parent_id
+        table:
+          schema: public
+          name: hierarchical_dimension_metadata
+- table:
+    schema: public
+    name: pipeline_datasource
+  array_relationships:
+  - name: field_pipeline_datasource_mappings
+    using:
+      foreign_key_constraint_on:
+        column: pipeline_datasource_id
+        table:
+          schema: public
+          name: field_pipeline_datasource_mapping
+  - name: unpublished_field_pipeline_datasource_mappings
+    using:
+      foreign_key_constraint_on:
+        column: pipeline_datasource_id
+        table:
+          schema: public
+          name: unpublished_field_pipeline_datasource_mapping
+- table:
+    schema: public
+    name: pipeline_run_metadata
+- table:
+    schema: public
+    name: self_serve_source
+  object_relationships:
+  - name: data_upload_file_summary
+    using:
+      foreign_key_constraint_on: file_summary_id
+  - name: dataprep_flow
+    using:
+      foreign_key_constraint_on: dataprep_flow_id
+- table:
+    schema: public
+    name: unpublished_field
+  array_relationships:
+  - name: unpublished_field_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: unpublished_field_id
+        table:
+          schema: public
+          name: unpublished_field_category_mapping
+  - name: unpublished_field_dimension_mappings
+    using:
+      foreign_key_constraint_on:
+        column: unpublished_field_id
+        table:
+          schema: public
+          name: unpublished_field_dimension_mapping
+  - name: unpublished_field_pipeline_datasource_mappings
+    using:
+      foreign_key_constraint_on:
+        column: unpublished_field_id
+        table:
+          schema: public
+          name: unpublished_field_pipeline_datasource_mapping
+- table:
+    schema: public
+    name: unpublished_field_category_mapping
+  object_relationships:
+  - name: category
+    using:
+      foreign_key_constraint_on: category_id
+  - name: unpublished_field
+    using:
+      foreign_key_constraint_on: unpublished_field_id
+- table:
+    schema: public
+    name: unpublished_field_dimension_mapping
+  object_relationships:
+  - name: dimension
+    using:
+      foreign_key_constraint_on: dimension_id
+  - name: unpublished_field
+    using:
+      foreign_key_constraint_on: unpublished_field_id
+- table:
+    schema: public
+    name: unpublished_field_pipeline_datasource_mapping
+  object_relationships:
+  - name: pipeline_datasource
+    using:
+      foreign_key_constraint_on: pipeline_datasource_id
+  - name: unpublished_field
+    using:
+      foreign_key_constraint_on: unpublished_field_id

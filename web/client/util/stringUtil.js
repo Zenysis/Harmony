@@ -1,4 +1,5 @@
 // @flow
+
 export const CASE_COMPARISON = {
   CASE_SENSITIVE: 0,
   IGNORE_CASE: 1,
@@ -137,7 +138,7 @@ export function capitalizeEachWord(s: ?string): ?string {
   if (!s || s.length < 1) {
     return s;
   }
-  return s.replace(/\w\S*/g, capitalize);
+  return s.replace(/\w\S*/g, (x: string) => capitalize(x, false));
 }
 
 /**
@@ -147,7 +148,7 @@ export function capitalizeEachWord(s: ?string): ?string {
  *   'thisStringIsGood' -> 'This String Is Good'
  * This function is not very smart and works by just inserting a space after
  * every upper-case letter. So it will not detect more complex patterns like:
- *   'HTMLString' -> 'H T M L String'
+ *   'HTMLString' -> ' H T M L String'
  * Params:
  *   s: string
  * Return: string split into spaces
@@ -163,7 +164,7 @@ export function splitCamelCase(
 }
 
 /**
- * Truncate a string to a given limit
+ * Truncate a string to a given limit and adds `…` to the end
  * Params:
  *   str: base string
  *   limit: amount of characters at which to truncate
@@ -231,21 +232,25 @@ export function areStringsEqualIgnoreCase(
  *     normalizeFloatInput('12d') -> '12'
  *     normalizeFloatInput('12.') -> '12.'
  *     normalizeFloatInput('$123.4') -> '123.4'
- *     normalizeFloatInput('123.456') -> '123.45'
+ *     normalizeFloatInput('123.456') -> '123.456'
  *     normalizeFloatInput('1,223.45') -> '1223.45'
  */
 export function normalizeFloatInput(value: ?string): string {
   if (value === null || value === '' || value === undefined) {
     return '';
   }
-  let v = value.toString().replace(/[^\d.]/g, '');
-  v = v.slice(0, v.indexOf('.') >= 0 ? v.indexOf('.') + 3 : undefined);
+  let v = value.toString().replace(/[^-\d.]/g, '');
+  // NOTE(abby): keep a negative symbol in the first position, else remove them
+  v = v.slice(0, 1) + v.slice(1).replace(/-/g, '');
+  // NOTE(abby): keep only one period
+  let i = 0;
+  v = v.replace(/\./g, m => (!i++ ? m : ''));
   return v;
 }
 
 /**
- * Function used to parse a string to a number or return undefined if it cannot
- * be parsed
+ * Function used to parse a string to a number or return undefined if it
+ * cannot be parsed
  */
 export function convertToNumberOrUndefined(value: string): number | void {
   const floatVal = parseFloat(normalizeFloatInput(value));
@@ -265,6 +270,7 @@ export function convertToNumberOrUndefined(value: string): number | void {
  *
  * @param {string | Array<string>} txtToSearch string to split into search terms
  * @param {string | Array<string>} fullText text to split into search keywords
+ * @param {number} caseComparison enum to be case insensitive or not
  * @returns {boolean} true if every search term is included in any of the
  *   keywords, false otherwise
  */
@@ -310,4 +316,33 @@ export function generateRandomString(strLength?: number = 10): string {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
+}
+
+// Converts a pixel value of the format '12px' into a number
+export function getPixelValue(fontSize: string): number {
+  const pxLen = fontSize.length;
+  return Number(fontSize.substr(0, pxLen - 2)); // remove trailing "px"
+}
+
+// Slugify a string
+export function slugify(
+  name: string,
+  slugSeparator: string = '-',
+  shortenStr: boolean = true,
+): string {
+  const INVALID_CHAR_REGEX = new RegExp('[^a-zA-Z0-9\\x80-\\uFFFF\\s]', 'g');
+  const MULTI_SPACE_REGEX = new RegExp('[\\s]+', 'g');
+  const MAX_LENGTH = 60;
+  // HACK(sophie): for data upload, we don't want to cut off the string length
+  // when we slugify
+  const strLength = shortenStr ? MAX_LENGTH : name.length;
+  const cleanName = name
+    .trim()
+    .replace(INVALID_CHAR_REGEX, ' ')
+    .replace(MULTI_SPACE_REGEX, ' ')
+    .toLocaleLowerCase()
+    .substr(0, strLength)
+    .trim();
+
+  return cleanName.replace(MULTI_SPACE_REGEX, slugSeparator);
 }

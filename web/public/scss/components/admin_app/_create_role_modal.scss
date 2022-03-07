@@ -1,0 +1,126 @@
+.create-role-modal {
+  padding-left: $space-m-px;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: $space-xxl-px;
+
+    &:last-child {
+      padding-bottom: 0px;
+    }
+  }
+
+  &__heading:after {
+    border-bottom: 3px solid $slate;
+    content: '';
+    display: block;
+    width: 30px;
+  }
+
+  &__description {
+    padding-bottom: $space-m-px;
+    padding-top: $space-m-px;
+  }
+
+  &__card {
+    // Taken from overview page thumbnails
+    border: 1px solid $gray-hover;
+    border-radius: 5px;
+    display: inline-block;
+    margin-right: $space-l-px;
+    position: relative;
+    text-align: center;
+    // Very specific width here so that it fills up the max width.
+    width: 17.7%;
+
+    &:last-child {
+      margin-right: 0;
+    }
+
+    &:hover {
+      background-color: $white-hover;
+    }
+
+    &--selected {
+      border: 3px solid $blue-primary;
+    }
+  }
+
+  &__cards {
+    padding-top: 10px;
+  }
+
+  &__card-header {
+    border-bottom: 1px solid $gray-hover;
+    font-size: $font-l;
+    overflow: hidden;
+    padding: 10px;
+    text-overflow: ellipsis;
+    text-transform: capitalize;
+  }
+
+  &__img {
+    width: 100%;
+  }
+
+  &__data-access-label {
+    margin-right: $space-xl-px;
+  }
+
+  &__data-access-selection {
+    display: flex;
+  }
+
+  &__checkmark {
+    background-color: $blue-primary;
+    border-radius: 10px;
+    color: $white;
+    padding: 3px;
+    position: absolute;
+    right: -16px;
+    top: -10px;
+  }
+
+  &__filter-selection-block {
+    .selection-block {
+      margin-bottom: 0px;
+
+      &:first-child {
+        margin-top: 0px;
+      }
+
+      &__title-block {
+        display: none;
+      }
+    }
+  }
+
+  &__sitewide-dashboard {
+    padding-bottom: 15px;
+  }
+
+  &__sitewide-dashboard-label {
+    margin-right: 30px;
+  }
+
+  &__sitewide-alerts-label {
+    margin-right: 68px;
+  }
+
+  &__sitewide-button {
+    color: $blue-primary;
+    padding-bottom: $space-m-px;
+    text-decoration: underline;
+  }
+
+  &__tool-icon {
+    margin: $space-m-px 0 $space-m-px 0;
+  }
+
+  &__data-export-checkbox {
+    .zen-label-wrapper {
+      display: flex;
+    }
+  }
+}

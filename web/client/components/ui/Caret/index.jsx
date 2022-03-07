@@ -2,112 +2,109 @@
 import * as React from 'react';
 import classNames from 'classnames';
 
+import Icon from 'components/ui/Icon';
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
 import type { StyleObject } from 'types/jsCore';
 
-export type CaretDirection =
-  | 'top'
-  | 'bottom'
-  | 'left'
-  | 'right'
-  | 'up'
-  | 'down';
+export type CaretDirection = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
+export type CaretType = 'TRIANGLE' | 'CHEVRON' | 'MENU';
 
-export type CaretType = 'triangle' | 'chevron' | 'menu';
-
-export const DIRECTIONS: { [string]: CaretDirection } = {
-  UP: 'top',
-  DOWN: 'bottom',
-  LEFT: 'left',
-  RIGHT: 'right',
+type CaretDirectionMap = {
+  UP: 'UP',
+  DOWN: 'DOWN',
+  LEFT: 'LEFT',
+  RIGHT: 'RIGHT',
 };
 
-export const CARET_TYPES: { [string]: CaretType } = {
-  TRIANGLE: 'triangle',
-  CHEVRON: 'chevron',
-  MENU: 'menu',
+type CaretTypeMap = {
+  TRIANGLE: 'TRIANGLE',
+  CHEVRON: 'CHEVRON',
+  MENU: 'MENU',
 };
 
-/**
- * Gets the new direction of the caret.
- *
- * Note(dennis): This is implemented like this to avoid breaking all parts in
- * the codebase where the Caret is used. The default caret will be rendered but
- * we now have an option of it being a chevron or a menu icon. I added two
- * options (up and down) to the direction because if the type is chevron the top
- *and bottom icons are named up and down instead.
- *
- * @param {string} caretType The type of the caret, can either be chevron,
- * triangle or menu as they are the options available in glyphicon docs
- * @param {string} caretDirection The direction of the caret.
- */
-function getCaretDirection(
-  caretType: CaretType,
-  caretDirection: CaretDirection,
-): string {
-  let direction = caretDirection;
-  if (caretType !== CARET_TYPES.TRIANGLE && direction === DIRECTIONS.UP) {
-    direction = 'up';
-  }
+const CARET_TYPE_TO_ICON_MAP = {
+  TRIANGLE: {
+    UP: 'triangle-top',
+    DOWN: 'triangle-bottom',
+    LEFT: 'triangle-left',
+    RIGHT: 'triangle-right',
+  },
+  CHEVRON: {
+    UP: 'chevron-up',
+    DOWN: 'chevron-down',
+    LEFT: 'chevron-left',
+    RIGHT: 'chevron-right',
+  },
+  MENU: {
+    UP: 'menu-up',
+    DOWN: 'menu-down',
+    LEFT: 'menu-left',
+    RIGHT: 'menu-right',
+  },
+};
 
-  if (
-    caretType !== CARET_TYPES.TRIANGLE &&
-    caretDirection === DIRECTIONS.DOWN
-  ) {
-    direction = 'down';
-  }
-  return direction;
-}
+const DIRECTIONS: CaretDirectionMap = {
+  UP: 'UP',
+  DOWN: 'DOWN',
+  LEFT: 'LEFT',
+  RIGHT: 'RIGHT',
+};
 
-type Props = {|
-  className: string,
-  direction: CaretDirection,
-  isDisabled: boolean,
-  type: CaretType,
+const CARET_TYPES: CaretTypeMap = {
+  TRIANGLE: 'TRIANGLE',
+  CHEVRON: 'CHEVRON',
+  MENU: 'MENU',
+};
+
+type Props = {
+  /** The accessibility name for this caret. */
+  ariaName?: string,
+  className?: string,
+  direction?: CaretDirection,
+  isDisabled?: boolean,
   onClick?: (event: SyntheticEvent<HTMLDivElement>) => void,
   size?: number,
-|};
-
-const defaultProps = {
-  className: '',
-  direction: DIRECTIONS.DOWN,
-  isDisabled: false,
-  onClick: undefined,
-  size: undefined,
-  type: CARET_TYPES.TRIANGLE,
+  type?: CaretType,
 };
 
 /**
+ * **This component is deprecated.**
+ * Use the `<Icon>` component instead with a type of 'svg-caret-down', 'svg-caret-up', 'svg-caret-left' or 'svg-caret-right'
+ *
  * A basic Caret component to point at a given direction.
  *
  * Directions should be specified using the `Caret.Directions` constant:
  *
  * `Caret.Directions.UP | DOWN | LEFT | RIGHT`
+ * @deprecated
  */
-export default function Caret(props: Props) {
-  const { className, direction, isDisabled, onClick, size, type } = props;
-  const style: StyleObject = {};
-  if (size) {
-    style.fontSize = size;
-  }
+export default function Caret({
+  ariaName = undefined,
+  className = '',
+  direction = DIRECTIONS.DOWN,
+  isDisabled = false,
+  onClick = undefined,
+  size = undefined,
+  type = CARET_TYPES.TRIANGLE,
+}: Props): React.Element<'div'> {
+  const style: StyleObject = {
+    fontSize: size !== undefined ? size : undefined,
+  };
 
   const caretClassName = classNames('zen-caret', className, {
     disabled: isDisabled,
   });
 
-  const caretDirection = getCaretDirection(type, direction);
+  const caretIconType = CARET_TYPE_TO_ICON_MAP[type][direction];
+  const caret = <Icon className="zen-caret__icon" type={caretIconType} />;
+  const ariaNameToUse = normalizeARIAName(ariaName);
 
-  const caret = (
-    <span
-      className={`zen-caret__icon glyphicon glyphicon-${type}-${caretDirection}`}
-    />
-  );
-
-  const onCaretClick = isDisabled ? undefined : onClick;
-  if (onCaretClick) {
+  if (onClick) {
     return (
       <div
         role="button"
-        onClick={onCaretClick}
+        aria-label={ariaNameToUse}
+        onClick={onClick}
         className={caretClassName}
         style={style}
       >
@@ -117,7 +114,12 @@ export default function Caret(props: Props) {
   }
 
   return (
-    <div className={caretClassName} style={style}>
+    <div
+      className={caretClassName}
+      style={style}
+      aria-hidden={ariaNameToUse === undefined}
+      aria-label={ariaNameToUse}
+    >
       {caret}
     </div>
   );
@@ -125,4 +127,3 @@ export default function Caret(props: Props) {
 
 Caret.Directions = DIRECTIONS;
 Caret.Types = CARET_TYPES;
-Caret.defaultProps = defaultProps;

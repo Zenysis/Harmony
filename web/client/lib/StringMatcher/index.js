@@ -19,6 +19,7 @@ export default class StringMatcher {
   +_pattern: RegExp;
   +_termCount: number;
   +_useCache: boolean;
+  +_searchTerms: SearchTerms;
 
   // Cache the computed results for up to `cacheSize` strings tested by the
   // StringMatcher.
@@ -31,9 +32,18 @@ export default class StringMatcher {
     cacheSize?: number = 2000,
   ) {
     this._pattern = buildSearchPattern(searchTerms, caseSensitive);
+    this._searchTerms = searchTerms;
     this._termCount = searchTerms.length;
     this._useCache = useCache;
     this._cacheSize = cacheSize;
+  }
+
+  /**
+   * Get the original search terms passed to this StringMatcher.
+   * @returns {SearchTerms}
+   */
+  getSearchTerms(): SearchTerms {
+    return this._searchTerms;
   }
 
   /**
@@ -45,7 +55,16 @@ export default class StringMatcher {
       return cachedResult.matchesAll;
     }
 
-    const matches = textToSearch.match(this._pattern);
+    // NOTE(nina): In order to deal with situations of an accented search term
+    // or an accented search result, we want to remove the accents of both the
+    // search term and the search result. The _pattern property is built from
+    // StringMatcher/patternBuilder.js to remove the accents of the search
+    // terms. This line does the same for the specific search result we
+    // are matching against.
+    const matches = textToSearch
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .match(this._pattern);
     let matchesAll = false;
 
     if (!!matches && matches.length >= this._termCount) {
@@ -77,7 +96,15 @@ export default class StringMatcher {
       return cachedResult.matchesSome;
     }
 
-    const matchesSome = this._pattern.test(textToSearch);
+    // NOTE(nina): In order to deal with situations of an accented search term
+    // or an accented search result, we want to remove the accents of both the
+    // search term and the search result. The _pattern property is built from
+    // StringMatcher/patternBuilder.js to remove the accents of the search
+    // terms. This line does the same for the specific search result we
+    // are matching against.
+    const matchesSome = this._pattern.test(
+      textToSearch.normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+    );
     if (cachedResult !== undefined) {
       cachedResult.matchesSome = matchesSome;
 
@@ -105,7 +132,16 @@ export default class StringMatcher {
       return cachedResult.matchPositions;
     }
 
-    const matchPositions = computeMatchPositions(textToSearch, this._pattern);
+    const matchPositions = computeMatchPositions(
+      // NOTE(nina): In order to deal with situations of an accented search term
+      // or an accented search result, we want to remove the accents of both the
+      // search term and the search result. The _pattern property is built from
+      // StringMatcher/patternBuilder.js to remove the accents of the search
+      // terms. This line does the same for the specific search result we
+      // are matching against.
+      textToSearch.normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+      this._pattern,
+    );
     if (cachedResult !== undefined) {
       cachedResult.matchPositions = matchPositions;
       if (matchPositions.length === 0) {

@@ -1,25 +1,21 @@
 .dropdown-menu {
-	margin-top: -1px;
-	border-radius: 0px 0px $border-radius-base $border-radius-base;
-	top: inherit;
-	left: inherit;
-}
-
-.select-indicator-container > .bootstrap-select.open > .dropdown-toggle {
-	border-radius: $border-radius-base $border-radius-base 0px 0px;
+  border-radius: 0px 0px $border-radius-base $border-radius-base;
+  left: inherit;
+  margin-top: -1px;
+  top: inherit;
 }
 
 .btn {
-	border-radius: $border-radius-base;
-	height: $spacing-l;
+  border-radius: $border-radius-base;
+  height: $spacing-l;
 }
 
 .btn-link {
-	text-decoration: underline;
+  text-decoration: underline;
 }
 
 .form-control {
-	height: $spacing-l;
+  height: $spacing-l;
 }
 
 .col-xs-1,
@@ -70,11 +66,11 @@
 .col-sm-12,
 .col-md-12,
 .col-lg-12 {
-	padding-left: $spacing-m;
-	padding-right: $spacing-m;
+  padding-left: $spacing-m;
+  padding-right: $spacing-m;
 }
 
 .row {
-	margin-left: -$spacing-m;
-	margin-right: -$spacing-m;
+  margin-left: -$spacing-m;
+  margin-right: -$spacing-m;
 }

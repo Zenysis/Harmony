@@ -1,0 +1,59 @@
+.aqt-query-result-action-buttons {
+  align-items: center;
+  background-color: $gray-light;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  display: flex;
+  height: 60px;
+
+  &__primary-buttons {
+    flex: 1;
+
+    span:last-child {
+      .aqt-action-button {
+        margin-right: 0;
+      }
+    }
+  }
+
+  &__secondary-buttons {
+    &--button {
+      display: inline-block;
+      margin-right: 6.25px;
+    }
+
+    &--button:last-of-type {
+      margin-right: 16.25px;
+      padding: 10px 0px;
+      @media (max-width: 1150px) {
+        margin-right: 6.25px;
+        padding: 8px 0px;
+      }
+    }
+  }
+
+  &__secondary-actions-dropdown-icon {
+    font-size: 22px;
+    vertical-align: middle;
+
+    &:hover {
+      color: $slate-hover;
+    }
+  }
+}
+
+.query-result-export-button,
+.download-image-button {
+  &__dropdown-button {
+    &:active:focus {
+      // TODO(stephen, anyone): This needs to be a color variable. Currently is
+      // hardcoded everywhere.
+      background-color: #e1eaf1;
+      box-shadow: none;
+      outline: initial;
+    }
+
+    &:hover {
+      border: none;
+    }
+  }
+}

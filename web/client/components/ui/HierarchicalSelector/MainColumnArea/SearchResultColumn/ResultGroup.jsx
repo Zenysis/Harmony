@@ -1,54 +1,54 @@
 // @flow
 import * as React from 'react';
 
+import * as Zen from 'lib/Zen';
 import ResultGroupItem from 'components/ui/HierarchicalSelector/MainColumnArea/SearchResultColumn/ResultGroupItem';
 import SearchPath from 'components/ui/HierarchicalSelector/SearchPath';
-import ZenArray from 'util/ZenModel/ZenArray';
 import autobind from 'decorators/autobind';
 import type HierarchyItem from 'models/ui/HierarchicalSelector/HierarchyItem';
 import type StringMatcher from 'lib/StringMatcher';
+import type { NamedItem } from 'models/ui/HierarchicalSelector/types';
 
-type Props = {
-  items: ZenArray<HierarchyItem>,
+type DefaultProps = {
+  expandOnMount: boolean,
+  hideRoot: boolean,
+};
+
+type Props<T> = {
+  ...DefaultProps,
+  items: Zen.Array<HierarchyItem<T>>,
   matcher: StringMatcher,
 
   // callback for when a category breadcrumb is clicked, we pass back the path
   // to this category
-  onCategoryClick: (path: ZenArray<HierarchyItem>) => void,
+  onCategoryClick: (path: Zen.Array<HierarchyItem<T>>) => void,
 
   // callback for when a leaf item is clicked
   onItemClick: (
-    item: HierarchyItem,
+    item: HierarchyItem<T>,
     event: SyntheticEvent<HTMLElement>,
   ) => void,
-  path: ZenArray<HierarchyItem>,
-
-  expandOnMount: boolean,
-  hideRoot: boolean,
+  path: Zen.Array<HierarchyItem<T>>,
 };
 
 type State = {
   expanded: boolean,
 };
 
-export default class ResultGroup extends React.PureComponent<Props, State> {
-  static defaultProps = {
+export default class ResultGroup<T: NamedItem> extends React.PureComponent<
+  Props<T>,
+  State,
+> {
+  static defaultProps: DefaultProps = {
     expandOnMount: false,
     hideRoot: false,
   };
 
-  state = {
-    expanded: false,
+  state: State = {
+    expanded: this.props.expandOnMount,
   };
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      expanded: this.props.expandOnMount,
-    };
-  }
-
-  isExpandable() {
+  isExpandable(): boolean {
     return !this.props.items.isEmpty();
   }
 
@@ -57,7 +57,7 @@ export default class ResultGroup extends React.PureComponent<Props, State> {
     this.setState(prevState => ({ expanded: !prevState.expanded }));
   }
 
-  maybeRenderItems() {
+  maybeRenderItems(): React.Node {
     const { items, matcher, onItemClick } = this.props;
     if (this.isExpandable() && this.state.expanded) {
       const itemNodes = items.map(item => (
@@ -77,7 +77,7 @@ export default class ResultGroup extends React.PureComponent<Props, State> {
     return null;
   }
 
-  maybeRenderCaret() {
+  maybeRenderCaret(): React.Node {
     if (this.isExpandable()) {
       const iconClass = this.state.expanded
         ? 'glyphicon-menu-down'
@@ -93,7 +93,7 @@ export default class ResultGroup extends React.PureComponent<Props, State> {
     return null;
   }
 
-  renderBreadcrumbs() {
+  renderBreadcrumbs(): React.Node {
     const { path, onCategoryClick, hideRoot } = this.props;
     return (
       <div className="hierarchical-search-result-group__breadcrumb-row">
@@ -107,7 +107,7 @@ export default class ResultGroup extends React.PureComponent<Props, State> {
     );
   }
 
-  render() {
+  render(): React.Element<'div'> {
     return (
       <div className="hierarchical-search-result-group">
         {this.renderBreadcrumbs()}

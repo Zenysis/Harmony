@@ -1,28 +1,39 @@
-from future import standard_library
-
-standard_library.install_aliases()
 from builtins import object
 from datetime import datetime
-from http.client import NO_CONTENT
+from http.client import NO_CONTENT, NOT_FOUND, OK, UNAUTHORIZED
 
-from flask import g, url_for, current_app
+from flask import g, url_for, current_app, request
 from flask_user import current_user
 from flask_potion import fields
+from flask_potion.schema import FieldSet
 from flask_potion.contrib.alchemy import fields as alchemy_fields
 from flask_potion.routes import Route, ItemRoute, Relation
 from flask_potion.signals import after_create, before_update
 from flask_potion.instances import Instances
-from werkzeug.exceptions import Unauthorized
+from flask_principal import ItemNeed
 
-from config.dashboard_base import EMPTY_SPECIFICATION_AS_JSON
-from models.alchemy.dashboard import Dashboard, DashboardUserMetadata
-from models.alchemy.user import User
+from models.alchemy.dashboard import Dashboard, DashboardReportSchedule
+from models.alchemy.user import User, UserAcl, UserRoles
 from models.alchemy.history import HistoryRecord
+from models.alchemy.permission import (
+    Role,
+    ResourceRole,
+    RESOURCE_ROLE_NAMES,
+    SitewideResourceAcl,
+)
+from models.alchemy.schedule import SchedulerEntry
+from models.alchemy.security_group import Group
 
-from web.server.api.model_schemas import USERNAME_SCHEMA, generate_history_record_schema
+from web.server.api.model_schemas import (
+    DASHBOARD_REPORT_SCHEDULE,
+    DASHBOARD_SCHEDULED_REPORTS,
+    USERNAME_SCHEMA,
+    generate_history_record_schema,
+)
 from web.server.api.api_models import PrincipalResource
+from web.server.configuration.bots import BOT_USERS
 from web.server.data.data_access import Transaction
-from web.server.security.permissions import principals
+from web.server.errors import NotificationError
 from web.server.potion.filters import UserFilter
 from web.server.routes.views.authorization import (
     AuthorizedOperation,
@@ -30,16 +41,23 @@ from web.server.routes.views.authorization import (
 )
 from web.server.routes.views.dashboard import (
     _add_visualization,
+    _add_gis_item,
+    _attach_metadata_to_dashboard_query,
+    add_item_holder_to_dashboard,
     api_bulk_transfer_dashboard_ownership,
     api_transfer_dashboard_ownership,
     DashboardManager,
     format_and_upgrade_specification,
-    get_dashboard_title,
+    format_and_upgrade_specification_list,
     get_or_create_metadata,
     lookup_author,
+    share_dashboard_via_email,
+    format_and_downgrade_dashboard_list,
+    format_and_downgrade_specification,
 )
-from web.server.util.util import EMAIL_PATTERN, as_dictionary
-from web.server.errors import NotificationError
+from web.server.routes.views.users import get_current_user
+from web.server.security.permissions import SuperUserPermission, principals
+from web.server.util.util import EMAIL_PATTERN, as_dictionary, get_dashboard_title
 
 # TODO(vedant) - Allow users to change their Dashboard Slugs via the Settings
 # Modal. Once this is done, we will restrict the ability to use whitespaces
@@ -68,14 +86,54 @@ QUERY_RESULT_SPEC_SCHEMA = fields.Custom(
 
 ADD_QUERY_TO_DASHBOARD_SCHEMA = fields.Object(
     properties={
-        'activeViewType': fields.String(
-            description='The currently active view type when the query was saved',
+        'visualizationType': fields.String(
+            description='The currently active visualization type when the query was saved.',
             nullable=False,
         ),
         'queryResultSpec': QUERY_RESULT_SPEC_SCHEMA,
         'querySelections': SELECTIONS_SCHEMA,
+        'type': fields.String(attribute='type', default='QUERY_ITEM'),
     },
     description='The request object to add a query to a dashboard',
+)
+
+ADD_GIS_ITEM_TO_DASHBOARD_SCHEMA = fields.Object(
+    properties={
+        'entityLayers': fields.Custom(
+            fields.Any(),
+            description='A collection of layer IDs mapped to entity layers',
+        ),
+        'generalSettings': fields.Custom(
+            fields.Any(),
+            description='The general settings object describing the settings \
+            for a GIS item to be added to a dashboard.',
+        ),
+        'indicatorLayers': fields.Custom(
+            fields.Any(),
+            description='A collection of layer IDs mapped to indicator layers',
+        ),
+        'selectedLayerIds': fields.Custom(
+            fields.Any(),
+            description='The selected list of layer IDs when the item was saved',
+        ),
+        'type': fields.String(attribute='type', default='GIS_ITEM'),
+    },
+    description='The request object to add a GIS item to a dashboard',
+)
+
+ADD_ITEM_HOLDER_TO_DASHBOARD_SCHEMA = fields.Object(
+    properties={
+        'id': fields.String(),
+        'item': fields.Any(),
+        'position': fields.Object(
+            properties={
+                'columnCount': fields.Integer(),
+                'rowCount': fields.Integer(),
+                'x': fields.Integer(),
+                'y': fields.Integer(),
+            }
+        ),
+    },
 )
 
 # The schema for the dashboard's specification. Because the specification is stored in the database
@@ -90,9 +148,19 @@ ADD_QUERY_TO_DASHBOARD_SCHEMA = fields.Object(
 SPECIFICATION_SCHEMA = fields.Custom(
     fields.Any(),
     description='The JSON specification that is used to render the dashboard.',
-    default=EMPTY_SPECIFICATION_AS_JSON,
     converter=format_and_upgrade_specification,
     formatter=format_and_upgrade_specification,
+    io='w',
+)
+
+SPECIFICATION_ARRAY_SCHEMA = fields.Custom(
+    fields.Array(
+        fields.Object({'slug': fields.String(), 'specification': fields.Any()})
+    ),
+    description='An array of dashboard JSON specifications.',
+    default=[],
+    converter=format_and_upgrade_specification_list,
+    formatter=format_and_upgrade_specification_list,
     io='w',
 )
 
@@ -201,17 +269,25 @@ DASHBOARD_METADATA_FIELDS = {
     'totalViewsByUser': TOTAL_VIEWS_BY_USER_SCHEMA,
 }
 
-DASHBOARD_SIMPLE_FIELDS = {}
-DASHBOARD_SIMPLE_FIELDS.update(DASHBOARD_BASE_FIELDS)
-DASHBOARD_SIMPLE_FIELDS.update(DASHBOARD_METADATA_FIELDS)
+DASHBOARD_SIMPLE_FIELDS = {
+    **DASHBOARD_BASE_FIELDS,
+    **DASHBOARD_METADATA_FIELDS,
+    # HACK(stephen): The dashboard title is exposed inside `_attach_metadata_to_dashboard_query`
+    # by using Postgres JSONB column functionality to extract the title value from
+    # the spec entirely inside Postgres. This makes it so we don't need to load the
+    # specification locally to access the value.
+    'title': fields.String(attribute='title', io='r'),
+}
 
 # Not the prettiest solution to getting the URI to appear in the overriden GET/PATCH Schema but it
 # works for now. One option would be to override the ModelResource Meta and add a new property
 # (e.g. 'single_view_fields') which would only serialize certain fields if viewing a single resource
 # item as opposed to a list.
 # TODO(vedant) - Figure out how to do this in a better way.
-DASHBOARD_DETAILED_FIELDS = {'specification': SPECIFICATION_SCHEMA}
-DASHBOARD_DETAILED_FIELDS.update(DASHBOARD_SIMPLE_FIELDS)
+DASHBOARD_DETAILED_FIELDS = {
+    'specification': SPECIFICATION_SCHEMA,
+    **DASHBOARD_SIMPLE_FIELDS,
+}
 
 DETAILED_DASHBOARD_SCHEMA = alchemy_fields.InlineModel(
     DASHBOARD_DETAILED_FIELDS, model=Dashboard, description='The dashboard model.'
@@ -246,14 +322,17 @@ UNUSED_TOTAL_VIEWS_SCHEMA = fields.Integer(
 )
 
 
+def find_dashboard_by_slug(slug: str, transaction: Transaction) -> Dashboard:
+    return transaction.find_all_by_fields(Dashboard, {'slug': slug}).first()
+
+
 class DashboardResource(PrincipalResource):
-    '''The potion class for performing CRUD operations on the `Dashboard` class.
-    '''
+    '''The potion class for performing CRUD operations on the `Dashboard` class.'''
 
     resource = Relation('resource', io='r')
     author = Relation('user', io='r')
 
-    class Meta(object):
+    class Meta:
         manager = principals(DashboardManager)
         model = Dashboard
         natural_key = 'slug'
@@ -296,60 +375,43 @@ class DashboardResource(PrincipalResource):
         lastModified = UNUSED_LAST_MODIFIED_SCHEMA
         totalViews = UNUSED_TOTAL_VIEWS_SCHEMA
 
-    # HACK(stephen): Attaching dashboard metadata to the base dashboard model
-    # response is like fitting a square peg into a round hole. To add that
-    # information in ways that Flask-Potion would naturally work causes us to
-    # issue a huge number of queries per dashboard (previously 14 queries per
-    # dashboard with a naive implementation). This query encapsulates all the
-    # information needed for the dashboard response into a single query.
-    # TODO(stephen): If we have to write workarounds like this, it probably
-    # means we shouldn't be jamming too much information into a single API.
-    def _attach_metadata_to_query(self, query):
-        # NOTE(stephen): I don't think a transaction is necessary for this
-        # read only query, but it is an easy way to access the session.
-        with Transaction() as transaction:
-            session = transaction._session
-            subquery = DashboardUserMetadata.summary_by_dashboard_for_user(
-                session, current_user.id
-            ).subquery()
-            return (
-                query
-                # Join in the summarized metadata for each dashboard.
-                .outerjoin(subquery, Dashboard.id == subquery.c.dashboard_id)
-                # Attach user info so we can extract the author username.
-                .outerjoin(User, Dashboard.author_id == User.id)
-                # Make sure all the metadata columns are included.
-                .add_columns(subquery)
-                # Also include all dashboard columns since otherwise a new query
-                # will be issued EACH TIME we access a dashboard in the query
-                # result.
-                .add_columns(Dashboard.__table__)
-                # Manually set up author_username since hybrid properties weren't
-                # transferring.
-                .add_columns(User.username.label('author_username'))
-            )
-
     # HACK(stephen): To ensure endpoints that return a single dashboard also
     # include the appropriate metadata, we must join in the dashboard metadata
     # to our single dashboard query.
-    def _get_single_dashboard_with_metadata(self, resource_id):
+    def _get_single_dashboard_with_metadata(self, resource_id, use_legacy_spec=False):
         # NOTE(stephen): The resource_id being filtered on here is **not**
         # Dashboard.id. This is because we use the `resource_id` column for
         # lookups and reference.
+        # pylint: disable=protected-access
         query = self.manager._query().filter(self.manager.id_column == resource_id)
-        return self._attach_metadata_to_query(query).one()
+        return _attach_metadata_to_dashboard_query(
+            query, True, use_legacy_spec=use_legacy_spec
+        ).one()
 
     # pylint: disable=R0201
     # pylint: disable=E1101
     # Flask Potion does not allow class methods.
+
+    # Override the default dashboard creation POST function so we can return
+    # a dashboard with all the necessary metadata (except for the specification)
+    @Route.POST(
+        '',
+        rel='create',
+        title='Create a dashboard and return DASHBOARD_SIMPLE_FIELDS',
+        schema=fields.Object({'slug': fields.String(), 'specification': fields.Any()}),
+        response_schema=fields.Object(DASHBOARD_SIMPLE_FIELDS),
+    )
+    def create_dashboard(self, dashboard_info):
+        with AuthorizedOperation('create_resource', 'dashboard'):
+            return self.manager.create_dashboard(**dashboard_info)
 
     # Override the default "get all dashboards" route to augment the response
     # with dashboard specific metadata.
     @Route.GET(
         '',
         rel='instances',
-        title='Something',
-        description='Something',
+        title='Get all dashboards',
+        description='Gets all dashboards',
         schema=Instances(),
         response_schema=fields.Array(fields.Object(DASHBOARD_SIMPLE_FIELDS)),
     )
@@ -361,50 +423,209 @@ class DashboardResource(PrincipalResource):
         if not base_query:
             return []
 
-        return self._attach_metadata_to_query(base_query).paginate(page, per_page).items
+        return (
+            _attach_metadata_to_dashboard_query(base_query)
+            .paginate(page, per_page)
+            .items
+        )
+
+    @Route.GET(
+        '/viewable',
+        title='Retrieve all dashboards the user can view',
+        schema=Instances(),
+        response_schema=fields.Array(fields.Object(DASHBOARD_SIMPLE_FIELDS)),
+    )
+    def get_viewable_dashboards(self, page, per_page, where, sort):
+        base_query = self.manager.instances(where, sort)
+        # If query is empty, return empty list
+        if not base_query:
+            return []
+
+        # Explicitly return all dashboards for admins
+        if SuperUserPermission().can():
+            return (
+                _attach_metadata_to_dashboard_query(base_query)
+                .paginate(page=page, per_page=per_page)
+                .items
+            )
+
+        # pylint: disable=C0103
+        viewable_dashboard_resource_id_list = [
+            item.value
+            for item in g.identity.provides
+            if (
+                isinstance(item, ItemNeed)
+                and item.type == 'dashboard'
+                and item.method == 'view_resource'
+            )
+        ]
+        return (
+            _attach_metadata_to_dashboard_query(
+                base_query.filter(
+                    Dashboard.resource_id.in_(viewable_dashboard_resource_id_list)
+                )
+            )
+            .paginate(page=page, per_page=per_page)
+            .items
+        )
+
+    @ItemRoute.POST(
+        '/cannot_view',
+        title='List recipients that cannot view dashboard',
+        description='Get recipients can view dashboard and returning all users with no access',
+        schema=fields.Object({'emails': fields.Array(USERNAME_SCHEMA, min_items=0)}),
+        response_schema=fields.Array(USERNAME_SCHEMA),
+    )
+    def get_no_access_recipients(self, dashboard, data):
+        emails = data.get('emails')
+        if not emails:
+            return []
+        with Transaction() as transaction:
+            session = transaction.run_raw()
+
+            roles = [
+                RESOURCE_ROLE_NAMES['DASHBOARD_VIEWER'],
+                RESOURCE_ROLE_NAMES['DASHBOARD_EDITOR'],
+                RESOURCE_ROLE_NAMES['DASHBOARD_ADMIN'],
+            ]
+
+            # when dashboard resource has sitewide access all registered users can see it
+            if (
+                session.query(SitewideResourceAcl)
+                .filter(SitewideResourceAcl.resource_id == dashboard.resource_id)
+                .first()
+            ):
+                return []
+
+            # any superusers in provided emails should have access to
+            # the dashboard already
+            super_users = [
+                email
+                for col in (
+                    session.query(User.username)
+                    .filter(User.username.in_(emails))
+                    .join(UserRoles)
+                    .join(Role)
+                    .filter(Role.name.in_(['admin']))
+                    .all()
+                )
+                for email in col
+            ]
+
+            # find users with access to the resource
+            have_access = [
+                email
+                for col in (
+                    session.query(User.username)
+                    .filter(User.username.in_(emails))
+                    .join(UserAcl)
+                    .filter(UserAcl.resource_id == dashboard.resource_id)
+                    .join(ResourceRole)
+                    .filter(ResourceRole.name.in_(roles))
+                    .all()
+                )
+                for email in col
+            ]
+            have_access.extend(super_users)
+
+            # return users with no access
+            return list(set(emails) - set(have_access))
+
+    @Route.GET(
+        '/editable',
+        title='Dashboards that this user can edit',
+        response_schema=fields.Array(fields.Object(DASHBOARD_SIMPLE_FIELDS)),
+    )
+    def get_editable_instances(self):
+        # Explicitly return all dashboards for admins
+        if SuperUserPermission().can():
+            base_query = self.manager.instances()
+            return _attach_metadata_to_dashboard_query(base_query)
+
+        # pylint: disable=C0103
+        editable_dashboard_resource_id_list = [
+            item.value
+            for item in g.identity.provides
+            if (
+                isinstance(item, ItemNeed)
+                and item.type == 'dashboard'
+                and item.method == 'edit_resource'
+            )
+        ]
+        dashboard_query = Dashboard.query.filter(
+            Dashboard.resource_id.in_(editable_dashboard_resource_id_list)
+        )
+        return _attach_metadata_to_dashboard_query(dashboard_query).all()
 
     @Route.POST(
-        '/upgrade',
+        '/upgrade_spec',
         title='Upgrade Dashboard Specification',
         description='Upgrades the provided dashboard specification to the '
         'latest schema version supported by the server.',
         schema=fields.Any(),
         rel='upgrade',
     )
-    def upgrade_dashboard(self, dashboard_specification):
+    def upgrade_dashboard_spec(self, dashboard_specification):
         # The validation is being done in the conversion defined by SPECIFICATION_SCHEMA. If there
         # are any errors, they will be thrown as an exception to the client. No action needs to be
         # taken here.
         return format_and_upgrade_specification(dashboard_specification)
 
+    # TODO(stephen, david): Delete this endpoint after 2021-12-01 since it can only
+    # be used if the user has not refreshed their browser since the release was pushed
+    # in the beginning of October. Also clean up any code paths that this method touched
+    # since they are no longer needed.
     @ItemRoute.POST(
         '/visualization',
-        title='Add Simple Query Visualization',
-        description='Adds an item from Simple Query Tool to the dashboard.',
+        title='Add Query Visualization',
+        description='Adds an item from Query Tool to the dashboard.',
         schema=ADD_QUERY_TO_DASHBOARD_SCHEMA,
         response_schema=DETAILED_DASHBOARD_SCHEMA,
-        rel='addVisualization',
+        rel='addAdvancedVisualization',  # TODO(anyone): $SQTDeprecate remove Advanced naming
     )
     def add_visualization(self, dashboard, request):
         resource_id = dashboard.resource.id
         with AuthorizedOperation('edit_resource', 'dashboard', resource_id):
-            _add_visualization(dashboard, request, False)
-            track_dashboard_access(dashboard.id, True)
+            _add_visualization(dashboard, request)
+            track_dashboard_access(
+                dashboard.id, edited=True, increment_view_count=False
+            )
+            return self._get_single_dashboard_with_metadata(resource_id)
+
+    # TODO(stephen, david): Delete this endpoint after 2021-12-01 since it can only
+    # be used if the user has not refreshed their browser since the release was pushed
+    # in the beginning of October. Also clean up any code paths that this method touched
+    # since they are no longer needed.
+    @ItemRoute.POST(
+        '/gis_item',
+        title='Add GIS Item',
+        description='Adds an item from GIS Tool to the dashboard.',
+        schema=ADD_GIS_ITEM_TO_DASHBOARD_SCHEMA,
+        response_schema=DETAILED_DASHBOARD_SCHEMA,
+        rel='addGISItem',
+    )
+    def add_gis_item(self, dashboard, request):
+        resource_id = dashboard.resource.id
+        with AuthorizedOperation('edit_resource', 'dashboard', resource_id):
+            _add_gis_item(dashboard, request)
+            track_dashboard_access(
+                dashboard.id, edited=True, increment_view_count=False
+            )
             return self._get_single_dashboard_with_metadata(resource_id)
 
     @ItemRoute.POST(
-        '/visualization/advanced',
-        title='Add Advanced Query Visualization',
-        description='Adds an item from Advanced Query Tool to the dashboard.',
-        schema=ADD_QUERY_TO_DASHBOARD_SCHEMA,
+        '/add_item',
+        title='Add item to dashboard',
+        schema=ADD_ITEM_HOLDER_TO_DASHBOARD_SCHEMA,
         response_schema=DETAILED_DASHBOARD_SCHEMA,
-        rel='addAdvancedVisualization',
     )
-    def add_advanced_visualization(self, dashboard, request):
+    def add_item(self, dashboard, request):
         resource_id = dashboard.resource.id
         with AuthorizedOperation('edit_resource', 'dashboard', resource_id):
-            _add_visualization(dashboard, request, True)
-            track_dashboard_access(dashboard.id, True)
+            add_item_holder_to_dashboard(dashboard, request)
+            track_dashboard_access(
+                dashboard.id, edited=True, increment_view_count=False
+            )
             return self._get_single_dashboard_with_metadata(resource_id)
 
     @ItemRoute.POST(
@@ -526,7 +747,12 @@ class DashboardResource(PrincipalResource):
             dashboard.total_views += 1
             track_dashboard_access(dashboard.id)
             dashboard = transaction.add_or_update(dashboard, flush=True)
-        return self._get_single_dashboard_with_metadata(id)
+
+        # HACK(stephen): Dirty hack to check if the user requested the legacy spec
+        # version by passing it in the url params. The ability to view legacy specs is
+        # a short lived feature and it's ok to make small hacks like this.
+        use_legacy_spec = request.args.get('legacy') == '1'
+        return self._get_single_dashboard_with_metadata(id, use_legacy_spec)
 
     @Route.PATCH(
         lambda r: '/<{}:id>'.format(r.meta.id_converter),
@@ -562,13 +788,459 @@ class DashboardResource(PrincipalResource):
             )
         return records
 
+    @ItemRoute.POST(
+        '/share_via_email',
+        title='Send emails',
+        schema=fields.Object(
+            properties={
+                'recipients': fields.Array(fields.String()),
+                'message': fields.String(),
+                'subject': fields.String(),
+                'sender': fields.String(),
+                'shouldAttachPdf': fields.Boolean(attribute='should_attach_pdf'),
+                'shouldEmbedImage': fields.Boolean(attribute='should_embed_image'),
+                'dashboardUrl': fields.String(nullable=True, attribute='dashboard_url'),
+                'isScheduledReport': fields.Boolean(
+                    nullable=True, attribute='is_scheduled_report'
+                ),
+                'useRecipientQueryPolicy': fields.Boolean(
+                    nullable=True, default=True, attribute='use_recipient_permissions'
+                ),
+                'useSingleEmailThread': fields.Boolean(
+                    nullable=True, default=False, attribute='use_email_thread'
+                ),
+            }
+        ),
+        response_schema=fields.Any(),
+    )
+    def share_via_email(self, dashboard, request_obj):
+        share_dashboard_via_email(
+            dashboard,
+            request_obj['recipients'],
+            request_obj['message'],
+            request_obj['subject'],
+            request_obj['sender'],
+            use_recipient_permissions=request_obj['use_recipient_permissions'],
+            should_attach_pdf=request_obj['should_attach_pdf'],
+            should_embed_image=request_obj['should_embed_image'],
+            dashboard_url=request_obj['dashboard_url'],
+            is_scheduled_report=request_obj['is_scheduled_report'],
+            use_email_thread=request_obj['use_email_thread'],
+        )
+        return OK
 
-def track_dashboard_access(dashboard_id, edited=False):
+    @ItemRoute.GET(
+        '/report_schedules',
+        title='Dashboards scheduled reports',
+        response_schema=DASHBOARD_SCHEDULED_REPORTS,
+    )
+    def get_dashboard_reports(self, dashboard):
+        with AuthorizedOperation('create_resource', 'dashboard'):
+            return (
+                DashboardReportSchedule.query.filter_by(dashboard_id=dashboard.id)
+                .order_by(DashboardReportSchedule.id.desc())
+                .all()
+            )
+
+    # pylint: disable=W0613
+    # Method signature requires dashboard params
+    @ItemRoute.DELETE(
+        lambda r: '/report_schedules/<{}:dashboard_schedule_report_id>'.format(
+            r.meta.id_converter
+        ),
+        title='Delete schedule dashboard reports',
+    )
+    def delete_schedule_report(self, dashboard, dashboard_schedule_report_id):
+        with AuthorizedOperation(
+            'update_users', 'dashboard', dashboard.resource.id
+        ), Transaction() as transaction:
+            report = transaction.find_by_id(
+                DashboardReportSchedule, dashboard_schedule_report_id
+            )
+            if not report:
+                return NOT_FOUND
+            entry = transaction.find_by_id(SchedulerEntry, report.scheduler_entry_id)
+            if not entry:
+                return NOT_FOUND
+            transaction.delete(entry.crontab)
+        return OK
+
+    # pylint: disable=W0613
+    # Method signature requires dashboard params
+    @ItemRoute.GET(
+        lambda r: '/report_schedules/<{}:dashboard_schedule_report_id>'.format(
+            r.meta.id_converter
+        ),
+        title='Get a dashboard schedule report',
+        response_schema=DASHBOARD_REPORT_SCHEDULE,
+    )
+    def get_schedule_report(self, dashboard, dashboard_schedule_report_id):
+        with AuthorizedOperation(
+            'update_users', 'dashboard', dashboard.resource.id
+        ), Transaction() as transaction:
+            report = transaction.find_by_id(
+                DashboardReportSchedule, dashboard_schedule_report_id
+            )
+            return report
+
+    def get_user_group_emails(self, user_groups, transaction):
+        if not user_groups:
+            return []
+        return [
+            user.username
+            for user in transaction.run_raw()
+            .query(User.username)
+            .filter(User.groups.any(Group.name.in_([grp.name for grp in user_groups])))
+            .all()
+        ]
+
+    def guery_security_groups(self, user_groups, transaction):
+        if not user_groups:
+            return []
+        return (
+            transaction.run_raw()
+            .query(Group.id)
+            .filter(Group.name.in_([grp.name for grp in user_groups]))
+        )
+
+    @ItemRoute.POST(
+        '/report_schedules',
+        title='Schedule dashboard reports',
+        schema=DASHBOARD_REPORT_SCHEDULE,
+        response_schema=DASHBOARD_REPORT_SCHEDULE,
+    )
+    def schedule_report(self, dashboard, request_obj):
+        report_schedule = DashboardReportSchedule(
+            dashboard_id=dashboard.id, owner_id=current_user.id
+        )
+        report_schedule.set_attrs(request_obj)
+        with AuthorizedOperation(
+            'update_users', 'dashboard', dashboard.resource.id
+        ), Transaction() as transaction:
+            entry = SchedulerEntry()
+            user_group_emails = self.get_user_group_emails(
+                request_obj['user_groups'], transaction
+            )
+            DashboardReportSchedule.set_schedule_entry(
+                entry, request_obj.copy(), dashboard, current_user, user_group_emails
+            )
+            entry = transaction.add_or_update(entry, flush=True)
+            report_schedule.scheduler_entry_id = entry.id
+            report_schedule = transaction.add_or_update(report_schedule, flush=True)
+            DashboardReportSchedule.set_report_groups(
+                transaction,
+                self.guery_security_groups(request_obj['user_groups'], transaction),
+                report_schedule,
+            )
+        return report_schedule
+
+    @ItemRoute.PATCH(
+        lambda r: '/report_schedules/<{}:dashboard_schedule_report_id>'.format(
+            r.meta.id_converter
+        ),
+        title='Edit schedule dashboard reports',
+        schema=DASHBOARD_REPORT_SCHEDULE,
+        response_schema=DASHBOARD_REPORT_SCHEDULE,
+    )
+    def edit_schedule_report(
+        self, dashboard, request_obj, dashboard_schedule_report_id
+    ):
+        with AuthorizedOperation(
+            'update_users', 'dashboard', dashboard.resource.id
+        ), Transaction() as transaction:
+            report_schedule = transaction.find_by_id(
+                DashboardReportSchedule, dashboard_schedule_report_id
+            )
+            if not report_schedule:
+                return NOT_FOUND
+
+            report_schedule.set_attrs(request_obj)
+            report_schedule.id = dashboard_schedule_report_id
+            entry = transaction.find_by_id(
+                SchedulerEntry, report_schedule.scheduler_entry_id
+            )
+            if not entry:
+                return NOT_FOUND
+
+            user_group_emails = self.get_user_group_emails(
+                request_obj['user_groups'], transaction
+            )
+            DashboardReportSchedule.set_schedule_entry(
+                entry, request_obj.copy(), dashboard, current_user, user_group_emails
+            )
+
+            transaction.add_or_update(entry, flush=False)
+            report_schedule = transaction.add_or_update(report_schedule, flush=False)
+            DashboardReportSchedule.set_report_groups(
+                transaction,
+                self.guery_security_groups(request_obj['user_groups'], transaction),
+                report_schedule,
+            )
+            return report_schedule
+
+    # NOTE(sophie): This and the following two functions are used for internal testing.
+    # Specifications are type any because we're not enforcing a specific version in
+    # order to test properly
+    @Route.GET(
+        '/raw_dashboard_specs',
+        title='Get raw (not upgraded) dashboard specs, used internally',
+        response_schema=fields.Array(
+            fields.Object({'slug': fields.String(), 'specification': fields.Any()})
+        ),
+    )
+    def get_raw_dashboard_specs(self):
+        # only allow admins access to this functionality
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                dashboards = transaction.find_all_by_fields(Dashboard, {})
+                return [
+                    {'slug': dashboard.slug, 'specification': dashboard.specification}
+                    for dashboard in dashboards
+                ]
+        return None, UNAUTHORIZED
+
+    @Route.GET(
+        '/raw_dashboard_spec',
+        title=(
+            'Get raw (not upgraded) dashboard spec for a given slug. The '
+            'specification is None if the slug could not be found.'
+        ),
+        schema=FieldSet({'slug': fields.String()}),
+        response_schema=fields.Object({'specification': fields.Any()}),
+    )
+    def get_raw_dashboard_spec(self, slug):
+        # only allow admins access to this functionality
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                dashboard = find_dashboard_by_slug(slug, transaction)
+                if dashboard:
+                    return {'specification': dashboard.specification}
+                return {'specification': None}
+        return None, UNAUTHORIZED
+
+    @Route.GET(
+        '/dashboard_specs',
+        title='Get upgraded dashboard specs (without writing back to db).',
+        # The SPECIFICATION_ARRAY_SCHEMA will handle upgrading the dashboard
+        schema=FieldSet(
+            # this value is used when we only care about testing all upgrades
+            # (so we only care about a success/failure result). So in that case
+            # we can skip returning the full array of all upgraded schemas,
+            # because that can be a lot of data
+            {'ignoreReturn': fields.Boolean(default=False, attribute='ignore_return')}
+        ),
+        response_schema=SPECIFICATION_ARRAY_SCHEMA,
+    )
+    def get_dashboard_specs(self, ignore_return):
+        # only allow admins access to this functionality
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                dashboards = transaction.find_all_by_fields(Dashboard, {})
+                dashboard_results = [
+                    {'slug': dashboard.slug, 'specification': dashboard.specification}
+                    for dashboard in dashboards
+                ]
+
+                if ignore_return:
+                    # run the upgrade just to check if there are any errors
+                    format_and_upgrade_specification_list(dashboard_results)
+                    return []
+
+                # the upgrade will get run by the SPECIFICATION_ARRAY_SCHEMA
+                return dashboard_results
+        return None, UNAUTHORIZED
+
+    @Route.GET(
+        '/dashboard_spec',
+        title='Get upgraded dashboard spec for a given slug (without writing back to db).',
+        schema=FieldSet({'slug': fields.String()}),
+        # The SPECIFICATION_SCHEMA will handle upgrading the dashboard
+        response_schema=fields.Object({'specification': SPECIFICATION_SCHEMA}),
+    )
+    def get_dashboard_spec(self, slug):
+        # only allow admins access to this functionality
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                dashboard = find_dashboard_by_slug(slug, transaction)
+                if dashboard:
+                    return {'specification': dashboard.specification}
+                return {'specification': None}
+        return None, UNAUTHORIZED
+
+    @Route.POST(
+        '/upgrade',
+        title='Upgrade dashboard',
+        description='Upgrade a dashboard given a slug and write back to db',
+        schema=FieldSet({'slug': fields.String()}),
+    )
+    def upgrade_dashboard(self, slug):
+        # only allow admins access to this functionality
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                dashboard = find_dashboard_by_slug(slug, transaction)
+                upgraded_spec = format_and_upgrade_specification(
+                    dashboard.specification
+                )
+                dashboard.specification = upgraded_spec
+                transaction.add_or_update(dashboard)
+            return None, NO_CONTENT
+        return None, UNAUTHORIZED
+
+    @Route.POST(
+        '/upgrade_all',
+        title='Upgrade all dashboards',
+        description='Upgrade all dashboards and write back to db',
+    )
+    def upgrade_all(self):
+        # only allow admins access to this functionality
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                dashboards = transaction.find_all_by_fields(Dashboard, {})
+                dashboard_slug_map = {d.slug: d for d in dashboards}
+                upgraded_spec_tuples = format_and_upgrade_specification_list(
+                    [(d.slug, d.specification) for d in dashboards]
+                )
+
+                # write back all the upgraded specs
+                for spec_obj in upgraded_spec_tuples:
+                    slug, spec = spec_obj['slug'], spec_obj['specification']
+                    dashboard = dashboard_slug_map[slug]
+                    dashboard.specification = spec
+                    transaction.add_or_update(dashboard)
+            return None, NO_CONTENT
+        return None, UNAUTHORIZED
+
+    @Route.POST(
+        '/bulk_delete',
+        title='Delete all dashboards identified by the given slugs',
+        schema=FieldSet({'slugs': fields.Array(fields.String())}),
+    )
+    def bulk_delete(self, slugs):
+        # only allow Admins access to this functionality. It is not intended
+        # for public use. It is just a helper API for internal use.
+        if SuperUserPermission().can():
+            dashboards = Dashboard.query.filter(Dashboard.slug.in_(slugs))
+            with Transaction() as transaction:
+                for dashboard in dashboards:
+                    transaction.delete(dashboard)
+            return None, NO_CONTENT
+        return None, UNAUTHORIZED
+
+    @Route.POST(
+        '/delete_all',
+        title='Delete all dashboards',
+    )
+    def delete_all(self):
+        # only allow Admins access to this functionality. It is not intended
+        # for public use. It is just a helper API for internal use.
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                dashboards = transaction.find_all_by_fields(Dashboard, {})
+                for dashboard in dashboards:
+                    transaction.delete(dashboard)
+            return None, NO_CONTENT
+        return None, UNAUTHORIZED
+
+    @Route.GET(
+        '/downgrade',
+        title='Get downgraded dashboard spec',
+        description='Get downgraded dashboard spec for a given slug (without writing back to db)',
+        schema=FieldSet({'slug': fields.String()}),
+        response_schema=fields.Any(),
+    )
+    def get_downgraded_dashboard(self, slug):
+        # only allow admins access to this functionality
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                dashboard = find_dashboard_by_slug(slug, transaction)
+                downgraded_spec = format_and_downgrade_specification(
+                    dashboard.specification
+                )
+                return downgraded_spec
+        return None, UNAUTHORIZED
+
+    @Route.GET(
+        '/downgrade_all',
+        title='Get downgraded dashboard specs',
+        description='Get downgraded dashboard specs given a version (without writing back to db).',
+        schema=FieldSet({'version': fields.String()}),
+        response_schema=fields.List(
+            FieldSet({'slug': fields.String(), 'specification': fields.Any()})
+        ),
+    )
+    def get_downgraded_all_dashboards(self, version):
+        # only allow admins access to this functionality
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                session = transaction.run_raw()
+                dashboards = session.query(Dashboard).filter(
+                    Dashboard.specification['version'].astext == version
+                )
+                downgraded_specs = format_and_downgrade_dashboard_list(
+                    dashboards,
+                )
+                return downgraded_specs
+        return None, UNAUTHORIZED
+
+    @Route.POST(
+        '/downgrade',
+        title='Downgrade dashboard spec',
+        description='Downgrade a dashboard given a slug and write back to db',
+        schema=FieldSet({'slug': fields.String()}),
+    )
+    def downgrade_dashboard(self, slug):
+        # only allow admins access to this functionality
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                dashboard = find_dashboard_by_slug(slug, transaction)
+                dashboard.specification = format_and_downgrade_specification(
+                    dashboard.specification
+                )
+                transaction.add_or_update(dashboard)
+            return None, NO_CONTENT
+        return None, UNAUTHORIZED
+
+    @Route.POST(
+        '/downgrade_all',
+        title='Downgrade all dashboards',
+        description='Downgrade all dashboards given a version and write back to db',
+        schema=FieldSet({'version': fields.String()}),
+    )
+    def downgrade_all_dashboards(self, version):
+        # only allow admins access to this functionality
+        if SuperUserPermission().can():
+            with Transaction() as transaction:
+                session = transaction.run_raw()
+                dashboards = session.query(Dashboard).filter(
+                    Dashboard.specification['version'].astext == version
+                )
+                slug_to_dashboard_map = {
+                    dashboard.slug: dashboard for dashboard in dashboards
+                }
+                downgraded_specs = format_and_downgrade_dashboard_list(dashboards)
+
+                # write back all the downgraded specs
+                for spec_obj in downgraded_specs:
+                    slug, spec = spec_obj['slug'], spec_obj['specification']
+                    dashboard = slug_to_dashboard_map[slug]
+                    dashboard.specification = spec
+                    transaction.add_or_update(dashboard)
+            return None, NO_CONTENT
+        return None, UNAUTHORIZED
+
+
+def track_dashboard_access(dashboard_id, edited=False, increment_view_count=True):
+    if get_current_user().username in BOT_USERS:
+        # Don't count views by bots.
+        return
+
     with Transaction() as transaction:
         metadata = get_or_create_metadata(transaction, dashboard_id)
-        now = datetime.now()
+        now = datetime.utcnow()
         metadata.last_viewed = now
-        metadata.views_by_user += 1
+
+        if increment_view_count:
+            metadata.views_by_user += 1
         if edited:
             metadata.last_edited = now
         transaction.add_or_update(metadata)
@@ -580,7 +1252,11 @@ def track_dashboard_access(dashboard_id, edited=False):
 def send_email_after_create(sender, item):
     dashboard_link = url_for('dashboard.grid_dashboard', name=item.slug, _external=True)
     message = current_app.email_renderer.create_new_dashboard_message(
-        item.author, current_app.zen_config.general.DEPLOYMENT_FULL_NAME, dashboard_link
+        item.author,
+        current_app.zen_config.general.DEPLOYMENT_FULL_NAME,
+        dashboard_link,
+        item.resource.label,
+        item.slug,
     )
     try:
         g.request_logger.info(
@@ -621,11 +1297,10 @@ def track_dashboard_changes(sender, item, changes):
 def generate_metadata_after_create(sender, item):
     with Transaction() as transaction:
         metadata = get_or_create_metadata(transaction, item.id)
-        now = datetime.now()
+        now = datetime.utcnow()
         metadata.last_viewed = now
         metadata.last_edited = now
-        metadata.views_by_user = 1
-        item.total_views += 1
+        metadata.views_by_user = 0  # creation does not count as a view
         transaction.add_or_update(metadata)
         transaction.add_or_update(item)
 

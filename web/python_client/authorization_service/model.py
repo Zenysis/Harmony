@@ -184,6 +184,10 @@ class QueryPolicy(dict):
     def resource(self):
         return self.get('resource')
 
+    @property
+    def query_policy_type_id(self):
+        return self.get('queryPolicyTypeId')
+
     def serialize(self):
         result = dict(self)
 

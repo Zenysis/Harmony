@@ -1,9 +1,7 @@
 // @flow
-import { randomNormal } from 'd3-random';
-
 import type {
   BinDataPoint,
-  BoxPlotData,
+  BoxPlotBoxData,
   BoxPlotSummary,
 } from 'components/ui/visualizations/BoxPlot/types';
 
@@ -16,11 +14,16 @@ import type {
  */
 /* eslint-enable */
 
-const random = randomNormal(4, 3);
+const random = () => Math.random() * 10;
 const randomOffset = () => Math.random() * 10;
 
+// NOTE(stephen): Track the box plots generated so that when the user changes
+// the count from 10 to 5 or 5 to 10 the boxes drawn are not randomized each
+// time.
+const GENERATED_BOXES = [];
+
 /**
- * Generates normally distributed data points to use while drawing the histogram
+ * Generates uniformally distributed data points
  * @param {number} sampleSize The number of data points to generate
  * @param {number} offSet The offset of the data points
  */
@@ -43,10 +46,9 @@ function generateGroupDataPoints(
 export function generateBoxPlotData(
   numberOfGroups: number,
   sampleSize: number = 1000,
-): $ReadOnlyArray<BoxPlotData> {
-  const sampleData = [];
-
-  for (let group = 0; group < numberOfGroups; group += 1) {
+): $ReadOnlyArray<BoxPlotBoxData> {
+  const start = GENERATED_BOXES.length;
+  for (let group = start; group < numberOfGroups; group += 1) {
     const offset = randomOffset();
     const points = generateGroupDataPoints(sampleSize, offset);
 
@@ -59,9 +61,12 @@ export function generateBoxPlotData(
     const min = firstQuartile - 1.5 * IQR;
     const max = thirdQuartile + 1.5 * IQR;
 
-    const outliers: Array<number> = points.filter(
-      (p: number): boolean => p < min || p > max,
-    );
+    const outliers = points
+      .filter((p: number): boolean => p < min || p > max)
+      .map(value => ({
+        value,
+        dimensions: { Region: 'Some Region', Facility: 'Some Facility' },
+      }));
     const binWidth = 2 * IQR * (sampleSize - outliers.length) ** (-1 / 3);
     const binNum = Math.round((max - min) / binWidth);
     const actualBinWidth = (max - min) / binNum;
@@ -96,10 +101,10 @@ export function generateBoxPlotData(
       max,
     };
 
-    sampleData.push({
+    GENERATED_BOXES.push({
       data: { boxPlotSummary, binData, outliers },
       key: `Group ${group}`,
     });
   }
-  return sampleData;
+  return GENERATED_BOXES.slice(0, numberOfGroups);
 }

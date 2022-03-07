@@ -1,47 +1,68 @@
 // @flow
+export type DimensionID = string;
+export type MetricID = string;
+
 export type DataPoint = {
-  /** The number of cases corresponding to the data point */
-  value: number,
-
-  /** The date at which the number of cases where recorded */
-  date: Date,
+  /* all dimensions except the bucketing grouping */
+  dimensions: {
+    +[DimensionID]: string | null,
+    ...,
+  },
+  metrics: {
+    +[MetricID]: number | null,
+    ...,
+  },
 };
 
-export type Bin = {
-  /** The number of values in the bin */
-  valuesCount: number,
+/* Data for the bars in one bin grouping */
+export type Bucket = {
+  /* Dimension for bucketing the data points */
+  timestamp: string,
 
-  /** The lower limit of the bin */
-  lowerBinLimit: number | Date,
-
-  /** The upper limit of the bin */
-  upperBinLimit: number | Date,
+  bars: $ReadOnlyArray<DataPoint>,
 };
 
-export type HistogramData = {
-  /** Intervals of data with corresponding count of values win each interval */
-  bins: $ReadOnlyArray<Bin>,
-
-  /** The minimum value of all lower bin limit of the bins */
-  lowerBound: number | Date,
-
-  /** The maximum value of all upper bin limits of the bins */
-  upperBound: number | Date,
+export type AxisTitles = {
+  xAxis: string,
+  yAxis: string,
 };
 
-export type Margin = {
-  top: number,
+export type AxisTickLabelProps = {
+  angle: number,
+  dx: string,
+  dy: string,
+  fill: string,
+  fontSize: number | string,
+  textAnchor: 'start' | 'middle' | 'end',
+  verticalAnchor: 'start' | 'middle' | 'end',
+};
+
+export type AxisTheme = {
+  titleLabelProps: {
+    fill: string,
+    fontSize: number | string,
+  },
+  tickLabelProps: AxisTickLabelProps,
+};
+
+export type BarStyle = {
+  fill: string,
+  fillOpacity: number,
+  stroke: string,
+  strokeOpacity: number,
+};
+
+export type EpiCurveTheme = {
+  barStyle: BarStyle,
+  valueAngle: number,
+  valueFontSize: number | string,
+  xAxis: AxisTheme,
+  yAxis: AxisTheme,
+};
+
+export type Padding = {
+  bottom: number,
   left: number,
   right: number,
-  bottom: number,
-};
-
-export type DateAccessor = ({ date: Date }) => Date;
-
-export type TooltipData = {
-  /** The lower limit of a bin to be shown in the tooltip */
-  from: Date,
-
-  /** The upper limit of the bin to be shown in the tooltip */
-  to: Date,
+  top: number,
 };

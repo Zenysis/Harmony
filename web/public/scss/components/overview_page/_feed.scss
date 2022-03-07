@@ -1,0 +1,120 @@
+// HACK(sophie): combined height of the feed section search bar and tab headers
+$feed-header-height: 59px + 35px;
+
+.feed {
+  &__panel {
+    border-left: 1px solid $gray;
+    flex: 0 0 378px;
+
+    .zen-tabs__contents-container {
+      // ensure the left border extends the full height of the page and any
+      // notifications past the screen height scroll within the element
+      height: calc(100vh - #{$navbar-height} - #{$feed-header-height});
+      overflow: auto;
+    }
+
+    .zen-tab-content-wrapper {
+      padding-top: 0px;
+    }
+  }
+
+  &__tab-header-row {
+    .zen-tabs__header-row {
+      border-bottom: 1px solid $gray;
+    }
+  }
+
+  &__tab-header-text {
+    padding: 5px 50px;
+    text-align: center;
+    width: 188px;
+  }
+
+  &__search-bar {
+    padding: $space-s-px $space-xs-px;
+  }
+
+  &__no-display {
+    color: #58585a;
+    margin: $space-xxxl-px $space-xl-px 0 $space-xl-px;
+    text-align: center;
+  }
+
+  &__recent {
+    border-bottom: 1px solid $gray;
+    border-top: 1px solid $gray;
+    color: #bfc2c9;
+    padding: $space-xs-px $space-m-px;
+  }
+}
+
+.feed-notification {
+  border-bottom: 1px solid $gray;
+  padding: $space-m-px;
+
+  &__icon {
+    height: 24px;
+    width: 24px;
+  }
+
+  &__action-button {
+    .zen-button__contents {
+      font-weight: normal;
+      padding: 0px $space-m-px;
+      text-transform: capitalize;
+    }
+  }
+
+  &__time {
+    color: $gray;
+    white-space: nowrap;
+  }
+
+  // Highlight resources such as dashboard names
+  &__resource {
+    font-weight: bold;
+  }
+
+  // Italicizes 'dashboard' in dashboard permissions update
+  &__dashboard {
+    font-style: italic;
+  }
+
+  &__dropdown-button {
+    background-color: transparent;
+    border: none;
+    color: $slate-hover;
+    margin-bottom: $space-xxs-px;
+    padding: 0px;
+  }
+
+  &__dropdown-caret {
+    margin-left: $space-xs-px;
+  }
+
+  &__dashboard-hyperlink {
+    background-color: transparent;
+    border: none;
+    color: $blue-primary;
+    margin: $space-xxs-px 0px $space-xxs-px $space-m-px;
+    padding: 0px;
+    text-overflow: ellipsis;
+  }
+
+  &__show-all {
+    color: $slate-hover;
+    font-weight: bold;
+    margin-top: $space-xxs-px;
+  }
+
+  // Remove the button box shadow and decrease spacing to take up less visual
+  // attention
+  .zen-button {
+    box-shadow: None;
+    min-height: 0;
+
+    &__contents {
+      padding: 0px;
+    }
+  }
+}

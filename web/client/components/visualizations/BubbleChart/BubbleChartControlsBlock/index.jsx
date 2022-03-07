@@ -2,68 +2,44 @@
 import * as React from 'react';
 
 import CheckboxControl from 'components/visualizations/common/controls/CheckboxControl';
-import ControlsGroup from 'components/visualizations/common/controls/ControlsGroup';
 import DropdownControl, {
   Option,
 } from 'components/visualizations/common/controls/DropdownControl';
+import Group from 'components/ui/Group';
 import ResultLimitControl from 'components/visualizations/common/controls/ResultLimitControl';
-import type { ControlsBlockProps } from 'components/visualizations/common/commonTypes';
-import type { ViewTypeConfig } from 'models/core/QueryResultSpec/VisualizationSettings';
+import type { ControlsBlockProps } from 'components/visualizations/common/types/controlsBlockProps';
 
 type Props = ControlsBlockProps<'BUBBLE_CHART'>;
-type Controls = $PropertyType<Props, 'controls'>;
 
-// Number of results to display.
-const DEFAULT_RESULT_LIMIT = 100;
 const RESULT_LIMIT_OPTIONS = [20, 50, 100, 250, 500];
 const TXT_BUBBLECHART = t('query_result.bubblechart');
 const TXT_BEST_FIT_LINE = t('query_result.controls.best_fit_line_label');
+export const Z_AXIS_NONE = 'none';
 
 export default class BubbleChartControlsBlock extends React.PureComponent<Props> {
-  static getDefaultControls(viewTypeConfig: ViewTypeConfig): Controls {
-    const { fields } = viewTypeConfig;
-    return {
-      linearFit: false,
-      resultLimit: DEFAULT_RESULT_LIMIT,
-      showLegend: false,
-      xAxis: fields[0] || '',
-      yAxis: fields[1] || '',
-      zAxis: fields[2] || 'none',
-    };
-  }
-
-  getLabelFromFieldId(fieldId: string) {
+  getLabelFromFieldId(fieldId: string): string | void {
     const seriesObj = this.props.seriesSettings.seriesObjects()[fieldId];
     return seriesObj ? seriesObj.label() : undefined;
   }
 
-  maybeRenderResultLimitDropdown() {
-    const { controls, onControlsSettingsChange, queryResult } = this.props;
-    const maxResults = queryResult.data().length;
-    if (maxResults < 1) {
-      return null;
-    }
-
+  maybeRenderResultLimitDropdown(): React.Node {
+    const { controls, onControlsSettingsChange } = this.props;
     return (
       <ResultLimitControl
         controlKey="resultLimit"
         onValueChange={onControlsSettingsChange}
-        value={controls.resultLimit}
-        maxResults={maxResults}
+        value={controls.resultLimit()}
         resultLimitOptions={RESULT_LIMIT_OPTIONS}
-        colsWrapper={6}
-        colsLabel={6}
-        colsControl={6}
       />
     );
   }
 
-  renderBestFitLineOption() {
+  renderBestFitLineOption(): React.Node {
     const { controls, onControlsSettingsChange } = this.props;
     return (
       <CheckboxControl
         controlKey="linearFit"
-        value={controls.linearFit}
+        value={controls.linearFit()}
         onValueChange={onControlsSettingsChange}
         label={TXT_BEST_FIT_LINE}
       />
@@ -77,7 +53,7 @@ export default class BubbleChartControlsBlock extends React.PureComponent<Props>
   renderAxesDropdowns(): $ReadOnlyArray<React.Element<typeof DropdownControl>> {
     const { controls, fields, onControlsSettingsChange } = this.props;
     const axesOptions = fields.map(field => {
-      const fieldId = field.id();
+      const fieldId = field.get('id');
       return (
         <Option key={fieldId} value={fieldId}>
           {this.getLabelFromFieldId(fieldId)}
@@ -90,7 +66,7 @@ export default class BubbleChartControlsBlock extends React.PureComponent<Props>
         axis !== 'zAxis'
           ? axesOptions
           : axesOptions.concat(
-              <Option key="none" value="none">
+              <Option key={Z_AXIS_NONE} value={Z_AXIS_NONE}>
                 {TXT_BUBBLECHART.none_option}
               </Option>,
             );
@@ -98,7 +74,7 @@ export default class BubbleChartControlsBlock extends React.PureComponent<Props>
         <DropdownControl
           key={axis}
           controlKey={axis}
-          value={controls[axis]}
+          value={controls.get(axis)}
           onValueChange={onControlsSettingsChange}
           label={t(`query_result.bubblechart.${axis}_title`)}
         >
@@ -108,31 +84,31 @@ export default class BubbleChartControlsBlock extends React.PureComponent<Props>
     });
   }
 
-  renderToggleLegendControl() {
+  renderToggleLegendControl(): React.Node {
     const { controls, onControlsSettingsChange } = this.props;
     return (
       <CheckboxControl
         controlKey="showLegend"
-        value={controls.showLegend}
+        value={controls.showLegend()}
         onValueChange={onControlsSettingsChange}
         label={TXT_BUBBLECHART.show_legend}
       />
     );
   }
 
-  render() {
+  render(): React.Node {
     if (this.props.fields.length < 2) {
       // Not enough fields selected - display error message
       return <div>{TXT_BUBBLECHART.error_message}</div>;
     }
 
     return (
-      <ControlsGroup>
+      <Group.Vertical spacing="l">
         {this.maybeRenderResultLimitDropdown()}
         {this.renderBestFitLineOption()}
         {this.renderToggleLegendControl()}
         {this.renderAxesDropdowns()}
-      </ControlsGroup>
+      </Group.Vertical>
     );
   }
 }

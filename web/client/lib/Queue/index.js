@@ -1,4 +1,5 @@
 // @flow
+/* eslint-disable max-classes-per-file */
 
 /**
  * A node for use in a singly linked list. Stores a value and a pointer to the

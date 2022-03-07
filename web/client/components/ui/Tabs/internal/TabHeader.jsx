@@ -3,50 +3,58 @@ import * as React from 'react';
 import classNames from 'classnames';
 
 import Heading from 'components/ui/Heading';
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
 
 type Props = {
   isActive: boolean,
   name: string,
-  onTabClick: (name: string) => void,
+  onTabClick: () => void,
   marginRight: string | number,
+
+  // determines if the header should be rendered with a more light weight
+  // style (no uppercase text-transform, and not bold).
   useLightWeightHeading: boolean,
 
-  className: string,
+  className?: string,
+  disabled?: boolean,
   testId?: string,
+  tabHeadingSize?: 'small' | 'medium' | 'large',
 };
 
-const defaultProps = {
-  className: '',
-  testId: undefined,
-};
-
-export default function TabHeader(props: Props) {
-  const {
-    isActive,
-    className,
-    name,
-    onTabClick,
-    useLightWeightHeading,
-    marginRight,
-    testId,
-  } = props;
-  const onClick = () => onTabClick(name);
+export default function TabHeader({
+  isActive,
+  name,
+  onTabClick,
+  marginRight,
+  useLightWeightHeading,
+  className = '',
+  disabled = false,
+  tabHeadingSize = 'small',
+  testId = undefined,
+}: Props): React.Node {
   const headingClassName = classNames('zen-tab-header__heading', className, {
-    'zen-tab-header__heading--active': isActive,
+    'zen-tab-header__heading--active': isActive && !disabled,
     'zen-tab-header__heading--use-light-weight-heading': useLightWeightHeading,
+    'zen-tab-header__heading--disabled': disabled,
+  });
+  const containerClassName = classNames('zen-tab-header__outer-container', {
+    'zen-tab-header--disabled': disabled,
   });
 
+  // TODO(abby): convert to correct aria usage: removing aria-label,
+  // switching role to tab, etc. update any custom renderHeaders as well
   return (
     <div
-      className="zen-tab-header__outer-container"
-      onClick={onClick}
+      aria-label={normalizeARIAName(name)}
+      className={containerClassName}
+      onClick={onTabClick}
       style={{ marginRight }}
       role="button"
-      zen-test-id={testId}
+      data-testid={testId}
     >
-      <Heading.Small className={headingClassName}>{name}</Heading.Small>
+      <Heading size={tabHeadingSize} className={headingClassName}>
+        {name}
+      </Heading>
     </div>
   );
 }
-
-TabHeader.defaultProps = defaultProps;

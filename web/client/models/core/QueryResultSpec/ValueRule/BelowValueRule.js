@@ -1,7 +1,7 @@
 // @flow
 import * as Zen from 'lib/Zen';
 import type { Serializable } from 'lib/Zen';
-import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/types';
+import type { TestableRule } from 'models/core/QueryResultSpec/ValueRule/TestableRule';
 
 type Values = {
   value: number,
@@ -46,4 +46,4 @@ class BelowValueRule extends Zen.BaseModel<BelowValueRule, Values>
   }
 }
 
-export default ((BelowValueRule: any): Class<Zen.Model<BelowValueRule>>);
+export default ((BelowValueRule: $Cast): Class<Zen.Model<BelowValueRule>>);

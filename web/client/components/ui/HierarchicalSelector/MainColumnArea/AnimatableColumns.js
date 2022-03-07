@@ -1,18 +1,21 @@
 // @flow
+import * as Zen from 'lib/Zen';
 import HierarchyItem from 'models/ui/HierarchicalSelector/HierarchyItem';
 import SearchResultColumnData from 'models/ui/HierarchicalSelector/SearchResultColumnData';
-import type ZenArray from 'util/ZenModel/ZenArray';
+import type { NamedItem } from 'models/ui/HierarchicalSelector/types';
 
-export type AnimatableColumn = HierarchyItem | SearchResultColumnData;
+export type AnimatableColumn<T: NamedItem> =
+  | HierarchyItem<T>
+  | SearchResultColumnData<T>;
 
-type ColumnsArray = ZenArray<AnimatableColumn>;
+type ColumnsArray<T> = Zen.Array<AnimatableColumn<T>>;
 
 /**
  * A collection of helper functions to work with an array of animatable columns
  * columns.
  */
 const AnimatableColumns = {
-  hasSearchColumn(columns: ColumnsArray): boolean {
+  hasSearchColumn<T: NamedItem>(columns: ColumnsArray<T>): boolean {
     return columns.some(c => c instanceof SearchResultColumnData);
   },
 
@@ -26,8 +29,8 @@ const AnimatableColumns = {
    * This is the width that would be rendered if we never clamped the
    * hierarchical selector with a maxWidth.
    */
-  getTotalColumnWidth(
-    columns: ColumnsArray,
+  getTotalColumnWidth<T: NamedItem>(
+    columns: ColumnsArray<T>,
     hasSearchResults: boolean,
     columnWidth: number,
     maxWidth: number,
@@ -47,8 +50,8 @@ const AnimatableColumns = {
    * of all columns (adjusted depending on if there's a search result column),
    * clamped by the max width.
    */
-  getHierarchicalSelectorWidth(
-    hierarchyItems: ZenArray<HierarchyItem>,
+  getHierarchicalSelectorWidth<T: NamedItem>(
+    hierarchyItems: Zen.Array<HierarchyItem<T>>,
     hasSearchResults: boolean,
     columnWidth: number,
     maxWidth: number,

@@ -1,16 +1,10 @@
 ```jsx
-initialState = {
-  currentPage: 2,
-}
-
-function onPageChange(currentPage) {
-  setState({ currentPage });
-}
+const [currentPage, setCurrentPage] = React.useState(2);
 
 <PageSelector
-  currentPage={state.currentPage}
+  currentPage={currentPage}
   pageSize={5}
   resultCount={100}
-  onPageChange={onPageChange}
+  onPageChange={setCurrentPage}
 />
 ```

@@ -6,23 +6,21 @@ import Configuration from 'services/models/Configuration';
 import autobind from 'decorators/autobind';
 import type { HTTPService } from 'services/APIService';
 
-export type ConfigurationKey =
-  | 'public_access'
-  | 'default_url'
-  | 'crisp_id'
-  | 'crisp_enabled'
-  | 'project_manager_ids'
-  | 'cur_datasource';
-
 // A mapping of all the valid configuration keys.
-export const CONFIGURATION_KEY: { [string]: ConfigurationKey } = {
+export const CONFIGURATION_KEY = Object.freeze({
   PUBLIC_ACCESS: 'public_access',
   DEFAULT_URL: 'default_url',
   CRISP_ID: 'crisp_id',
   CRISP_ENABLED: 'crisp_enabled',
   PROJECT_MANAGER_IDS: 'project_manager_ids',
   CUR_DATASOURCE: 'cur_datasource',
-};
+  KEEP_ME_SIGNED: 'keep_me_signed_in',
+  ENABLE_CASE_MANAGEMENT: 'enable_case_management',
+  CASE_MANAGEMENT_APP_NAME: 'case_management_app_name',
+  CASE_MANAGEMENT_HOME_PAGE_DASHBOARD: 'case_management_home_page_dashboard',
+});
+
+export type ConfigurationKey = $Values<typeof CONFIGURATION_KEY>;
 
 class ConfigurationService {
   _httpService: HTTPService;
@@ -113,4 +111,4 @@ class ConfigurationService {
   }
 }
 
-export default new ConfigurationService(APIService);
+export default (new ConfigurationService(APIService): ConfigurationService);

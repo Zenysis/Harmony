@@ -1,59 +1,60 @@
 // @flow
 import * as React from 'react';
 
-import Control from 'components/visualizations/common/controls/Control';
 import DropdownControl, {
   Option,
 } from 'components/visualizations/common/controls/DropdownControl';
 import type { VisualizationControlProps } from 'components/visualizations/common/controls/commonTypes';
 
-type Props = VisualizationControlProps<number> & {
-  maxResults: number,
-  resultLimitOptions: Array<number>,
+type Props = {
+  ...VisualizationControlProps<number>,
+  resultLimitOptions: $ReadOnlyArray<number>,
 
   buttonMinWidth?: number,
-  showAllOption: boolean,
-};
-
-const defaultProps = {
-  ...Control.defaultColumnCounts,
-  buttonMinWidth: undefined,
-  showAllOption: true,
+  showAllOption?: boolean,
 };
 
 const TXT_LIMIT_RESULTS = t('query_result.controls.limit_results');
 const TXT_ALL = t('query_result.common.all');
 
-export default function ResultLimitControl(props: Props) {
-  const {
-    maxResults,
-    resultLimitOptions,
-    showAllOption,
-    value,
-    ...passThroughControlProps
-  } = props;
-
-  // If the current number of results is less than the smallest result limit
-  // option, and the all option is disabled, we can hide the result limit
-  // control.
-  if (maxResults < resultLimitOptions[0] && !showAllOption) {
-    return null;
+// On 2019-10-15, a breaking change was made to the ResultLimitControl where
+// the "All" value was changed to a static value of -1. Previously it was equal
+// to a now removed `maxResults` prop. Some dashboards and cached sessions will
+// still have this max value which is not located inside the result limit
+// options. Find the correct bucket that includes this value or return -1 if
+// it is larger than the biggest bucket.
+function bucketValue(
+  value: number,
+  resultLimitOptions: $ReadOnlyArray<number>,
+): number {
+  if (value === -1 || resultLimitOptions.includes(value)) {
+    return value;
   }
 
-  const actualValue =
-    maxResults < Math.min(...resultLimitOptions) ? maxResults : value;
+  const bucket = resultLimitOptions.find(v => v > value);
+  return bucket === undefined ? -1 : bucket;
+}
 
-  const options = resultLimitOptions
-    .filter(limit => !Number.isNaN(limit) && limit < maxResults)
-    .map(limit => (
-      <Option key={limit} value={limit}>
-        {limit}
-      </Option>
-    ));
+export default function ResultLimitControl({
+  controlKey,
+  onValueChange,
+  resultLimitOptions,
+  value,
+  buttonMinWidth = undefined,
+  showAllOption = true,
+}: Props): React.Node {
+  const options = resultLimitOptions.map(limit => (
+    <Option key={limit} value={limit}>
+      {limit}
+    </Option>
+  ));
 
+  // The All option has a value of `-1` to show that all results should be
+  // included. This is instead of hardcoding the maximum results possible since
+  // the query result can change.
   if (showAllOption) {
     options.push(
-      <Option key={maxResults} value={maxResults}>
+      <Option key={-1} value={-1}>
         {TXT_ALL}
       </Option>,
     );
@@ -62,12 +63,13 @@ export default function ResultLimitControl(props: Props) {
   return (
     <DropdownControl
       label={TXT_LIMIT_RESULTS}
-      value={actualValue}
-      {...passThroughControlProps}
+      labelClassName="wrap-label-text"
+      value={bucketValue(value, resultLimitOptions)}
+      controlKey={controlKey}
+      onValueChange={onValueChange}
+      buttonMinWidth={buttonMinWidth}
     >
       {options}
     </DropdownControl>
   );
 }
-
-ResultLimitControl.defaultProps = defaultProps;

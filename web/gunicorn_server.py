@@ -3,8 +3,11 @@ import argparse
 import os
 import sys
 
-from google.cloud import logging as google_cloud_logging
-from google.cloud.logging.handlers import CloudLoggingHandler
+# gevent monkey patch before all other imports
+import gevent.monkey
+
+gevent.monkey.patch_all()
+
 from gunicorn.app.base import BaseApplication
 from multiprocessing import cpu_count
 from pylib.file.file_utils import FileUtils
@@ -25,7 +28,7 @@ LISTEN_PORT_ENV_VAR = 'ZEN_GUNICORN_LISTEN_PORT'
 DEFAULT_LISTEN_ADDRESS = '0.0.0.0'
 DEFAULT_LISTEN_PORT = 5000
 DEFAULT_WORKER_THREAD_COUNT = cpu_count() * 4
-DEFAULT_WORKER_TIMEOUT = 30
+DEFAULT_WORKER_TIMEOUT = 60
 
 
 class GunicornApplication(BaseApplication):
@@ -90,15 +93,24 @@ def main():
         '--workers',
         type=str,
         required=False,
+        default=DEFAULT_WORKER_THREAD_COUNT,
         help=(
             (
                 'The number of Gunicorn worker threads that the server will start. '
-                'By default, this is the number of available CPUs * 4. '
+                'By default, this is %d. '
                 'Can also be specified via the \'%s\' environment variable. '
                 'The inline parameter takes priority. '
             )
-            % (WORKER_COUNT_ENV_VAR)
+            % (DEFAULT_WORKER_THREAD_COUNT, WORKER_COUNT_ENV_VAR)
         ),
+    )
+    parser.add_argument(
+        '-k',
+        '--worker-class',
+        type=str,
+        required=False,
+        default=os.getenv('GUNICORN_WORKER_CLASS', 'gevent'),
+        help=(('The type of workers to use. Defaults to "gevent"')),
     )
     parser.add_argument(
         '-t',
@@ -111,9 +123,15 @@ def main():
         'be specified via the \'%s\' environment '
         'variable. The inline parameter takes priority.' % WORKER_TIMEOUT_ENV_VAR,
     )
+    parser.add_argument(
+        '--pidfile',
+        type=str,
+        required=False,
+        help='A filename that gunicorn will store the master process PID in',
+    )
     arguments = parser.parse_args()
-    worker_count = arguments.workers
-    worker_timeout = int(arguments.timeout)
+    worker_count = int(os.getenv(WORKER_COUNT_ENV_VAR, arguments.workers))
+    worker_timeout = int(os.getenv(WORKER_TIMEOUT_ENV_VAR, arguments.timeout))
     listen_port = arguments.listen_port
 
     listen_address = (
@@ -127,37 +145,34 @@ def main():
         or int(DEFAULT_LISTEN_PORT)
     )
 
-    worker_count = (
-        int(worker_count if worker_count else 0)
-        or int(os.getenv(WORKER_COUNT_ENV_VAR, 0))
-        or DEFAULT_WORKER_THREAD_COUNT
-    )
-
-    worker_timeout_env = os.getenv(WORKER_COUNT_ENV_VAR)
-    if worker_timeout_env:
-        worker_timeout = int(worker_timeout_env)
-
     if listen_port < 1 or listen_port > 65535:
         raise ValueError('\'listen_port\' must be between 1 and 65535.')
 
     if worker_count < 1:
         raise ValueError('\'worker_count\' must be greater than or equal to 1.')
 
+    if worker_timeout < 5:
+        raise ValueError('\'worker_timeout\' must be greater than 5.')
+
     def setup_post_fork_logging(server, worker):
+        # TODO(ian): Reenable this when stackdriver logging is compatible with gevent.
         # After the gunicorn fork, recreate the Google Cloud Logging clients.
         # There is an issue with the clients where they do not log after a
         # process fork.
-        if not IS_TEST:
-            setup_stackdriver_logger(LOG)
+        # if not IS_TEST:
+        #    setup_stackdriver_logger(LOG)
+        pass
 
     options = {
         'bind': '%s:%s' % (listen_address, listen_port),
         'workers': worker_count,
+        'worker_class': arguments.worker_class,
         'timeout': worker_timeout,
         # FIXME(ian): Post fork logging temporarily disabled due to thread
         # safety issues identified in KE instance.
         # 'post_fork': setup_post_fork_logging,
         'reload': True,
+        'pidfile': arguments.pidfile,
     }
 
     flask_application = create_app()

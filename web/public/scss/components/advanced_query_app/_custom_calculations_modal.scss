@@ -1,0 +1,240 @@
+.custom-calculations-modal {
+  .zen-modal__body {
+    padding: 0;
+  }
+
+  &__body {
+    display: flex;
+    height: 100%;
+  }
+
+  &__panel-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  &__first-col {
+    border-right: 2px solid $gray-light;
+    width: 33.33%;
+  }
+
+  &__second-col {
+    display: flex;
+    flex-direction: column;
+    width: 66.66%;
+  }
+}
+
+.custom-calculations-formula-panel {
+  &__title-section {
+    margin-bottom: 16px;
+  }
+}
+
+.custom-calculations-calculator-validator-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.custom-calculations-fields-panel {
+  &:first-child {
+    margin-bottom: 16px;
+  }
+
+  &__body {
+    font-size: 12px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  &__field-tag {
+    display: block;
+    margin-right: 0;
+
+    .zen-tag__content {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &__field-count,
+  &__field-count--active {
+    transition: all 200ms;
+  }
+
+  &__field-count {
+    height: $space-l-px;
+    padding-right: $space-l-px;
+    width: 0px;
+
+    &--active {
+      align-items: center;
+      background-color: $slate-hover;
+      border-radius: 100px;
+      color: $gray-light;
+      display: flex;
+      height: $space-l-px;
+      justify-content: center;
+      width: $space-l-px;
+    }
+  }
+}
+
+.custom-calculations-formula-editor {
+  flex-grow: 1;
+  font-family: monospace;
+  min-height: 300px;
+  overflow: scroll;
+  padding-top: 10px;
+  position: relative;
+  width: 100%;
+
+  // we need to match all divs in the formula-editor, because sometimes
+  // empty divs are added without class names. But we don't want to add
+  // this font-family to Tags and their children
+  div {
+    font-family: monospace;
+    &.zen-tag,
+    .zen-tag div {
+      font-family: $base-font-family;
+    }
+  }
+
+  &__line > * {
+    // Ideally there would be a matching margin-right value, but it looks like
+    // there is a built in space added to the left of every symbol, so it would
+    // just be adding extra awkward space
+    margin-left: 5px;
+  }
+
+  &__field-tag {
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+}
+
+.custom-calculations-validator {
+  height: 15px;
+  margin-top: 15px;
+  position: relative;
+
+  &__svg {
+    display: inline-block;
+    height: 15px;
+    width: 15px;
+  }
+
+  &__label {
+    display: inline-block;
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 3px;
+    margin-top: -12px;
+    text-align: left;
+  }
+}
+
+.custom-calculations-formula-viewer {
+  &__line {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    height: 20px;
+    margin-bottom: 5px;
+  }
+
+  &__line > * {
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+
+  &__tag {
+    background-color: #06679e;
+    border: solid #06679e;
+    border-radius: 5px;
+    color: white;
+    font: 12px $base-font-family;
+    height: 22px;
+    margin: 5px;
+    padding-bottom: 4px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 2px;
+    text-align: center;
+  }
+
+  &__background {
+    background-color: $gray-light;
+    border: 1px solid $gray;
+    border-radius: 3px;
+    overflow-x: auto;
+    overflow-y: auto;
+    padding-left: $space-s-px;
+    padding-right: $space-s-px;
+    padding-top: $space-xs-px;
+    white-space: nowrap;
+  }
+}
+
+.custom-calculations-custom-field-panel {
+  &__btn-list {
+    background-color: $gray-light;
+    border-bottom-left-radius: 5px;
+    border-top-left-radius: 5px;
+  }
+
+  &__btn {
+    background-color: $gray-light;
+    padding: $space-s-px $space-s-px;
+    transition: background-color $fast-transition;
+
+    &:first-child {
+      border-top-left-radius: 5px;
+    }
+
+    &:hover {
+      background-color: $gray-light-active;
+    }
+  }
+
+  &__plain-text-btn {
+    color: $blue-primary;
+    &:hover {
+      color: $blue-primary-hover;
+    }
+  }
+
+  &__btn-icon {
+    display: block;
+    float: left;
+    height: 10px;
+    margin: 2px 13px 2px 0px;
+    width: 10px;
+  }
+}
+
+.custom-calculations-calculator {
+  height: 30px;
+  margin-left: -4px;
+  margin-top: 10px;
+
+  &__symbol-button {
+    background-color: #3597e4;
+    background-image: linear-gradient(to right, #2fa4e2, #3c8ae6);
+    border: none;
+    height: 30px;
+    margin: 4px;
+    padding: 6px;
+    width: 30px;
+  }
+
+  &__icon {
+    display: block;
+    fill: #ffffff;
+    height: 18px;
+    width: 18px;
+  }
+}

@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 
+import * as Zen from 'lib/Zen';
 import DraggableItem, { DRAG_SIGNAL } from 'components/ui/DraggableItem';
 import PlaceholderItem from 'components/ui/DraggableItemList/internal/PlaceholderItem';
 import autobind from 'decorators/autobind';
@@ -9,7 +10,6 @@ import {
   computeInitialDragThreshold,
   computeNextDragThreshold,
 } from 'components/ui/DraggableItemList/internal/util';
-import type ZenArray from 'util/ZenModel/ZenArray';
 import type {
   DragEventSignal,
   DraggableData,
@@ -26,19 +26,30 @@ export type DragItemStyle = {
   width: number,
 };
 
-type Props<T> = {|
+type DefaultProps = {
+  /**
+   * An optional CSS selector that restricts drag events to only the DOM
+   * elements that match the selector. If not provided, the entire element
+   * will be draggable.
+   */
+  dragRestrictionSelector: string,
+};
+
+type Props<T> = {
+  ...DefaultProps,
+
   /**
    * An ordered list of items to render in the draggable list. There is no
    * restriction on the item type, and it is ok to have duplicates in the list.
    */
-  items: ZenArray<T>,
+  items: Zen.Array<T>,
 
   /**
    * Signals that a new ordering of items has been produced.
-   * @param {ZenArray.T} items The new ordering based on the user's drag actions
+   * @param {Zen.Array.T} items The new ordering based on the user's drag actions
    */
   onItemOrderChanged: (
-    ZenArray<T>,
+    Zen.Array<T>,
     event: SyntheticEvent<HTMLDivElement>,
   ) => void,
 
@@ -46,24 +57,25 @@ type Props<T> = {|
    * A render function that controls how the given item should be rendered
    * within the list.
    * @param {T} item Item to render.
-   * @returns {ReactElement.ElementType} A renderable React element.
+   * @returns {React.MixedElement} A renderable React element.
    */
-  renderItem: (item: T) => React.Element<React.ElementType>,
-
-  /**
-   * An optional CSS selector that restricts drag events to only the DOM
-   * elements that match the selector. If not provided, the entire element
-   * will be draggable.
-   */
-  dragRestrictionSelector: string,
-|};
+  renderItem: (item: T) => React.MixedElement,
+};
 
 type State<T> = {
   currentDragItemIdx: number,
+  /**
+   * Each drag cycle (wait + drag start + drag move... + drag end) should
+   * maintain an identifier that indicates events and changes that occur during
+   * that cycle are all part of the same cycle. When the cycle starts again, the
+   * identifier should change. This helps us produce a safe `key` based on item
+   * index.
+   */
+  dragCycleId: number,
   dragItemStyle: DragItemStyle,
   dragThreshold: [number, number],
   originalDragItemIdx: number,
-  originalItemOrder: ZenArray<T>,
+  originalItemOrder: Zen.Array<T>,
 };
 
 const DEFAULT_DRAG_STYLE: DragItemStyle = {
@@ -74,8 +86,12 @@ const DEFAULT_DRAG_STYLE: DragItemStyle = {
   width: 0,
 };
 
-function createDefaultState<T>(items: ZenArray<T>): State<T> {
+function createDefaultState<T>(
+  items: Zen.Array<T>,
+  dragCycleId: number = 0,
+): State<T> {
   return {
+    dragCycleId,
     currentDragItemIdx: -1,
     dragItemStyle: DEFAULT_DRAG_STYLE,
     dragThreshold: [0, 0],
@@ -96,7 +112,7 @@ export default class DraggableItemList<T> extends React.Component<
   Props<T>,
   State<T>,
 > {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     dragRestrictionSelector: '',
   };
 
@@ -106,13 +122,28 @@ export default class DraggableItemList<T> extends React.Component<
     props: Props<T>,
     state: State<T>,
   ): State<T> | null {
-    // If the input item order has changed, our assumptions about the items in
-    // the list are no longer valid and we must reset to a non-dragging state.
-    if (props.items !== state.originalItemOrder) {
-      return createDefaultState(props.items);
+    // If the input item order has not changed, our assumptions are still valid.
+    if (props.items === state.originalItemOrder) {
+      return null;
     }
 
-    return null;
+    // If the input item order has changed, we need to reset to a non-dragging
+    // and potentially update the drag cycle to invalidate the previous
+    // rendering.
+    let { dragCycleId } = state;
+
+    // If the user was in the middle of a drag, update the drag cycle ID since
+    // we will be resetting to a non-dragging state and changing the item order.
+    // In addition, if the number of items has changed then we cannot guarantee
+    // that the order is consistent with the previous order.
+    if (
+      state.currentDragItemIdx !== -1 ||
+      props.items.size() !== state.originalItemOrder.size()
+    ) {
+      dragCycleId += 1;
+    }
+
+    return createDefaultState(props.items, dragCycleId);
   }
 
   @autobind
@@ -151,9 +182,14 @@ export default class DraggableItemList<T> extends React.Component<
   onDragStart(
     e: SyntheticEvent<HTMLDivElement>,
     { node }: DraggableData,
-    currentDragItemIdx: number,
+    currentDragItemIdx: number | void,
   ): DragEventSignal {
     const dragItemStyle = computeDragItemStyle(node);
+
+    // Prevent drag events from bubbling up to the parent since an ancestor
+    // could also be a draggable item.
+    e.stopPropagation();
+
     this.setState({
       currentDragItemIdx,
       dragItemStyle,
@@ -166,18 +202,26 @@ export default class DraggableItemList<T> extends React.Component<
   onDragEnd(
     e: SyntheticEvent<HTMLDivElement>,
     data: DraggableData,
-    currentDragItemIdx: number,
+    currentDragItemIdx: number | void,
   ): DragEventSignal {
     const { items, onItemOrderChanged } = this.props;
-    const { originalDragItemIdx } = this.state;
+    const { dragCycleId, originalDragItemIdx } = this.state;
+    let newItemOrder = items;
+
+    // If the item order has not changed, we don't need to modify the drag
+    // cycle ID. This provides a small rendering benefit since React will be
+    // able to more efficiently reconcile the rendered child items.
+    let newDragCycleId = dragCycleId;
+
     if (originalDragItemIdx !== currentDragItemIdx) {
-      const newItemOrder = items
+      newItemOrder = items
         .delete(originalDragItemIdx)
-        .insertAt(currentDragItemIdx, items.get(originalDragItemIdx));
+        .insertAt(currentDragItemIdx || 0, items.get(originalDragItemIdx));
+      newDragCycleId = dragCycleId + 1;
       onItemOrderChanged(newItemOrder, e);
     }
 
-    this.setState(createDefaultState(items));
+    this.setState(createDefaultState(newItemOrder, newDragCycleId));
 
     // Since we are resetting the actual position of the item in the DOM, we
     // do not want to preserve the drag translation applied to the element when
@@ -185,10 +229,11 @@ export default class DraggableItemList<T> extends React.Component<
     return DRAG_SIGNAL.RESET;
   }
 
-  renderItems() {
+  renderItems(): React.Node {
     const { dragRestrictionSelector, items, renderItem } = this.props;
     const {
       currentDragItemIdx,
+      dragCycleId,
       dragItemStyle,
       originalDragItemIdx,
     } = this.state;
@@ -237,7 +282,7 @@ export default class DraggableItemList<T> extends React.Component<
       // no restriction on the items of the ZenArray. There could be duplicates.
       output.push(
         <DraggableItem
-          key={itemIdx}
+          key={`${dragCycleId}--${itemIdx}`}
           dragMovementBounds="parent"
           dragRestrictionSelector={dragRestrictionSelector}
           extraEventData={i}
@@ -253,7 +298,7 @@ export default class DraggableItemList<T> extends React.Component<
     return output;
   }
 
-  render() {
+  render(): React.Element<'div'> {
     return <div className="ui-draggable-item-list">{this.renderItems()}</div>;
   }
 }

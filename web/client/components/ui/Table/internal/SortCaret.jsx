@@ -12,7 +12,7 @@ const defaultProps = {
   sortDirection: undefined,
 };
 
-export default function SortCaret(props: Props) {
+export default function SortCaret(props: Props): React.Element<'div'> {
   const { sortDirection } = props;
   const upCaretClassName = classNames(
     'zen-table__sort-caret zen-table__sort-caret-up',

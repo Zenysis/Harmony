@@ -1,21 +1,7 @@
-// @noflow
+// @flow
 import moment from 'moment';
 
-const TEXT = t('visualizations.common.SettingsModal.GeneralSettingsTab');
-
-export const BUCKET_LABELS = {
-  NONE: TEXT.None,
-  DAY: TEXT.Day,
-  WEEK: TEXT.Week,
-  MONTH: TEXT.Month,
-  QUARTER: TEXT.Quarter,
-  HALF_YEAR: TEXT.Halfyear,
-  YEAR: TEXT.Year,
-  FISCAL_QUARTER: TEXT.FiscalQuarter,
-  FISCAL_YEAR: TEXT.FiscalYear,
-};
-
-export const BUCKET_TYPE = {
+type BucketTypeMap = {
   NONE: 'NONE',
   DAY: 'DAY',
   WEEK: 'WEEK',
@@ -27,23 +13,51 @@ export const BUCKET_TYPE = {
   FISCAL_YEAR: 'FISCAL_YEAR',
 };
 
+export type BucketType = $Values<BucketTypeMap>;
+
+export const BUCKET_TYPE: BucketTypeMap = {
+  NONE: 'NONE',
+  DAY: 'DAY',
+  WEEK: 'WEEK',
+  MONTH: 'MONTH',
+  QUARTER: 'QUARTER',
+  HALF_YEAR: 'HALF_YEAR',
+  YEAR: 'YEAR',
+  FISCAL_QUARTER: 'FISCAL_QUARTER',
+  FISCAL_YEAR: 'FISCAL_YEAR',
+};
+
+type BucketGranularityBackendNamesMap = {
+  ALL: 'all',
+  DAY: 'day',
+  WEEK: 'week',
+  MONTH: 'month',
+  QUARTER: 'quarter',
+  YEAR: 'year',
+  FISCAL_QUARTER: 'fiscal_quarter',
+  FISCAL_YEAR: 'fiscal_year',
+};
+
 // Granularity names that the backend expects.
 // TODO(stephen): Just consolidate this with BUCKET_TYPE so that it
 // doesn't need to be defined twice. This might require a rewrite of saved
 // dashboards.
 // TODO(stephen): THIS SHOULD LIVE SOMEWHERE ELSE.
-export const BACKEND_GRANULARITIES = {
+export const BACKEND_GRANULARITIES: BucketGranularityBackendNamesMap = {
   ALL: 'all',
-  [BUCKET_TYPE.DAY]: 'day',
-  [BUCKET_TYPE.WEEK]: 'week',
-  [BUCKET_TYPE.MONTH]: 'month',
-  [BUCKET_TYPE.QUARTER]: 'quarter',
-  [BUCKET_TYPE.YEAR]: 'year',
-  [BUCKET_TYPE.FISCAL_QUARTER]: 'fiscal_quarter',
-  [BUCKET_TYPE.FISCAL_YEAR]: 'fiscal_year',
+  DAY: 'day',
+  WEEK: 'week',
+  MONTH: 'month',
+  QUARTER: 'quarter',
+  YEAR: 'year',
+  FISCAL_QUARTER: 'fiscal_quarter',
+  FISCAL_YEAR: 'fiscal_year',
 };
 
-export function getBucketForDate(dateInput, bucketType) {
+export function getBucketForDate(
+  dateInput: string,
+  bucketType: BucketType,
+): string {
   // For a given date, return a string that this data is bucketed with.
   // Any values with a matching string will be summed.
   const d = moment.utc(dateInput);
@@ -74,12 +88,7 @@ export function getBucketForDate(dateInput, bucketType) {
   return rounded.toISOString();
 }
 
-export function hasForecastTimeSeries(fieldIds, fieldId) {
-  const forecastIndicator = `forecast_${fieldId}`;
-  return fieldIds.includes(forecastIndicator);
-}
-
-export function getForecastFieldId(fieldId) {
+export function getForecastFieldId(fieldId: string): string {
   return `forecast_${fieldId}`;
 }
 

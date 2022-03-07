@@ -7,24 +7,32 @@ import DropdownControl, {
 
 type DropdownControlProps = $Diff<
   React.ElementConfig<typeof DropdownControl>,
-  { children: mixed },
+  { children: mixed, valueStyle: mixed },
 >;
 
 type Props = DropdownControlProps;
 
-const defaultProps = {
-  ...DropdownControl.defaultProps,
-};
-
 // Mapping from font display name to font family.
 const FONT_OPTIONS = {
   Arial: 'Arial',
-  'Sans Sarif': 'Open Sans',
+  'Sans Serif': 'Lato',
   Serif: 'Times New Roman',
   'Courier New': 'Courier New, monospace',
 };
 
-export default function FontFamilyControl(props: Props) {
+export default function FontFamilyControl({
+  controlKey,
+  value,
+  onValueChange,
+  ariaName = undefined,
+  buttonMinWidth = undefined,
+  buttonWidth = undefined,
+  label = '',
+  labelClassName = '',
+  menuWidth = '100%',
+  className = '',
+  showButtonContentsOnHover = false,
+}: Props): React.Node {
   const fontFamilyOptions = Object.keys(FONT_OPTIONS).map(displayName => (
     <Option
       key={displayName}
@@ -34,12 +42,22 @@ export default function FontFamilyControl(props: Props) {
       {displayName}
     </Option>
   ));
-  const { value } = props;
   return (
-    <DropdownControl {...props} valueStyle={{ fontFamily: value }}>
+    <DropdownControl
+      controlKey={controlKey}
+      value={value}
+      onValueChange={onValueChange}
+      ariaName={ariaName}
+      buttonMinWidth={buttonMinWidth}
+      buttonWidth={buttonWidth}
+      label={label}
+      labelClassName={labelClassName}
+      menuWidth={menuWidth}
+      className={className}
+      showButtonContentsOnHover={showButtonContentsOnHover}
+      valueStyle={{ fontFamily: value }}
+    >
       {fontFamilyOptions}
     </DropdownControl>
   );
 }
-
-FontFamilyControl.defaultProps = defaultProps;

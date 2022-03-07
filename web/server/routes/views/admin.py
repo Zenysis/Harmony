@@ -1,4 +1,4 @@
-# pylint: disable=C0103
+# mypy: disallow_untyped_defs=True
 from flask import current_app, url_for, g
 from flask_user import current_user
 from flask_user.signals import user_forgot_password
@@ -10,7 +10,7 @@ from web.server.errors import ItemNotFound, NotificationError
 from web.server.data.data_access import Transaction
 
 
-def send_reset_password(email):
+def send_reset_password(email: str) -> None:
     logger = g.request_logger if hasattr(g, 'request_logger') else LOG
 
     with Transaction() as transaction:
@@ -20,7 +20,7 @@ def send_reset_password(email):
         )
 
         if not user:
-            logger.warning('User does not exist with email: \'%s\'', user.username)
+            logger.warning('User does not exist with email: \'%s\'', email)
             raise ItemNotFound('user', {'username': email})
 
         # Generate reset password token

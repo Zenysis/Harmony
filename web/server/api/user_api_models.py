@@ -2,11 +2,7 @@
 
 User APIs Accessible via http://<server_uri>:5000/api2/user
 '''
-from future import standard_library
-
-standard_library.install_aliases()
-from builtins import object
-from http.client import BAD_REQUEST, OK, CREATED, NO_CONTENT
+from http.client import BAD_REQUEST, OK, NO_CONTENT, UNAUTHORIZED
 
 from flask import current_app, g
 from flask_potion import fields
@@ -16,18 +12,25 @@ from flask_potion.signals import before_delete, after_delete
 from flask_user import current_user
 from werkzeug.exceptions import BadRequest
 
-from models.alchemy.user import User, USER_STATUSES, UserStatusEnum
+from models.alchemy.user import User, UserAcl, USER_STATUSES, UserStatusEnum
 from web.server.api.api_models import PrincipalResource
 from web.server.api.model_schemas import (
+    ACL_SCHEMA,
     USER_ROLES_SCHEMA,
     USERNAME_SCHEMA,
-    DEFAULT_ROLES_SCHEMA,
     INTERNATIONALIZED_ALPHANUMERIC_AND_DELIMITER,
     INTERNATIONALIZED_ALPHANUMERIC_AND_DELIMITER_OR_EMPTY,
     ROLE_MAP_SCHEMA,
     role_list_as_map,
     user_role_as_dictionary,
 )
+from web.server.api.permission_api_schemas import (
+    RESOURCE_ROLE_SUMMARY,
+    RESOURCE_SUMMARY,
+)
+
+# pylint:disable=C0413
+from web.server.api.permission_api_models import RoleResource
 from web.server.api.responses import STANDARD_RESPONSE_SCHEMA, StandardResponse
 from web.server.errors import UserAlreadyInvited
 from web.server.routes.views.authorization import (
@@ -35,20 +38,27 @@ from web.server.routes.views.authorization import (
     authorization_required,
 )
 from web.server.routes.views.admin import send_reset_password
-from web.server.routes.views.default_users import (
-    add_default_role,
-    delete_default_role,
-    list_default_roles,
+from web.server.api.user_api_schemas import (
+    FRONTEND_USER_UPDATE_SCHEMA,
+    INVITE_OBJECT_SCHEMA,
+    FIRST_NAME_SCHEMA,
+    LAST_NAME_SCHEMA,
+    PHONE_NUMBER_SCHEMA,
+    STATUS_SCHEMA,
 )
 from web.server.routes.views.users import (
     add_user_role_api,
+    build_user_updates,
     delete_user_role_api,
     force_delete_user,
+    get_user_owned_resources,
     invite_users,
     Invitee,
+    update_user_acls,
+    update_user_groups,
     update_user_roles_from_map,
 )
-from web.server.security.permissions import ROOT_SITE_RESOURCE_ID
+from web.server.security.permissions import ROOT_SITE_RESOURCE_ID, SuperUserPermission
 from web.server.util.util import (
     EMAIL_REGEX,
     get_resource_string,
@@ -57,23 +67,19 @@ from web.server.util.util import (
 )
 from web.server.potion.signals import after_user_role_change
 
-# The schema for an invite user request
-INVITE_OBJECT_FIELDS = {
-    'name': fields.String(
-        description='The invited user\'s name.',
-        pattern=INTERNATIONALIZED_ALPHANUMERIC_AND_DELIMITER,
-    ),
-    'email': USERNAME_SCHEMA,
-}
 
-INVITE_OBJECT_SCHEMA = fields.Custom(
-    fields.Object(INVITE_OBJECT_FIELDS), converter=lambda value: Invitee(**value)
-)
+class UserAclResource(PrincipalResource):
+    class Meta:
+        name = 'user_acl'
+        model = UserAcl
+
+    class Schema:
+        resource = RESOURCE_SUMMARY
+        resourceRole = RESOURCE_ROLE_SUMMARY
 
 
 class UserResource(PrincipalResource):
-    '''The potion class for performing CRUD operations on the `User` class.
-    '''
+    '''The potion class for performing CRUD operations on the `User` class.'''
 
     class Meta(object):
         title = 'Users API'
@@ -104,38 +110,39 @@ class UserResource(PrincipalResource):
 
     class Schema(object):
         username = USERNAME_SCHEMA
-        roles = fields.Custom(
-            ROLE_MAP_SCHEMA,
+        roles = fields.Array(
+            fields.Inline(RoleResource),
             description='The role(s) that the user currently possesses.',
-            attribute='roles',
-            formatter=role_list_as_map,
-            default=[],
         )
-        firstName = fields.String(
-            description='The first name of the user.',
-            attribute='first_name',
-            pattern=INTERNATIONALIZED_ALPHANUMERIC_AND_DELIMITER,
-        )
-        lastName = fields.String(
-            description='The last name of the user.',
-            attribute='last_name',
-            pattern=INTERNATIONALIZED_ALPHANUMERIC_AND_DELIMITER_OR_EMPTY,)
-        phoneNumber = fields.String(
-            description='The phone number of the user.', attribute='phone_number'
-        )
+        firstName = FIRST_NAME_SCHEMA
+        lastName = LAST_NAME_SCHEMA
+        phoneNumber = PHONE_NUMBER_SCHEMA
         # Disabling this warning because Hyper-Schema is enforcing
         # that the value of this field MUST match one of the values
         # of the Enum.
         # pylint:disable=E1136
         # pylint: disable=E1101
-        status = fields.Custom(
-            fields.String(enum=USER_STATUSES),
-            attribute='status_id',
-            formatter=lambda status_id: UserStatusEnum(status_id).name.lower(),
-            converter=lambda status_value: UserStatusEnum[status_value.upper()].value,
-            default=UserStatusEnum.ACTIVE.value,
-            nullable=False,
-        )
+        status = STATUS_SCHEMA
+        acls = fields.Array(fields.Inline(UserAclResource), attribute='acls')
+
+    # TODO(toshi): Combine schemas
+    # pylint: disable=R0201
+    # pylint: disable=E1101
+    @ItemRoute.PATCH(
+        '',
+        rel='update',
+        title='Update user',
+        description='Updates a user',
+        schema=FRONTEND_USER_UPDATE_SCHEMA,
+        response_schema=fields.Inline('self'),
+    )
+    def update_user(self, db_user, obj):
+        with AuthorizedOperation('edit_user', 'site'):
+            updates = build_user_updates(obj)
+            updated_user = self.manager.update(db_user, updates)
+            update_user_acls(updated_user, obj.get('acls', []))
+            update_user_groups(updated_user, obj.get('groups', []))
+            return update_user_groups, OK
 
     # The parameter is coming directly from the API which uses camelCase instead of
     # snake_case
@@ -181,8 +188,10 @@ class UserResource(PrincipalResource):
             # TODO(vedant) - This is for legacy users who signed up with usernames that do
             # not represent an e-mail address
             if not EMAIL_REGEX.match(username):
-                message = 'User {username} does not have a valid e-mail address.'.format(
-                    username=username
+                message = (
+                    'User {username} does not have a valid e-mail address.'.format(
+                        username=username
+                    )
                 )
                 return StandardResponse(message, BAD_REQUEST, False), BAD_REQUEST
 
@@ -202,7 +211,7 @@ class UserResource(PrincipalResource):
         description='Force delete a User and ALL their created artifacts (Dashboards, etc.)',
     )
     def force_delete(self, user):
-        with AuthorizedOperation('delete_resource', 'user', user.id):
+        with AuthorizedOperation('delete_user', 'site'):
             before_delete.send(user)
             force_delete_user(user)
             after_delete.send(user)
@@ -219,7 +228,7 @@ class UserResource(PrincipalResource):
         ),
     )
     def invite_user(self, invitees):
-        with AuthorizedOperation('invite_user', 'site', ROOT_SITE_RESOURCE_ID):
+        with AuthorizedOperation('invite_user', 'site'):
             invited_users = [invitee.email for invitee in invitees]
             try:
                 pending_users = invite_users(invitees)
@@ -312,69 +321,49 @@ class UserResource(PrincipalResource):
             g.request_logger.info(message)
             return self.manager.read(user.id)
 
-    @Route.GET(
-        '/default/roles',
-        title='Get Default User Role(s)',
-        description='Gets all role(s) that are possessed by all registered users and optionally, '
-        'unregistered users.',
-        rel='getDefaultRoles',
+    @ItemRoute.GET(
+        '/can_export_data',
+        description='Returns if a user can export data',
+        rel='canExport',
+        response_schema=fields.Boolean(),
     )
-    @authorization_required('view_resource', 'user', is_api_request=True)
-    def list_default_roles(self):
-        return StandardResponse(
-            'Successfully retrieved a listing of all public roles. ',
-            OK,
-            True,
-            roles=role_list_as_map(list_default_roles()),
-        )
+    def can_export_data(self, user):
+        '''Returns if a user can export data by checking all roles through
+        direct or group assignment for this user.
+        '''
+        if SuperUserPermission().can():
+            return True
+        all_roles = list(user.roles)
+        for group in user.groups:
+            all_roles += group.roles
 
-    @Route.POST(
-        '/default/roles',
-        title='Add Default User Role',
-        description='Adds a single role to a user that will apply to all registered users and '
-        'optionally, unregistered users.',
-        schema=DEFAULT_ROLES_SCHEMA,
-        rel='addDefaultRole',
-    )
-    @authorization_required('edit_resource', 'user', is_api_request=True)
-    def add_default_role_by_name(self, request):
-        role_name = request['roleName']
-        resource_type = request['resourceType']
-        resource_name = request.get('resourceName')
-        (_, exists) = add_default_role(role_name, resource_type, resource_name)
-        action = 'has been added' if exists else 'already exists'
-        message = 'Role \'%s\' %s for %s' % (
-            role_name,
-            action,
-            get_resource_string(resource_name, resource_type),
-        )
-        g.request_logger.info(message)
-        response_code = OK if exists else CREATED
-        return (StandardResponse(message, response_code, True), response_code)
+        for role in all_roles:
+            if role.enable_data_export:
+                return True
+        return False
 
-    @Route.DELETE(
-        '/default/roles',
-        title='Delete Default User Role',
-        description='Deletes a single role from a user that will apply to both anonymous '
-        '(unregistered) as well as registered users.',
-        schema=DEFAULT_ROLES_SCHEMA,
-        response_schema=STANDARD_RESPONSE_SCHEMA,
-        rel='deletePublicRole',
+    @ItemRoute.GET(
+        '/ownership',
+        rel='ownership',
+        description='Gets ACLs that a particular user owns',
+        response_schema=fields.Array(RESOURCE_SUMMARY),
     )
-    @authorization_required('delete_resource', 'user', is_api_request=True)
-    def delete_default_role_by_name(self, request):
-        role_name = request['roleName']
-        resource_type = request['resourceType']
-        resource_name = request.get('resourceName')
-        (_, exists) = delete_default_role(role_name, resource_type, resource_name)
-        action = 'has been deleted' if exists else 'does not exist'
-        message = 'Role \'%s\' %s for %s' % (
-            role_name,
-            action,
-            get_resource_string(resource_name, resource_type),
-        )
-        g.request_logger.info(message)
-        return StandardResponse(message, OK, True)
+    def get_ownership(self, user):
+        with AuthorizedOperation('view_user', 'site'):
+            if user.is_superuser() and not current_user.is_superuser():
+                return None, UNAUTHORIZED
+            return get_user_owned_resources(user)
+
+    @ItemRoute.GET(
+        '/is_user_in_group',
+        rel='is_user_in_group',
+        description='Gets groups user is in',
+        schema=FieldSet({'group_name': fields.String()}),
+        response_schema=fields.Boolean(),
+    )
+    def get_is_user_in_group(self, user, group_name):
+        group_names = [group.name for group in user.groups]
+        return group_name in group_names
 
 
 @before_delete.connect_via(UserResource)
@@ -399,4 +388,4 @@ def invalidate_user_identity_cache(sender, role):
         g.request_logger.info('Invalidated identity cache for user %s', sender.username)
 
 
-RESOURCE_TYPES = [UserResource]
+RESOURCE_TYPES = [UserAclResource, UserResource]

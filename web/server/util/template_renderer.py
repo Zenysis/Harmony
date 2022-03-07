@@ -1,6 +1,6 @@
-from builtins import object
 import json
-import os
+
+import related
 
 from flask import current_app, render_template, request, url_for
 from flask_user import current_user
@@ -8,36 +8,18 @@ from pylib.file.file_utils import FileUtils
 from werkzeug.routing import BuildError
 
 from config.locales import LOCALES
-from config.dashboard_base import EMPTY_SPECIFICATION
+from data.query_policy import get_all_value_policy_name
+from web.server.configuration.bots import BOT_USERS
 from web.server.configuration.settings import (
     get_configuration,
     CRISP_ENABLED_KEY,
     CRISP_ID_KEY,
 )
 from web.server.environment import IS_PRODUCTION, IS_TEST, BUILD_TAG
-from web.server.data.alerts import get_alert_options
+from web.server.data.alerts import is_alert_enabled
 from web.server.data.case_management import get_case_management_options
-from web.server.data.data_upload import get_data_upload_app_options
+from web.server.data.data_upload import get_raw_data_upload_show_in_navbar
 from web.server.util.util import is_session_persisted, ISO_DATETIME_FORMAT
-
-# HACK(stephen): The indicator property "dimension_values" is not used by the
-# frontend. It adds additional size to the serialized indicators, and it is more
-# difficult to serialize which slows down response times.
-
-
-def _strip_dimension_values(group_definitions):
-    output = []
-    for group in group_definitions:
-        new_group = dict(group)
-        indicators = []
-        for ind in group['indicators']:
-            if 'dimension_values' in ind:
-                ind = dict(ind)
-                ind.pop('dimension_values')
-            indicators.append(ind)
-        new_group['indicators'] = indicators
-        output.append(new_group)
-    return output
 
 
 def read_js_version(javascript_version_file=None):
@@ -57,7 +39,7 @@ def read_js_version(javascript_version_file=None):
     return FileUtils.FileContents(javascript_version_file).strip()
 
 
-class TemplateRenderer(object):
+class TemplateRenderer:
     def __init__(self, configuration_module, javascript_version):
         # TODO(vedant,toshi,stephen) - The eventual goal is to NOT pass the
         # entire configuration module to this class.
@@ -70,15 +52,6 @@ class TemplateRenderer(object):
         # Chat-specific Configurations
         self.enable_chat = configuration_module.chat.ENABLE_CHAT
         self.chat_host = configuration_module.chat.CHAT_HOST
-
-        # Indicator Configurations
-        self.indicator_group_definitions = _strip_dimension_values(
-            configuration_module.indicators.GROUP_DEFINITIONS
-        )
-        self.removed_indicators = configuration_module.indicators.REMOVED_INDICATORS
-        self.postgres_indicators = (
-            configuration_module.postgres_indicators.GROUP_DEFINITIONS
-        )
 
         # Locale Configurations
         self.locales = LOCALES
@@ -125,15 +98,15 @@ class TemplateRenderer(object):
             'flagClass': ui_configuration.FLAG_CLASS,
             'logoPath': ui_configuration.LOGO_PATH,
             'showLocalePicker': len(ui_configuration.ENABLE_LOCALES) > 1,
-            'defaultDatePickerType': ui_configuration.DEFAULT_DATE_PICKER_TYPE,
             'userManualUrl': ui_configuration.USER_MANUAL_URL,
             'feedbackRegistration': ui_configuration.FEED_BACK_REGISTRATION_LINK,
             'maxDataDate': time_boundary.get_max_data_date(),
             'minDataDate': time_boundary.get_min_data_date(),
-            'showSelectionDateRanges': ui_configuration.SHOW_SELECTION_DATE_RANGES,
             'enableDataQualityLab': ui_configuration.ENABLE_DATA_QUALITY_LAB,
             'sessionTimeout': ui_configuration.SESSION_TIMEOUT,
             'isSessionPersisted': is_session_persisted(),
+            'customColors': ui_configuration.CUSTOM_COLORS,
+            'isHarmony': ui_configuration.IS_HARMONY,
         }
 
     def build_user_params(self):
@@ -182,6 +155,7 @@ class TemplateRenderer(object):
             'crisp_chat_id': get_configuration(CRISP_ID_KEY),
             'js_version': self.javascript_version,
             'is_screenshot_request': request.args.get('screenshot') == '1',
+            'isPDFRequest': request.args.get('pdf') == '1',
         }
 
     # Build the backend js config without indicators or locations. This config
@@ -192,7 +166,6 @@ class TemplateRenderer(object):
         aggregation_configuration = self.aggregation_configuration
         general_configuration = self.general_configuration
         deployment_name = general_configuration.DEPLOYMENT_NAME
-
         return {
             'deploymentName': deployment_name,
             'nationName': general_configuration.NATION_NAME,
@@ -200,27 +173,18 @@ class TemplateRenderer(object):
             'dimensionCategories': aggregation_configuration.DIMENSION_CATEGORIES,
             'locale': locale,
             'dashboardIsPublic': get_configuration('public_access'),
-            'selectGranularityButtonOrder': ui_configuration.SELECT_GRANULARITY_BUTTON_ORDER,
-            'selectGranularityDefaultLevel': ui_configuration.SELECT_GRANULARITY_DEFAULT_LEVEL,
-            'showIndicatorNotes': ui_configuration.SHOW_INDICATOR_NOTES,
             'enableEtDateSelection': ui_configuration.ENABLE_ET_DATE_SELECTION,
-            'filterDimensions': current_app.zen_config.filters.PUBLIC_FILTER_DIMENSIONS
-            if get_configuration('public_access')
-            else current_app.zen_config.filters.FILTER_DIMENSIONS,
-            'filterOrder': ui_configuration.FILTER_ORDER,
-            'filterOptions': ui_configuration.DEFAULT_FILTER_OPTIONS,
-            'fieldOptions': ui_configuration.FIELD_OPTIONS,
-            'sqtGeographyFilterDimensions': current_app.zen_config.filters.FRONTEND_CACHED_FILTER_DIMENSIONS,
             'timeseriesUseEtDates': ui_configuration.TIMESERIES_USE_ET_DATES,
             'timeseriesDefaultGranularity': ui_configuration.TIMESERIES_DEFAULT_GRANULARITY,
-            'timeseriesEnabledGranularities': aggregation_configuration.ENABLED_GRANULARITIES,
-            'aqtEnabledGranularites': aggregation_configuration.AQT_ENABLED_GRANULARITIES,
-            'tableColumns': ui_configuration.TABLE_COLUMNS,
+            'countryCode': ui_configuration.COUNTRY_CODE,
             'mapDefaultLatLng': ui_configuration.MAP_DEFAULT_LATLNG,
             'mapDefaultZoom': ui_configuration.MAP_DEFAULT_ZOOM,
             'geoDataOverlay': ui_configuration.GEO_DATA_URL,
             'geoDataLabels': ui_configuration.GEO_DATA_DISPLAY,
             'geoDataDimensions': ui_configuration.GEO_DATA_DIMENSIONS,
+            'geoDataLabelKey': ui_configuration.GEO_DATA_LABEL_KEY,
+            'gisAppSettings': related.to_dict(ui_configuration.GIS_APP_SETTINGS),
+            'dqlMapDimensions': ui_configuration.DQL_MAP_DIMENSIONS,
             'mapOverlayGeoJson': ui_configuration.MAP_GEOJSON_LOCATION,
             'mapboxAccessToken': ui_configuration.MAPBOX_ACCESS_TOKEN,
             'mapboxAdminURLS': ui_configuration.MAP_MAPBOX_ADMIN_URLS,
@@ -229,40 +193,34 @@ class TemplateRenderer(object):
             'IS_DEMO': request.args.get('demo') == '1',
             'vendorScriptPath': current_app.config.get('VENDOR_SCRIPT_PATH'),
             'ui': self.build_ui_params(),
+            'useNewDashboardApp': current_app.config.get('USE_NEW_DASHBOARD_APP'),
             'user': self.build_user_params(),
-            'alertsOptions': get_alert_options(),
+            'alertsEnabled': is_alert_enabled(),
             'dataUploadAppOptions': {
-                'showInNavbar': get_data_upload_app_options(
-                    deployment_name, self.indicator_group_definitions
-                )['showInNavbar']
+                'showInNavbar': get_raw_data_upload_show_in_navbar(deployment_name)
             },
             'caseManagementAppOptions': get_case_management_options(
                 general_configuration.DEPLOYMENT_NAME
             ),
-            'fiscalStartMonth': aggregation_configuration.FISCAL_START_MONTH,
+            'calendarSettings': related.to_dict(
+                aggregation_configuration.CALENDAR_SETTINGS
+            ),
             'locales': self.build_locale_params(dashboard),
-        }
-
-    # Build the backend js config for indicators and locations. This config can be
-    # very large and should ideally be passed separately from the HTML.
-
-    def build_heavy_backend_js_config(self):
-        ui_configuration = self.ui_configuration
-        druid_context = current_app.druid_context
-        dimension_lookup = druid_context.dimension_values_lookup
-
-        output = {
-            'defaultDashboardSpec': EMPTY_SPECIFICATION,
-            'dimensionValueMap': dimension_lookup.get_dimension_value_map(),
-            'geoNameMap': ui_configuration.GEO_NAME_MAP,
-            'indicatorGroups': self.indicator_group_definitions,
-            'removedIndicators': self.removed_indicators,
-            'indicatorSelectionDropdowns': ui_configuration.QUERY_FORM_DROPDOWNS,
-            'postgresIndicatorGroups': self.postgres_indicators,
+            'isThumbnailRequest': request.args.get('thumbnail') == '1',
+            'botUsers': list(BOT_USERS),
+            'is_screenshot_request': request.args.get('screenshot') == '1',
+            'isPDFRequest': request.args.get('pdf') == '1',
+            'queryPolicyDimensions': {
+                dimension_name: get_all_value_policy_name(dimension_name)
+                for dimension_name in current_app.zen_config.filters.AUTHORIZABLE_DIMENSIONS
+            },
             'buildTag': BUILD_TAG,
+            'dataDigestAppOptions': {
+                'canonicalPrefix': current_app.zen_config.datatypes.CANONICAL_PREFIX,
+                'cleanedPrefix': current_app.zen_config.datatypes.CLEANED_PREFIX,
+                'slabURL': general_configuration.SLAB_URL,
+            },
         }
-
-        return output
 
     def render_helper(
         self,
@@ -270,7 +228,6 @@ class TemplateRenderer(object):
         locale='en',
         pass_to_js=None,
         pass_to_template=None,
-        lightweight_js_only=False,
     ):
         '''Render template with common template and JS params. Additional JS and
         template params can be passed through pass_to_js and pass_to_template.
@@ -287,7 +244,6 @@ class TemplateRenderer(object):
             locale,
             final_pass_to_js,
             pass_to_template,
-            lightweight_js_only,
         )
 
     def js_render_helper(
@@ -296,7 +252,6 @@ class TemplateRenderer(object):
         locale='en',
         js_params=None,
         pass_to_template=None,
-        lightweight_js_only=False,
     ):
         '''
         Render template for pages with js components. All JS params must be specified in
@@ -306,8 +261,6 @@ class TemplateRenderer(object):
         template_params = self.build_template_params(locale)
         if js_params:
             template_params['pass_to_js'] = Serializer.serialize(js_params)
-        if lightweight_js_only:
-            template_params['lightweight_js_only'] = True
         if pass_to_template:
             template_params.update(pass_to_template)
         return render_template(template_path, **template_params)
@@ -323,7 +276,7 @@ class TemplateRenderer(object):
         return render_template(template_path, **template_params)
 
 
-class Serializer(object):
+class Serializer:
     @staticmethod
     def serialize(obj):
         return json.dumps(obj)

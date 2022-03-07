@@ -1,10 +1,10 @@
 ############################################################################
 # Datatypes
 
-from enum import Enum
 from pylib.base.flags import Flags
 
 from data.pipeline.datatypes.base_row import BaseRow
+from data.pipeline.datatypes.base_row_factory import BaseRowFactory
 from data.pipeline.datatypes.dimension_factory import DimensionFactory
 
 # Output field information
@@ -21,28 +21,11 @@ class Dimension:
     FACILITY = 'FacilityName'
 
 
-class LocationTypeEnum(Enum):
-    NATION = 1
-    STATE = 2
-    DISTRICT = 3
-    FACILITY = 4
-
-
-LOCATION_TYPES = set(location_type.name for location_type in LocationTypeEnum)
-
 HIERARCHICAL_DIMENSIONS = [Dimension.STATE, Dimension.DISTRICT, Dimension.FACILITY]
 DIMENSION_PARENTS = {
-    Dimension.DISTRICT: [Dimension.STATE],
-    Dimension.FACILITY: [Dimension.STATE, Dimension.DISTRICT],
+    parent: HIERARCHICAL_DIMENSIONS[: parent_index + 1]
+    for parent_index, parent in enumerate(HIERARCHICAL_DIMENSIONS[1:])
 }
-
-
-class BaseTemplateCamelNameRow(BaseRow):
-    # These are the fields that will be used in the matching process
-    # They are ordered by granularity
-    MAPPING_KEYS = HIERARCHICAL_DIMENSIONS
-    PARENT_LEVELS = DIMENSION_PARENTS
-    UNMAPPED_KEYS = []
 
 
 # pylint: disable=invalid-name
@@ -50,7 +33,7 @@ TemplateCamelNameDimensionFactory = DimensionFactory(
     HIERARCHICAL_DIMENSIONS, [], RAW_PREFIX, CLEANED_PREFIX, CANONICAL_PREFIX
 )
 
-BaseRowType = BaseTemplateCamelNameRow
+BaseRowType = BaseRowFactory(Dimension, HIERARCHICAL_DIMENSIONS, DIMENSION_PARENTS)
 DimensionFactoryType = TemplateCamelNameDimensionFactory
 
 

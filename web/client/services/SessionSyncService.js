@@ -1,13 +1,18 @@
 // @flow
 import Promise from 'bluebird';
 
-type FileOperation = 'readonly' | 'readwrite';
+type FileOperationMap = {
+  readonly: 'readonly',
+  readwrite: 'readwrite',
+};
+
+type FileOperation = $Keys<FileOperationMap>;
 type ObjectStoreOptions = {
   keyPath?: ?(string | $ReadOnlyArray<string>),
   autoIncrement?: boolean,
 };
 
-const FILE_OPERATIONS: { [FileOperation]: FileOperation } = {
+const FILE_OPERATIONS: FileOperationMap = {
   readonly: 'readonly',
   readwrite: 'readwrite',
 };
@@ -16,9 +21,7 @@ const TEXT = t('services.SessionSyncService');
 
 // TODO(pablo, toshi): make this service more generic to allow multiple
 // different dbs for different applications
-const SESSION_DB_NAME = `${
-  window.__JSON_FROM_BACKEND.deploymentName
-}_aqt_sessions`;
+const SESSION_DB_NAME = `${window.__JSON_FROM_BACKEND.deploymentName}_aqt_sessions`;
 const SESSION_DB_VER = 1;
 
 class BrowserSessionService {
@@ -27,7 +30,7 @@ class BrowserSessionService {
   indexString: string;
   keyObj: ObjectStoreOptions;
   objectStoreName: string;
-  _db: IDBObjectStore | void;
+  _db: IDBDatabase | void;
   _dbSupported: boolean;
 
   constructor(
@@ -70,6 +73,7 @@ class BrowserSessionService {
       const request = this.indexedDB.open(this.objectStoreName, this.dbVersion);
 
       request.onsuccess = () => {
+        // $FlowIssue[incompatible-type] Flow's indexedDB annotation is incorrect. IDBOpenDBRequest should specify overwrite result as an IDBDatabase, not IDBObjectStore
         this._db = request.result;
         resolve(this._db);
       };
@@ -158,10 +162,10 @@ class BrowserSessionService {
   }
 }
 
-export default new BrowserSessionService(
+export default (new BrowserSessionService(
   { keyPath: 'username' },
   'username',
   SESSION_DB_NAME,
   SESSION_DB_VER,
   TEXT.sessionsUnsupported,
-);
+): BrowserSessionService);

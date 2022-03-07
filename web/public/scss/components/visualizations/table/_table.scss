@@ -1,0 +1,46 @@
+.table-visualization {
+  .visualization {
+    display: flex;
+  }
+
+  &__table {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  &__table-cell {
+    display: flex;
+    // add a padding to every table cell
+    // NOTE(pablo): this is added so that if the user switches to scorecard,
+    // there is some padding between the number and the colored background
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  &__empty-dimension-cell {
+    color: $gray;
+  }
+
+  &__hyperlinked-row {
+    &:hover {
+      // hover color for even rows
+      .ui-table-visualization__table-cell {
+        background-color: $white-hover;
+      }
+
+      // hover color for odd rows
+      .ui-table-visualization__row--odd {
+        .ui-table-visualization__table-cell {
+          background-color: $gray-light-hover;
+        }
+      }
+    }
+  }
+
+  .ui-table-visualization-header__cell {
+    // NOTE(pablo): add padding to all header cells to match the padding we
+    // added to every table cell
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}

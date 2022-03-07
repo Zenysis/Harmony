@@ -1,11 +1,10 @@
 // @flow
 import * as React from 'react';
-import { ParentSize } from '@vx/responsive';
 
+import * as Zen from 'lib/Zen';
 import BumpChartCore from 'components/ui/visualizations/BumpChart';
-import BumpChartQueryResultData from 'components/visualizations/BumpChart/models/BumpChartQueryResultData';
+import BumpChartQueryResultData from 'models/visualizations/BumpChart/BumpChartQueryResultData';
 import Visualization from 'components/visualizations/common/Visualization';
-import ZenMap from 'util/ZenModel/ZenMap';
 import { DAY_GRANULARITY, formatDatesByGranularity } from 'util/dateUtil';
 import { THEMES } from 'components/ui/visualizations/BumpChart/models/BumpChartTheme';
 import { TIMESTAMP_GROUPING_ID } from 'models/core/QueryResultSpec/QueryResultGrouping';
@@ -13,38 +12,38 @@ import { autobind, memoizeOne } from 'decorators';
 import { visualizationDefaultProps } from 'components/visualizations/common/commonTypes';
 import type BumpChartTheme from 'components/ui/visualizations/BumpChart/models/BumpChartTheme';
 import type QueryResultSeries from 'models/core/QueryResultSpec/QueryResultSeries';
+import type { RawTimestamp } from 'models/visualizations/BumpChart/types';
 import type {
-  ChartSize,
-  RawTimestamp,
-} from 'components/visualizations/BumpChart/types';
-import type { VisualizationProps } from 'components/visualizations/common/commonTypes';
+  VisualizationDefaultProps,
+  VisualizationProps,
+} from 'components/visualizations/common/commonTypes';
 
 type Props = VisualizationProps<'BUMP_CHART'>;
 
 type State = {
-  selectedKeys: ZenMap<number>,
+  selectedKeys: Zen.Map<number>,
 };
 
 type ValueFormatter = (value: number | string) => string;
 
 export default class BumpChart extends React.PureComponent<Props, State> {
-  static defaultProps = {
+  static defaultProps: VisualizationDefaultProps<'BUMP_CHART'> = {
     ...visualizationDefaultProps,
     queryResult: BumpChartQueryResultData.create({}),
   };
 
-  // HACK(stephen): I want to use a ZenMap for storage of selectedKeys, but
+  // HACK(stephen): I want to use a Zen.Map for storage of selectedKeys, but
   // limitations in how visualizationControls are serialized to dashboards
   // prevents me from using that in the `controls` prop. For now, store the
   // object version in `controls` and unpack it when the visualization loads.
-  state = {
-    selectedKeys: ZenMap.create(this.props.controls.selectedKeys),
+  state: State = {
+    selectedKeys: Zen.Map.create(this.props.controls.selectedKeys()),
   };
 
   @memoizeOne
   buildValueFormatter(
     fieldId: string,
-    seriesObjects: { +[string]: QueryResultSeries },
+    seriesObjects: { +[string]: QueryResultSeries, ... },
   ): ValueFormatter {
     const seriesObj = seriesObjects[fieldId];
     return (value: number | string) => seriesObj.formatFieldValue(value);
@@ -53,7 +52,7 @@ export default class BumpChart extends React.PureComponent<Props, State> {
   @memoizeOne
   buildDateMapping(
     dates: $ReadOnlyArray<RawTimestamp>,
-  ): { +[date: RawTimestamp]: string } {
+  ): { +[date: RawTimestamp]: string, ... } {
     const { controls, groupBySettings } = this.props;
     const groupingObject = groupBySettings
       .groupings()
@@ -63,14 +62,14 @@ export default class BumpChart extends React.PureComponent<Props, State> {
       ? groupingObject.formatGroupingValues(
           dates,
           true,
-          controls.useEthiopianDates,
+          controls.useEthiopianDates(),
           true,
         )
       : formatDatesByGranularity(
           dates,
           DAY_GRANULARITY,
           true,
-          controls.useEthiopianDates,
+          controls.useEthiopianDates(),
           true,
         );
 
@@ -84,7 +83,7 @@ export default class BumpChart extends React.PureComponent<Props, State> {
   }
 
   @autobind
-  formatDate(date: RawTimestamp) {
+  formatDate(date: RawTimestamp): string {
     const { queryResult } = this.props;
     const dates = queryResult.dates();
     const dateMapping = this.buildDateMapping(dates);
@@ -94,13 +93,13 @@ export default class BumpChart extends React.PureComponent<Props, State> {
   // NOTE(stephen): Workaround limitation in how view specific settings are
   // saved to a dashboard. Cannot currently store zenmodels.
   getTheme(): BumpChartTheme {
-    const { theme } = this.props.controls;
+    const theme = this.props.controls.theme();
     return THEMES[theme];
   }
 
   getValueFormatter(): ValueFormatter {
     const { controls, seriesSettings } = this.props;
-    const fieldId = controls.selectedField;
+    const fieldId = controls.selectedField();
     const seriesObjects = seriesSettings.seriesObjects();
     // HACK(nina): This is a really bad bandaid fix. Currently there is a bug
     // in AQT where adding indicators, and then removing earlier indicators
@@ -146,7 +145,7 @@ export default class BumpChart extends React.PureComponent<Props, State> {
   }
 
   @autobind
-  maybeRenderBumpChart({ width, height }: ChartSize) {
+  maybeRenderBumpChart(height: number, width: number): React.Node {
     const { loading, queryResult } = this.props;
     const dates = queryResult.dates();
     const lines = queryResult.lines();
@@ -172,10 +171,10 @@ export default class BumpChart extends React.PureComponent<Props, State> {
     );
   }
 
-  render() {
+  render(): React.Node {
     return (
       <Visualization loading={this.props.loading}>
-        <ParentSize>{this.maybeRenderBumpChart}</ParentSize>
+        {this.maybeRenderBumpChart}
       </Visualization>
     );
   }

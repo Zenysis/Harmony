@@ -1,25 +1,40 @@
 // @flow
 // Inspired by material design drag handle using glyphicons.
 import * as React from 'react';
+import classNames from 'classnames';
 
-type Props = {|
-  className: string,
-  size: 'small' | 'medium' | 'large',
-|};
+import Icon from 'components/ui/Icon';
+import type { IconType } from 'components/ui/Icon/types';
 
-const defaultProps = {
-  className: '',
-  size: 'small',
+type Props = {
+  className?: string,
+  disabled?: boolean,
+  iconType?: IconType,
+  size?: 'small' | 'medium' | 'large',
 };
 
 const DRAG_HANDLE_CLASS = 'ui-drag-handle';
-const ICON_CLASS = 'glyphicon glyphicon-option-vertical';
+
+const SIZE_STYLES = {
+  small: {
+    height: 12,
+    width: 12,
+  },
+  medium: {
+    height: 14,
+    width: 14,
+  },
+  large: {
+    height: 16,
+    width: 16,
+  },
+};
 
 /**
  * A basic draggable handle icon that indicates to the user that an
  * element is draggable.
  *
- * You can restrict a `DraggableItem` to only allow draggin on the handle by
+ * You can restrict a `DraggableItem` to only allow dragging on the handle by
  * passing the handle's selector in:
  * ```jsx
  * <DraggableItem dragRestrictionSelector={DragHandle.DEFAULT_SELECTOR}>
@@ -28,19 +43,20 @@ const ICON_CLASS = 'glyphicon glyphicon-option-vertical';
  * ```
  */
 export default function DragHandle({
-  className,
-  size,
+  className = '',
+  disabled = false,
+  iconType = 'svg-drag-indicator',
+  size = 'small',
   ...passThroughProps
-}: Props) {
-  const fullClassName = `${className} ${DRAG_HANDLE_CLASS}`;
-  const dragIconClassName = `${DRAG_HANDLE_CLASS}__icon ${DRAG_HANDLE_CLASS}__icon--${size}`;
+}: Props): React.Element<'div'> {
+  const fullClassName = classNames(DRAG_HANDLE_CLASS, className, {
+    [`${DRAG_HANDLE_CLASS}--disabled`]: disabled,
+  });
   return (
     <div className={fullClassName} {...passThroughProps}>
-      <span className={`${dragIconClassName} ${ICON_CLASS}`} />
-      <span className={`${dragIconClassName} ${ICON_CLASS}`} />
+      <Icon style={SIZE_STYLES[size]} type={iconType} />
     </div>
   );
 }
 
-DragHandle.defaultProps = defaultProps;
 DragHandle.DEFAULT_SELECTOR = `.${DRAG_HANDLE_CLASS}`;

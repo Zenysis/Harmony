@@ -14,6 +14,6 @@ export interface SearchableNodeView<ParentValue, LeafValue, Node, Children>
   isLeaf(node: Node): boolean;
   searchableText(node: Node): string;
 
-  /** The value used to identify a node */
+  /** The unique value used to identify a node */
   value(node: Node): ParentValue | LeafValue;
 }

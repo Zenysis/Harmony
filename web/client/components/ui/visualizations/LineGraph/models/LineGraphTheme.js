@@ -2,7 +2,7 @@
 import * as Zen from 'lib/Zen';
 
 type Values = {
-  id: Zen.ReadOnly<string>,
+  id: string,
   axisLabelFill: string,
   axisLineStroke: string,
   axisTickStroke: string,
@@ -40,7 +40,7 @@ const DARK_THEME_COLOR_RANGE = [
 ];
 
 class LineGraphTheme extends Zen.BaseModel<LineGraphTheme, Values> {
-  static DarkTheme = LineGraphTheme.create({
+  static DarkTheme: Zen.Model<LineGraphTheme> = LineGraphTheme.create({
     id: 'dark',
     axisLabelFill: 'white',
     axisLineStroke: 'white',
@@ -49,7 +49,7 @@ class LineGraphTheme extends Zen.BaseModel<LineGraphTheme, Values> {
     linesColorRange: DARK_THEME_COLOR_RANGE,
   });
 
-  static LightTheme = LineGraphTheme.create({
+  static LightTheme: Zen.Model<LineGraphTheme> = LineGraphTheme.create({
     id: 'light',
     axisLabelFill: 'rgba(0,0,0,0.7)',
     axisLineStroke: 'rgba(0,0,0,0.7)',
@@ -58,13 +58,10 @@ class LineGraphTheme extends Zen.BaseModel<LineGraphTheme, Values> {
     linesColorRange: LIGHT_THEME_COLOR_RANGE,
   });
 
-  static THEMES = {
-    // $ZenModelReadOnlyIssue
+  static Themes: { +[string]: Zen.Model<LineGraphTheme> } = {
     [LineGraphTheme.DarkTheme.id()]: LineGraphTheme.DarkTheme,
-
-    // $ZenModelReadOnlyIssue
     [LineGraphTheme.LightTheme.id()]: LineGraphTheme.LightTheme,
   };
 }
 
-export default ((LineGraphTheme: any): Class<Zen.Model<LineGraphTheme>>);
+export default ((LineGraphTheme: $Cast): Class<Zen.Model<LineGraphTheme>>);

@@ -50,7 +50,46 @@ UPLOAD_CATEGORIES = {
                 ],
             },
         ],
-    }
+    },
+    'pk': {
+        'dropdownLabelKey': 'dataCategory',
+        'options': [
+            {'optionName': "DSC Zero Dose Line List", 'filePrepend': "dsc_zd"},
+            {'optionName': "DSC Missed Children", 'filePrepend': "dsc_missed_children"},
+            {'optionName': "BCG (VLMIS)", 'filePrepend': "vlmis-bcg"},
+            {'optionName': "OPV (VLMIS)", 'filePrepend': "vlmis-opv"},
+            {'optionName': "Penta (VLMIS)", 'filePrepend': "vlmis-penta"},
+            {'optionName': "PCV-10 (VLMIS)", 'filePrepend': "vlmis-pcv-10"},
+            {'optionName': "Rotarix (VLMIS)", 'filePrepend': "vlmis-rotarix"},
+            {'optionName': "Dt (VLMIS)", 'filePrepend': "vlmis-dt"},
+            {'optionName': "Hep B (VLMIS)", 'filePrepend': "vlmis-hep-b"},
+            {'optionName': "Measles (VLMIS)", 'filePrepend': "vlmis-measles"},
+            {'optionName': "TT (VLMIS)", 'filePrepend': "vlmis-tt"},
+            {'optionName': "TCV 5 (VLMIS)", 'filePrepend': "vlmis-tcv"},
+            {'optionName': "IPV (VLMIS)", 'filePrepend': "vlmis-ipv"},
+            {'optionName': "Measles (VPD-surveillance)", 'filePrepend': "vpd-measles"},
+            {'optionName': "NNT (VPD-surveillance)", 'filePrepend': "vpd-nnt"},
+            {
+                'optionName': "Pertusis (VPD-surveillance)",
+                'filePrepend': "vpd-pertusis",
+            },
+            {
+                'optionName': "Diptheria (VPD-surveillance)",
+                'filePrepend': "vpd-diptheria",
+            },
+            {'optionName': "AFP (VPD-surveillance)", 'filePrepend': "vpd-afp"},
+            {
+                'optionName': "Childhood TB (VPD-surveillance)",
+                'filePrepend': "vpd-childhood-tb",
+            },
+            {'optionName': "AEFI (VPD surveillance)", 'filePrepend': "vpd-aefi"},
+            {'optionName': "IDIMS", 'filePrepend': "polio_idims"},
+            {'optionName': "ICM", 'filePrepend': "polio_icm"},
+            {'optionName': "Polio Catch Up", 'filePrepend': "polio_catch_up"},
+            {'optionName': "EOC", 'filePrepend': "polio_eoc"},
+            {'optionName': "EPI/EOA", 'filePrepend': "epi_eoa"},
+        ],
+    },
 }
 
 
@@ -65,13 +104,18 @@ def _get_upload_categories(deployment_name, indicator_group_definitions):
     return {'dropdownLabelKey': 'dataCategory', 'options': main_datasets}
 
 
-def get_data_upload_app_options(deployment_name, indicator_group_definitions):
-    '''Gets DataUploadApp options. Currently it only returns whether or not the
-    data upload link is enabled in the navbar.
-    '''
-    show_in_navbar = deployment_name in DEPLOYMENTS_WITH_DATA_UPLOAD_NAVBAR
+def get_raw_data_upload_show_in_navbar(deployment_name):
+    '''Gets whether or not the raw data upload link is enabled in the navbar.'''
+    return deployment_name in DEPLOYMENTS_WITH_DATA_UPLOAD_NAVBAR
+
+
+def get_raw_data_upload_app_options(deployment_name, indicator_group_definitions):
+    '''Gets RawDataUploadApp options.'''
     upload_categories = _get_upload_categories(
         deployment_name, indicator_group_definitions
     )
 
-    return {'showInNavbar': show_in_navbar, 'uploadCategories': upload_categories}
+    return {
+        'showInNavbar': get_raw_data_upload_show_in_navbar(deployment_name),
+        'uploadCategories': upload_categories,
+    }

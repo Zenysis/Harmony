@@ -9,29 +9,16 @@ The initial implementation of the EpiCurve visualization using vx
 
 ```jsx
 import InputText from 'components/ui/InputText';
+import LabelWrapper from 'components/ui/LabelWrapper';
 import { createSampleData } from 'components/ui/visualizations/EpiCurve/mocks';
 
-const numberOfDataPoints = 200;
-const initialData = createSampleData(numberOfDataPoints)
+const initialData = createSampleData()
 
-initialState = {
-  data: initialData,
-  binCount: 10,
-  showBinValues: false
-}
-
-function onBinCountChange(binCount){
-  setState({
-    binCount: Number(binCount),
-    data: createSampleData(numberOfDataPoints, binCount)
-  })
-}
-
-function toggleShowBinValues(){
-  setState(prevState=>({ showBinValues: !prevState.showBinValues }))
-}
-
-const binValuesLabel = state.showBinValues ? 'Hide Bin Values': 'Show Bin Values';
+const [binCount, setBinCount] = React.useState(10);
+const data = React.useMemo(
+  () => createSampleData(binCount),
+  [binCount],
+);
 
 <div>
   <LabelWrapper label="Bin Count" inline className="inline">
@@ -39,23 +26,15 @@ const binValuesLabel = state.showBinValues ? 'Hide Bin Values': 'Show Bin Values
       type="number"
       min="0"
       max="50"
-      onChange={onBinCountChange}
-      value={String(state.binCount)}
-    />
-  </LabelWrapper>
-  {' '}
-  <LabelWrapper label={binValuesLabel} inline className="inline">
-    <Checkbox
-      onChange={toggleShowBinValues}
-      value={state.showBinValues}
+      onChange={value => setBinCount(Number(value))}
+      value={String(binCount)}
     />
   </LabelWrapper>
 
   <EpiCurveCore
-    data={state.data}
+    data={data}
     width={900}
     height={600}
-    showBinValues={state.showBinValues}
   />
 </div>
 ```

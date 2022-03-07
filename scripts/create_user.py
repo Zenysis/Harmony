@@ -9,9 +9,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.session import sessionmaker
 from pylib.base.flags import Flags
 
-from data.alerts.credentials import get_credentials
 from log import LOG
 from models.alchemy.user import User, UserRoles, UserStatusEnum
+from models.alchemy.query_policy import QueryPolicyRole
 
 # I have to import this model since it is referenced by the `User` model
 # pylint:disable=W0611
@@ -25,9 +25,6 @@ from web.server.configuration.instance import load_instance_configuration_from_f
 
 PASSWORD_ENCRYPTION_SCHEME = ['bcrypt']
 PERMISSIVE_EMAIL_REGEX = re.compile(r'[^@]+@[^@]+\.[^@]+')
-AUTOMATION_USERNAME = 'automation@zenysis.com'
-AUTOMATION_FIRST_NAME = 'Automation'
-AUTOMATION_LAST_NAME = 'Account'
 
 
 def get_user_string(user):
@@ -188,14 +185,6 @@ def main():
         default=False,
         help='Overwrite the user if the specified username already exists.',
     )
-    Flags.PARSER.add_argument(
-        '-A',
-        '--automation_user',
-        action='store_true',
-        required=False,
-        default=False,
-        help='Make a new automation user.',
-    )
     Flags.InitArgs()
     sql_connection_string = Flags.ARGS.sql_connection_string
     if not sql_connection_string:
@@ -212,19 +201,9 @@ def main():
     # there will not be a key error
     status = UserStatusEnum[Flags.ARGS.status]
     overwrite_user = Flags.ARGS.overwrite
-    automation_user = Flags.ARGS.automation_user
-
-    if automation_user:
-        username = AUTOMATION_USERNAME
-        first_name = AUTOMATION_FIRST_NAME
-        last_name = AUTOMATION_LAST_NAME
-        _, plaintext_password = get_credentials()
-        is_site_admin = True
 
     if not username:
-        LOG.error(
-            'You must provide a username if you are not creating a automation user.'
-        )
+        LOG.error('You must provide a username.')
         return 5
 
     if not overwrite_user and (not first_name or not last_name):

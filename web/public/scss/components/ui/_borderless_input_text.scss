@@ -1,0 +1,22 @@
+.zen-borderless-input-text {
+  border-bottom: 1px dashed $blue-dark;
+  display: inline-block;
+
+  &:hover {
+    border-bottom: 1px solid $blue-dark;
+  }
+
+  &:active {
+    border-bottom: 1px solid $blue-dark-active;
+  }
+
+  &__text {
+    color: $blue-dark;
+    display: inline-block;
+    font-size: 14px;
+
+    &:active {
+      color: $blue-dark-active;
+    }
+  }
+}

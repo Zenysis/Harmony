@@ -1,0 +1,306 @@
+.zen-date-picker {
+  box-shadow: 0 5px 20px 0 rgba(35, 36, 37, 0.15);
+
+  // NOTE(pablo): exact pixel width chosen to match the design mocks
+  width: 504px;
+
+  &--calendar-view {
+    // NOTE(pablo): exact pixel width chosen to match the design mocks
+    width: 697px;
+  }
+
+  &__quick-options {
+    background-color: #f4f4f4;
+
+    // NOTE(pablo): exact pixel width chosen to match the design mocks
+    min-width: 156px;
+    padding-bottom: $space-xl-px;
+    padding-top: $space-l-px;
+
+    // NOTE(pablo): both min-width and width are necessary here to keep things
+    // exactly the width we want
+    width: 156px;
+  }
+
+  &__quick-options-title {
+    color: $slate-hover;
+    margin-bottom: $space-xxs-px;
+    padding-left: $space-m-px;
+    text-transform: capitalize;
+  }
+
+  &__quick-options-row {
+    cursor: pointer;
+    padding: $space-xxs-px $space-l-px $space-xxs-px $space-m-px;
+    transition: background-color $fast-transition, box-shadow $fast-transition;
+
+    &:hover {
+      background-color: $white;
+    }
+
+    &--active {
+      background-color: $white;
+      box-shadow: inset 3px 0px 0px 0px $blue-dark;
+    }
+  }
+
+  &__top-container {
+    display: flex;
+  }
+
+  &__main-container {
+    background-color: $white;
+    padding: $space-l-px;
+    padding-bottom: $space-xl-px;
+    vertical-align: top;
+    width: 100%;
+
+    > * {
+      margin-bottom: $space-m-px;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  &__date-unit-btn {
+    text-transform: capitalize;
+  }
+}
+
+.zen-date-type-editor {
+  > * {
+    margin-bottom: $space-m-px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &.zen-date-type-editor__btn-group-container {
+      margin-bottom: $space-xs-px;
+    }
+  }
+}
+
+.zen-date-picker-apply-btn {
+  background-color: $blue-primary;
+  border: none;
+  padding-bottom: $space-xs-px;
+  padding-top: $space-xs-px;
+  transition: background-color $fast-transition;
+  width: 100%;
+
+  &:hover {
+    background-color: $blue-primary-hover;
+  }
+
+  &:active {
+    background-color: $blue-primary-active;
+  }
+
+  &[disabled] {
+    background-color: $gray;
+    cursor: not-allowed;
+  }
+}
+
+.zen-date-picker-selectable-button-group {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  max-height: 215px;
+
+  &__radio-item {
+    height: 1px;
+    margin: 0 0 0 -1px;
+    opacity: 0;
+    position: absolute;
+    width: 1px;
+  }
+
+  &__selectable-btn {
+    align-items: center;
+    background: $white;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    height: 35px;
+    justify-content: center;
+    margin-bottom: $space-xs-px;
+    padding: 0 $space-xs-px;
+    width: 144px;
+
+    &:first-child {
+      margin-right: $space-s-px;
+    }
+
+    &:hover {
+      background: $white-hover;
+    }
+
+    &--selected {
+      background: $blue-lightest;
+      border: 1px solid $blue-dark-active;
+      color: $blue-dark-active;
+
+      &:hover {
+        background: $blue-lightest;
+      }
+    }
+  }
+}
+
+.zen-calendar-editor {
+  &__calendar-type-picker-row {
+    margin-bottom: $space-m-px;
+  }
+
+  &__radio-item {
+    font-size: 14px;
+  }
+
+  &__input-row {
+    margin-bottom: $space-m-px;
+
+    * {
+      margin-right: $space-m-px;
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+  }
+
+  &__and-text {
+    background-color: $gray-light;
+    border-radius: 5px;
+    padding: $space-xs-px $space-m-px;
+    text-transform: uppercase;
+  }
+
+  &__calendar-container {
+    align-items: center;
+    border: 1px solid $gray-light-active;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  &__calendar {
+    &.DayPicker {
+      font-size: 14px !important;
+    }
+
+    .DayPicker-Months {
+      height: 275px;
+    }
+
+    /* stylelint-disable-next-line max-line-length */
+    .DayPicker-Day--selected:not(.DayPicker-Day--start):not(.DayPicker-Day--end):not(.DayPicker-Day--outside) {
+      background-color: #f0f8ff !important;
+      color: #4a90e2;
+    }
+
+    .DayPicker-Day--today {
+      $blue: #4a90e2;
+
+      // NOTE(pablo): this is a super weird way of adding a 1px border around
+      // the date, but using box-shadow ensures that the width of the calendar
+      // doesn't change. That way nothing ends up overflowing.
+      box-shadow: inset -1px -1px 0px 0px $blue, inset -1px 1px 0 0 $blue,
+        inset 1px 1px 0 0 $blue, inset 1px -1px 0 0 $blue;
+      color: inherit;
+      font-weight: normal;
+
+      &.DayPicker-Day--selected {
+        box-shadow: none;
+      }
+    }
+
+    .DayPicker-Day {
+      border-radius: 0 !important;
+      padding: 7px;
+    }
+
+    .DayPicker-Month {
+      margin-left: $space-s-px;
+      margin-right: $space-s-px;
+    }
+
+    .DayPicker-wrapper {
+      padding-bottom: 0;
+    }
+
+    .DayPicker-Footer {
+      margin-bottom: $space-m-px;
+      margin-top: -$space-l-px;
+      text-align: right;
+    }
+
+    .DayPicker-TodayButton {
+      @extend .u-highlighted-text;
+      font-size: 14px;
+      margin-right: $space-xs-px;
+      padding-right: 0;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &--disable-today-btn {
+      .DayPicker-TodayButton {
+        color: $gray;
+        pointer-events: none;
+      }
+    }
+  }
+
+  &__footer-portal {
+    display: inline-block;
+  }
+
+  &__footer-divider {
+    margin-right: $space-xs-px;
+  }
+
+  &__reset-btn {
+    font-size: 14px;
+    margin-bottom: $space-s-px;
+    margin-right: $space-m-px;
+    margin-top: $space-xs-px;
+
+    &--enabled {
+      @extend .u-highlighted-text;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &--disabled {
+      color: $gray;
+      cursor: unset;
+    }
+  }
+}
+
+.zen-ethiopian-date-selector-start {
+  margin-bottom: $space-m-px;
+}
+
+.zen-ethiopian-date-selector {
+  &__label {
+    margin-bottom: $space-xs-px;
+  }
+
+  &__month-dropdown {
+    margin-right: $space-xs-px;
+  }
+}
+
+.zen-year-to-date-editor {
+  &__years-input {
+    margin-left: $space-xs-px;
+    margin-right: $space-xs-px;
+  }
+}

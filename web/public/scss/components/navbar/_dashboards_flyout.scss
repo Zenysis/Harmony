@@ -1,0 +1,35 @@
+.navbar-dashboards-flyout {
+  max-width: 600px;
+  padding: $space-xxs-px;
+  position: relative;
+
+  &__search-box {
+    margin-bottom: $space-s-px;
+  }
+
+  &__tab-contents {
+    padding-bottom: $space-xxs-px;
+    padding-top: $space-m-px;
+  }
+
+  &__table-is-favorite-cell {
+    text-align: center;
+  }
+
+  &__add-dashboard-button-container {
+    flex: 1;
+  }
+
+  &__add-dashboard-button {
+    min-height: 30px;
+    // !important is needed here as the
+    // .zen-button--primary-outline.zen-button--small styles that we are
+    // overriding have a higher specificity
+    padding-bottom: 0 !important;
+    padding-top: 0 !important;
+
+    @media (max-width: $max-mobile-width) {
+      width: 100%;
+    }
+  }
+}

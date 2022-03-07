@@ -14,9 +14,11 @@
   if (typeof Object.assign !== 'function') {
     // Object.prototype.assign() polyfill from:
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#Polyfill
-    Object.assign = function assign(target, varArgs) { // eslint-disable-line no-unused-vars
+    Object.assign = function assign(target, varArgs) {
+      // eslint-disable-line no-unused-vars
       'use strict';
-      if (target === null) { // TypeError if undefined or null
+      if (target === null) {
+        // TypeError if undefined or null
         throw new TypeError('Cannot convert undefined or null to object');
       }
 
@@ -25,7 +27,8 @@
       for (var index = 1; index < arguments.length; index++) {
         var nextSource = arguments[index];
 
-        if (nextSource !== null) { // Skip over if undefined or null
+        if (nextSource !== null) {
+          // Skip over if undefined or null
           for (var nextKey in nextSource) {
             // Avoid bugs when hasOwnProperty is shadowed
             if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
@@ -58,19 +61,20 @@
         var relativeStart = start >> 0;
 
         // Step 8.
-        var k = relativeStart < 0 ?
-          Math.max(len + relativeStart, 0) :
-          Math.min(relativeStart, len);
+        var k =
+          relativeStart < 0
+            ? Math.max(len + relativeStart, 0)
+            : Math.min(relativeStart, len);
 
         // Steps 9-10.
         var end = arguments[2];
-        var relativeEnd = end === undefined ?
-          len : end >> 0;
+        var relativeEnd = end === undefined ? len : end >> 0;
 
         // Step 11.
-        var final = relativeEnd < 0 ?
-          Math.max(len + relativeEnd, 0) :
-          Math.min(relativeEnd, len);
+        var final =
+          relativeEnd < 0
+            ? Math.max(len + relativeEnd, 0)
+            : Math.min(relativeEnd, len);
 
         // Step 12.
         while (k < final) {
@@ -80,7 +84,7 @@
 
         // Step 13.
         return O;
-      }
+      },
     });
   }
 
@@ -127,7 +131,7 @@
 
         // 7. Return undefined.
         return undefined;
-      }
+      },
     });
   }
 
@@ -174,7 +178,7 @@
 
         // 7. Return -1.
         return -1;
-      }
+      },
     });
   }
 
@@ -192,8 +196,12 @@
   if (!Set.prototype.union) {
     Set.prototype.union = function union(arrayLikeObject) {
       var output = new Set();
-      this.forEach(function(v) { output.add(v) });
-      arrayLikeObject.forEach(function(v) { output.add(v) });
+      this.forEach(function(v) {
+        output.add(v);
+      });
+      arrayLikeObject.forEach(function(v) {
+        output.add(v);
+      });
       return output;
     };
   }
@@ -213,42 +221,43 @@
   if (!Set.prototype.difference) {
     Set.prototype.difference = function difference(arrayLikeObject) {
       var output = new Set();
-      this.forEach(function(v) { output.add(v) });
-      arrayLikeObject.forEach(function(v) { output.delete(v) });
+      this.forEach(function(v) {
+        output.add(v);
+      });
+      arrayLikeObject.forEach(function(v) {
+        output.delete(v);
+      });
       return output;
-    };
-  }
-
-  // Set operation to add all elements from an array-like object
-  if (!Set.prototype.addAll) {
-    Set.prototype.addAll = function addAll(arrayLikeObject) {
-      var me = this;
-      arrayLikeObject.forEach(function(v) { me.add(v) });
-      return this;
     };
   }
 
   // Production steps of ECMA-262, Edition 6, 22.1.2.1
   if (!Array.from) {
-    Array.from = (function () {
+    Array.from = (function() {
       var toStr = Object.prototype.toString;
-      var isCallable = function (fn) {
-        return typeof fn === 'function' || toStr.call(fn) === '[object Function]';
+      var isCallable = function(fn) {
+        return (
+          typeof fn === 'function' || toStr.call(fn) === '[object Function]'
+        );
       };
-      var toInteger = function (value) {
+      var toInteger = function(value) {
         var number = Number(value);
-        if (isNaN(number)) { return 0; }
-        if (number === 0 || !isFinite(number)) { return number; }
+        if (isNaN(number)) {
+          return 0;
+        }
+        if (number === 0 || !isFinite(number)) {
+          return number;
+        }
         return (number > 0 ? 1 : -1) * Math.floor(Math.abs(number));
       };
       var maxSafeInteger = Math.pow(2, 53) - 1;
-      var toLength = function (value) {
+      var toLength = function(value) {
         var len = toInteger(value);
         return Math.min(Math.max(len, 0), maxSafeInteger);
       };
 
       // The length property of the from method is 1.
-      return function from(arrayLike/*, mapFn, thisArg */) {
+      return function from(arrayLike /*, mapFn, thisArg */) {
         // 1. var C be the this value.
         var C = this;
 
@@ -257,7 +266,9 @@
 
         // 3. ReturnIfAbrupt(items).
         if (arrayLike == null) {
-          throw new TypeError('Array.from requires an array-like object - not null or undefined');
+          throw new TypeError(
+            'Array.from requires an array-like object - not null or undefined',
+          );
         }
 
         // 4. If mapfn is undefined, then var mapping be false.
@@ -267,7 +278,9 @@
           // 5. else
           // 5. a If IsCallable(mapfn) is false, throw a TypeError exception.
           if (!isCallable(mapFn)) {
-            throw new TypeError('Array.from: when provided, the second argument must be a function');
+            throw new TypeError(
+              'Array.from: when provided, the second argument must be a function',
+            );
           }
 
           // 5. b. If thisArg was supplied, var T be thisArg; else var T be undefined.
@@ -293,7 +306,10 @@
         while (k < len) {
           kValue = items[k];
           if (mapFn) {
-            A[k] = typeof T === 'undefined' ? mapFn(kValue, k) : mapFn.call(T, kValue, k);
+            A[k] =
+              typeof T === 'undefined'
+                ? mapFn(kValue, k)
+                : mapFn.call(T, kValue, k);
           } else {
             A[k] = kValue;
           }
@@ -304,24 +320,32 @@
         // 20. Return A.
         return A;
       };
-    }());
+    })();
   }
 
   // Number library polyfills for IE
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/
-  Number.isFinite = Number.isFinite || function(value) {
-    return typeof value === 'number' && isFinite(value);
-  };
+  Number.isFinite =
+    Number.isFinite ||
+    function(value) {
+      return typeof value === 'number' && isFinite(value);
+    };
 
-  Number.isInteger = Number.isInteger || function(value) {
-    return typeof value === 'number' &&
-      isFinite(value) &&
-      Math.floor(value) === value;
-  };
+  Number.isInteger =
+    Number.isInteger ||
+    function(value) {
+      return (
+        typeof value === 'number' &&
+        isFinite(value) &&
+        Math.floor(value) === value
+      );
+    };
 
-  Number.isNaN = Number.isNaN || function(value) {
-    return value !== value;
-  };
+  Number.isNaN =
+    Number.isNaN ||
+    function(value) {
+      return value !== value;
+    };
 
   // Object.values and Object.entries polyfills from tc39 proposal
   // (with modifications)
@@ -329,14 +353,17 @@
   if (!Object.values || !Object.entries) {
     // The tc39 polyfill uses Reflect.ownKeys which is **never** supported by
     // IE. Add a separate polyfill for that here.
-    var ownKeys = Object.getOwnPropertyNames;   // IE version
-    if (Reflect.ownKeys) {                      // Modern version
+    var ownKeys = Object.getOwnPropertyNames; // IE version
+    if (Reflect.ownKeys) {
+      // Modern version
       ownKeys = Reflect.ownKeys;
-    } else if (Object.getOwnPropertySymbols) {  // Best choice if no Reflect
+    } else if (Object.getOwnPropertySymbols) {
+      // Best choice if no Reflect
       ownKeys = function ownKeys(o) {
-        return Object.getOwnPropertyNames(o)
-          .concat(Object.getOwnPropertySymbols(o));
-      }
+        return Object.getOwnPropertyNames(o).concat(
+          Object.getOwnPropertySymbols(o),
+        );
+      };
     }
 
     if (!Object.values) {
@@ -351,7 +378,7 @@
           }
         }
         return output;
-      }
+      };
     }
 
     if (!Object.entries) {
@@ -366,8 +393,7 @@
           }
         }
         return output;
-      }
+      };
     }
   }
-
 })();

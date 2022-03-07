@@ -16,12 +16,12 @@ type DefaultValues = {
    *     ...
    *   }
    */
-  criteria: { [string]: mixed },
+  criteria: { +[string]: mixed, ... },
 };
 
 // A SerializedQueryFilter is just the filter criteria.
 // Its shape is explained a few lines above.
-type SerializedQueryFilter = { [string]: mixed };
+type SerializedQueryFilter = { +[string]: mixed, ... };
 type DeserializationConfig = { filterType: string };
 
 /**
@@ -33,7 +33,7 @@ type DeserializationConfig = { filterType: string };
 class QuerySelectionFilter
   extends Zen.BaseModel<QuerySelectionFilter, RequiredValues, DefaultValues>
   implements Serializable<SerializedQueryFilter, DeserializationConfig> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     criteria: {},
   };
 
@@ -52,6 +52,6 @@ class QuerySelectionFilter
   }
 }
 
-export default ((QuerySelectionFilter: any): Class<
+export default ((QuerySelectionFilter: $Cast): Class<
   Zen.Model<QuerySelectionFilter>,
 >);

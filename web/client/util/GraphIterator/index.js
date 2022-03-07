@@ -50,9 +50,13 @@ import { GraphNodeView } from 'util/GraphIterator/GraphNodeView';
  *
  */
 
-type IterationType = 'FIND_ANY' | 'FOR_EACH';
+type IterationTypeMap = {
+  FIND_ANY: 'FIND_ANY',
+  FOR_EACH: 'FOR_EACH',
+};
+type IterationType = $Keys<IterationTypeMap>;
 
-const ITERATION_TYPES: { [IterationType]: IterationType } = {
+const ITERATION_TYPES: IterationTypeMap = {
   FIND_ANY: 'FIND_ANY',
   FOR_EACH: 'FOR_EACH',
 };

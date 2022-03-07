@@ -1,0 +1,202 @@
+.field-details-page {
+  margin: 0 auto;
+  padding-bottom: $space-xl-px;
+  padding-top: $space-xxl-px;
+  width: 1000px;
+
+  &__breadcrumb {
+    margin-top: $space-l-px;
+  }
+
+  &__arrow-back-text {
+    color: $blue-primary;
+    float: right;
+  }
+
+  &__nav-section {
+    border-bottom: 1px solid $gray;
+    display: flex;
+    padding-bottom: $space-m-px;
+  }
+
+  &__previous-page-button {
+    align-items: center;
+    display: flex;
+  }
+
+  &__title-block {
+    margin-top: $space-xl-px;
+  }
+
+  &__action-buttons {
+    margin-left: auto;
+  }
+}
+
+.field-details-section {
+  margin-top: $space-xxl-px;
+
+  &__list {
+    background: $white;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    margin-top: $space-s-px;
+  }
+}
+
+.dc-field-details-list-item {
+  align-items: center;
+  display: grid;
+  grid-gap: $space-m-px;
+  grid-template-columns: 264px auto;
+
+  // We want each row to have a consistent minimum height. The value section
+  // produces the largest items, so set the minimum height to the height of
+  // the editable item controls section. The editable item controls are found
+  // on almost every row, and their height is slightly larger than the text
+  // height when no controls are present.
+  grid-template-rows: minmax(24px, max-content);
+  padding: $space-m-px;
+
+  &:not(:last-of-type) {
+    border-bottom: 1px solid $gray;
+  }
+
+  &__title {
+    color: $slate-hover;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 22px;
+  }
+}
+
+.editable-text-value {
+  align-items: center;
+  display: flex;
+
+  &__text-block {
+    flex: 1;
+  }
+
+  &__input {
+    @extend .zen-input-text;
+  }
+
+  &__input-textarea {
+    height: auto;
+    min-height: 35px;
+    resize: vertical;
+  }
+}
+
+.editable-item-controls {
+  align-items: center;
+  display: flex;
+
+  // Set the control height to match the height of the icons. The hover state
+  // will extend past the boundary of the icon, but it should not be included
+  // in the row's height.
+  height: 24px;
+
+  &__button {
+    height: 36px;
+    width: 36px;
+  }
+
+  &__button-separator {
+    background-color: $gray;
+    height: 16px;
+    width: 1px;
+  }
+}
+
+.editable-category-value {
+  align-items: center;
+  display: flex;
+
+  &__category-list {
+    margin-right: auto;
+  }
+}
+
+.editable-category-path {
+  display: flex;
+}
+
+.editable-category-path .zen-breadcrumb-item__collapse {
+  // HACK(solo): The text in breadcrumb is overflowing and the elipsis
+  // implemented by .zen-breadcrumb-item__collapse has no effect
+  // we are targeting a combination of these classes to fix it for field details
+  // page
+  max-width: 500px;
+}
+
+.editable-visibility-status-dropdown-value {
+  align-items: center;
+  display: flex;
+
+  &__dropdown {
+    flex: 1;
+  }
+}
+
+.dc-editable-calculation {
+  align-items: center;
+  display: flex;
+
+  // HACK(stephen): We are using the AQT CalculationCustomizationBlock directly
+  // inline in the calculation editing row. That component normally renders in
+  // a vertical orientation inside a Popover. The styles below change this to
+  // render in a horizontal form that fits nicely inside the calculation row.
+  // This is a somewhat brittle choice, since changes to the
+  // CalculationCustomizationBlock could cause these overrides to fail. For now,
+  // it was an ok choice to make because it saves us from duplicating the logic
+  // of calculation customization inside data catalog.
+  &__customization-block {
+    // Use a grid display to orient the .indicator-section-rows as columns
+    // instead of rows.
+    display: grid;
+    grid-gap: $space-m-px;
+
+    // Most calculation types only render a single dropdown. There are a few,
+    // though, that will 2 or 3 separate sections. This column choice accounts
+    // for the various types.
+    grid-template-columns: 175px 200px auto;
+
+    .indicator-section-row {
+      margin-bottom: 0;
+
+      // HACK(stephen): If there is *only one* .indicator-section-row being
+      // rendered, we want to hide the title. This cleans up the UI and prevents
+      // the word "Operation" from showing up multiple times when there is only
+      // one option to choose from.
+      &:only-of-type {
+        .indicator-section-row__title {
+          display: none;
+        }
+      }
+    }
+  }
+
+  &__edit-button-wrapper {
+    margin-left: auto;
+  }
+}
+
+.dc-editable-calculation-display {
+  display: flex;
+
+  &__operation-label {
+    color: $gray;
+    padding-right: $space-xxs-px;
+  }
+
+  &__operation-value {
+    text-transform: capitalize;
+  }
+
+  &__text-divider {
+    color: $gray;
+    padding: 0px $space-xs-px;
+  }
+}

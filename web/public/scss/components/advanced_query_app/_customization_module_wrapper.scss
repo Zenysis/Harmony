@@ -1,11 +1,9 @@
 .aqt-customization-module-wrapper {
   @include zen-elevation-4;
   background: white;
-  padding: 1em;
-  position: fixed;
+  border-radius: 5px;
   width: $aqt-customization-module-width;
   z-index: 100;
-  border-radius: 5px;
 
   .zen-label-wrapper {
     padding-top: 1em;
@@ -19,12 +17,19 @@
     }
   }
 
-  &__close-row {
-    padding-top: 1em;
+  &__contents {
+    padding: $space-m-px;
   }
 
-  &__close-btn {
-    float: right;
-    border-radius: 5px;
+  &__close-row {
+    display: flex;
+    justify-content: flex-end;
+    padding-bottom: $space-m-px;
+    padding-right: $space-m-px;
+  }
+
+  &__apply-btn {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
   }
 }

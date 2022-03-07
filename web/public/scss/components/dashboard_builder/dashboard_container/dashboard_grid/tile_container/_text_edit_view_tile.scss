@@ -1,0 +1,88 @@
+.gd-dashboard-text-edit-view {
+  &__exit-menu {
+    background-color: $white;
+    border: 1px solid lightgray;
+    border-radius: 3px;
+    box-shadow: 1px 2px 4px 2px $gray;
+    // Using non-standard padding to match the jodit toolbar.
+    padding: 3px;
+    position: absolute;
+    top: -50px;
+  }
+
+  &__icon_btn {
+    border-radius: 3px;
+    margin: 0px;
+    &:hover {
+      background-color: #dcdcdc;
+    }
+    &--cancel {
+      fill: $error-color;
+    }
+    &--save {
+      color: $success-color;
+    }
+  }
+
+  &--center {
+    .gd-dashboard-text-edit-view__exit-menu {
+      right: -195px; // Approximately half the width of the toolbar
+    }
+    .jodit-toolbar__box {
+      left: -220px;
+    }
+  }
+
+  &--left {
+    .gd-dashboard-text-edit-view__exit-menu {
+      left: 550px;
+    }
+    .jodit-toolbar__box {
+      margin-left: 0;
+    }
+  }
+
+  &--right {
+    .gd-dashboard-text-edit-view__exit-menu {
+      right: 0;
+    }
+    .jodit-toolbar__box {
+      right: 80px;
+    }
+  }
+
+  &__editor-wrapper {
+    background-color: $white;
+    border: 2px solid #0f6fff;
+    box-shadow: 1px 2px 4px 2px $gray;
+    flex: 1;
+
+    // NOTE(stephen): We need to explicitly `unset` the font-size since a parent
+    // element will set it as an inline style during editing.
+    .gd-dashboard-text-tile {
+      font-size: unset !important;
+    }
+  }
+}
+
+.jodit-resizer {
+  visibility: hidden;
+}
+
+.jodit-toolbar__box {
+  border: 1px solid lightgray;
+  border-radius: 3px;
+  box-shadow: 1px 2px 4px 2px $gray;
+  overflow: visible;
+  position: absolute;
+  top: -50px;
+  width: 545px;
+}
+
+.jodit-ui-group {
+  flex-wrap: nowrap;
+}
+
+.jodit-workplace {
+  display: contents;
+}

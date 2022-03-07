@@ -23,10 +23,10 @@ type SerializedAxesSettings = {
 const DEFAULT_AXIS_SETTINGS_BAR_GRAPH = {
   labelsFontColor: '#313234',
   labelsFontFamily: 'Lato, Arial',
-  labelsFontSize: '12px',
+  labelsFontSize: '13px',
   titleFontColor: '#313234',
   titleFontFamily: 'Lato, Arial',
-  titleFontSize: '12px',
+  titleFontSize: '13px',
 };
 
 class AxesSettings extends Zen.BaseModel<AxesSettings, Values>
@@ -36,12 +36,13 @@ class AxesSettings extends Zen.BaseModel<AxesSettings, Values>
   ): Zen.Model<AxesSettings> | void {
     switch (viewType) {
       case RESULT_VIEW_TYPES.BAR_GRAPH:
+      case RESULT_VIEW_TYPES.BOX_PLOT:
+      case RESULT_VIEW_TYPES.EPICURVE:
         return AxesSettings.create({
           xAxis: XAxisSettings.create(DEFAULT_AXIS_SETTINGS_BAR_GRAPH),
           y1Axis: YAxisSettings.create(DEFAULT_AXIS_SETTINGS_BAR_GRAPH),
           y2Axis: YAxisSettings.create(DEFAULT_AXIS_SETTINGS_BAR_GRAPH),
         });
-      case RESULT_VIEW_TYPES.CHART:
       case RESULT_VIEW_TYPES.TIME:
       case RESULT_VIEW_TYPES.HEATTILES:
       case RESULT_VIEW_TYPES.BUBBLE_CHART:
@@ -58,9 +59,9 @@ class AxesSettings extends Zen.BaseModel<AxesSettings, Values>
   static deserialize(values: SerializedAxesSettings): Zen.Model<AxesSettings> {
     const { xAxis, y1Axis, y2Axis } = values;
     return AxesSettings.create({
-      xAxis: XAxisSettings.deserialize(xAxis),
-      y1Axis: YAxisSettings.deserialize(y1Axis),
-      y2Axis: YAxisSettings.deserialize(y2Axis),
+      xAxis: XAxisSettings.deserialize(xAxis || {}),
+      y1Axis: YAxisSettings.deserialize(y1Axis || {}),
+      y2Axis: YAxisSettings.deserialize(y2Axis || {}),
     });
   }
 
@@ -74,4 +75,4 @@ class AxesSettings extends Zen.BaseModel<AxesSettings, Values>
   }
 }
 
-export default ((AxesSettings: any): Class<Zen.Model<AxesSettings>>);
+export default ((AxesSettings: $Cast): Class<Zen.Model<AxesSettings>>);

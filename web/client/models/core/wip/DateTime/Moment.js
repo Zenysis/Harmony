@@ -1,5 +1,10 @@
 // @flow
 import moment from 'moment';
+
+import formatCustom, {
+  requiresCustomFormat,
+} from 'models/core/wip/DateTime/formatCustom';
+
 /* eslint-disable no-use-before-define */
 
 // This model is an immutable wrapper around the momentjs library.
@@ -30,26 +35,35 @@ type MomentDateInitializer =
   | moment$Moment
   | moment$MomentOptions
   | Date
-  | Array<number>
+  | $ReadOnlyArray<number>
   | void
   | null;
 
-type MomentInitializerFns = (() => Moment) &
+type MomentImmutableInitializerFns = (() => Moment) &
   (MomentDateInitializer => Moment) &
-  ((date: string, format: string | Array<string>) => Moment) &
-  ((date: string, format: string | Array<string>, strict: boolean) => Moment) &
-  ((date: string, format: string | Array<string>, locale: string) => Moment) &
+  ((date: string, format: string | $ReadOnlyArray<string>) => Moment) &
   ((
     date: string,
-    format: string | Array<string>,
+    format: string | $ReadOnlyArray<string>,
+    strict: boolean,
+  ) => Moment) &
+  ((
+    date: string,
+    format: string | $ReadOnlyArray<string>,
+    locale: string,
+  ) => Moment) &
+  ((
+    date: string,
+    format: string | $ReadOnlyArray<string>,
     locale: string,
     strict: boolean,
   ) => Moment);
 
-// a set of the momentjs methods we're exposing as this class' public API
+// The momentjs methods we directly implement in this class instead of patching.
 const EXPOSED_METHODS = new Set([
   'format',
   'isAfter',
+  'isSame',
   'isSameOrAfter',
   'isBefore',
   'isSameOrBefore',
@@ -59,16 +73,39 @@ const EXPOSED_METHODS = new Set([
   'diff',
   'startOf',
   'endOf',
+  'min',
   'max',
   'unix',
+  'millisecond',
+  'utc',
+  'valueOf',
 ]);
+
+// Momentjs's type definitions use `Array<string>` heavily in the constructor
+// argument signature. We want the inputs to be pure, and although we're pretty
+// sure momentjs does not mutate them, we can't be fully sure. This method will
+// clone any array arguments into a new array to ensure any mutation happens on
+// the copied array only.
+// NOTE(stephen): Using `any` here since this is *very difficult* to flow type.
+// As long as the parent function is properly typed, we will be ok.
+function _cloneArgs(...args: any): any {
+  /* eslint-disable no-param-reassign */
+  if (Array.isArray(args[0])) {
+    args[0] = [...args[0]];
+  }
+  if (Array.isArray(args[1])) {
+    args[1] = [...args[1]];
+  }
+  return args;
+}
 
 // NOTE(stephen): Only supporting a subset of momentjs's static methods for now.
 export default class Moment {
   _referenceMoment: moment$Moment;
   _internalMoment: moment$Moment;
 
-  static create: MomentInitializerFns = (...args) => new Moment(...args);
+  static create: MomentImmutableInitializerFns = (...args) =>
+    new Moment(..._cloneArgs(...args));
 
   // Create a Moment from a Unix timestamp (seconds since the Unix Epoch)
   static unix(secondsSinceEpoch: number): Moment {
@@ -76,8 +113,13 @@ export default class Moment {
   }
 
   // Create a Moment in UTC mode. See: https://momentjs.com/docs/#/parsing/utc
-  static utc: MomentInitializerFns = (...args) =>
-    Moment.create(moment.utc(...args));
+  static utc: MomentImmutableInitializerFns = (...args) =>
+    new Moment(moment.utc(..._cloneArgs(...args)));
+
+  // Expose the momentjs min() function
+  static min(moments: $ReadOnlyArray<Moment>): Moment {
+    return Moment.create(moment.min(moments.map(m => m._internalMoment)));
+  }
 
   // Expose the momentjs max() function
   static max(moments: $ReadOnlyArray<Moment>): Moment {
@@ -95,6 +137,11 @@ export default class Moment {
 
   // Expose the momentjs format() function
   format(format?: string): string {
+    // HACK(stephen): Augment momentjs to add support for formatting values with
+    // custom format strings like epi week and half year.
+    if (requiresCustomFormat(format)) {
+      return formatCustom(this._internalMoment, format);
+    }
     return this._internalMoment.format(format);
   }
 
@@ -171,16 +218,91 @@ export default class Moment {
     return Moment.create(this._internalMoment.clone().endOf(unit));
   }
 
-  // Expose the unix function
+  // Expose the millisecond function
+  millisecond(): number {
+    return this._internalMoment.millisecond();
+  }
+
+  // Expose the unix function - returns number of seconds since Unix epoch
   unix(): number {
     return this._internalMoment.unix();
   }
 
+  // Expose the utc function - returns the current Moment in UTC
+  utc(): Moment {
+    return Moment.create(this._internalMoment.utc());
+  }
+
+  // Expose the valueOf function: return number of milliseconds since Unix epoch
+  valueOf(): number {
+    return this._internalMoment.valueOf();
+  }
+
+  // eslint-disable-next-line spaced-comment
+  /*::
+  // NOTE(stephen): Expose all additional Momentjs functions to Flow with our
+  // immutable Moment class substituted in.
+  // TODO(stephen): Remove deprecated methods, deprecated function signatures.
+  // It is difficult to tell from the moment libdef what is allowed vs
+  // deprecated.
+  +calendar: (refTime?: any, formats?: moment$CalendarFormats) => string;
+  +clone: () => Moment;
+  +creationData: () => moment$MomentCreationData;
+  +date: (() => number) & ((number: number) => Moment);
+  +dates: (() => number) & ((number: number) => Moment);
+  +day: (() => number) & ((day: number | string) => Moment);
+  +dayOfYear: (() => number) & ((day: number) => Moment);
+  +days: (() => number) & ((day: number | string) => Moment);
+  +daysInMonth: () => number;
+  +from: (value: Moment | string | number | Date | Array<number>,removePrefix?: boolean) => string;
+  +fromNow: (removeSuffix?: boolean) => string;
+  +get: (string: string) => number;
+  +hour: (() => number) & ((number: number) => Moment);
+  +hours: (() => number) & ((number: number) => Moment);
+  +invalidAt: () => 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  +isBetween: (from: Moment | string | number | Date | Array<number>,to: Moment | string | number | Date | Array<number>,units?: string,inclusivity?: moment$Inclusivity) => boolean;
+  +isDST: () => boolean;
+  +isDSTShifted: () => boolean;
+  +isLeapYear: () => boolean;
+  +isoWeek: (() => number) & ((number: number) => Moment);
+  +isoWeekYear: (() => number) & ((number: number) => Moment);
+  +isoWeekday: (() => number) & ((day: number | string) => Moment);
+  +isoWeeks: (() => number) & ((number: number) => Moment);
+  +isoWeeksInYear: () => number;
+  +local: () => Moment;
+  +locale: (() => string) & ((locale: string, customization?: { ... } | null) => Moment);
+  +localeData: () => moment$LocaleData;
+  +milliseconds: (() => number) & ((number: number) => Moment);
+  +minute: (() => number) & ((number: number) => Moment);
+  +minutes: (() => number) & ((number: number) => Moment);
+  +month: (() => number) & ((number: number) => Moment);
+  +months: (() => number) & ((number: number) => Moment);
+  +quarter: (() => number) & ((number: number) => Moment);
+  +second: (() => number) & ((number: number) => Moment);
+  +seconds: (() => number) & ((number: number) => Moment);
+  +set: ((options: { [unit: string]: number, ... }) => Moment) & ((unit: string, value: number) => Moment);
+  +to: (value: Moment | string | number | Date | Array<number>,removePrefix?: boolean) => string;
+  +toArray: () => Array<number>;
+  +toDate: () => Date;
+  +toISOString: (keepOffset?: boolean) => string;
+  +toJSON: () => string;
+  +toNow: (removePrefix?: boolean) => string;
+  +toObject: () => moment$MomentObject;
+  +utcOffset: (() => number) & ((offset: number | string,keepLocalTime?: boolean,keepMinutes?: boolean) => Moment);
+  +week: (() => number) & ((number: number) => Moment);
+  +weekYear: (() => number) & ((number: number) => Moment);
+  +weekday: (() => number) & ((number: number) => Moment);
+  +weeks: (() => number) & ((number: number) => Moment);
+  +weeksInYear: () => number;
+  +year: (() => number) & ((number: number) => Moment);
+  +years: (() => number) & ((number: number) => Moment);
+  */
+
   // Provide an immutability layer on top of momentjs's API calls. Some momentjs
   // methods (like momentInstance.startOf('day')) will modify the underlying
   // momentjs object instead of returning a copy.
-  _hook(method: string, ...args: Array<mixed>) {
-    // $FlowSuppressError
+  _hook(method: string, ...args: Array<mixed>): mixed {
+    // $FlowExpectedError[incompatible-use]
     const output = this._internalMoment[method](...args);
 
     // Check to see if the call modified our internal moment
@@ -207,7 +329,7 @@ export default class Moment {
 // momentjs exposed for use. Idk. Don't wanna break something.
 Object.keys(moment.prototype).forEach(method => {
   if (!EXPOSED_METHODS.has(method)) {
-    // $FlowSuppressError
+    // $FlowExpectedError[prop-missing]
     Moment.prototype[method] = function m(...args) {
       return Moment.prototype._hook.call(this, method, ...args);
     };

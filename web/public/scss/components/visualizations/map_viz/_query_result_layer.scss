@@ -1,0 +1,89 @@
+.map-query-result-search-box {
+  position: absolute;
+  right: $space-xs-px;
+  top: $space-xs-px;
+}
+
+.query-result-timeline-container {
+  background-color: $white;
+  border: 1px solid $gray-5;
+  border-radius: 8px;
+  bottom: $space-xxs-px;
+  left: $space-xxs-px;
+  position: absolute;
+}
+
+.query-result-timeline-preview-container {
+  @extend .query-result-timeline-container;
+  font-size: 14px;
+  padding: $space-s-px $space-xs-px;
+}
+
+.query-result-timeline {
+  @extend .query-result-timeline-container;
+  font-size: 12px;
+  padding-bottom: $space-xxs-px;
+  padding-top: $space-xxs-px;
+  z-index: 2;
+
+  &__icon-button {
+    color: $slate;
+    margin: 0px;
+  }
+
+  &__slider-container {
+    display: flex;
+    position: relative;
+    width: 100%;
+  }
+
+  &__slider {
+    position: absolute;
+  }
+
+  // NOTE(nina): This is primarily to override default dropdown CSS
+  &__dropdown-button {
+    background: transparent;
+    border: none;
+    font-size: 12px;
+    height: inherit;
+    padding: 0 $space-xxs-px;
+
+    &:hover {
+      background: $gray-hover;
+      border: none;
+      border-radius: 4px;
+    }
+  }
+
+  &__end-date {
+    color: $gray;
+  }
+
+  // NOTE(nina): Overriding CSS for circle on input slider
+  &__thumb-circle {
+    background-color: $slate;
+    box-shadow: none !important;
+  }
+
+  &__thumb-container {
+    margin-top: -2px;
+    position: fixed;
+  }
+}
+
+.query-result-timeline-settings {
+  font-size: 14px;
+  padding: $space-m-px;
+
+  // NOTE(nina): Overriding CSS for radio items
+  .zen-radio-item {
+    font-size: 14px;
+  }
+}
+
+// HACK(nina): We want to vertically align the tooltips above each
+// play control in the *ExpandedTimeline* component
+.query-result-timeline-play-button-tooltip {
+  margin-top: 8px;
+}

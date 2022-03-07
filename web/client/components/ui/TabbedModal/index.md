@@ -3,22 +3,20 @@ Tabbed modal without a title:
 import Button from 'components/ui/Button';
 import Tab from 'components/ui/Tabs/Tab';
 
-initialState = {
-  show: false,
-};
+const [showModal, setShowModal] = React.useState(false);
 
 function onClick() {
-  setState({ show: true });
+  setShowModal(true);
 }
 
 function onRequestClose() {
-  setState({ show: false });
+  setShowModal(false);
 }
 
 <React.Fragment>
   <Button onClick={onClick}>Open!</Button>
   <TabbedModal
-    show={state.show}
+    show={showModal}
     onRequestClose={onRequestClose}
     showPrimaryButton={false}
     tabHeaderSpacing={60}
@@ -41,22 +39,20 @@ Tabbed modal with a title:
 import Button from 'components/ui/Button';
 import Tab from 'components/ui/Tabs/Tab';
 
-initialState = {
-  show: false,
-};
+const [showModal, setShowModal] = React.useState(false);
 
 function onClick() {
-  setState({ show: true });
+  setShowModal(true);
 }
 
 function onRequestClose() {
-  setState({ show: false });
+  setShowModal(false);
 }
 
 <React.Fragment>
   <Button onClick={onClick}>Open!</Button>
   <TabbedModal
-    show={state.show}
+    show={showModal}
     onRequestClose={onRequestClose}
     title="Test Modal"
     titleTooltip="This is a title tooltip"

@@ -1,8 +1,10 @@
 // @flow
+import type Promise from 'bluebird';
+
 import * as Zen from 'lib/Zen';
-import Dimension from 'models/core/wip/Dimension';
-import GroupingDimension from 'models/core/wip/GroupingItem/GroupingDimension';
 import Granularity from 'models/core/wip/Granularity';
+import GroupingDimension from 'models/core/wip/GroupingItem/GroupingDimension';
+import GroupingGranularity from 'models/core/wip/GroupingItem/GroupingGranularity';
 import type {
   GroupingItem,
   SerializedGroupingItem,
@@ -23,27 +25,20 @@ export default class GroupingItemUtil {
     switch (values.type) {
       case 'GROUPING_DIMENSION':
         return GroupingDimension.deserializeAsync(values.item);
-      case 'GRANULARITY':
-        return Granularity.deserializeAsync(values.item);
+      case 'GROUPING_GRANULARITY':
+        return GroupingGranularity.deserializeAsync(values.item);
       default: {
         // HACK(stephen): Support previous style of serialized grouping
-        // dimensions since migrating the dashboards will be difficult.
-        // TODO(stephen): Remove this when all priority dashboards have been
-        // migrated. This should realistically only affect MZ since no other
-        // deployments were creating important dashboards from AQT queries.
-        // NOTE(stephen): Placing this inside `default` to ensure flow refines
-        // properly.
-        if (type === 'DIMENSION') {
-          const legacyItem: Zen.Serialized<Dimension> = (values.item: any);
-          return Dimension.deserializeAsync(legacyItem).then(dimension =>
-            GroupingDimension.create({
-              dimension,
-              name: dimension.name(),
-              includeNull: true, // Previous behavior.
-              includeTotal: false,
-            }),
+        // granularities before we had GroupingGranularity type. This in theory
+        // should only happen for saved queries (either locally in a user's
+        // session or shared by URL).
+        if (type === 'GRANULARITY') {
+          const legacyItem: Zen.Serialized<Granularity> = (values.item: any);
+          return Granularity.deserializeAsync(legacyItem).then(
+            GroupingGranularity.createFromGranularity,
           );
         }
+
         throw new Error(
           `[GroupingItemUtil] Invalid grouping item type '${type}' passed in deserialization`,
         );
@@ -52,33 +47,55 @@ export default class GroupingItemUtil {
   }
 
   static serialize(item: GroupingItem): SerializedGroupingItem {
-    if (item instanceof GroupingDimension) {
+    if (item.tag === 'GROUPING_DIMENSION') {
       return {
         type: 'GROUPING_DIMENSION',
-        item: Zen.cast<GroupingDimension>(item).serialize(),
+        item: item.serialize(),
       };
     }
-    if (item instanceof Granularity) {
+    if (item.tag === 'GROUPING_GRANULARITY') {
       return {
-        type: 'GRANULARITY',
-        item: Zen.cast<Granularity>(item).serialize(),
+        type: 'GROUPING_GRANULARITY',
+        item: item.serialize(),
       };
     }
+
+    (item.tag: empty);
     throw new Error(
       '[GroupingItemUtil] Invalid grouping item passed in serialization',
     );
   }
 
   static serializeForQuery(item: GroupingItem): SerializedGroupingItemForQuery {
-    if (item instanceof GroupingDimension) {
-      (item: GroupingDimension);
-      return Zen.cast<GroupingDimension>(item).serializeForQuery();
+    return item.serializeForQuery();
+  }
+
+  /**
+   * Determine if this GroupingItem will produce the same Query representation
+   * as the other GroupingItem passed in.
+   */
+  static isGroupingItemQueryEqual(
+    currentItem: GroupingItem,
+    previousItem: GroupingItem,
+  ): boolean {
+    if (currentItem === previousItem) {
+      return true;
     }
-    if (item instanceof Granularity) {
-      return Zen.cast<Granularity>(item).serialize();
+
+    if (
+      currentItem instanceof GroupingDimension &&
+      previousItem instanceof GroupingDimension
+    ) {
+      return currentItem.isGroupingDimensionQueryEqual(previousItem);
     }
-    throw new Error(
-      '[GroupingItemUtil] Invalid grouping item passed in serialization',
-    );
+
+    if (
+      currentItem instanceof GroupingGranularity &&
+      previousItem instanceof GroupingGranularity
+    ) {
+      return currentItem.isGroupingGranularityQueryEqual(previousItem);
+    }
+
+    return false;
   }
 }

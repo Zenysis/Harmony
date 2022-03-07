@@ -7,36 +7,84 @@
   overflow: initial !important;
 
   .zen-modal__body {
+    display: flex;
+    flex-direction: column;
     padding: 0;
   }
 
-  .zen-tabs {
-    &__header-row {
+  // NOTE(nina, pablo): We want this tab style to only apply to the parent
+  // tabs of the tabbed modal, and not to any of its children.
+  &__tabs {
+    &.zen-tabs {
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+    }
+
+    > .zen-tabs__header-row {
       background-color: #f9f9f9;
       padding: 0 60px 0 30px;
+
+      > .zen-tabs__title {
+        height: $header-row-height;
+        line-height: $header-row-height;
+      }
+
+      .zen-tab-header__heading {
+        align-items: center;
+        box-sizing: content-box;
+        display: flex;
+        font-weight: 400;
+        height: $header-row-height;
+        padding: 0;
+        text-transform: none;
+      }
     }
 
-    &__contents-container {
-      height: calc(100% - #{$header-row-height});
-      overflow: auto;
-      padding-left: 30px;
-      padding-right: 40px;
-      position: absolute;
-      top: $header-row-height;
-      width: 100%;
+    > .zen-tabs__contents-container {
+      display: grid;
+      flex: 1;
+      grid-template-columns: 100%;
+      grid-template-rows: 100%;
+      overflow: hidden;
+
+      // Prefer visibility hidden over display none inside the tabbed modal so
+      // that the height is consistent across all tabs.
+      > .zen-tab-content-wrapper {
+        grid-column: 1;
+        grid-row: 1;
+        height: 100%;
+        overflow: auto;
+        padding: 30px;
+
+        &--no-padding {
+          padding: 0;
+        }
+
+        &--hidden {
+          display: block;
+          visibility: hidden;
+        }
+
+        > .zen-tab {
+          height: 100%;
+
+          // NOTE(stephen): Need to place an element at the end of the Tab.
+          // Without this, any margin or padding at the end of the Tab, that
+          // does not have an element below it within the Tab, will cause
+          // issues with `overflow`. If a tab has trailing space with no
+          // element after it, then its trailing space will cause the overflow
+          // calculation to be incorrect (calculated by the browser). This
+          // will cause sections that should not need scrolling to be
+          // scrollable.
+          &:after {
+            content: ' ';
+            display: block;
+            height: 1px;
+            margin-top: -1px;
+          }
+        }
+      }
     }
   }
-
-  .zen-tab-header__heading {
-    font-weight: 400;
-    height: $header-row-height;
-    line-height: $header-row-height;
-    padding: 0;
-    text-transform: none;
-  }
-}
-
-.zen-tab-content-wrapper,
-.zen-tab {
-  height: 100%;
 }

@@ -12,7 +12,7 @@ DEFAULT_INSTANCE_CONFIG_PATH = os.path.join(
 # Verbose name is preferred in this case.
 # pylint:disable=C0103
 def load_instance_configuration_from_file(
-    instance_config_path=DEFAULT_INSTANCE_CONFIG_PATH
+    instance_config_path=DEFAULT_INSTANCE_CONFIG_PATH, log_missing=True
 ):
     # Instance config is global and loaded only once. It lives at the root of
     # the source tree.
@@ -24,5 +24,6 @@ def load_instance_configuration_from_file(
     if IS_PRODUCTION:
         raise IOError(error_msg)
 
-    print(error_msg)
+    if log_missing:
+        print(error_msg)
     return {}

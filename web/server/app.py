@@ -1,54 +1,25 @@
 ''' Handle initialization and setup of the flask app and all its dependencies.
 '''
 import os
-import flask_admin
+
+from typing import Optional
 
 from flask import Flask
-from flask_migrate import Migrate
 from flask_potion import Api
 from flask_principal import Principal
-from pylib.file.file_utils import FileUtils
 from werkzeug.serving import is_running_from_reloader
 from werkzeug.contrib.cache import FileSystemCache
-
-from config.loader import import_configuration_module
-from data.wip.mock import generate_aqt_mock_data
-from db.druid.datasource import SiteDruidDatasource
-from db.druid.query_client import DruidQueryClient_
-from db.druid.metadata import DruidMetadata_, DruidMetadata
-from db.druid.config import construct_druid_configuration
 from log import LOG
 
-# These are required by Flask-Migrate for auto-detection of schema changes
-# pylint: disable=W0611
-from models.alchemy.alerts import AlertDefinition, AlertNotification
+from config.loader import import_configuration_module
+from data.query.mock import generate_query_mock_data
+from db.druid.datasource import SiteDruidDatasource
+from db.druid.query_client import DruidQueryClient_
+from db.druid.metadata import DruidMetadata_
+from db.druid.config import construct_druid_configuration
 from models.alchemy.configuration import Configuration
-from models.alchemy.case_management import Case, CaseEvent
-from models.alchemy.history import HistoryRecord
-from models.alchemy.dashboard import Dashboard
-from models.alchemy.indicator import Indicators, IndicatorGroups
-from models.alchemy.location import (
-    CanonicalLocations,
-    LocationTypes,
-    MappedLocations,
-    SuggestedMatches,
-    UnmatchedLocations,
-    UserMatches,
-    FlaggedLocations,
-)
-from models.alchemy.security_group import Group, GroupRoles, GroupUsers
-from models.alchemy.permission import (
-    Permission,
-    Resource,
-    ResourceType,
-    Role,
-    RolePermissions,
-)
-from models.alchemy.query_policy import QueryPolicy
-from models.alchemy.user import User, UserRoles
-from models.alchemy.user_query_session import UserQuerySession
 from web.server.api_setup import initialize_api_models
-from web.server.app_db import create_db
+from web.server.app_base import create_app_base
 from web.server.configuration.instance import load_instance_configuration_from_file
 from web.server.configuration.flask import FlaskConfiguration
 from web.server.configuration.settings import CUR_DATASOURCE_KEY, get_configuration
@@ -56,7 +27,6 @@ from web.server.data.data_access import Transaction
 from web.server.data.dimension_metadata import DimensionMetadata
 from web.server.data.dimension_values import DimensionValuesLookup
 from web.server.data.druid_context import DruidApplicationContext
-from web.server.data.explorer import GeoExplorerCache
 from web.server.data.status import SourceStatus
 from web.server.data.time_boundary import DataTimeBoundary
 from web.server.data.row_count import RowCountLookup
@@ -68,15 +38,17 @@ from web.server.errors.error_handlers import register_for_error_events
 from web.server.migrations.util import RevisionStatus
 from web.server.routes.api import ApiRouter
 from web.server.routes.dashboard import DashboardPageRouter
+from web.server.routes.data_catalog import DataCatalogPageRouter
+from web.server.routes.embedded_query import EmbeddedQueryPageRouter
 from web.server.routes.index import PageRouter
-from web.server.routes.page_renderer import PageRendererRouter
 from web.server.routes.util import ListConverter
 from web.server.routes.views.authentication import authentication_required
-from web.server.routes.views.flask_admin_view import ZenysisModelView
 from web.server.routes.views.query_policy import AuthorizedQueryClient
-from web.server.routes.views.locations import LocationHierachy
+from web.server.routes.views.locations import LocationHierarchy
 from web.server.routes.webpack_dev_proxy import webpack_dev_proxy
 from web.server.security.signal_handlers import register_for_signals
+from web.server.security.jwt_manager import JWTManager
+from web.server.util.dev.static_data_query_client import StaticDataQueryClient
 from web.server.util.emails import EmailRenderer
 from web.server.util.email_client import MailgunClient
 from web.server.util.template_renderer import TemplateRenderer, read_js_version
@@ -87,6 +59,7 @@ from web.server.notifications.notification_service import (
 )
 from web.server.environment import IS_PRODUCTION, OFFLINE_MODE
 from web.server.workers import create_celery
+from util.error_links import get_error_background_link_msg
 from util.offline_mode import (
     MockDruidQueryClient,
     MockDruidMetadata,
@@ -109,24 +82,22 @@ def _register_routes(app, register_webpack_proxy=False):
 
     default_locale = app.zen_config.ui.DEFAULT_LOCALE
     deployment_name = app.zen_config.general.DEPLOYMENT_NAME
-    geo_dashboard_class = app.zen_config.dashboard.GeoDashboardConfig
-    field_dashboard_class = app.zen_config.dashboard.FieldDashboardConfig
     indicator_group_definitions = app.zen_config.indicators.GROUP_DEFINITIONS
 
     template_renderer = app.template_renderer
     main_page_router = PageRouter(
         template_renderer, default_locale, deployment_name, indicator_group_definitions
     )
-    dashboard_router = DashboardPageRouter(
-        template_renderer, default_locale, geo_dashboard_class, field_dashboard_class
-    )
+    dashboard_router = DashboardPageRouter(template_renderer, default_locale)
+    data_catalog_router = DataCatalogPageRouter(template_renderer, default_locale)
+    embedded_query_router = EmbeddedQueryPageRouter(template_renderer, default_locale)
     api_router = ApiRouter(template_renderer, app.zen_config)
-    page_renderer_router = PageRendererRouter()
 
     # Register routes
     app.register_blueprint(dashboard_router.generate_blueprint())
+    app.register_blueprint(data_catalog_router.generate_blueprint())
+    app.register_blueprint(embedded_query_router.generate_blueprint())
     app.register_blueprint(api_router.generate_blueprint())
-    app.register_blueprint(page_renderer_router.generate_blueprint())
     app.register_blueprint(main_page_router.generate_blueprint())
     app.page_router = main_page_router
 
@@ -141,19 +112,6 @@ def _register_potion_routes(app):
         app, decorators=[authentication_required(is_api_request=True)], prefix='/api2'
     )
     initialize_api_models(potion_api)
-
-
-def _intitialize_flask_admin(app, db):
-    if not IS_PRODUCTION:
-        admin = flask_admin.Admin(
-            app,
-            name=app.zen_config.general.DEPLOYMENT_FULL_NAME,
-            template_mode='bootstrap3',
-            url='/flask-admin',
-        )
-        # Add views
-        admin.add_view(ZenysisModelView(IndicatorGroups, db.session))
-        admin.add_view(ZenysisModelView(Indicators, db.session))
 
 
 def _initialize_template_renderer(app):
@@ -183,8 +141,7 @@ def _initialize_email_renderer(app):
 
 
 def _initialize_app(app, db, is_production):
-    _intitialize_flask_admin(app, db)
-    _initialize_location_hierarchy(app)
+    _initialize_location_hierarchy(app, db)
     _register_routes(app, not is_production)
 
     # Setup Flask-User
@@ -195,7 +152,7 @@ def _initialize_app(app, db, is_production):
 
 
 def _create_app_internal(
-    db, flask_config, instance_configuration, zen_configuration_module
+    flask_config, instance_configuration, zen_configuration_module
 ):
     # Create and configure the main Flask app. Perform any initializations that
     # should happen before the site goes online.
@@ -205,19 +162,7 @@ def _create_app_internal(
     if is_production:
         LOG.info('Zenysis is running in PRODUCTION mode')
 
-    app = Flask(__name__, static_folder='../public', static_url_path='')
-
-    # Misc app setup and settings.
-    app.secret_key = flask_config.SECRET_KEY
-    app.debug = not is_production
-    app.config.from_object(flask_config)
-
-    # Register the app with our db reference
-    db.init_app(app)
-
-    # Handle migrations before anyone uses the DB
-    migrations_directory = FileUtils.GetAbsPathForFile('web/server/migrations')
-    Migrate(app, db, migrations_directory)
+    (app, db) = create_app_base(flask_config)
 
     # Only initialize the application if we are on the main processing thread.
     # In debug mode when the app is started directly (not via gunicorn), the
@@ -240,9 +185,10 @@ def _create_app_internal(
             _initialize_email_renderer(app)
             _initialize_druid_context(app)
             _initialize_geo_explorer(app)
-            _initialize_aqt_data(app)
+            _initialize_query_data(app)
             _initialize_notification_service(app, instance_configuration)
             _initialize_simple_cache(app)
+            _initialize_jwt_manager(app)
             _initialize_app(app, db, is_production)
 
     # NOTE(stephen): The last thing we need to do when bootstrapping our app is
@@ -258,10 +204,11 @@ def _create_app_internal(
 def _fail_if_schema_upgrade_needed():
     status = RevisionStatus()
     if status.head_revision != status.current_revision:
+        error_msg_link = get_error_background_link_msg('DatabaseRevisionStatusError')
         error_message = (
             'Database schema is out of date. Current database schema version is %s. '
-            'Latest version is %s. To upgrade, run: scripts/upgrade_database.sh'
-            % (status.current_revision, status.head_revision)
+            'Latest version is %s. To upgrade, run: yarn init-db %s'
+            % (status.current_revision, status.head_revision, error_msg_link)
         )
         LOG.error(error_message)
         raise EnvironmentError(error_message)
@@ -319,10 +266,23 @@ def _initialize_druid_context(app):
                 config_database_entity.overwritten = True
                 transaction.add_or_update(config_database_entity, flush=True)
 
-    LOG.info('** Using datasource %s **', datasource.name)
+    LOG.info(
+        '** Using datasource %s on host %s **',
+        datasource.name,
+        druid_configuration.base_endpoint(),
+    )
+
+    # If we are in development, we can use a special caching query client just for the
+    # Druid static data we load each time. This speeds up development reload times.
+    use_static_data_cache = not IS_PRODUCTION and not OFFLINE_MODE
+    static_data_query_client = (
+        system_query_client
+        if not use_static_data_cache
+        else StaticDataQueryClient(druid_configuration, datasource, druid_metadata)
+    )
 
     dimension_values = DimensionValuesLookup(
-        system_query_client,
+        static_data_query_client,
         datasource,
         filter_dimensions,
         dimension_slices,
@@ -331,23 +291,31 @@ def _initialize_druid_context(app):
     )
     dimension_values.load_dimensions_from_druid()
 
-    time_boundary = DataTimeBoundary(system_query_client, datasource)
+    time_boundary = DataTimeBoundary(static_data_query_client, datasource)
     time_boundary.load_time_boundary_from_druid()
-
-    row_count_lookup = RowCountLookup(system_query_client, datasource)
+    # TODO(stephen): The way we initialize static data is difficult to work with. Some
+    # classes are only used during initialization, while others are used throughout the
+    # app lifetime. All of them hold a reference to the query client, which makes it
+    # difficult to use the static data query client only during app initialization.
+    time_boundary.query_client = system_query_client
 
     status_information = SourceStatus(
-        system_query_client,
+        static_data_query_client,
         datasource,
         data_status_static_info,
         et_date_selection_enabled,
     )
     status_information.load_all_status()
 
-    dimension_metadata = DimensionMetadata(system_query_client, datasource)
+    dimension_metadata = DimensionMetadata(static_data_query_client, datasource)
     dimension_metadata.load_dimension_metadata(
         dimension_categories, dimension_id_map, time_boundary.get_full_time_interval()
     )
+
+    # If we are using a caching query client for loading static data, write the cache
+    # values (if changed) after we have finished loading.
+    if use_static_data_cache:
+        static_data_query_client.write_cache()
 
     druid_context = DruidApplicationContext(
         druid_metadata,
@@ -355,7 +323,7 @@ def _initialize_druid_context(app):
         dimension_values,
         time_boundary,
         status_information,
-        row_count_lookup,
+        RowCountLookup(system_query_client, datasource),
         dimension_metadata,
         datasource,
     )
@@ -370,32 +338,39 @@ def _initialize_geo_explorer(app):
     app.explorer_cache = geo_explorer_cache
 
 
-def _initialize_aqt_data(app):
+def _initialize_query_data(app):
+    LOG.info('Initializing Query data')
     dimension_values = app.druid_context.dimension_values_lookup
 
     aggregation_module = app.zen_config.aggregation
     dimension_parents = aggregation_module.DIMENSION_PARENTS
     dimension_categories = aggregation_module.DIMENSION_CATEGORIES
-    enabled_granularities = aggregation_module.ENABLED_GRANULARITIES
+    calendar_settings = aggregation_module.CALENDAR_SETTINGS
     dimension_id_map = aggregation_module.DIMENSION_ID_MAP
 
     data_sources = app.zen_config.indicators.DATA_SOURCES
     calculations_for_field = app.zen_config.aggregation_rules.CALCULATIONS_FOR_FIELD
+    calc_ind_constituents = (
+        app.zen_config.calculated_indicators.CALCULATED_INDICATOR_CONSTITUENTS
+    )
 
-    app.aqt_data = generate_aqt_mock_data(
+    app.query_data = generate_query_mock_data(
         dimension_values.get_dimension_value_map(filter_values_by_identity=False),
         data_sources,
         dimension_parents,
         dimension_categories,
-        enabled_granularities,
+        calendar_settings,
         calculations_for_field,
+        calc_ind_constituents,
         dimension_id_map,
         app.druid_context.dimension_metadata.sketch_sizes,
+        app.druid_context.dimension_metadata.field_metadata,
     )
+    LOG.info('Finished initializing Query data')
 
 
-def _initialize_location_hierarchy(app):
-    app.location_hierarchy = LocationHierachy()
+def _initialize_location_hierarchy(app, db):
+    app.location_hierarchy = LocationHierarchy(db)
 
 
 def _initialize_notification_service(app, instance_configuration):
@@ -434,24 +409,40 @@ def _initialize_simple_cache(app):
     app.cache = cache
 
 
+def _initialize_jwt_manager(app):
+    jwt_manager = JWTManager(
+        app.zen_config.general.DEPLOYMENT_FULL_NAME,
+        app.config['SECRET_KEY'],
+        app.config['JWT_TOKEN_EXPIRATION_TIME'],
+    )
+    app.jwt_manager = jwt_manager
+
+
 def _initialize_zenysis_module(app, zen_configuration_module):
     app.zen_config = zen_configuration_module
 
 
 def create_app(
-    flask_configuration=None, instance_configuration=None, zenysis_environment=None
-):
-    flask_configuration = flask_configuration or FlaskConfiguration()
-    instance_configuration = load_instance_configuration_from_file()
-    with CredentialProvider(instance_configuration) as credential_provider:
-        flask_configuration.SQLALCHEMY_DATABASE_URI = credential_provider.get(
-            'SQLALCHEMY_DATABASE_URI'
+    flask_config: Optional[FlaskConfiguration] = None,
+    instance_config: Optional[dict] = None,
+    zenysis_environment: Optional[str] = None,
+) -> Flask:
+    # If no flask configuration is provided, create a new one and populate secrets by
+    # reading the instance config.
+    if not flask_config:
+        flask_config = FlaskConfiguration()
+        instance_config = (
+            instance_config
+            if instance_config is not None
+            else load_instance_configuration_from_file()
         )
-        flask_configuration.MAILGUN_API_KEY = credential_provider.get('MAILGUN_API_KEY')
+        flask_config.apply_instance_config_overrides(instance_config)
+        with CredentialProvider(instance_config) as credential_provider:
+            flask_config.SQLALCHEMY_DATABASE_URI = credential_provider.get(
+                'SQLALCHEMY_DATABASE_URI'
+            )
+            flask_config.MAILGUN_API_KEY = credential_provider.get('MAILGUN_API_KEY')
 
-    flask_configuration.ASYNC_NOTIFICATIONS_ENABLED = instance_configuration.get(
-        'async_notifications_enabled', False
-    )
     if not zenysis_environment:
         zenysis_environment = os.getenv('ZEN_ENV')
 
@@ -460,9 +451,6 @@ def create_app(
             '`ZEN_ENV` was not set and/or `zenysis_environment` was not specified'
         )
 
-    db = create_db()
     configuration_module = import_configuration_module()
-    app = _create_app_internal(
-        db, flask_configuration, instance_configuration, configuration_module
-    )
+    app = _create_app_internal(flask_config, instance_config, configuration_module)
     return app

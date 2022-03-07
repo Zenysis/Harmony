@@ -1,99 +1,75 @@
 // @flow
 import * as React from 'react';
 
-import Configuration from 'services/models/Configuration';
 import ConfigurationService from 'services/ConfigurationService';
 import Dropdown from 'components/ui/Dropdown';
-import { autobind } from 'decorators';
+import Group from 'components/ui/Group';
+import { cancelPromise } from 'util/promiseUtil';
 import { noop } from 'util/util';
+import type Configuration from 'services/models/Configuration';
 import type { ChildProps } from 'components/AdminApp/ConfigurationTab/ConfigurationEntry';
 
 const KEY_TEXT = t('admin_app.configuration.keys');
 
-type State = {
-  flagOptions: $ReadOnlyArray<string>,
-  currentDatasource: string,
+type Props = {
+  ...ChildProps,
+  configuration: Configuration,
+  onConfigurationUpdated?: (updatedValue: Configuration) => void,
 };
 
-export default class DatasourceControl extends React.PureComponent<
-  ChildProps,
-  State,
-> {
-  static defaultProps = {
-    onConfigurationUpdated: noop,
-  };
+export default function DatasourceControl({
+  configuration,
+  onConfigurationUpdated = noop,
+}: Props): React.Node {
+  const [flagOptions, setFlagOptions] = React.useState<$ReadOnlyArray<string>>(
+    [],
+  );
+  const [currentDatasource, setCurrentDatasource] = React.useState<string>('');
 
-  state = {
-    flagOptions: [],
-    currentDatasource: '',
-  };
-
-  componentDidMount() {
-    this.loadFlags();
-  }
-
-  /**
-   * Set dropdown flags to datasources.
-   */
-  loadFlags() {
-    ConfigurationService.getDatasourceDict().then(datasources => {
-      this.setState({
-        flagOptions: [...datasources.datasourceList, 'LATEST_DATASOURCE'],
-        currentDatasource: datasources.currentDatasource,
-      });
-    });
-  }
-
-  @autobind
-  onDatasourceSelection(selectedValue: string) {
-    const { configuration, onConfigurationUpdated } = this.props;
-    const updatedConfiguration: Configuration = configuration.value(
-      selectedValue,
-    );
-    onConfigurationUpdated(updatedConfiguration);
-  }
-
-  renderFlagOptions(): Array<React.Element<Class<Dropdown.Option<string>>>> {
-    const { flagOptions } = this.state;
-
-    return flagOptions.map(option => (
-      <Dropdown.Option key={option} value={option}>
-        {option}
-      </Dropdown.Option>
-    ));
-  }
-
-  renderDropdown() {
-    const { configuration } = this.props;
-    const value = configuration.value();
-    const dropdownText: string = t(
-      'admin_app.configuration.flagConfiguration.currentValueLabel',
-      {
-        key: KEY_TEXT[configuration.key()],
+  React.useEffect(() => {
+    const promise = ConfigurationService.getDatasourceDict().then(
+      datasources => {
+        setFlagOptions([...datasources.datasourceList, 'LATEST_DATASOURCE']);
+        setCurrentDatasource(datasources.currentDatasource);
       },
     );
+    return () => cancelPromise(promise);
+  }, [setCurrentDatasource, setFlagOptions]);
 
-    const dropdownClassName = `configuration-flag-dropdown configuration-flag-text-${configuration.key()}`;
-    const textClassName = `configuration-flag-text configuration-flag-dropdown-${configuration.key()}`;
+  const onDatasourceSelection = React.useCallback(
+    (selectedValue: string) => {
+      const updatedConfiguration: Configuration = configuration.value(
+        selectedValue,
+      );
+      onConfigurationUpdated(updatedConfiguration);
+    },
+    [configuration, onConfigurationUpdated],
+  );
 
-    return (
-      <div className="configuration-tab_column">
-        <div className={textClassName}>{dropdownText}</div>
-        <Dropdown
-          className={dropdownClassName}
-          defaultDisplayContent={this.state.currentDatasource}
-          value={value}
-          onSelectionChange={this.onDatasourceSelection}
-        >
-          {this.renderFlagOptions()}
-        </Dropdown>
-      </div>
-    );
-  }
+  const flagDropdownOptions = flagOptions.map(option => (
+    <Dropdown.Option key={option} value={option}>
+      {option}
+    </Dropdown.Option>
+  ));
 
-  render() {
-    return (
-      <div className="configuration-tab__column">{this.renderDropdown()}</div>
-    );
-  }
+  const value = configuration.value();
+  const dropdownText: string = t(
+    'admin_app.configuration.flagConfiguration.currentValueLabel',
+    {
+      key: KEY_TEXT[configuration.key()],
+    },
+  );
+
+  return (
+    <Group.Vertical spacing="s">
+      {dropdownText}
+      <Dropdown
+        defaultDisplayContent={currentDatasource}
+        value={value}
+        onSelectionChange={onDatasourceSelection}
+      >
+        {flagDropdownOptions}
+      </Dropdown>
+    </Group.Vertical>
+  );
 }

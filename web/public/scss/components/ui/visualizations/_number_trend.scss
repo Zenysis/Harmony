@@ -1,0 +1,29 @@
+.primary-number-label {
+  color: $slate;
+  text-align: center;
+}
+
+.primary-number-value {
+  color: $black;
+  font-weight: bold;
+  line-height: 44px;
+
+  &__pill {
+    border-radius: 5px;
+    color: $white;
+    font-weight: bold;
+    padding: $space-xs-px $space-m-px;
+    text-align: center;
+  }
+}
+
+.number-trend-settings-control-element {
+  width: 200px;
+}
+
+// Overriding any default vx CSS
+.trend-tooltip {
+  padding: $space-m-px !important;
+  position: relative !important;
+  width: fit-content;
+}

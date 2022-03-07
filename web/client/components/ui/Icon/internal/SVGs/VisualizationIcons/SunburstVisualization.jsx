@@ -3,7 +3,9 @@ import * as React from 'react';
 
 import type { SVGProps } from 'components/ui/Icon/internal/SVGs/types';
 
-export default function SunburstVisualization(props: SVGProps) {
+export default function SunburstVisualization(
+  props: SVGProps,
+): React.Element<'svg'> {
   return (
     <svg
       width="64px"

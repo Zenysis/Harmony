@@ -1,26 +1,50 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import ProgressBar from 'components/ui/ProgressBar';
+// @flow
+import * as React from 'react';
+
 import AlertMessage, { ALERT_TYPE } from 'components/common/AlertMessage';
+import ElementResizeService from 'services/ui/ElementResizeService';
+import ProgressBar from 'components/ui/ProgressBar';
+import autobind from 'decorators/autobind';
+import type { ResizeRegistration } from 'services/ui/ElementResizeService';
 
-const propTypes = {
-  children: PropTypes.node.isRequired,
-
-  className: PropTypes.string,
-  footer: PropTypes.node,
-  loading: PropTypes.bool,
-  warning: PropTypes.string,
+type DefaultProps = {
+  className: string,
+  footer: React.Node,
+  loading: boolean,
+  warning: string,
 };
 
-const defaultProps = {
-  className: '',
-  footer: null,
-  loading: false,
-  warning: '',
+type Props = {
+  ...DefaultProps,
+  children: React.Node | ((height: number, width: number) => React.Node),
 };
 
-export default class Visualization extends React.PureComponent {
-  maybeRenderWarning() {
+type State = {
+  height: number,
+  width: number,
+};
+
+export default class Visualization extends React.Component<Props, State> {
+  static defaultProps: DefaultProps = {
+    className: '',
+    footer: null,
+    loading: false,
+    warning: '',
+  };
+
+  resizeRegistration: ResizeRegistration<HTMLDivElement> = ElementResizeService.register<HTMLDivElement>(
+    this.onResize,
+  );
+
+  state: State = { height: 10, width: 10 };
+
+  @autobind
+  onResize({ contentRect }: ResizeObserverEntry) {
+    const { height, width } = contentRect;
+    this.setState({ height, width });
+  }
+
+  maybeRenderWarning(): React.Node {
     if (!this.props.warning) {
       return null;
     }
@@ -32,7 +56,7 @@ export default class Visualization extends React.PureComponent {
     );
   }
 
-  renderFooter() {
+  renderFooter(): React.Node {
     const { footer, loading } = this.props;
 
     // Choosing visibility hidden instead of returning null so that
@@ -47,21 +71,28 @@ export default class Visualization extends React.PureComponent {
     );
   }
 
-  renderVisualization() {
+  renderVisualization(): React.Node {
     const { children, loading } = this.props;
+    const { height, width } = this.state;
 
     // Choosing visibility hidden vs display none to allow third party
     // libraries that interact with the block to perform setup as if the
     // block is rendered.
     const style = loading ? { visibility: 'hidden' } : undefined;
+    const vizContent =
+      typeof children === 'function' ? children(height, width) : children;
     return (
-      <div className="visualization" style={style}>
-        {children}
+      <div
+        className="visualization"
+        ref={this.resizeRegistration.setRef}
+        style={style}
+      >
+        {vizContent}
       </div>
     );
   }
 
-  render() {
+  render(): React.Node {
     const { className, loading } = this.props;
     return (
       <div className={`visualization-block ${className}`}>
@@ -72,6 +103,3 @@ export default class Visualization extends React.PureComponent {
     );
   }
 }
-
-Visualization.propTypes = propTypes;
-Visualization.defaultProps = defaultProps;

@@ -1,109 +1,19 @@
 $navbar-drop-down-border-radius: 10px;
 
+// This should correspond to MOBILE_VIEW_WIDTH in components/Navbar/util.jsx
+$max-mobile-width: 678px;
+
 .navbar {
   background-image: $blue-primary-gradient;
-  color: #eee;
-  font-size: 2rem;
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
+  color: $white;
+  font-size: $font-l;
+  height: $navbar-height;
   left: 0;
-  line-height: $navbar-height;
   position: absolute;
   right: 0;
   top: 0;
   z-index: 5000;
-  height: $navbar-height;
-  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
-
-  &__changelog-container {
-    display: inline-block;
-    vertical-align: middle;
-    height: 36px;
-  }
-
-  &__title-container {
-    cursor: pointer;
-    float: left;
-    border-right: 1px solid rgba(255, 255, 255, 0.5);
-    padding-right: 20px;
-
-    &:hover {
-      background-color: $blue-primary-hover;
-    }
-
-    img {
-      width: 4em;
-      height: auto;
-      margin-left: 1em;
-      margin-bottom: 0.2em;
-    }
-  }
-
-  &__logo {
-    width: 40px;
-    padding-left: 20px;
-    padding-right: 20px;
-
-    .flag {
-      // slightly scale flag horizontally to prevent it from appearing vertically
-      // stretched
-      transform: scaleX(1.05) translateY(-3px);
-      vertical-align: middle;
-    }
-  }
-
-  &__title {
-    margin-top: 1px;
-    display: inline-block;
-  }
-
-  &__links {
-    &--left {
-      float: left;
-    }
-
-    &--right {
-      float: right;
-    }
-  }
-
-  &__item {
-    cursor: pointer;
-    display: inline-block;
-    height: $navbar-item-height;
-
-    > * {
-      height: $navbar-item-height;
-    }
-
-    &--link {
-      padding-left: 15px;
-      padding-right: 15px;
-      position: relative;
-
-      // On screen sizes between the given range, some links move out of the
-      // Navbar, reducing the padding to prevent links from going out of the navbar
-      @media screen and (min-width: 678px) and (max-width: 767px) {
-        padding-left: 9px;
-        padding-right: 9px;
-      }
-    }
-
-    &--active {
-      background: $blue-primary-active;
-    }
-
-    a {
-      color: inherit;
-    }
-
-    button {
-      background-color: inherit;
-      border: none;
-    }
-  }
-
-  &__item:hover {
-    background-color: $blue-primary-hover;
-  }
 
   .zen-dropdown__option-list {
     /*
@@ -119,106 +29,118 @@ $navbar-drop-down-border-radius: 10px;
     max-height: 500px;
     overflow: auto;
   }
+}
 
-  .more-dropdown-link {
-    .zen-dropdown {
-      &__menu {
-        left: 0;
-        transform: translateX(unquote("calc(-50% + 45px)"));
-        right: auto !important;
+.navbar-title-container {
+  background: none;
+  border-bottom: none;
+  border-left: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  border-top: none;
+  float: left;
+  height: $navbar-height;
+  padding: $space-s-px $space-l-px $space-s-px $space-l-px;
 
-        &:before {
-          left: unquote("calc(50% - 4px)");
-        }
-      }
-    }
+  &:hover {
+    background-color: $blue-primary-hover;
+  }
 
-    .zen-dropdown-item-wrapper {
-      font-size: 1.8rem !important;
-    }
+  &__logo {
+    padding-right: $space-s-px;
+    width: 40px;
 
-    .zen-caret__icon {
-      margin-top: 36%;
-      font-size: 12px;
-      font-weight: bold;
-      margin-left: 2px;
+    .flag {
+      height: 27px;
+      // to correctly show only the flag
+      // HACK(nina): Need to vertically align flag
+      margin-top: -5px;
+      // slightly scale flag horizontally to prevent it from appearing
+      // vertically stretched
+      transform: scaleX(1.05);
+      vertical-align: middle;
+      width: 39px; // This would be 36px, but we need to increase the size
     }
   }
 
-  .zen-dropdown__menu {
-    &--open {
-      max-height: 90vh;
-      top: $navbar-height - 10px;
-      overflow: visible;
-      border-radius: $navbar-drop-down-border-radius;
-      border: none;
-      box-shadow: 3px 5px 15px 0 rgba(0, 0, 0, 0.2);
-    }
-
-    $border-width: 8px;
-    $border-bottom-width: 12px;
-
-    &:before {
-      position: absolute;
-      content: '';
-      width: 0;
-      height: 0;
-      border: $border-width solid transparent;
-      border-bottom-width: $border-bottom-width;
-      border-bottom-color: $white;
-      top: -($border-bottom-width + $border-width - 2px);
-      right: 16px;
-    }
-  }
-
-  .navbar__item--link-offset {
-    top: -1px;
+  img {
+    height: 27px;
+    // HACK(nina): Need to vertically align flag
+    margin-top: -5px;
+    // slightly scale flag horizontally to prevent it from appearing
+    // vertically stretched
+    transform: scaleX(1.05);
   }
 }
 
-.navbar__mobile {
-  &.navbar {
+.navbar-items {
+  display: flex;
+  height: $navbar-height;
+
+  &__left {
+    flex: 1;
+  }
+
+  &__right {
+    float: right;
+  }
+}
+
+.navbar-item {
+  background-color: inherit;
+  border: none;
+  color: inherit;
+  display: inline-block;
+  height: $navbar-item-height;
+  margin: 0px;
+  padding: $space-s-px $space-l-px;
+  position: relative;
+  vertical-align: middle;
+
+  &--active {
+    background: $blue-primary-active;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  // Overriding dropdown CSS
+  .zen-dropdown-button {
+    height: $navbar-height;
+  }
+
+  // Overriding icon CSS
+  .zen-icon {
+    margin-left: $space-xxs-px;
+  }
+
+  // Overriding caret dropdown CSS
+  .zen-caret {
+    display: inline-block;
+    // HACK(nina): Caret needs to vertically center with text
+    position: relative;
+    top: -2px;
+  }
+
+  // Overriding dropdown CSS
+  .zen-dropdown-button__button-content {
+    overflow: inherit;
+  }
+}
+
+.navbar-item:hover {
+  background-color: $blue-primary-hover;
+  border: none;
+  border-radius: 0px;
+}
+
+.navbar-mobile {
+  // Overriding normal class for mobile
+  .navbar {
     // On Screen sizes below 321px, Elements pop out of the Navbar we therefore
     // reduce font size to prevent navbar items from going out of the NavBar
     @media screen and (max-width: 321px) {
       font-size: 1.5rem;
-    }
-  }
-
-  .navbar {
-    &__item--link {
-      padding-left: 5px;
-      padding-right: 5px;
-    }
-
-    &__logo {
-      padding-left: 10px;
-      padding-right: 10px;
-    }
-
-    &__title-container {
-      padding-right: 10px;
-    }
-
-    &__links--right {
-      .navbar__item--link {
-        font-size: 2.5rem;
-
-        .glyphicon {
-          height: unset;
-          top: 2px;
-          margin-right: 0;
-        }
-
-        &:hover {
-          background: $blue-primary-hover;
-        }
-      }
-
-      button {
-        background: inherit;
-        border: none;
-      }
     }
 
     &__menu-container {
@@ -232,24 +154,18 @@ $navbar-drop-down-border-radius: 10px;
       top: $navbar-height + 2px;
       width: 80vw;
 
-      .navbar__item {
-        &--link {
-          color: #333;
-          width: 100%;
+      .navbar-item {
+        background-color: unset;
+        color: #333;
+        text-align: left;
+        width: 100%;
 
-          &:hover {
-            background: $gray-light;
-          }
+        &:hover {
+          background: $gray-light;
+        }
 
-          .zen-caret {
-            font-size: 1.5rem;
-          }
-
-          button {
-            background-color: unset;
-            text-align: left;
-            width: 100%;
-          }
+        .zen-caret {
+          font-size: 1.5rem;
         }
 
         &--active {
@@ -263,7 +179,7 @@ $navbar-drop-down-border-radius: 10px;
         }
 
         .collapsible-link-children {
-          .navbar__item--link {
+          .navbar-item--link {
             padding-left: 50px;
           }
         }
@@ -290,13 +206,54 @@ $navbar-drop-down-border-radius: 10px;
   }
 }
 
-.navbar-dropdown {
+.navbar-dropdown-button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: inherit;
+  height: $navbar-height;
+  padding: $space-s-px $space-l-px $space-s-px $space-s-px;
+
+  &:focus {
+    box-shadow: none;
+    outline: none;
+  }
+
+  &:hover {
+    background-color: $blue-primary-hover;
+    border: inherit;
+    border-radius: inherit;
+  }
+
   &__main-icon {
     position: relative;
-
     i {
       top: 5px;
     }
+  }
+}
+
+.navbar-dropdown-menu {
+  $border-width: 8px;
+  $border-bottom-width: 12px;
+  border: none;
+  border-radius: $navbar-drop-down-border-radius;
+  box-shadow: 3px 5px 15px 0 rgba(0, 0, 0, 0.2);
+
+  line-height: 40px;
+  margin-top: -4px;
+  max-height: 90vh;
+
+  &:before {
+    border: $border-width solid transparent;
+    border-bottom-color: $white;
+    border-bottom-width: $border-bottom-width;
+    content: '';
+    height: 0;
+    position: absolute;
+    right: 16px;
+    top: -($border-bottom-width + $border-width + 2);
+    width: 0;
   }
 
   &__icon {
@@ -315,61 +272,32 @@ $navbar-drop-down-border-radius: 10px;
     vertical-align: middle;
   }
 
-  // override default dropdown CSS
-  &.zen-dropdown {
-    .zen-dropdown {
-      &__menu {
-        line-height: 40px;
-        top: unquote("calc(100% - 3px)");
+  .zen-dropdown-item-wrapper {
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
-        .zen-dropdown-item-wrapper {
-          font-size: 15px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-
-          &:hover {
-            background: $gray-light;
-            color: $black;
-          }
-
-          &:last-of-type:hover {
-            border-bottom-left-radius: $navbar-drop-down-border-radius;
-            border-bottom-right-radius: $navbar-drop-down-border-radius;
-          }
-
-          &:first-of-type:not(.dashboards-dropdown__new-dashboard-option-wrapper):hover {
-            border-top-left-radius: $navbar-drop-down-border-radius;
-            border-top-right-radius: $navbar-drop-down-border-radius;
-          }
-        }
-      }
+    &:hover {
+      background: $gray-light;
+      color: $black;
     }
 
-    .zen-dropdown-button__main-btn {
-      background: none;
-      border: none;
-      color: inherit;
-      font-size: inherit;
-      height: 100%;
-      margin-top: -5px;
-      padding: 0 12px;
-
-      &:focus {
-        box-shadow: none;
-        outline: none;
-      }
+    &:last-of-type:hover {
+      border-bottom-left-radius: $navbar-drop-down-border-radius;
+      border-bottom-right-radius: $navbar-drop-down-border-radius;
     }
 
-    .zen-dropdown-button__button-content {
-      position: relative;
-      top: 1px;
+    &:first-of-type {
+      &:hover {
+        border-top-left-radius: $navbar-drop-down-border-radius;
+        border-top-right-radius: $navbar-drop-down-border-radius;
+      }
     }
   }
 
-  &.dashboards-dropdown {
-    .zen-dropdown__button-content {
-      top: 2px;
-    }
+  &__beta {
+    color: red;
+    margin-left: $space-xxxs-px;
   }
 }
 
@@ -377,6 +305,7 @@ $navbar-drop-down-border-radius: 10px;
   background: $gray-light;
   border-top-left-radius: $navbar-drop-down-border-radius;
   border-top-right-radius: $navbar-drop-down-border-radius;
+  cursor: default;
 
   &__item {
     font-size: $font-m;
@@ -393,14 +322,93 @@ $navbar-drop-down-border-radius: 10px;
     }
   }
 
+  &__title,
+  &__title:hover {
+    color: $slate;
+  }
+
   &__title-name {
     font-style: italic;
   }
 }
 
-.navbar-dashboards-dropdown {
-  .zen-caret {
-    margin-right: 0.6em;
-    font-size: 12px;
+.navbar-more-links {
+  &__button {
+    background: inherit;
+    border: none;
+    color: inherit;
+
+    .zen-caret__icon {
+      font-size: 12px;
+      font-weight: bold;
+    }
+  }
+
+  &__menu {
+    .zen-dropdown-item-wrapper {
+      font-size: $font-l !important;
+    }
+  }
+}
+
+.dashboards-dropdown-button {
+  display: inline-block;
+}
+
+.help-button {
+  vertical-align: baseline;
+}
+
+// NOTE(nina): This is a common style for popover 'dropdowns'. We could
+// consolidate it into the popover css if we haven't already
+.help-button-menu {
+  line-height: 3;
+  &__item {
+    background: none;
+    border: none;
+    display: block;
+    padding: 0px $space-s-px 0px $space-s-px;
+    text-align: left;
+    width: 100%;
+
+    &:hover {
+      background-color: $white-hover;
+      border-radius: 5px;
+    }
+
+    &:hover:first-child {
+      border-bottom-left-radius: 0px;
+      border-bottom-right-radius: 0px;
+    }
+
+    &:hover:last-child {
+      border-top-left-radius: 0px;
+      border-top-right-radius: 0px;
+    }
+
+    &:hover:only-child {
+      border-radius: 5px;
+    }
+  }
+}
+
+// HACK(nina): $GatesMalariaDemoHack - style changes to the nav bar
+.navbar-gates-malaria {
+  background-color: #0262ff;
+  background-image: none;
+
+  .navbar-item:hover,
+  .navbar-title-container:hover,
+  .navbar-dropdown-button:hover {
+    background-color: #6287ed;
+  }
+
+  .navbar-item--active {
+    background-color: #2649c4;
+  }
+
+  .navbar-title-container img {
+    margin-top: -8px;
+    transform: none;
   }
 }

@@ -1,31 +1,34 @@
 // @flow
 import * as React from 'react';
-import BlockPicker from 'react-color/lib/Block';
 import classNames from 'classnames';
-import type { Color, ColorResult, HSLColor } from 'react-color';
 
+import ColorPicker from 'components/ui/ColorBlock/internal/ColorPicker';
+import Popover from 'components/ui/Popover';
 import autobind from 'decorators/autobind';
-import { PALETTE_COLOR_ORDER } from 'components/QueryResult/graphUtil';
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
+import {
+  DEFAULT_PALETTE,
+  NO_COLOR_BACKGROUND,
+} from 'components/ui/ColorBlock/constants';
 
-// Export the react-color types so that the users of ColorBlock get all their
-// types from here.
-export type { Color, ColorResult };
+export type HexColor = string;
+export type RGBColor = { r: number, g: number, b: number, a?: number };
 
-type Props = {|
-  /** Hex color string  or rgba object */
-  color: Color,
+export type Color = HexColor | RGBColor;
+export type ColorResult = {
+  hex: HexColor,
+  rgb: RGBColor,
+};
+
+type DefaultProps = {
+  /**
+   * The accessibility name for this color block. If none is specified, we
+   * will default to 'color block'.
+   */
+  ariaName?: string,
 
   /** Does this ColorBlock support a color picker? */
   enableColorPicker: boolean,
-
-  /**
-   * If this ColorBlock is a controlled element, this controls whether or not
-   * to show it.
-   * If `undefined`, then the ColorBlock is uncontrolled.
-   * TODO(pablo): this is not a good design. Rethink ColorBlock usage.
-   * TODO(pablo): change to a ColorBlock and ColorBlock.Uncontrolled design
-   */
-  showColorPicker: boolean | void,
 
   /**
    * Callback when a color is selected from the colorpicker.
@@ -34,66 +37,52 @@ type Props = {|
   onColorChange?: (colorResult: ColorResult) => void,
 
   /**
-   * size in pixels of the color block
+   * Callback when a color is removed. If no callback is provided, then the
+   * color is not removable.
    */
+  onColorRemove?: (() => void) | void,
+
+  /** The color options to display */
+  palette: $ReadOnlyArray<string>,
+
+  /** Shape of the color block */
+  shape: 'circle' | 'square',
+
+  /** Size in pixels of the color block */
   size: number,
-|};
+  testId?: string,
+};
+
+type Props = {
+  ...DefaultProps,
+
+  /** Hex color string or RGB(a) color object */
+  color: HexColor | RGBColor | null,
+};
 
 type State = {
   showColorPicker: boolean,
 };
 
-// Customize the react-color picker to fit our custom colors.
-// The default color square width in react-color is 32px
-const NUM_SWATCH_COLUMNS = 9;
-const SWATCH_WIDTH = 32;
-const PICKER_BODY_WIDTH = SWATCH_WIDTH * NUM_SWATCH_COLUMNS;
-const PICKER_MARGIN_WIDTH = 10;
-const PICKER_WIDTH = `${PICKER_BODY_WIDTH + PICKER_MARGIN_WIDTH}px`;
+const _hex = (value: number) =>
+  Math.round(value)
+    .toString(16)
+    .padStart(2, '0');
+function buildHexColor(color: RGBColor): string {
+  const alpha = color.a !== undefined ? _hex(color.a * 255) : '';
+  return `#${_hex(color.r)}${_hex(color.g)}${_hex(color.b)}${alpha}`;
+}
 
-// From: https://stackoverflow.com/a/31851617
-function _hsvToHSL(h: number, s: number, v: number): HSLColor {
-  const output = {
-    h,
-    s: 0,
-    l: ((2 - s) * v) / 2,
+function buildRGBColor(color: HexColor): RGBColor {
+  return {
+    r: Number.parseInt(color.substr(1, 2), 16),
+    g: Number.parseInt(color.substr(3, 2), 16),
+    b: Number.parseInt(color.substr(5, 2), 16),
+    a: color.length === 9 ? Number.parseInt(color.substr(7, 2), 16) : undefined,
   };
-  if (output.l !== 0) {
-    if (output.l < 0.5) {
-      output.s = (s * v) / (output.l * 2);
-    } else if (output.l !== 1) {
-      output.s = (s * v) / (2 - output.l * 2);
-    }
-  }
-  return output;
 }
 
-// Convert the union Color type into a valid CSS color string.
-// NOTE(stephen): Refining these types is a little cumbersome since it is a
-// union of mostly disjoint objects. Checking for the exact properties works,
-// however adding a type check (like (color: RGBColor)) does not work.
-function buildCSSColor(color: Color): string {
-  if (typeof color === 'string') {
-    return color;
-  }
-
-  const alpha = color.a === undefined ? 1 : color.a;
-  if (color.r !== undefined && color.g !== undefined && color.b !== undefined) {
-    const { r, g, b } = color;
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-
-  // Conver hsv to hsl if that's what we received.
-  let hslColor: HSLColor;
-  if (color.v !== undefined && color.s !== undefined && color.h !== undefined) {
-    const { h, s, v } = color;
-    hslColor = _hsvToHSL(h, s, v);
-  } else {
-    hslColor = color;
-  }
-
-  return `hsla(${hslColor.h}, ${hslColor.s}, ${hslColor.l}, ${alpha})`;
-}
+const TEXT = t('ui.ColorBlock');
 
 /**
  * A ColorBlock component that literally just represents a block of a single
@@ -105,120 +94,138 @@ function buildCSSColor(color: Color): string {
  * implement an `onColorChange` function to pass in the new color as a prop.
  */
 export default class ColorBlock extends React.PureComponent<Props, State> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
+    ariaName: undefined,
     enableColorPicker: false,
     onColorChange: undefined,
+    onColorRemove: undefined,
+    palette: DEFAULT_PALETTE,
+    shape: 'square',
     size: 17,
-    showColorPicker: undefined,
+    testId: undefined,
   };
 
-  state = {
+  state: State = {
     showColorPicker: false,
   };
 
-  _colorPickerRef: $RefObject<'div'> = React.createRef();
+  _ref: $ElementRefObject<'div'> = React.createRef();
 
   componentDidUpdate(prevProps: Props) {
     if (prevProps.enableColorPicker !== this.props.enableColorPicker) {
       // if we're showing the color picker, but the enableColorPicker prop
       // changed to false, then we should hide it
       if (!this.props.enableColorPicker && this.state.showColorPicker) {
-        this.hideColorPicker();
+        this.onCloseColorBlock();
       }
     }
   }
 
-  componentWillUnmount() {
-    document.removeEventListener('click', this.onDocumentClick);
-  }
-
-  hideColorPicker() {
-    this.setState({ showColorPicker: false });
-    document.removeEventListener('click', this.onDocumentClick);
-  }
-
   @autobind
-  onColorChange(colorResult: ColorResult) {
+  onColorChange(hexColor: HexColor, closeColorBlock: boolean = false) {
     const { onColorChange } = this.props;
-    this.hideColorPicker();
     if (onColorChange) {
-      onColorChange(colorResult);
+      onColorChange({ hex: hexColor, rgb: buildRGBColor(hexColor) });
+    }
+
+    if (closeColorBlock) {
+      this.onCloseColorBlock();
     }
   }
 
   @autobind
-  onColorBlockClick() {
-    this.setState(
-      prevState => ({ showColorPicker: !prevState.showColorPicker }),
-      () => {
-        if (this.state.showColorPicker) {
-          document.addEventListener('click', this.onDocumentClick);
-        }
-      },
-    );
+  onColorRemove() {
+    const { onColorRemove } = this.props;
+    if (onColorRemove) {
+      onColorRemove();
+    }
+
+    this.onCloseColorBlock();
   }
 
   @autobind
-  onDocumentClick(event: Event) {
-    const colorPicker = this._colorPickerRef.current;
-    if (
-      event.target instanceof window.HTMLElement &&
-      colorPicker &&
-      (colorPicker === event.target || colorPicker.contains(event.target))
-    ) {
-      // don't hide if we clicked on the color picker
+  onCloseColorBlock() {
+    this.setState({ showColorPicker: false });
+  }
+
+  @autobind
+  onOpenColorBlock(event: SyntheticMouseEvent<HTMLDivElement>) {
+    const { current } = this._ref;
+    const { target } = event;
+    if (!current || !(target instanceof Node) || !current.contains(target)) {
       return;
     }
-
-    this.hideColorPicker();
+    this.setState({ showColorPicker: true });
   }
 
-  maybeRenderColorPicker() {
-    // TODO(pablo): x_x this component is a weird mix of controlled and
-    // uncontrolled. refactor this
-    if (
-      this.props.showColorPicker !== true &&
-      (!this.state.showColorPicker ||
-        !this.props.enableColorPicker ||
-        this.props.showColorPicker === false)
-    ) {
+  maybeRenderColorPicker(hexColor: HexColor | null): React.Node {
+    const { enableColorPicker, onColorRemove, palette } = this.props;
+    if (!enableColorPicker) {
       return null;
     }
 
     return (
-      <div className="zen-color-block__color-picker" ref={this._colorPickerRef}>
-        <BlockPicker
-          triangle="hide"
-          color={this.props.color}
-          colors={PALETTE_COLOR_ORDER}
-          width={PICKER_WIDTH}
-          onChangeComplete={this.onColorChange}
-        />
-      </div>
+      <Popover
+        anchorElt={this._ref.current}
+        containerType={Popover.Containers.EMPTY}
+        isOpen={this.state.showColorPicker}
+        onRequestClose={this.onCloseColorBlock}
+        keepInWindow
+      >
+        <div className="zen-color-block__color-picker">
+          <ColorPicker
+            color={hexColor}
+            onColorChange={this.onColorChange}
+            onColorRemove={
+              onColorRemove !== undefined ? this.onColorRemove : undefined
+            }
+            palette={palette}
+          />
+        </div>
+      </Popover>
     );
   }
 
-  render() {
-    const { color, size, enableColorPicker } = this.props;
+  render(): React.Element<'div'> {
+    const {
+      ariaName,
+      color,
+      enableColorPicker,
+      shape,
+      size,
+      testId,
+    } = this.props;
+    const hexColor =
+      typeof color === 'object' && color !== null
+        ? buildHexColor(color)
+        : color;
     const style = {
-      background: buildCSSColor(color),
+      background: hexColor !== null ? hexColor : NO_COLOR_BACKGROUND,
+      borderRadius: shape === 'circle' ? '50%' : 0,
       height: size,
       width: size,
     };
 
     const iconClassName = classNames('zen-color-block__icon', {
       'zen-color-block__clickable': enableColorPicker,
+      'zen-color-block__icon--no-color': color === null,
     });
 
     return (
-      <div className="zen-color-block">
+      <div
+        ref={this._ref}
+        aria-label={normalizeARIAName(ariaName || TEXT.colorBlock)}
+        className="zen-color-block"
+        onClick={this.onOpenColorBlock}
+        role="button"
+        data-testid={testId}
+      >
         <div
-          style={style}
+          data-testid="zen-inner-color-block"
           className={iconClassName}
-          onClick={this.onColorBlockClick}
-          role="button"
+          style={style}
         />
-        {this.maybeRenderColorPicker()}
+        {this.maybeRenderColorPicker(hexColor)}
       </div>
     );
   }

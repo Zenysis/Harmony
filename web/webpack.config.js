@@ -2,8 +2,19 @@ const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 
-// Cool webpack dashboard
-const WebpackDashboardPlugin = require('webpack-dashboard/plugin');
+const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');
+const FriendlyErrorsOutputPrinter = require('friendly-errors-webpack-plugin/src/output');
+
+// HACK(stephen): Update the FriendlyErrors output printer to clear the terminal
+// each time a compilation happens instead of building up a long scrollback.
+// This is similar to how our flow and mypy watchers work.
+FriendlyErrorsOutputPrinter.clearConsole = function() {
+  if (!this.capturing && this.enabled && process.stdout.isTTY) {
+    // Clear any lines that can be scrolled to.
+    console.log('\x1B[3J');
+    console.clear();
+  }
+};
 
 // Convert a relative path (starting from the repo root) to an absolute path.
 function absPath(repoRootRelativePath) {
@@ -11,18 +22,34 @@ function absPath(repoRootRelativePath) {
 }
 
 module.exports = {
-  devtool: 'sourcemap',
+  devtool: 'source-map',
   devServer: {
-    inline: false, // Disable Live Reload
-    quiet: true,
     allowedHosts: ['host.docker.internal'],
+
+    // Disable Live Reload
+    hot: false,
+    injectClient: false,
+    injectHot: false,
+    inline: false,
+    liveReload: false,
+
+    // Needed for friendly errors plugin.
+    quiet: true,
+    publicPath: '/build/',
   },
   entry: {
     admin: absPath('web/client/entryPoints/adminEntry.js'),
-    gridDashboard: absPath('web/client/entryPoints/gridDashboardEntry.js'),
+    alerts: absPath('web/client/entryPoints/alertsAppEntry.js'),
+    advancedQuery: absPath('web/client/entryPoints/advancedQueryEntry.js'),
+    dashboardBuilder: absPath(
+      'web/client/entryPoints/DashboardBuilderEntry.js',
+    ),
+    dataCatalog: absPath('web/client/entryPoints/dataCatalogEntry.js'),
+    dataDigest: absPath('web/client/entryPoints/dataDigestEntry.js'),
+    dataQuality: absPath('web/client/entryPoints/dataQualityEntry.js'),
+    embeddedQuery: absPath('web/client/entryPoints/embeddedQueryEntry.js'),
+    fieldSetup: absPath('web/client/entryPoints/fieldSetupEntry.js'),
     navbar: absPath('web/client/entryPoints/navbarEntry.js'),
-    query: absPath('web/client/entryPoints/queryEntry.js'),
-    upload: absPath('web/client/entryPoints/dataUploadEntry.js'),
     newUserButton: absPath('web/client/entryPoints/newUserButtonEntry.js'),
     unauthorizedPage: absPath(
       'web/client/entryPoints/unauthorizedPageEntry.js',
@@ -37,11 +64,9 @@ module.exports = {
   },
   output: {
     path: absPath('web/public/build'),
-    publicPath: '/build/',
     filename: '[name].bundle.js',
   },
   plugins: [
-    new webpack.HotModuleReplacementPlugin(),
     new MiniCssExtractPlugin({ filename: 'bundle.css' }),
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new webpack.ProvidePlugin({
@@ -51,10 +76,10 @@ module.exports = {
     new webpack.DefinePlugin({
       __DEV__: JSON.stringify(true),
     }),
-    new WebpackDashboardPlugin(),
+    new FriendlyErrorsWebpackPlugin(),
   ],
   optimization: {
-    noEmitOnErrors: true,
+    emitOnErrors: false,
     splitChunks: {
       cacheGroups: {
         commons: {
@@ -71,7 +96,7 @@ module.exports = {
         // TODO(stephen): Make sure we set up flask and webpack to make this
         // cacheable.
         vendor: {
-          chunks: 'all',
+          chunks: 'initial',
           name: 'vendor',
           test: absPath('node_modules'),
           enforce: true,
@@ -89,7 +114,6 @@ module.exports = {
           options: {
             presets: [
               '@babel/flow',
-              ['@babel/stage-2', { decoratorsLegacy: true }],
               [
                 '@babel/env',
                 {
@@ -115,6 +139,7 @@ module.exports = {
               ],
             ],
             plugins: [
+              'relay',
               ['@babel/plugin-proposal-decorators', { legacy: true }],
               ['@babel/plugin-proposal-class-properties', { loose: true }],
             ],

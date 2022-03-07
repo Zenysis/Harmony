@@ -1,5 +1,7 @@
 Basic dropdown:
 ```jsx
+import Dropdown from 'components/ui/Dropdown';
+
 <Dropdown.Uncontrolled
   initialValue={undefined}
   defaultDisplayContent="Make a selection"
@@ -16,6 +18,8 @@ Basic dropdown:
 Dropdown with searchable items. For demonstration purposes, the fourth item in this dropdown is configured so that it is both unselectable and unaffected by the search text.
 You can also pass a `renderButtonLabel` prop to render the button contents in a more customized way:
 ```jsx
+import Dropdown from 'components/ui/Dropdown';
+
 function renderButtonLabel(value) {
   return `Selected: ${value}`;
 }
@@ -46,6 +50,8 @@ const optionItems = options.map(optString => (
 
 Dropdowns can nest their options into groups, and you can still have everything be searchable:
 ```jsx
+import Dropdown from 'components/ui/Dropdown';
+
 const myDashboards = ['Amazing Dashboard', 'Something Important'];
 const otherDashboards = ["Quentin's Dashboard", "Nina's Analysis", 'Wow another option'];
 const myDashboardOptions = myDashboards.map(dash =>
@@ -92,6 +98,8 @@ const otherDashboardOptions = otherDashboards.map(dash =>
 
 Dropdowns with left and right menu alignments:
 ```jsx
+import Dropdown from 'components/ui/Dropdown';
+
 <React.Fragment>
   <Dropdown
     initialValue={undefined}
@@ -124,6 +132,7 @@ Dropdowns with left and right menu alignments:
 You can control the dropdown button width using `buttonWidth` and `buttonMinWidth`.
 Notice how in the first dropdown, if you make a selection that extends past the `buttonWidth` then we will add an elipsis to cut off the text:
 ```jsx
+import Dropdown from 'components/ui/Dropdown';
 import LabelWrapper from 'components/ui/LabelWrapper';
 
 <React.Fragment>
@@ -172,6 +181,7 @@ import LabelWrapper from 'components/ui/LabelWrapper';
 
 Use `menuWidth` or `menuMinWidth` to control the width of the menu. You can set an exact pixel width, or you can use a string if you wanted to set a percentage width. The percentage width will be calculated based off of the button. E.g. `width="50%"` will create a menu with 50% of the button width. `width="100%"` will make the menu's width be the same as the button's.
 ```jsx
+import Dropdown from 'components/ui/Dropdown';
 import LabelWrapper from 'components/ui/LabelWrapper';
 
 <React.Fragment>
@@ -220,6 +230,8 @@ import LabelWrapper from 'components/ui/LabelWrapper';
 
 Dropdown menus have a default `maxHeight` set through CSS to prevent excessively long menus when there are lots of options. This can be overridden by passing a `menuMaxHeight` prop:
 ```jsx
+import Dropdown from 'components/ui/Dropdown';
+
 const options = ["First", "Second", "Third", "Fourth", "oh", "my", "god", "so", "many", "options"];
 const optionItems = options.map(optString => (
   <Dropdown.Option
@@ -241,6 +253,8 @@ const optionItems = options.map(optString => (
 Dropdowns can have different intents if you wanted to give the button a different color:
 
 ```jsx
+import Dropdown from 'components/ui/Dropdown';
+
 const optionVals = ['First', 'Second'];
 const options = optionVals.map(opt =>
   <Dropdown.Option key={opt} value={opt}>{opt}</Dropdown.Option>

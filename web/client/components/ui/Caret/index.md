@@ -5,18 +5,14 @@ Disabled Caret (unclickable, despite having an `onClick` event):
 
 Clickable caret, and changes direction when clicked:
 ```jsx
-initialState = {
-  direction: Caret.Directions.DOWN,
-};
+const [direction, setDirection] = React.useState(Caret.Directions.DOWN);
 
 function toggleDirection() {
-  setState((prevState) => {
-    if (prevState.direction === Caret.Directions.UP) {
-      return { direction: Caret.Directions.DOWN };
-    }
-    return { direction: Caret.Directions.UP };
-  });
+  const newDirection = direction === Caret.Directions.UP
+    ? Caret.Directions.DOWN
+    : Caret.Directions.UP;
+  setDirection(newDirection);
 }
 
-<Caret direction={state.direction} onClick={toggleDirection} />
+<Caret direction={direction} onClick={toggleDirection} />
 ```

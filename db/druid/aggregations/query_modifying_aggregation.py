@@ -1,6 +1,4 @@
-from builtins import object
-from abc import ABCMeta, abstractmethod
-from future.utils import with_metaclass
+from abc import ABC, abstractmethod
 
 #### This query type is DANGEROUS. It modifies the structure of the query
 # right before it is sent to the server. There are very few cases where this
@@ -8,7 +6,7 @@ from future.utils import with_metaclass
 # query that will need this behavior, you MUST talk to @stephen before
 # implementing it. These aggregations can have broad side effects that are
 # very hard to debug. They should almost never be used.
-class QueryModifyingAggregation(with_metaclass(ABCMeta, object)):
+class QueryModifyingAggregation(ABC):
     @abstractmethod
     def modify_query(self, query):
         pass

@@ -1,16 +1,16 @@
 // @flow
 import * as Zen from 'lib/Zen';
 
-type Required = {
+type RequiredValues = {
   name: string,
 };
 
-type Optional = {
-  dogdad: string,
+type DefaultValues = {
+  +dogdad: string,
 };
 
-class Dog extends Zen.BaseModel<Dog, Required, Optional> {
-  static defaultValues = {
+class Dog extends Zen.BaseModel<Dog, RequiredValues, DefaultValues> {
+  static defaultValues: DefaultValues = {
     dogdad: 'Pablo',
   };
 
@@ -19,4 +19,4 @@ class Dog extends Zen.BaseModel<Dog, Required, Optional> {
   }
 }
 
-export default ((Dog: any): Class<Zen.Model<Dog>>);
+export default ((Dog: $Cast): Class<Zen.Model<Dog>>);

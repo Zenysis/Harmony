@@ -1,334 +1,157 @@
 // @flow
 import * as React from 'react';
 
-import ControlsGroup from 'components/visualizations/common/controls/ControlsGroup';
-import FontColorControl from 'components/visualizations/common/controls/FontColorControl';
+import ColorControl from 'components/visualizations/common/controls/ColorControl';
 import FontFamilyControl from 'components/visualizations/common/controls/FontFamilyControl';
 import FontSizeControl from 'components/visualizations/common/controls/FontSizeControl';
+import Group from 'components/ui/Group';
 import InputControl from 'components/visualizations/common/controls/InputControl';
-import LineStyleDropdownControl from 'components/visualizations/common/controls/LineStyleDropdownControl';
+import LabelWrapper from 'components/ui/LabelWrapper';
 import NumericDropdownControl from 'components/visualizations/common/controls/NumericDropdownControl';
 import SettingsBlock from 'components/common/visualizationSettings/SettingsPage/SettingsBlock';
 import SettingsPage from 'components/common/visualizationSettings/SettingsPage';
 import { AXIS_TYPES } from 'components/visualizations/common/SettingsModal/AxesSettingsTab/constants';
 import { convertToNumberOrUndefined } from 'util/stringUtil';
 import type AxesSettings from 'models/core/QueryResultSpec/VisualizationSettings/AxesSettings';
+import type XAxisSettings from 'models/core/QueryResultSpec/VisualizationSettings/XAxisSettings';
+import type YAxisSettings from 'models/core/QueryResultSpec/VisualizationSettings/YAxisSettings';
 import type {
   AxisType,
   XAxisType,
   YAxisType,
 } from 'components/visualizations/common/SettingsModal/AxesSettingsTab/constants';
 
-export type AxesSettingsEvents = {
+export type AxesSettingsOptions = {
+  hasAxisRangeSupport: boolean,
+};
+
+type Props = {
+  ...AxesSettingsOptions,
   onAxisSettingsChange: (
     axisType: AxisType,
     settingType: string,
     value: any,
   ) => void,
+  settings: AxesSettings,
+  y1AxisEnabled: boolean,
+  y2AxisEnabled: boolean,
 };
-
-export type AxesSettingsOptions = {
-  hasAxisRangeSupport: boolean,
-  hasGoalLine: boolean,
-};
-
-type Props = $Merge<
-  $Merge<AxesSettingsEvents, AxesSettingsOptions>,
-  {
-    settings: AxesSettings,
-    y1AxisEnabled: boolean,
-    y2AxisEnabled: boolean,
-  },
->;
 
 const TEXT = t('visualizations.common.SettingsModal.AxesSettingsTab');
 
-const GOAL_LINE_STYLE_OPTIONS = [
+const GOAL_LINE_STYLE_OPTIONS: Array<string> = [
   TEXT.goalLineStyleSolid,
   TEXT.goalLineStyleDashed,
 ];
 
-export default class AxesSettingsTab extends React.PureComponent<Props> {
-  static eventNames: Array<$Keys<AxesSettingsEvents>> = [
-    'onAxisSettingsChange',
-  ];
+type AxisFunctions = {
+  xAxis: (controlKey: string, val: string) => void,
+  y1Axis: (controlKey: string, val: string) => void,
+  y2Axis: (controlKey: string, val: string) => void,
+};
 
-  static defaultProps = {
+export default class AxesSettingsTab extends React.PureComponent<Props> {
+  static defaultProps: AxesSettingsOptions = {
     hasAxisRangeSupport: true,
-    hasGoalLine: false,
   };
 
   // NOTE(david): Build axis change callbacks bound to a specific axis so we
   // can re-use existing control components without redefining the
   // onValueChange callback each time.
-  onValueChange = {
+  onValueChange: AxisFunctions = {
     [AXIS_TYPES.X_AXIS]: this.buildOnValueChange(AXIS_TYPES.X_AXIS),
     [AXIS_TYPES.Y1_AXIS]: this.buildOnValueChange(AXIS_TYPES.Y1_AXIS),
     [AXIS_TYPES.Y2_AXIS]: this.buildOnValueChange(AXIS_TYPES.Y2_AXIS),
   };
 
-  onAxisRangeChange = {
+  onAxisRangeChange: AxisFunctions = {
     [AXIS_TYPES.X_AXIS]: this.buildOnAxisRangeChange(AXIS_TYPES.X_AXIS),
     [AXIS_TYPES.Y1_AXIS]: this.buildOnAxisRangeChange(AXIS_TYPES.Y1_AXIS),
     [AXIS_TYPES.Y2_AXIS]: this.buildOnAxisRangeChange(AXIS_TYPES.Y2_AXIS),
   };
 
-  buildOnValueChange(axisType: AxisType) {
+  buildOnValueChange(axisType: AxisType): (string, string) => void {
     return (controlKey: string, val: string) =>
       this.props.onAxisSettingsChange(axisType, controlKey, val);
   }
 
-  buildOnAxisRangeChange(axisType: AxisType) {
+  buildOnAxisRangeChange(axisType: AxisType): (string, string) => void {
     return (controlKey: string, val: string) => {
       const newVal = convertToNumberOrUndefined(val);
       this.props.onAxisSettingsChange(axisType, controlKey, newVal);
     };
   }
 
-  maybeRenderAxisGoalLineControlGroup(axisType: AxisType) {
-    if (this.props.hasGoalLine) {
-      const {
-        goalLine,
-        goalLineLabel,
-        goalLineFontSize,
-        goalLineColor,
-        goalLineThickness,
-        goalLineStyle,
-      } = this.props.settings.get(axisType).modelValues();
-      return (
-        <ControlsGroup>
-          <span zen-test-id={`goalLine-${axisType}`}>
-            <InputControl
-              colsControl={9}
-              colsLabel={3}
-              controlKey="goalLine"
-              initialValue={goalLine}
-              onValueChange={this.onValueChange[axisType]}
-              label={TEXT.goalLineValue}
-            />
-          </span>
-          <InputControl
-            colsControl={9}
-            colsLabel={3}
-            controlKey="goalLineLabel"
-            initialValue={goalLineLabel}
-            onValueChange={this.onValueChange[axisType]}
-            label={TEXT.goalLineLabel}
-          />
-          <FontSizeControl
-            colsControl={9}
-            colsLabel={3}
-            colsWrapper={12}
-            controlKey="goalLineFontSize"
-            value={goalLineFontSize}
-            onValueChange={this.onValueChange[axisType]}
-            label={TEXT.goalLineFontSize}
-            buttonMinWidth={100}
-            maxFontSize={28}
-            minFontSize={10}
-          />
-          <NumericDropdownControl
-            colsControl={9}
-            colsLabel={3}
-            colsWrapper={12}
-            controlKey="goalLineThickness"
-            value={goalLineThickness}
-            onValueChange={this.onValueChange[axisType]}
-            label={TEXT.goalLineThickness}
-            buttonMinWidth={100}
-          />
-          <LineStyleDropdownControl
-            axisType={axisType}
-            colsControl={9}
-            colsLabel={3}
-            colsWrapper={12}
-            controlKey="goalLineStyle"
-            value={goalLineStyle}
-            onValueChange={this.onValueChange[axisType]}
-            label={TEXT.goalLineStyle}
-            optionValues={GOAL_LINE_STYLE_OPTIONS}
-            buttonMinWidth={100}
-          />
-          <FontColorControl
-            axisType={axisType}
-            controlKey="goalLineColor"
-            value={goalLineColor}
-            onValueChange={this.onValueChange[axisType]}
-            label={TEXT.goalLineColor}
-            buttonMinWidth={115}
-          />
-        </ControlsGroup>
-      );
-    }
+  maybeRenderAxisFontColorControlGroup(axisType: AxisType): React.Node {
     return null;
   }
 
-  maybeRenderYAxisSubSection(yAxis: YAxisType) {
-    const isAxisEnabled = this.props[`${yAxis}Enabled`];
-    if (!isAxisEnabled) {
-      return null;
-    }
-
-    return (
-      <SettingsBlock className="y-axis-sub-section" title={TEXT[yAxis].title}>
-        {this.renderAxisTitleControlGroup(yAxis)}
-        {this.renderAxisFontSizeControlGroup(yAxis)}
-        {this.maybeRenderAxisFontColorControlGroup(yAxis)}
-        {this.maybeRenderAxisFontFamilyControlGroup(yAxis)}
-        {this.maybeRenderAxisRangeControlGroup(yAxis)}
-        {this.maybeRenderAxisGoalLineControlGroup(yAxis)}
-      </SettingsBlock>
-    );
+  maybeRenderAxisFontFamilyControlGroup(axisType: AxisType): React.Node {
+    return null;
   }
 
-  maybeRenderAxisFontColorControlGroup(axisType: AxisType) {
-    // $CycloneIdaiHack
-    // TODO(pablo, moriah): enable this for all deployments when we've gone
-    // through a full design process for these settings.
-    if (window.__JSON_FROM_BACKEND.deploymentName !== 'mz') {
-      return null;
-    }
-
-    const controlsMetadata = [
-      { controlKey: 'titleFontColor', className: 'title-font-color' },
-      { controlKey: 'labelsFontColor', className: 'labels-font-color' },
-    ];
-
-    const fontColorControls = controlsMetadata.map(
-      ({ controlKey, className }) => {
-        const value = this.props.settings.get(axisType)[controlKey]();
-        return (
-          <ControlsGroup key={controlKey}>
-            <FontColorControl
-              axisType={axisType}
-              controlKey={controlKey}
-              value={value}
-              onValueChange={this.onValueChange[axisType]}
-              label={TEXT[axisType].labels[controlKey]}
-              className={className}
-              buttonMinWidth={115}
-            />
-          </ControlsGroup>
-        );
-      },
-    );
-    return <React.Fragment>{fontColorControls}</React.Fragment>;
+  maybeRenderXAxisTitleDistanceControlGroup(axisType: XAxisType): React.Node {
+    return null;
   }
 
-  maybeRenderAxisFontFamilyControlGroup(axisType: AxisType) {
-    // $CycloneIdaiHack
-    // TODO(pablo, moriah): enable this for all deployments when we've gone
-    // through a full design process for these settings.
-    if (window.__JSON_FROM_BACKEND.deploymentName !== 'mz') {
-      return null;
-    }
-
-    const controlsMetadata = [
-      { controlKey: 'titleFontFamily', className: 'title-font-family' },
-      { controlKey: 'labelsFontFamily', className: 'labels-font-family' },
-    ];
-
-    const fontFamilyControls = controlsMetadata.map(
-      ({ controlKey, className }) => {
-        const value = this.props.settings.get(axisType)[controlKey]();
-        return (
-          <ControlsGroup key={controlKey}>
-            <FontFamilyControl
-              controlKey={controlKey}
-              value={value}
-              onValueChange={this.onValueChange[axisType]}
-              label={TEXT[axisType].labels[controlKey]}
-              className={className}
-              buttonMinWidth={115}
-            />
-          </ControlsGroup>
-        );
-      },
-    );
-    return <React.Fragment>{fontFamilyControls}</React.Fragment>;
-  }
-
-  maybeRenderXAxisTitleDistanceControlGroup(axisType: XAxisType) {
-    // $CycloneIdaiHack
-    // TODO(pablo, moriah): enable this for all deployments when we've gone
-    // through a full design process for these settings.
-    if (window.__JSON_FROM_BACKEND.deploymentName !== 'mz') {
-      return null;
-    }
-
-    const { settings } = this.props;
-    const value = settings.get(AXIS_TYPES.X_AXIS).additionalAxisTitleDistance();
-    const controlKey = 'additionalAxisTitleDistance';
-    return (
-      <ControlsGroup key={controlKey}>
-        <InputControl
-          key={controlKey}
-          controlKey={controlKey}
-          initialValue={value}
-          onValueChange={this.onValueChange[axisType]}
-          label={TEXT[axisType].labels[controlKey]}
-        />
-      </ControlsGroup>
-    );
-  }
-
-  maybeRenderAxisRangeControlGroup(axisType: YAxisType) {
+  maybeRenderAxisRangeControlGroup(axisType: YAxisType): React.Node {
     if (!this.props.hasAxisRangeSupport) {
       return null;
     }
 
-    const controlsMetadata = [
-      {
-        controlKey: 'rangeFrom',
-        className: 'range-from',
-        columns: { colsWrapper: 6, colsLabel: 6, colsControl: 6 },
-      },
-      {
-        controlKey: 'rangeTo',
-        className: 'range-to',
-        columns: { colsWrapper: 4, colsLabel: 1, colsControl: 9 },
-      },
-    ];
-    const rangeControls = controlsMetadata.map(
-      ({ controlKey, className, columns }) => {
-        const value = this.props.settings.get(axisType)[controlKey]();
-        return (
+    const axisSettings = this.props.settings.get(axisType);
+    const rangeFromValue = axisSettings.rangeFrom();
+    const rangeToValue = axisSettings.rangeTo();
+    const onValueChange = this.onAxisRangeChange[axisType];
+
+    return (
+      <LabelWrapper
+        labelClassName="settings-modal__control-label"
+        label={TEXT[axisType].labels.rangeFrom}
+      >
+        <Group alignItems="center" flex itemFlexValue="1" spacing="m">
           <InputControl
-            key={controlKey}
-            axisType={axisType}
-            controlKey={controlKey}
+            key="rangeFrom"
+            controlKey="rangeFrom"
             initialValue={
-              value === undefined || value === null ? '' : value.toString()
+              rangeFromValue === undefined || rangeFromValue === null
+                ? ''
+                : rangeFromValue.toString()
             }
-            onValueChange={this.onAxisRangeChange[axisType]}
-            label={TEXT[axisType].labels[controlKey]}
-            className={className}
-            {...columns}
+            onValueChange={onValueChange}
           />
-        );
-      },
+          <Group.Item className="settings-modal__control-label" flexValue="0">
+            {TEXT[axisType].labels.rangeTo}
+          </Group.Item>
+          <InputControl
+            key="rangeTo"
+            controlKey="rangeTo"
+            initialValue={
+              rangeToValue === undefined || rangeToValue === null
+                ? ''
+                : rangeToValue.toString()
+            }
+            onValueChange={onValueChange}
+          />
+        </Group>
+      </LabelWrapper>
     );
-    return <ControlsGroup>{rangeControls}</ControlsGroup>;
   }
 
-  renderAxisTitleControlGroup(axisType: AxisType) {
+  renderAxisTitleControlGroup(axisType: AxisType): React.Node {
     const initialValue = this.props.settings.get(axisType).get('title');
 
     return (
-      <ControlsGroup>
-        <InputControl
-          controlKey="title"
-          initialValue={initialValue}
-          onValueChange={this.onValueChange[axisType]}
-          label={TEXT[axisType].labels.title}
-          colsLabel={3}
-          colsControl={9}
-        />
-      </ControlsGroup>
+      <InputControl
+        controlKey="title"
+        initialValue={initialValue}
+        onValueChange={this.onValueChange[axisType]}
+        label={TEXT[axisType].labels.title}
+      />
     );
   }
 
-  renderAxisFontSizeControlGroup(axisType: AxisType) {
+  renderAxisFontSizeControlGroup(axisType: AxisType): React.Node {
     const controlsMetadata = [
       { controlKey: 'titleFontSize', className: 'title-font-size' },
       { controlKey: 'labelsFontSize', className: 'labels-font-size' },
@@ -338,47 +161,64 @@ export default class AxesSettingsTab extends React.PureComponent<Props> {
       ({ controlKey, className }) => {
         const value = this.props.settings.get(axisType)[controlKey]();
         return (
-          <ControlsGroup key={controlKey}>
-            <FontSizeControl
-              controlKey={controlKey}
-              value={value}
-              onValueChange={this.onValueChange[axisType]}
-              label={TEXT[axisType].labels[controlKey]}
-              className={className}
-              buttonMinWidth={115}
-              maxFontSize={28}
-              minFontSize={10}
-            />
-          </ControlsGroup>
+          <FontSizeControl
+            buttonMinWidth={115}
+            className={className}
+            controlKey={controlKey}
+            key={controlKey}
+            label={TEXT[axisType].labels[controlKey]}
+            maxFontSize={17}
+            minFontSize={12}
+            onValueChange={this.onValueChange[axisType]}
+            value={value}
+          />
         );
       },
     );
-    return <React.Fragment>{fontSizeControls}</React.Fragment>;
+    return <Group.Vertical spacing="l">{fontSizeControls}</Group.Vertical>;
   }
 
-  renderXAxisSection() {
+  renderXAxisSection(): React.Node {
     const axisType = AXIS_TYPES.X_AXIS;
     return (
       <SettingsBlock title={TEXT[axisType].title}>
-        {this.renderAxisTitleControlGroup(axisType)}
-        {this.renderAxisFontSizeControlGroup(axisType)}
-        {this.maybeRenderAxisFontColorControlGroup(axisType)}
-        {this.maybeRenderAxisFontFamilyControlGroup(axisType)}
-        {this.maybeRenderXAxisTitleDistanceControlGroup(axisType)}
+        <Group.Vertical spacing="l">
+          {this.renderAxisTitleControlGroup(axisType)}
+          {this.renderAxisFontSizeControlGroup(axisType)}
+          {this.maybeRenderAxisFontColorControlGroup(axisType)}
+          {this.maybeRenderAxisFontFamilyControlGroup(axisType)}
+          {this.maybeRenderXAxisTitleDistanceControlGroup(axisType)}
+        </Group.Vertical>
       </SettingsBlock>
     );
   }
 
-  renderYAxisSection() {
+  renderYAxisSubSection(yAxis: YAxisType): React.Node {
+    return (
+      <SettingsBlock className="y-axis-sub-section" title={TEXT[yAxis].title}>
+        <Group.Vertical spacing="l">
+          {this.renderAxisTitleControlGroup(yAxis)}
+          {this.renderAxisFontSizeControlGroup(yAxis)}
+          {this.maybeRenderAxisFontColorControlGroup(yAxis)}
+          {this.maybeRenderAxisFontFamilyControlGroup(yAxis)}
+          {this.maybeRenderAxisRangeControlGroup(yAxis)}
+        </Group.Vertical>
+      </SettingsBlock>
+    );
+  }
+
+  renderYAxisSection(): React.Node {
+    const { y1AxisEnabled, y2AxisEnabled } = this.props;
+
     return (
       <React.Fragment>
-        {this.maybeRenderYAxisSubSection(AXIS_TYPES.Y1_AXIS)}
-        {this.maybeRenderYAxisSubSection(AXIS_TYPES.Y2_AXIS)}
+        {y1AxisEnabled && this.renderYAxisSubSection(AXIS_TYPES.Y1_AXIS)}
+        {y2AxisEnabled && this.renderYAxisSubSection(AXIS_TYPES.Y2_AXIS)}
       </React.Fragment>
     );
   }
 
-  render() {
+  render(): React.Node {
     return (
       <SettingsPage className="axes-settings-tab">
         {this.renderXAxisSection()}

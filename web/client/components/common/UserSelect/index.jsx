@@ -1,20 +1,20 @@
 // @flow
 import * as React from 'react';
 
-import BootstrapSelect from 'components/bootstrap_select';
+import * as Zen from 'lib/Zen';
+import Dropdown from 'components/ui/Dropdown';
 import IdentityRoleMap from 'services/models/IdentityRoleMap';
+import RemoveButtonCol from 'components/common/RemoveButtonCol';
 import Role from 'services/models/Role';
 import Table from 'components/ui/Table';
-import UserRow from 'components/common/UserSelect/UserRow';
-import ZenArray from 'util/ZenModel/ZenArray';
-import ZenMap from 'util/ZenModel/ZenMap';
-import { USER_STATUS } from 'services/models/User';
+import User, { USER_STATUS } from 'services/models/User';
 import { autobind, memoizeOne } from 'decorators';
 import type RoleDefinition from 'services/models/RoleDefinition';
-import type User, { UserStatus } from 'services/models/User';
-import type { ResourceType } from 'services/AuthorizationService';
+import type { ResourceType } from 'services/AuthorizationService/types';
+import type { UserStatus } from 'services/models/User';
 
 const TEXT = t('common.user_select');
+const REMOVE_BUTTON_TEXT = TEXT.removeButtonColumn;
 
 export const DEFAULT_STATUSES = [
   USER_STATUS.ACTIVE,
@@ -28,12 +28,20 @@ const COMMON_HEADERS = [
     displayContent: TEXT.name,
     searchable: u => u.getUserFullName(),
   },
-  { id: 'email', displayContent: TEXT.email, searchable: u => u.username() },
+  {
+    id: 'email',
+    displayContent: TEXT.email,
+    searchable: u => u.username(),
+  },
   {
     id: 'phoneNumber',
-    displayContent: t('admin_app.userTableHeaders.phoneNumber'),
+    displayContent: TEXT.phoneNumber,
   },
-  { id: 'status', displayContent: TEXT.status, searchable: u => u.status() },
+  {
+    id: 'status',
+    displayContent: TEXT.status,
+    searchable: u => u.status(),
+  },
 ];
 
 const HEADERS = [
@@ -47,21 +55,10 @@ const ROLELESS_HEADERS = [
   { id: 'actions', displayContent: '', style: { width: 30 } },
 ];
 
-// TODO(vedant) - Convert all the properties that deal with roles
-// to use the new `Role` ZenModel
-type Props = {
-  onUserRolesUpdated: IdentityRoleMap => void,
-
-  // A listing of all possible users.
-  users: ZenArray<User>,
-
-  // A mapping of usernames to an array of role names indicating which roles
-  // the user holds.
-  userToRoles: IdentityRoleMap,
-
+type DefaultProps = {
   // The default role that new users will be assigned in the dropdown.
   // If not declared, the user will have to explictly select.
-  // NOTE: This must be a role that is defined in the `roles` property.
+  // NOTE(vedant): This must be a role that is defined in the `roles` property.
   newUserRole: RoleDefinition | void,
 
   // Determines whether or not the Role columns should be rendered in this
@@ -70,7 +67,7 @@ type Props = {
   roleSelectionEnabled: boolean,
 
   // A listing of all possible roles
-  roles: ZenArray<RoleDefinition>,
+  roles: Zen.Array<RoleDefinition>,
 
   // The title of the User Select Control
   title: string,
@@ -85,7 +82,20 @@ type Props = {
   userStatusFilter: $ReadOnlyArray<UserStatus>,
 };
 
-const NO_USER_SELECTION = '';
+// TODO(vedant) - Convert all the properties that deal with roles
+// to use the new `Role` ZenModel
+type Props = {
+  ...DefaultProps,
+
+  onUserRolesUpdated: IdentityRoleMap => void,
+
+  // A listing of all possible users.
+  users: Zen.Array<User>,
+
+  // A mapping of usernames to an array of role names indicating which roles
+  // the user holds.
+  userToRoles: IdentityRoleMap,
+};
 
 function getUserLabel(user: User) {
   const username = user.username();
@@ -94,16 +104,11 @@ function getUserLabel(user: User) {
   return label;
 }
 
-function getUserDataTokens(user: User) {
-  const dataTokens = [user.username(), user.firstName(), user.lastName()];
-  return dataTokens.filter(token => !!token);
-}
-
 export default class UserSelect extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     newUserRole: undefined,
     roleSelectionEnabled: true,
-    roles: ZenArray.create<RoleDefinition>(),
+    roles: Zen.Array.create<RoleDefinition>(),
     title: TEXT.default_title,
     userStatusFilter: DEFAULT_STATUSES,
   };
@@ -116,8 +121,8 @@ export default class UserSelect extends React.PureComponent<Props> {
   }
 
   @memoizeOne
-  getUsernameToUserMapping(users: ZenArray<User>): ZenMap<User> {
-    return ZenMap.fromArray(users, 'username');
+  getUsernameToUserMapping(users: Zen.Array<User>): Zen.Map<User> {
+    return Zen.Map.fromArray(users, 'username');
   }
 
   @autobind
@@ -145,9 +150,8 @@ export default class UserSelect extends React.PureComponent<Props> {
   }
 
   @autobind
-  onUserSelected(event: SyntheticEvent<HTMLSelectElement>) {
+  onUserSelected(user: User) {
     const { newUserRole, userToRoles } = this.props;
-    const username = event.currentTarget.value;
     const newRoleName = newUserRole ? newUserRole.name() : '';
 
     const role = Role.create({
@@ -155,7 +159,7 @@ export default class UserSelect extends React.PureComponent<Props> {
       resourceType: 'USER',
       roleName: newRoleName,
     });
-    this.onUserRolesUpdated(userToRoles.addRole(username, role));
+    this.onUserRolesUpdated(userToRoles.addRole(user.username(), role));
   }
 
   @autobind
@@ -169,7 +173,7 @@ export default class UserSelect extends React.PureComponent<Props> {
     this.props.onUserRolesUpdated(userToRoles);
   }
 
-  renderUserDropdown() {
+  renderUserDropdown(): React.Node {
     const { userToRoles, users, userStatusFilter } = this.props;
 
     if (!userToRoles) {
@@ -198,54 +202,55 @@ export default class UserSelect extends React.PureComponent<Props> {
       })
       .map(user => {
         const label = getUserLabel(user);
-        const dataTokens = getUserDataTokens(user);
 
         return (
-          <option
-            data-tokens={dataTokens.join(' ')}
-            key={user.username()}
-            value={user.username()}
-          >
+          <Dropdown.Option key={label} value={user} searchableText={label}>
             {label}
-          </option>
+          </Dropdown.Option>
         );
       });
 
     return (
-      <BootstrapSelect
-        className="user-select-dropdown btn-group-xs input-medium"
-        data-width="fit"
-        title={this.props.title}
-        value={NO_USER_SELECTION}
-        onChange={this.onUserSelected}
-        multiple={false}
-        data-live-search
+      <Dropdown
+        value={undefined}
+        onSelectionChange={this.onUserSelected}
+        defaultDisplayContent={this.props.title}
+        enableSearch
       >
-        {options}
-      </BootstrapSelect>
+        {options.toArray()}
+      </Dropdown>
     );
   }
 
   @autobind
-  renderSingleUserRow(user: User) {
-    const userRoles = this.props.userToRoles
-      .roles()
-      .get(user.username(), ZenArray.create());
+  renderSingleUserRow(user: User): React.Element<typeof Table.Row> {
+    const userStatus = user.status();
+
+    if (userStatus === undefined) {
+      throw new Error(
+        '[UserRow] Should not be rendering a user with undefined status.',
+      );
+    }
     return (
       <Table.Row id={`${user.status() || ''}-${user.username()}`}>
-        <UserRow
-          showRolesDropdown={this.props.roleSelectionEnabled}
-          onUserRoleChange={this.updateUserRoles}
+        <Table.Cell key="fullName">{user.getUserFullName()}</Table.Cell>
+        <Table.Cell key="username">{user.username()}</Table.Cell>
+        <Table.Cell key="phoneNumber">{user.phoneNumber()}</Table.Cell>
+        <Table.Cell key="userStatus">
+          {t(`admin_app.user_status_values.${userStatus}`)}
+        </Table.Cell>
+        <RemoveButtonCol
+          key="removeButton"
+          columnId={user}
+          deleteButtonText={REMOVE_BUTTON_TEXT.deleteButton}
+          deleteConfirmationText={REMOVE_BUTTON_TEXT.deleteConfirmation}
           onRemoveClick={this.onUserRemoved}
-          userRoles={userRoles}
-          roles={this.props.roles}
-          user={user}
         />
       </Table.Row>
     );
   }
 
-  render() {
+  render(): React.Node {
     const { roleSelectionEnabled, userToRoles, users } = this.props;
     const headers = roleSelectionEnabled ? HEADERS : ROLELESS_HEADERS;
 
@@ -264,7 +269,7 @@ export default class UserSelect extends React.PureComponent<Props> {
 
     return (
       <div className="user-select">
-        {this.renderUserDropdown()}
+        <div className="user-select-dropdown">{this.renderUserDropdown()}</div>
         <div className="user-list">
           <Table
             data={userRows}

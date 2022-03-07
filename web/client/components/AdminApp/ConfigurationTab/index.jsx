@@ -2,55 +2,58 @@
 import * as React from 'react';
 import Promise from 'bluebird';
 
+import * as Zen from 'lib/Zen';
+import BooleanControl from 'components/AdminApp/ConfigurationTab/ConfigurationEntry/BooleanControl';
 import Configuration from 'services/models/Configuration';
 import ConfigurationEntry from 'components/AdminApp/ConfigurationTab/ConfigurationEntry';
 import ConfigurationService, {
   CONFIGURATION_KEY,
 } from 'services/ConfigurationService';
+import DataCatalogControlBlock from 'components/AdminApp/ConfigurationTab/DataCatalogControlBlock';
 import DatasourceControl from 'components/AdminApp/ConfigurationTab/ConfigurationEntry/DatasourceControl';
 import FlagControl from 'components/AdminApp/ConfigurationTab/ConfigurationEntry/FlagControl';
+import Group from 'components/ui/Group';
 import TextControl from 'components/AdminApp/ConfigurationTab/ConfigurationEntry/TextControl';
+import Toaster from 'components/ui/Toaster';
 import UserSelectControl from 'components/AdminApp/ConfigurationTab/ConfigurationEntry/UserSelectControl';
-import ZenMap from 'util/ZenModel/ZenMap';
 import autobind from 'decorators/autobind';
-import withScriptLoader from 'components/common/withScriptLoader';
-import { VENDOR_SCRIPTS } from 'vendor/registry';
+import { ENABLED_DATA_CATALOG_APP } from 'components/DataCatalogApp/flags';
 import type { ConfigurationKey } from 'services/ConfigurationService';
 
 const TEXT = t('admin_app.configuration');
 const KEY_TEXT = TEXT.keys;
 
-type Props = {
-  getConfiguration: (key: ConfigurationKey) => Promise<Configuration>,
-
-  resetConfiguration: (key: ConfigurationKey) => Promise<Configuration>,
-
-  // eslint-disable-next-line max-len
-  setConfiguration: (
-    updatedConfiguration: Configuration,
-  ) => Promise<Configuration>,
+type DefaultProps = {
+  getConfiguration: typeof ConfigurationService.getConfiguration,
+  resetConfiguration: typeof ConfigurationService.resetConfiguration,
+  setConfiguration: typeof ConfigurationService.setConfiguration,
 };
+
+type Props = DefaultProps;
 
 type State = {
-  configurationValues: ZenMap<Configuration>,
+  configurationValues: Zen.Map<Configuration>,
 };
 
-class ConfigurationTab extends React.PureComponent<Props, State> {
-  static defaultProps = {
+export default class ConfigurationTab extends React.PureComponent<
+  Props,
+  State,
+> {
+  static defaultProps: DefaultProps = {
     getConfiguration: ConfigurationService.getConfiguration,
-    setConfiguration: ConfigurationService.setConfiguration,
     resetConfiguration: ConfigurationService.resetConfiguration,
+    setConfiguration: ConfigurationService.setConfiguration,
   };
 
-  state = {
-    configurationValues: ZenMap.create(),
+  state: State = {
+    configurationValues: Zen.Map.create(),
   };
 
   componentDidMount() {
     this.fetchAndSetConfigurations();
   }
 
-  fetchAndSetConfigurations() {
+  fetchAndSetConfigurations(): Promise<$ReadOnlyArray<void>> {
     return Promise.all(
       Object.keys(CONFIGURATION_KEY).map(key =>
         this.fetchAndSetConfiguration(CONFIGURATION_KEY[key]),
@@ -80,10 +83,23 @@ class ConfigurationTab extends React.PureComponent<Props, State> {
   }
 
   @autobind
-  resetConfiguration(configuration: Configuration): void {
+  updateLocalConfiguration(configuration: Configuration) {
+    this.setState((previousState: State) => {
+      const { configurationValues } = previousState;
+      return {
+        configurationValues: configurationValues.set(
+          configuration.key(),
+          configuration,
+        ),
+      };
+    });
+  }
+
+  @autobind
+  resetConfiguration(configuration: Configuration): Promise<void> {
     const { key } = configuration.modelValues();
 
-    this.props
+    return this.props
       .resetConfiguration(key)
       .then((resetConfiguration: Configuration) => {
         this.setState(
@@ -96,11 +112,11 @@ class ConfigurationTab extends React.PureComponent<Props, State> {
               ),
             };
           },
-          () => window.toastr.success(TEXT.valueSuccessfullyReset),
+          () => Toaster.success(TEXT.valueSuccessfullyReset),
         );
       })
       .catch(error => {
-        window.toastr.error(TEXT.updateError);
+        Toaster.error(TEXT.updateError);
         console.error(error);
       });
   }
@@ -125,17 +141,22 @@ class ConfigurationTab extends React.PureComponent<Props, State> {
             const updateText = t('admin_app.configuration.valueUpdated', {
               key: KEY_TEXT[newConfigurationFromServer.key()],
             });
-            window.toastr.success(updateText);
+            Toaster.success(updateText);
           },
         );
       })
       .catch(error => {
-        window.toastr.error(TEXT.updateError);
+        Toaster.error(TEXT.updateError);
         console.error(error);
       });
   }
 
-  renderPublicAccessControl() {
+  maybeRenderDataCatalogControl(): React.Node {
+    // NOTE(yitian): only enable on on certain instances for now.
+    return ENABLED_DATA_CATALOG_APP && <DataCatalogControlBlock />;
+  }
+
+  renderPublicAccessControl(): React.Node {
     const { configurationValues } = this.state;
     const publicAccessConfiguration = configurationValues.get(
       CONFIGURATION_KEY.PUBLIC_ACCESS,
@@ -147,6 +168,7 @@ class ConfigurationTab extends React.PureComponent<Props, State> {
 
     return (
       <ConfigurationEntry
+        useCardWrapper
         isDestructiveAction
         configuration={publicAccessConfiguration}
         configurationTitle={KEY_TEXT[publicAccessConfiguration.key()]}
@@ -156,12 +178,16 @@ class ConfigurationTab extends React.PureComponent<Props, State> {
           TEXT.warningText[publicAccessConfiguration.key()]
         }
       >
-        <FlagControl configuration={publicAccessConfiguration} />
+        <FlagControl
+          configuration={publicAccessConfiguration}
+          onConfigurationUpdated={this.setConfiguration}
+          testId="public-access-configuration"
+        />
       </ConfigurationEntry>
     );
   }
 
-  renderDefaultUrlControl() {
+  renderDefaultUrlControl(): React.Node {
     const { configurationValues } = this.state;
 
     const defaultUrlConfiguration = configurationValues.get(
@@ -172,64 +198,61 @@ class ConfigurationTab extends React.PureComponent<Props, State> {
       return null;
     }
 
+    const primaryButtonText: string = t(
+      'admin_app.configuration.textConfiguration.saveText',
+      {
+        key: KEY_TEXT[defaultUrlConfiguration.key()],
+      },
+    );
+
     return (
       <ConfigurationEntry
+        useCardWrapper
+        className="configuration-tab__text-control-body"
         configuration={defaultUrlConfiguration}
         configurationTitle={KEY_TEXT[defaultUrlConfiguration.key()]}
+        enablePrimaryButton
         onConfigurationUpdated={this.setConfiguration}
+        onPrimaryAction={() => this.setConfiguration(defaultUrlConfiguration)}
         onResetConfiguration={this.resetConfiguration}
+        primaryButtonText={primaryButtonText}
       >
-        <TextControl configuration={defaultUrlConfiguration} />
+        <TextControl
+          configuration={defaultUrlConfiguration}
+          updateLocalConfiguration={this.updateLocalConfiguration}
+        />
       </ConfigurationEntry>
     );
   }
 
-  renderCrispEnabledControl() {
-    const { configurationValues } = this.state;
-    const crispEnabledConfiguration = configurationValues.get(
-      CONFIGURATION_KEY.CRISP_ENABLED,
-    );
-
-    if (!crispEnabledConfiguration) {
-      return null;
-    }
-
-    return (
-      <ConfigurationEntry
-        configuration={crispEnabledConfiguration}
-        configurationTitle={KEY_TEXT[crispEnabledConfiguration.key()]}
-        onConfigurationUpdated={this.setConfiguration}
-        onResetConfiguration={this.resetConfiguration}
-      >
-        <FlagControl configuration={crispEnabledConfiguration} />
-      </ConfigurationEntry>
-    );
-  }
-
-  renderCrispIdControl() {
+  renderKeepMeSignedInControl(): React.Node {
     const { configurationValues } = this.state;
 
-    const crispIdConfiguration = configurationValues.get(
-      CONFIGURATION_KEY.CRISP_ID,
+    const defaultKeepMeSignedIn = configurationValues.get(
+      CONFIGURATION_KEY.KEEP_ME_SIGNED,
     );
 
-    if (!crispIdConfiguration) {
+    if (!defaultKeepMeSignedIn) {
       return null;
     }
-
     return (
       <ConfigurationEntry
-        configuration={crispIdConfiguration}
-        configurationTitle={KEY_TEXT[crispIdConfiguration.key()]}
+        useCardWrapper
+        configuration={defaultKeepMeSignedIn}
+        configurationTitle={KEY_TEXT[defaultKeepMeSignedIn.key()]}
         onConfigurationUpdated={this.setConfiguration}
         onResetConfiguration={this.resetConfiguration}
       >
-        <TextControl configuration={crispIdConfiguration} />
+        <BooleanControl
+          label={TEXT.keepMeSignedInLabel}
+          configuration={defaultKeepMeSignedIn}
+          onConfigurationUpdated={this.setConfiguration}
+        />
       </ConfigurationEntry>
     );
   }
 
-  renderProjectManagerControl() {
+  renderProjectManagerControl(): React.Node {
     const { configurationValues } = this.state;
 
     const projectManagersConfiguration = configurationValues.get(
@@ -240,19 +263,36 @@ class ConfigurationTab extends React.PureComponent<Props, State> {
       return null;
     }
 
+    const primaryButtonText: string = t(
+      'admin_app.configuration.textConfiguration.saveText',
+      {
+        key: KEY_TEXT[projectManagersConfiguration.key()],
+      },
+    );
+
     return (
       <ConfigurationEntry
+        useCardWrapper
         configuration={projectManagersConfiguration}
         configurationTitle={KEY_TEXT[projectManagersConfiguration.key()]}
+        enablePrimaryButton
         onConfigurationUpdated={this.setConfiguration}
+        onPrimaryAction={() =>
+          this.setConfiguration(projectManagersConfiguration)
+        }
         onResetConfiguration={this.resetConfiguration}
+        primaryButtonText={primaryButtonText}
       >
-        <UserSelectControl configuration={projectManagersConfiguration} />
+        <UserSelectControl
+          configuration={projectManagersConfiguration}
+          onConfigurationUpdated={this.setConfiguration}
+          updateLocalConfiguration={this.updateLocalConfiguration}
+        />
       </ConfigurationEntry>
     );
   }
 
-  renderDatasourceControl() {
+  renderDatasourceControl(): React.Node {
     const { configurationValues } = this.state;
     const datasourceConfiguration = configurationValues.get(
       CONFIGURATION_KEY.CUR_DATASOURCE,
@@ -263,6 +303,7 @@ class ConfigurationTab extends React.PureComponent<Props, State> {
 
     return (
       <ConfigurationEntry
+        useCardWrapper
         configuration={datasourceConfiguration}
         configurationTitle={KEY_TEXT[datasourceConfiguration.key()]}
         destructiveChangeWarning={
@@ -272,27 +313,33 @@ class ConfigurationTab extends React.PureComponent<Props, State> {
         onResetConfiguration={this.resetConfiguration}
         isDestructiveAction
       >
-        <DatasourceControl configuration={datasourceConfiguration} />
+        <DatasourceControl
+          configuration={datasourceConfiguration}
+          onConfigurationUpdated={this.setConfiguration}
+        />
       </ConfigurationEntry>
     );
   }
 
-  render() {
+  renderCaseManagementControl(): React.Node {
+    return null;
+  }
+
+  render(): React.Node {
     // TODO(vedant) - Although fine for now, we should think of an extensible
     // way of representing disparate configuration settings.
     return (
       <form>
-        <fieldset>
+        <Group.Vertical spacing="l">
           {this.renderPublicAccessControl()}
           {this.renderDefaultUrlControl()}
-          {this.renderCrispEnabledControl()}
-          {this.renderCrispIdControl()}
+          {this.renderKeepMeSignedInControl()}
           {this.renderProjectManagerControl()}
           {this.renderDatasourceControl()}
-        </fieldset>
+          {this.renderCaseManagementControl()}
+          {this.maybeRenderDataCatalogControl()}
+        </Group.Vertical>
       </form>
     );
   }
 }
-
-export default withScriptLoader(ConfigurationTab, VENDOR_SCRIPTS.toastr);

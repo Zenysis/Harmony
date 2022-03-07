@@ -1,0 +1,72 @@
+.gd-dashboard-control-button {
+  align-items: center;
+  display: flex;
+  font-size: 14px;
+  // NOTE(david): We subtract 1px to account for the dashboard header border
+  height: $dashboard-header-height - 1px;
+  padding: 0 $space-m-px;
+
+  &__icon {
+    height: $space-m-px;
+    margin-right: $space-xs-px;
+    width: $space-m-px;
+  }
+
+  &:hover {
+    background-color: $gray-light-hover;
+  }
+
+  &--disabled {
+    color: $gray;
+    cursor: default;
+    &:hover {
+      background-color: initial;
+    }
+  }
+}
+
+.gd-dashboard-save-button {
+  &--unsaved-changes {
+    color: $success-color;
+    font-weight: bold;
+  }
+
+  // HACK(nina): Reposition icon to align with label
+  .gd-dashboard-control-button__icon {
+    margin-bottom: -1px;
+  }
+}
+
+.gd-dashboard-undo-button {
+  &--unsaved-changes {
+    color: $error-color;
+    font-weight: bold;
+  }
+}
+
+.gd-dashboard-share-button {
+  // HACK(nina): Reposition icon to align with label
+  .gd-dashboard-control-button__icon {
+    margin-bottom: 2px;
+  }
+}
+
+// HACK(nina): The header has no padding on the right side. This is intentional
+// to avoid creating a gap between the read only button and the right side
+// when a user hovers over it. Instead, we modify the the padding of the
+// read only button to account for this lack of padding in the header.
+.gd-dashboard-read-only-button .gd-dashboard-control-button {
+  padding: 0 $space-l-px;
+}
+
+.gd-dashboard-zoom-level-button {
+  @extend .gd-dashboard-control-button;
+
+  background-color: initial;
+  border: none;
+  border-radius: 0;
+
+  &:hover {
+    border: none;
+  }
+}

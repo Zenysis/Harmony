@@ -1,11 +1,12 @@
 // @flow
 import * as React from 'react';
-import { AxisBottom, AxisLeft } from '@vx/axis';
-import { Group } from '@vx/group';
+import { AxisBottom } from '@vx/axis';
 import { Line, LinePath } from '@vx/shape';
 
 import LineGraphTheme from 'components/ui/visualizations/LineGraph/models/LineGraphTheme';
-import LineGraphTooltip from 'components/ui/visualizations/LineGraph/LineGraphTooltip';
+import LineGraphTooltip from 'components/ui/visualizations/LineGraph/internal/LineGraphTooltip';
+import MetricAxis from 'components/ui/visualizations/common/MetricAxis';
+import ResponsiveContainer from 'components/ui/visualizations/common/ResponsiveContainer';
 import { autobind, memoizeOne } from 'decorators';
 import {
   extractDate,
@@ -15,6 +16,8 @@ import {
   computeYScale,
   createDateFormatter,
 } from 'components/ui/visualizations/LineGraph/LineGraphUtil';
+import type { ChartSize } from 'components/ui/visualizations/types';
+import type { GoalLineData } from 'components/ui/visualizations/common/MetricAxis/types';
 import type {
   TooltipData,
   DataPoint,
@@ -23,40 +26,14 @@ import type {
   TimeSeries,
 } from 'components/ui/visualizations/LineGraph/types';
 
-type Margin = {
-  top: number,
-  left: number,
-  right: number,
-  bottom: number,
-};
-
-type Props = {|
+type DefaultProps = {
   /**
-   * The start point of the vertical axis. Can be "zero" for the vertical axis
-   * to start at zero or "min" to start at the minimum data point in the dataset
+   * Goal lines to display on the line graph
    */
-  verticalAxisStartPoint: VerticalAxisStartPoint,
+  goalLines: $ReadOnlyArray<GoalLineData>,
 
   /** The overall height of the graph */
   height: number,
-
-  /** The width of the graph */
-  width: number,
-
-  /**
-   * The Space the graph should leave on the left, right, top and bottom of
-   * the all SVG plot
-   */
-  margin: Margin,
-
-  /** The data to be used to draw the line graph */
-  data: $ReadOnlyArray<TimeSeries>,
-
-  /**
-   * The date format of the tooltip. For valid formats see moments docs
-   * (https://momentjs.com/docs/#/parsing/string-format/)
-   */
-  tooltipDateFormat: string,
 
   /**
    * The date format of the horizontal axis. For valid formats see moments docs
@@ -73,69 +50,145 @@ type Props = {|
   /** The visualization color theme  */
   theme: LineGraphTheme,
 
+  /**
+   * The date format of the tooltip. For valid formats see moments docs
+   * (https://momentjs.com/docs/#/parsing/string-format/)
+   */
+  tooltipDateFormat: string,
+
   /** The label to the date in the tooltip */
   tooltipDateLabel: string | void,
 
+  /** Function to format a tooltip value */
+  tooltipValueFormatter: (value: number) => number | string,
+
   /** The label of the value in the tooltip */
   tooltipValueLabel: string | void,
-|};
+
+  /**
+   * The start point of the vertical axis. Can be "zero" for the vertical axis
+   * to start at zero or "min" to start at the minimum data point in the dataset
+   */
+  verticalAxisStartPoint: VerticalAxisStartPoint,
+
+  /** Text for the x axis label */
+  xAxisLabel: string | void,
+
+  /** Text for the y axis label */
+  yAxisLabel: string | void,
+};
+
+type Props = {
+  ...DefaultProps,
+
+  /** The data to be used to draw the line graph */
+  data: $ReadOnlyArray<TimeSeries>,
+
+  /** The width of the graph */
+  width: number,
+};
 
 type State = {
+  innerChartSize: ChartSize,
   tooltipData: TooltipData | void,
   tooltipLeft: number,
   tooltipTop: number,
   tooltipRight: number,
 };
 
+const LABEL_FONT_SIZE = 13;
+const LABEL_FONT = 'Lato, sans-serif';
+
 class LineGraph extends React.PureComponent<Props, State> {
-  state = {
+  state: State = {
+    innerChartSize: {
+      height: 10,
+      width: 10,
+    },
     tooltipData: undefined,
     tooltipLeft: 0,
     tooltipTop: 0,
     tooltipRight: 0,
   };
 
-  static defaultProps = {
-    tooltipDateFormat: 'MMM Do, YYYY',
-    horizontalAxisDateFormat: 'MMM YYYY',
-    verticalAxisStartPoint: 'zero',
+  static defaultProps: DefaultProps = {
+    goalLines: [],
     height: 400,
-    margin: {
-      // left and bottom a bit large to cater for axes
-      bottom: 50,
-      left: 90,
-
-      // Note(Dennis) to protect bottom axis right most and left axis top most
-      // labels from being clipped
-      // can be removed once we switch to the  CollisionAvoidantAxis
-      right: 15,
-      top: 10,
-    },
+    horizontalAxisDateFormat: 'MMM YYYY',
     onDataPointClick: undefined,
     theme: LineGraphTheme.LightTheme,
+    tooltipDateFormat: 'MMM Do, YYYY',
     tooltipDateLabel: undefined,
+    tooltipValueFormatter: (value: number) => value,
     tooltipValueLabel: undefined,
+    verticalAxisStartPoint: 'zero',
+    xAxisLabel: undefined,
+    yAxisLabel: undefined,
   };
 
   @memoizeOne
-  computeXScale = computeXScale;
+  computeXScale: typeof computeXScale = computeXScale;
 
   @memoizeOne
-  computeYScale = computeYScale;
+  computeYScale: typeof computeYScale = computeYScale;
 
   @memoizeOne
-  computeColorScale = computeColorScale;
+  computeColorScale: typeof computeColorScale = computeColorScale;
 
   @memoizeOne
-  createDateFormatter = createDateFormatter;
+  createDateFormatter: typeof createDateFormatter = createDateFormatter;
 
-  @autobind
-  getBottomAxisTickLabelProps() {
+  @memoizeOne
+  buildYScale(
+    data: $ReadOnlyArray<TimeSeries>,
+    goalLines: $ReadOnlyArray<GoalLineData>,
+    innerChartHeight: number,
+    verticalAxisStartPoint: VerticalAxisStartPoint,
+  ): $FlowTODO {
+    // We include the goal lines as data points to ensure that they are
+    // included in axis scale
+    const goalLineDataPoints = goalLines.map(goalLine => ({
+      value: goalLine.value,
+      date: new Date(),
+    }));
+
+    const dataPoints = [...this.getAllDataPoints(data), ...goalLineDataPoints];
+
+    return computeYScale(dataPoints, innerChartHeight, verticalAxisStartPoint);
+  }
+
+  @memoizeOne
+  buildAxisLabelProps(theme: LineGraphTheme): { ... } {
     return {
-      fill: this.props.theme.axisLabelFill(),
+      textAnchor: 'middle',
+      fontFamily: LABEL_FONT,
+      fontSize: LABEL_FONT_SIZE,
+      fill: theme.axisLabelFill(),
+    };
+  }
+
+  @memoizeOne
+  buildLeftAxisTickLabelProps(theme: LineGraphTheme): { ... } {
+    return {
+      fill: theme.axisLabelFill(),
       fontWeight: 'bold',
-      fontSize: 13,
-      fontFamily: 'Lato, sans-serif',
+      fontSize: LABEL_FONT_SIZE,
+      fontFamily: LABEL_FONT,
+
+      // default styles from vx docs
+      dx: '-0.25em',
+      dy: '0.25em',
+      textAnchor: 'end',
+    };
+  }
+
+  @memoizeOne
+  buildBottomAxisTickLabelProps(theme: LineGraphTheme): { ... } {
+    return {
+      fill: theme.axisLabelFill(),
+      fontWeight: 'bold',
+      fontSize: LABEL_FONT_SIZE,
+      fontFamily: LABEL_FONT,
 
       // default styles from vx docs
       dy: '0.25em',
@@ -143,19 +196,26 @@ class LineGraph extends React.PureComponent<Props, State> {
     };
   }
 
-  @autobind
-  getLeftAxisTickLabelProps() {
-    return {
-      fill: this.props.theme.axisLabelFill(),
-      fontWeight: 'bold',
-      fontSize: 13,
-      fontFamily: 'Lato, sans-serif',
+  @memoizeOne
+  buildBackgroundProps(theme: LineGraphTheme): { +fill: string } {
+    return { fill: theme.backgroundColor() };
+  }
 
-      // default styles from vx docs
-      dx: '-0.25em',
-      dy: '0.25em',
-      textAnchor: 'end',
-    };
+  getAxisLabelProps(): { ... } {
+    return this.buildAxisLabelProps(this.props.theme);
+  }
+
+  getBackgroundProps(): { +fill: string } {
+    return this.buildBackgroundProps(this.props.theme);
+  }
+
+  @autobind
+  getBottomAxisTickLabelProps(): { ... } {
+    return this.buildBottomAxisTickLabelProps(this.props.theme);
+  }
+
+  getLeftAxisTickLabelProps(): { ... } {
+    return this.buildLeftAxisTickLabelProps(this.props.theme);
   }
 
   @memoizeOne
@@ -176,39 +236,39 @@ class LineGraph extends React.PureComponent<Props, State> {
     return timeSeries.map(series => series.name);
   }
 
-  getColorScale() {
+  @memoizeOne
+  getY1AxisGoalLines(
+    goalLines: $ReadOnlyArray<GoalLineData>,
+  ): $ReadOnlyArray<GoalLineData> {
+    // NOTE(david): Currently the line graph only has one y axis so this should
+    // be all goal lines. In future we will likely add a y2axis.
+    return goalLines.filter(goalLine => goalLine.axis === 'y1Axis');
+  }
+
+  getColorScale(): $FlowTODO {
     return this.computeColorScale(
       this.getAllTimeSeriesNames(this.props.data),
       this.props.theme.linesColorRange(),
     );
   }
 
-  getXScale() {
+  getXScale(): $FlowTODO {
     return this.computeXScale(
       this.getAllDataPoints(this.props.data),
-      this.getInnerWidth(),
+      this.state.innerChartSize.width,
     );
   }
 
-  getYScale() {
-    const { data, verticalAxisStartPoint } = this.props;
-    return this.computeYScale(
-      this.getAllDataPoints(data),
-      this.getInnerHeight(),
+  getYScale(): $FlowTODO {
+    const { data, goalLines, verticalAxisStartPoint } = this.props;
+    const { innerChartSize } = this.state;
+
+    return this.buildYScale(
+      data,
+      this.getY1AxisGoalLines(goalLines),
+      innerChartSize.height,
       verticalAxisStartPoint,
     );
-  }
-
-  getInnerWidth() {
-    const { margin, width } = this.props;
-    const innerWidth = width - margin.left - margin.right;
-    return innerWidth;
-  }
-
-  getInnerHeight() {
-    const { margin, height } = this.props;
-    const innerHeight = height - margin.top - margin.bottom;
-    return innerHeight;
   }
 
   @autobind
@@ -221,11 +281,23 @@ class LineGraph extends React.PureComponent<Props, State> {
     });
   }
 
-  maybeRenderToolTip() {
-    const { tooltipData, tooltipLeft, tooltipTop, tooltipRight } = this.state;
+  @autobind
+  onInnerChartResize(height: number, width: number) {
+    this.setState({ innerChartSize: { height, width } });
+  }
+
+  maybeRenderToolTip(): React.Node {
+    const {
+      innerChartSize,
+      tooltipData,
+      tooltipLeft,
+      tooltipTop,
+      tooltipRight,
+    } = this.state;
     const {
       tooltipDateLabel,
       tooltipValueLabel,
+      tooltipValueFormatter,
       tooltipDateFormat,
     } = this.props;
 
@@ -238,8 +310,9 @@ class LineGraph extends React.PureComponent<Props, State> {
     return (
       <LineGraphTooltip
         formatDate={formatDate}
-        graphHeight={this.getInnerHeight()}
-        graphWidth={this.getInnerWidth()}
+        formatValue={tooltipValueFormatter}
+        graphHeight={innerChartSize.height}
+        graphWidth={innerChartSize.width}
         tooltipData={tooltipData}
         tooltipLeft={tooltipLeft}
         tooltipTop={tooltipTop}
@@ -250,7 +323,7 @@ class LineGraph extends React.PureComponent<Props, State> {
     );
   }
 
-  maybeRenderHoveredDataPointHighlight() {
+  maybeRenderHoveredDataPointHighlight(): React.Node {
     const { tooltipLeft, tooltipData, tooltipTop } = this.state;
 
     if (!tooltipData) {
@@ -281,17 +354,14 @@ class LineGraph extends React.PureComponent<Props, State> {
     );
   }
 
-  renderBackground() {
-    return (
-      <rect
-        width={this.props.width}
-        height={this.props.height}
-        fill={this.props.theme.backgroundColor()}
-      />
-    );
-  }
-
-  renderDataPoint(dataPointData: DataPoint, seriesName: string): React.Node {
+  renderDataPoint(
+    dataPointData: DataPoint,
+    seriesName: string,
+    seriesDimensions: $ReadOnly<{
+      [dimensionName: string]: string | null,
+      ...,
+    }>,
+  ): React.Node {
     const { onDataPointClick } = this.props;
     const xScale = this.getXScale();
     const yScale = this.getYScale();
@@ -302,7 +372,7 @@ class LineGraph extends React.PureComponent<Props, State> {
     const key = `${seriesName}-${extractDate(
       dataPointData,
     ).toDateString()}-${extractValue(dataPointData)}`;
-    const tooltipData = { ...dataPointData, seriesName };
+    const tooltipData = { ...dataPointData, seriesDimensions, seriesName };
 
     return (
       <g key={key}>
@@ -341,12 +411,12 @@ class LineGraph extends React.PureComponent<Props, State> {
     );
   }
 
-  renderDataPoints() {
+  renderDataPoints(): React.Node {
     const { data } = this.props;
     const dataPoints = data.map(series => (
       <g key={series.name}>
         {series.data.map(dataPoint =>
-          this.renderDataPoint(dataPoint, series.name),
+          this.renderDataPoint(dataPoint, series.name, series.dimensions),
         )}
       </g>
     ));
@@ -354,34 +424,46 @@ class LineGraph extends React.PureComponent<Props, State> {
     return <React.Fragment>{dataPoints}</React.Fragment>;
   }
 
-  renderBottomAxis() {
-    const { margin, horizontalAxisDateFormat } = this.props;
+  renderBottomAxis(): React.Element<typeof AxisBottom> {
+    const { horizontalAxisDateFormat, theme, xAxisLabel } = this.props;
     const xScale = this.getXScale();
     const formatDate = this.createDateFormatter(horizontalAxisDateFormat);
     return (
       <AxisBottom
+        label={xAxisLabel}
+        labelOffset={16}
+        labelProps={this.getAxisLabelProps()}
         scale={xScale}
-        top={this.getInnerHeight() + margin.top}
-        left={margin.left - margin.right}
-        stroke={this.props.theme.axisLineStroke()}
-        tickStroke={this.props.theme.axisTickStroke()}
-        tickLabelProps={this.getBottomAxisTickLabelProps}
+        stroke={theme.axisLineStroke()}
         tickFormat={formatDate}
+        tickLabelProps={this.getBottomAxisTickLabelProps}
+        tickStroke={theme.axisTickStroke()}
       />
     );
   }
 
-  renderLeftAxis() {
-    const { margin } = this.props;
+  @autobind
+  renderLeftAxis(
+    innerRef: (React.ElementRef<'g'> | null) => void,
+  ): React.Element<typeof MetricAxis> {
+    const { goalLines, theme, yAxisLabel } = this.props;
+    const { innerChartSize } = this.state;
     const yScale = this.getYScale();
+    const leftAxisGoalLines = this.getY1AxisGoalLines(goalLines);
+
     return (
-      <AxisLeft
-        scale={yScale}
-        left={margin.left - margin.right}
-        top={margin.top}
-        stroke={this.props.theme.axisLineStroke()}
-        tickStroke={this.props.theme.axisTickStroke()}
-        tickLabelProps={this.getLeftAxisTickLabelProps}
+      <MetricAxis
+        axisOrientation="left"
+        chartWidth={innerChartSize.width}
+        goalLines={leftAxisGoalLines}
+        height={innerChartSize.height}
+        innerRef={innerRef}
+        stroke={theme.axisLineStroke()}
+        tickColor={theme.axisTickStroke()}
+        tickLabelProps={this.getLeftAxisTickLabelProps()}
+        title={yAxisLabel}
+        titleLabelProps={this.getAxisLabelProps()}
+        yScale={yScale}
       />
     );
   }
@@ -405,21 +487,30 @@ class LineGraph extends React.PureComponent<Props, State> {
     return lineGraphs;
   }
 
-  render() {
-    const { margin, width, height } = this.props;
+  renderInnerChart(): React.Element<'g'> {
+    return (
+      <g>
+        {this.renderLineGraphs()}
+        {this.maybeRenderHoveredDataPointHighlight()}
+        {this.renderDataPoints()}
+      </g>
+    );
+  }
+
+  render(): React.Element<'div'> {
+    const { width, height } = this.props;
 
     return (
       <div className="line-graph__visualization-container">
-        <svg width={width} height={height}>
-          {this.renderBackground()}
-          <Group top={margin.top} left={margin.left - margin.right}>
-            {this.renderLineGraphs()}
-            {this.maybeRenderHoveredDataPointHighlight()}
-            {this.renderDataPoints()}
-          </Group>
-          {this.renderBottomAxis()}
-          {this.renderLeftAxis()}
-        </svg>
+        <ResponsiveContainer
+          axisBottom={this.renderBottomAxis()}
+          axisLeft={this.renderLeftAxis}
+          backgroundProps={this.getBackgroundProps()}
+          chart={this.renderInnerChart()}
+          height={height}
+          onChartResize={this.onInnerChartResize}
+          width={width}
+        />
         {this.maybeRenderToolTip()}
       </div>
     );

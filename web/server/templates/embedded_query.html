@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+{% set body_class="embedded-query-app-container" %}
+
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+{% endblock %}
+
+{% block scripts %}
+  {% include 'query_app_vendor_scripts.html' %}
+  <script src="{{ bundle_resource_url('embeddedQuery.bundle.js') }}"></script>
+{% endblock %}
+
+{% block tracking_event %}
+<script>analytics.track('Embedded query view', {nonInteraction: 1});</script>
+{% endblock %}

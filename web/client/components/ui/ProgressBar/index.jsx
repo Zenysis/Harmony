@@ -1,32 +1,36 @@
 // @flow
 import * as React from 'react';
 
-type Props = {|
+import normalizeARIAName from 'components/ui/util/normalizeARIAName';
+
+type Props = {
+  /** The accessibility name for this loading bar. Defaults to 'Loading' */
+  ariaName?: string,
+
   /** Extra class name to attach to the progress bar */
-  className: string,
+  className?: string,
 
   /**
    * Enables rendering of the progress bar.
    * Nothing is rendered if its set to false
    */
-  enabled: boolean,
+  enabled?: boolean,
 
   /**
    * The completed percentage of the task in progress.
    * Should be a number between 0 and 100
    */
-  percentCompleted: number,
-|};
-
-const defaultProps = {
-  className: '',
-  enabled: true,
-  percentCompleted: 100,
+  percentCompleted?: number,
 };
 
-export default function ProgressBar(props: Props) {
-  const { className, enabled, percentCompleted } = props;
+const TEXT = t('ui.ProgressBar');
 
+export default function ProgressBar({
+  ariaName = TEXT.loading,
+  className = '',
+  enabled = true,
+  percentCompleted = 100,
+}: Props): React.Element<'div'> | null {
   if (!enabled) {
     return null;
   }
@@ -36,7 +40,11 @@ export default function ProgressBar(props: Props) {
   };
 
   return (
-    <div className={`progress ${className}`}>
+    <div
+      role="progressbar"
+      className={`progress ${className}`}
+      aria-label={normalizeARIAName(ariaName)}
+    >
       <div
         className="progress-bar progress-bar-striped active"
         style={barStyle}
@@ -44,5 +52,3 @@ export default function ProgressBar(props: Props) {
     </div>
   );
 }
-
-ProgressBar.defaultProps = defaultProps;

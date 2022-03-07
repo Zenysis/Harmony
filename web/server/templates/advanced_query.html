@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% set body_class="condensed-navbar" %}
+{% set body_class="condensed-navbar advanced-query-app-body" %}
 
 {% block css %}
 {% if enable_chat %}
@@ -27,4 +27,8 @@
   {% endif %}
 
   <script src="{{ bundle_resource_url('advancedQuery.bundle.js') }}"></script>
+{% endblock %}
+
+{% block tracking_event %}
+<script>analytics.track('AQT view', {nonInteraction: 1});</script>
 {% endblock %}

@@ -2,7 +2,7 @@
 import * as React from 'react';
 
 import Dropdown from 'components/ui/Dropdown';
-import type { DropdownChildType } from 'components/ui/Dropdown';
+import type { DropdownChildType } from 'components/ui/Dropdown/types';
 import type { SearchableNodeView } from 'models/ui/common/GraphSearchResults/types';
 
 type Children<T> = React.ChildrenArray<?DropdownChildType<T>>;

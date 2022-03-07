@@ -1,12 +1,11 @@
-from builtins import object
 from collections import OrderedDict
-from copy import copy
 
 from pydruid.utils.aggregators import filtered as filtered_aggregator, longsum
 from toposort import toposort_flatten
 
 from db.druid.post_aggregation_builder import build_expression_post_aggregator
 from db.druid.util import (
+    EmptyFilter,
     build_filter_from_aggregation,
     build_query_filter_from_aggregations,
     extract_aggregations_for_post_aggregation,
@@ -14,7 +13,7 @@ from db.druid.util import (
 )
 
 
-class BaseCalculation(object):
+class BaseCalculation:
     COUNT_SUFFIX = '__count'
 
     def __init__(
@@ -154,7 +153,7 @@ class BaseCalculation(object):
         count_agg = longsum('count')
 
         # If an aggregation filter exists, use it to limit the count.
-        if agg_filter is not None:
+        if agg_filter is not None and not isinstance(agg_filter, EmptyFilter):
             count_agg = filtered_aggregator(filter=agg_filter, agg=count_agg)
 
         key = self.count_field_name(field)

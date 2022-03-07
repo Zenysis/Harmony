@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 
 from flask import current_app, g, send_file
+from flask_user import current_user
 
 # pylint: disable=E0611
 # werkzeug does contain the secure_filename function.
@@ -31,7 +32,7 @@ def handle_data_upload(category, uploads):
         destinations.append(destination)
 
     data_upload_message = current_app.email_renderer.create_data_upload_alert_message(
-        filenames, destinations, category, datestamp
+        filenames, destinations, category, datestamp, current_user
     )
     current_app.notification_service.send_email(data_upload_message)
 

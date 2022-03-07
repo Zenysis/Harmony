@@ -1,3 +1,7 @@
 .zen-icon {
-  margin-right: 0.4em;
+  // TODO(stephen, anyone): Remove this because it should not be necessary. Only
+  // was left in because it is hard to know if it is overriding a different
+  // style (it shouldn't be, but the Icon component has a lot of legacy
+  // problems with spacing and alignment!).
+  margin-right: 0;
 }

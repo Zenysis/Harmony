@@ -17,7 +17,6 @@ from db.druid.calculations.simple_calculation import (
     SumCalculation,
     LastValueCalculation,
 )
-from config.br.aggregation import GRANULARITY_BUCKETING_FN
 from db.druid.aggregations.time_interval_aggregation import (
     GregorianStockIntervalCreator,
     TimeIntervalAggregation,

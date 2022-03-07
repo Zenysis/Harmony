@@ -1,6 +1,6 @@
-from builtins import str
-from builtins import object
 from functools import wraps
+from typing import Optional
+
 from flask import current_app, g, request
 from flask_user import current_user
 from flask_principal import ItemNeed
@@ -20,7 +20,7 @@ from web.server.util.util import (
 )
 
 
-class AuthorizedQuery(object):
+class AuthorizedQuery:
     '''A class that makes it possible to encapsulate a query operation inside an
     authorization check that ensures that the user is authorized to perform
     the operation before executing the code inside the block.
@@ -75,7 +75,7 @@ class AuthorizedQuery(object):
         return
 
 
-class AuthorizedOperation(object):
+class AuthorizedOperation:
     '''A class that makes it possible to encapsulate an operation inside an
     authorization check that ensures that the user is authorized to perform
     the operation before executing the code inside the block.
@@ -227,7 +227,12 @@ def is_authorized(permission, resource_type, resource_id=None, log_request=True)
     return False
 
 
-def is_authorized_api(request_object=None, log_request=False):
+def is_authorized_api(
+    permission: str,
+    resource_type: str,
+    resource_name: Optional[str] = None,
+    log_request: bool = False,
+) -> bool:
     '''
     Determines whether or not the currently loaded user can perform the specified
     operation on the specified resource (if specified). Data is taken from request_object
@@ -249,21 +254,13 @@ def is_authorized_api(request_object=None, log_request=False):
 
     # We don't want to log requests to the Web API for
     # for authorization since these requests are not malicious
-    request_object = request_object or request
-    request_data = request_object.get_json(force=True)
-    resource_type = request_data['resourceType']
-    resource_name = request_data.get('resourceName')
     resource_id = None
 
     if resource_name:
         resource = get_resource_by_type_and_name(resource_type, resource_name)
         resource_id = resource.id
 
-    if is_authorized(
-        request_data['permission'], resource_type, resource_id, log_request
-    ):
-        return Success()
-    return unauthorized_error(request_data['permission'])
+    return is_authorized(permission, resource_type, resource_id, log_request)
 
 
 def authorization_required(

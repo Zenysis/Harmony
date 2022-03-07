@@ -1,19 +1,13 @@
 // @flow
 import * as React from 'react';
 
-import AlertDefinition from 'models/AlertsApp/AlertDefinition';
-import AlertMessage, { ALERT_TYPE } from 'components/common/AlertMessage';
 import BaseModal from 'components/ui/BaseModal';
-import DashboardMeta from 'models/core/Dashboard/DashboardMeta';
+import Group from 'components/ui/Group';
+import Heading from 'components/ui/Heading';
 import User from 'services/models/User';
-import ZenArray from 'util/ZenModel/ZenArray';
+import type Resource from 'services/models/Resource';
 
 const TEXT = t('admin_app.deleteUserModal');
-const TITLE = TEXT.title;
-const DELETE = TEXT.deleteWithoutTransfer;
-const TRANSFER_AND_DELETE = TEXT.deleteWithTransfer;
-const ALERT_DESCRIPTION = TEXT.alertDescription;
-const DASHBOARD_DESCRIPTION = TEXT.dashboardDescription;
 
 type Props = {
   onRequestClose: () => void,
@@ -22,65 +16,73 @@ type Props = {
   show: boolean,
   user: User,
 
-  userAlerts: ZenArray<AlertDefinition>,
-  userDashboards: ZenArray<DashboardMeta>,
+  userAlertResources: $ReadOnlyArray<Resource>,
+  userDashboardResources: $ReadOnlyArray<Resource>,
 };
 
-const defaultProps = {
-  userAlerts: ZenArray.create(),
-  userDashboards: ZenArray.create(),
-};
-
-export default function DeleteUserModal(props: Props) {
-  const {
-    onForceDelete,
-    onRequestClose,
-    onSafeDelete,
-    show,
-    user,
-    userAlerts,
-    userDashboards,
-  } = props;
-
-  const dashboardListItems = userDashboards.map((dashboard: DashboardMeta) => {
-    const key = dashboard.uri();
-    const label = `${dashboard.title()} - (URL: ${dashboard.slug()})`;
-    return <li key={key}>{label}</li>;
+export default function DeleteUserModal({
+  onForceDelete,
+  onRequestClose,
+  onSafeDelete,
+  show,
+  user,
+  userAlertResources = [],
+  userDashboardResources = [],
+}: Props): React.Element<typeof BaseModal> {
+  const dashboardListItems = userDashboardResources.map(dashboardResource => {
+    const key = dashboardResource.uri();
+    const label = dashboardResource.label();
+    return (
+      <li key={key}>
+        <p>{label}</p>
+      </li>
+    );
   });
 
-  const alertListItems = userAlerts.map((alertDef: AlertDefinition) => {
-    const key = alertDef.uri();
-    const fieldName = alertDef.getReadableField();
-    const dimensionName = alertDef.dimensionName();
-    const text = `${fieldName} - ${dimensionName}`;
-    return <li key={key}>{text}</li>;
+  const alertListItems = userAlertResources.map(alertResource => {
+    const key = alertResource.uri();
+    const label = alertResource.label();
+    return (
+      <li key={key}>
+        <p>{label}</p>
+      </li>
+    );
   });
 
   const { firstName, lastName } = user.modelValues();
 
+  const dashboardItemsBlock = dashboardListItems.length > 0 && (
+    <div>
+      <Heading.Small>{TEXT.dashboards}</Heading.Small>
+      <ul>{dashboardListItems}</ul>
+    </div>
+  );
+
+  const alertItemsBlock = alertListItems.length > 0 && (
+    <div>
+      <Heading.Small>{TEXT.alerts}</Heading.Small>
+      <ul>{alertListItems}</ul>
+    </div>
+  );
+
   return (
     <BaseModal
-      title={`${TITLE}: ${firstName} ${lastName}`}
+      title={`${TEXT.title}: ${firstName} ${lastName}`}
       show={show}
       onRequestClose={onRequestClose}
       onPrimaryAction={onSafeDelete}
-      primaryButtonText={TRANSFER_AND_DELETE}
+      primaryButtonText={TEXT.deleteWithTransfer}
       onSecondaryAction={onForceDelete}
-      secondaryButtonText={DELETE}
+      secondaryButtonText={TEXT.deleteWithoutTransfer}
       secondaryButtonIntent={BaseModal.Intents.DANGER}
-      height={200}
       showPrimaryButton
       showSecondaryButton
     >
-      <AlertMessage type={ALERT_TYPE.WARNING}>
-        {DASHBOARD_DESCRIPTION}
-      </AlertMessage>
-      <ul>{dashboardListItems}</ul>
-
-      <AlertMessage type={ALERT_TYPE.WARNING}>{ALERT_DESCRIPTION}</AlertMessage>
-      <ul>{alertListItems}</ul>
+      <Group.Vertical>
+        <p>{TEXT.takeOwnershipMessage}</p>
+        {dashboardItemsBlock}
+        {alertItemsBlock}
+      </Group.Vertical>
     </BaseModal>
   );
 }
-
-DeleteUserModal.defaultProps = defaultProps;

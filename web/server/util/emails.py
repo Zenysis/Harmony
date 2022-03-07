@@ -1,7 +1,8 @@
 # pylint: disable=R0903
 from builtins import zip, object
-from past.utils import old_div
 from datetime import datetime
+from enum import Enum
+from past.utils import old_div
 from flask import current_app
 
 import global_config
@@ -15,6 +16,7 @@ from web.server.util.email_translations import (
     ACCESS_GRANTED_EMAIL_TRANSLATIONS,
     NEW_DASHBOARD_EMAIL_TRANSLATIONS,
     SHARE_ANALYSIS_EMAIL_TRANSLATIONS,
+    SHARE_DASHBOARD_EMAIL_TRANSLATIONS,
 )
 from web.server.util.html_email_builder import HTMLEmailBuilder
 
@@ -74,9 +76,26 @@ Com base nos alertas do indicador, há novas notificações para exibição.
 SUPPORT_TEXT = 'Need help?'
 SUPPORT_CONTACT = f'We\'re ready to assist, email us at {global_config.SUPPORT_EMAIL}'
 
-DASHBOARD_EMAILS_TAG = 'dashboard_tag'
-SHARE_ANALYSIS_EMAILS_TAG = 'share_analysis_tag'
-ALERT_EMAILS_UBSUBSCRIBE_TAG = 'alert_tag'
+ALERT_NOTIFICATION_TAG = 'alert_notification'
+NEW_DAHSBOARD_CREATED_TAG = 'new_dashboard_created'
+PASSWORD_RESET_TAG = 'password_reset'
+PLATFORM_INVITATION_TAG = 'platform_invitation'
+DASHBOARD_ACCESS_GRANTED_TAG = 'dashboard_access_granted'
+SHARE_AQT_ANALYSIS_TAG = 'share_aqt_analysis'
+SHARE_DASHBOARD_REPORT_TAG = 'share_dashboard_report'
+SCHEDULED_DASHBOARD_REPORT_TAG = 'scheduled_dashboard_report'
+DATA_UPLOAD_TAG = 'data_upload'
+
+SHARE_DASHBOARD_PDF_BODY = '''
+The attached dashboard PDF has been shared with you.
+'''
+
+
+class DashboardViewSources(Enum):
+    DASHBOARD_PERMISSION_EMAIL = 'dashboard_permission_email'
+    NEW_DASHBOARD_EMAIL = 'new_dashboard_email'
+    DASHBOARD_SCHEDULED_REPORT_EMAIL = 'dashboard_scheduled_report_email'
+    SHARED_DASHBOARD_EMAIL = 'shared_dashboard_email'
 
 
 class EmailRenderer(object):
@@ -93,6 +112,9 @@ class EmailRenderer(object):
         self.deployment_full_name = deployment_full_name
         self.deployment_base_url = deployment_base_url
         self.full_platform_name = full_platform_name
+
+    def get_email_sender(self, sending_user):
+        return f'{sending_user.first_name} {sending_user.last_name} <{sending_user.username}>'
 
     def create_password_reset_message(
         self, resetting_user, target_user, reset_password_link
@@ -131,7 +153,6 @@ class EmailRenderer(object):
         cc_email = (
             resetting_user.username if hasattr(resetting_user, 'username') else None
         )
-
         msg = EmailMessage(
             subject=subject,
             body=body,
@@ -139,6 +160,7 @@ class EmailRenderer(object):
             html=html,
             cc=[],
             bcc=[],
+            tags=[self.deployment_abbreviated_name, PASSWORD_RESET_TAG],
         )
 
         if cc_email:
@@ -146,6 +168,8 @@ class EmailRenderer(object):
         return msg
 
     def bcc_project_managers(self, email_msg):
+        # pylint: disable=no-member
+        # User has query object
         bcc_users = User.query.filter(
             User.id.in_(get_configuration(PROJECT_MANAGER_ID_KEY))
         ).all()
@@ -153,7 +177,7 @@ class EmailRenderer(object):
             email_msg.add_bcc(user.username)
 
     def create_invitation_message(self, inviting_user, pending_user, invite_link):
-        subject = 'Your Data Analysis Invite'
+        subject = f'Your {self.deployment_full_name} Invite'
         body_template = INVITE_USER_BODY_EN
 
         if self.default_locale == 'fr':
@@ -176,10 +200,8 @@ class EmailRenderer(object):
             support_email=global_config.SUPPORT_EMAIL,
         )
         html = html_builder.generate_html(
-            invite_link=invite_link,
-            support_email=global_config.SUPPORT_EMAIL,
+            invite_link=invite_link, support_email=global_config.SUPPORT_EMAIL
         )
-
         msg = EmailMessage(
             subject=subject,
             body=body,
@@ -187,16 +209,26 @@ class EmailRenderer(object):
             html=html,
             cc=[],
             bcc=[],
+            sender=self.get_email_sender(inviting_user),
+            tags=[self.deployment_abbreviated_name, PLATFORM_INVITATION_TAG],
         )
         msg.add_cc(inviting_user.username)
         self.bcc_project_managers(msg)
         return msg
 
     def create_new_dashboard_message(
-        self, dashboard_author, deployment_name, dashboard_link
+        self,
+        dashboard_author,
+        deployment_name,
+        dashboard_link,
+        dashboard_name,
+        dashboard_slug,
     ):
         subject = 'Your New %s Dashboard' % deployment_name
         body_template = NEW_DASHBOARD_EN
+        dashboard_link = (
+            f'{dashboard_link}?source={DashboardViewSources.NEW_DASHBOARD_EMAIL.value}'
+        )
 
         body = body_template % (
             dashboard_author.first_name,
@@ -212,6 +244,7 @@ class EmailRenderer(object):
             first_name=dashboard_author.first_name,
             platform_name=self.deployment_full_name,
             support_email=global_config.SUPPORT_EMAIL,
+            dashboard_name=dashboard_name,
         )
         html = html_builder.generate_html(
             first_name=dashboard_author.first_name,
@@ -228,47 +261,60 @@ class EmailRenderer(object):
             html=html,
             cc=[],
             bcc=[],
-            tag=DASHBOARD_EMAILS_TAG,
+            tags=[
+                self.deployment_abbreviated_name,
+                NEW_DAHSBOARD_CREATED_TAG,
+                dashboard_slug,
+            ],
+            sender=self.get_email_sender(dashboard_author),
         )
         return msg
 
     # pylint: disable=R0201
     def create_share_analysis_email(
-        self, subject, recipient, reply_to, body, attachments, query_url, image=None
+        self, subject, to_addr, reply_to, body, attachments, query_url, image=None
     ):
 
-        html_builder = HTMLEmailBuilder(
-            'web/server/templates/emails/share_analysis_email.html'
-        )
+        html_builder = HTMLEmailBuilder('web/server/templates/emails/share_email.html')
 
         body_message = body.split('\n')
 
         html_builder.set_translations(
-            SHARE_ANALYSIS_EMAIL_TRANSLATIONS,
-            support_email=global_config.SUPPORT_EMAIL,
+            SHARE_ANALYSIS_EMAIL_TRANSLATIONS, support_email=global_config.SUPPORT_EMAIL
         )
         html = html_builder.generate_html(
             body_message=body_message,
-            query_url=query_url,
+            shared_link=query_url,
             embedded_image=image,
             support_email=global_config.SUPPORT_EMAIL,
         )
+        query_slug = query_url.split('/')[-1]
         msg = EmailMessage(
             subject=subject,
             body=body,
-            to_addr=recipient,
+            to_addr=to_addr,
             html=html,
             cc=[],
-            bcc=[],
+            bcc=[reply_to],
             sender=reply_to,
             attachments=attachments,
-            tag=SHARE_ANALYSIS_EMAILS_TAG,
+            tags=[self.deployment_abbreviated_name, SHARE_AQT_ANALYSIS_TAG, query_slug],
         )
         return msg
 
-    def create_add_dashboard_user_message(self, to_addr, new_roles, dashboard_url):
+    def create_add_dashboard_user_message(
+        self,
+        to_addr,
+        new_roles,
+        dashboard_url,
+        dashboard_name,
+        dashboard_owner,
+        dashboard_slug,
+    ):
         subject = 'Granted Access to Dashboard'
         permissions = ', '.join(new_roles.get(to_addr)).replace('dashboard_', '')
+        source = DashboardViewSources.DASHBOARD_PERMISSION_EMAIL.value
+        dashboard_url = f'{dashboard_url}?source={source}'
         body = ADD_TO_DASHBOARD_EN % (permissions, dashboard_url)
 
         html_builder = HTMLEmailBuilder(
@@ -279,6 +325,9 @@ class EmailRenderer(object):
             self.default_locale,
             granted_permissions=permissions,
             platform_name=self.deployment_full_name,
+            support_email=global_config.SUPPORT_EMAIL,
+            dashboard_name=dashboard_name,
+            dashboard_owner=f'{dashboard_owner.first_name} {dashboard_owner.last_name}',
         )
         html = html_builder.generate_html(
             granted_permissions=permissions,
@@ -295,7 +344,12 @@ class EmailRenderer(object):
             html=html,
             cc=[],
             bcc=[],
-            tag=DASHBOARD_EMAILS_TAG,
+            tags=[
+                self.deployment_abbreviated_name,
+                DASHBOARD_ACCESS_GRANTED_TAG,
+                dashboard_slug,
+            ],
+            sender=self.get_email_sender(dashboard_owner),
         )
         return msg
 
@@ -334,6 +388,7 @@ class EmailRenderer(object):
             ALERT_EMAIL_TRANSLATIONS,
             self.default_locale,
             platform_name=self.full_platform_name,
+            support_email=global_config.SUPPORT_EMAIL,
         )
         html_str = html_builder.generate_html(
             alerts_link=link,
@@ -350,16 +405,16 @@ class EmailRenderer(object):
             html=html_str,
             cc=[],
             bcc=recipients,
-            tag=ALERT_EMAILS_UBSUBSCRIBE_TAG,
+            tags=[self.deployment_abbreviated_name, ALERT_NOTIFICATION_TAG],
         )
 
     def create_data_upload_alert_message(
-        self, filenames, destinations, category, datestamp
+        self, filenames, destinations, category, datestamp, uploading_user
     ):
         # Add default notifies until we are sure that ALL deployments have
         # configured project managers.
-        to_addr = ''
         cc = global_config.DATA_UPLOAD_DEFAULT_NOTIFY
+        to_addr = cc[0]
 
         base_url = self.deployment_base_url
         urls = ['%s/%s' % (base_url, path) for path in destinations]
@@ -373,8 +428,66 @@ class EmailRenderer(object):
         )
         body = 'New files for "%s":\n\n%s' % (category, '\n'.join(links))
         email_msg = EmailMessage(
-            subject=subject, body='', to_addr=to_addr, html=body, cc=cc, bcc=[]
+            subject=subject,
+            body='',
+            to_addr=to_addr,
+            html=body,
+            cc=cc,
+            bcc=[],
+            sender=self.get_email_sender(uploading_user),
+            tags=[self.deployment_abbreviated_name, DATA_UPLOAD_TAG],
         )
         self.bcc_project_managers(email_msg)
 
         return email_msg
+
+    def create_share_dashboard_pdf_message(
+        self,
+        recipients,
+        pdf_attachment_list,
+        body,
+        subject,
+        dashboard_url,
+        sender,
+        image,
+        slug,
+        **kwargs,
+    ):
+        html_builder = HTMLEmailBuilder('web/server/templates/emails/share_email.html')
+        body_message = body.split('\n')
+        is_scheduled_report = kwargs.get('is_scheduled_report')
+        use_email_thread = kwargs.get('use_email_thread')
+
+        html_builder.set_translations(
+            SHARE_DASHBOARD_EMAIL_TRANSLATIONS, support_email=global_config.SUPPORT_EMAIL
+        )
+        source = (
+            DashboardViewSources.DASHBOARD_SCHEDULED_REPORT_EMAIL.value
+            if is_scheduled_report
+            else DashboardViewSources.SHARED_DASHBOARD_EMAIL.value
+        )
+        dashboard_url = f'{dashboard_url}?source={source}'
+        html = html_builder.generate_html(
+            body_message=body_message,
+            shared_link=dashboard_url,
+            embedded_image=image,
+            support_email=global_config.SUPPORT_EMAIL,
+        )
+
+        email_tag = (
+            SCHEDULED_DASHBOARD_REPORT_TAG
+            if is_scheduled_report
+            else SHARE_DASHBOARD_REPORT_TAG
+        )
+
+        return EmailMessage(
+            subject=subject,
+            body=body,
+            to_addr=sender,
+            cc=recipients if use_email_thread else [],
+            bcc=recipients if not use_email_thread else [],
+            html=html,
+            sender=sender,
+            attachments=pdf_attachment_list,
+            tags=[self.deployment_abbreviated_name, email_tag, slug],
+        )

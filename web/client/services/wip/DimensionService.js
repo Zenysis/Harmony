@@ -4,26 +4,28 @@ import Promise from 'bluebird';
 import APIService, { API_VERSION } from 'services/APIService';
 import CachedMapService from 'services/wip/CachedMapService';
 import CategoryService from 'services/wip/CategoryService';
+// no way to avoid this circular dependency unfortunately
+// eslint-disable-next-line import/no-cycle
 import Dimension from 'models/core/wip/Dimension';
 import { convertIDToURI, convertURIToID } from 'services/wip/util';
 import type { APIVersion, HTTPService } from 'services/APIService';
 import type { Cache, RejectFn, ResolveFn } from 'services/wip/CachedMapService';
 import type { URI, URIConverter } from 'services/types/api';
 
-const TEXT = t('select_granularity');
-
 class DimensionService extends CachedMapService<Dimension>
   implements URIConverter {
   apiVersion: APIVersion = API_VERSION.V2;
-  endpoint: string = 'wip/dimensions';
+  endpoint: string;
   _httpService: HTTPService;
 
-  constructor(httpService: HTTPService) {
+  constructor(httpService: HTTPService, checkAuthorization: boolean) {
     super();
+    this.endpoint = checkAuthorization
+      ? 'query/dimensions/authorized'
+      : 'query/dimensions';
     this._httpService = httpService;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   buildCache(
     resolve: ResolveFn<Dimension>,
     reject: RejectFn,
@@ -36,15 +38,14 @@ class DimensionService extends CachedMapService<Dimension>
         const dimensionMappingCache = {};
         rawDimensionList.forEach(rawDimension => {
           const { description, id, name } = rawDimension;
-          const translatedName = name.length ? name : TEXT[id] || id;
           const category = CategoryService.UNSAFE_get(
             CategoryService.convertURIToID(rawDimension.category.$ref),
           );
-          const dimension = Dimension.create({
+          const dimension = Dimension.fromObject({
             category,
             description,
             id,
-            name: translatedName,
+            name,
           });
           dimensionMappingCache[dimension.id()] = dimension;
         });
@@ -62,4 +63,13 @@ class DimensionService extends CachedMapService<Dimension>
   }
 }
 
-export default new DimensionService(APIService);
+// NOTE(toshi): There are areas in which we want to constrain the dimensions
+// that a user can see ie groupby and filter dropdowns, but we cannot completely
+// remove an unauthorized dimension from a user's client which is why we have
+// two services here.
+export const AuthorizedDimensionService = (new DimensionService(
+  APIService,
+  true,
+): DimensionService);
+
+export default (new DimensionService(APIService, false): DimensionService);

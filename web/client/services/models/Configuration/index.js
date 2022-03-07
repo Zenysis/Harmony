@@ -18,37 +18,28 @@ type BackendConfiguration = {
  */
 
 type RequiredValues = {
-  /**
-   * The unique name of the configuration setting.
-   */
+  /** The unique name of the configuration setting. */
   key: ConfigurationKey,
-  /**
-   * The current value of the configuration setting.
-   */
+
+  /** The current value of the configuration setting. */
   value: any,
 };
 
 type DefaultValues = {
-  /**
-   * An explanation of what the configuration setting does.
-   */
+  /** An explanation of what the configuration setting does. */
   description: string,
-  /**
-   * @readonly
-   * The default value of the configuration setting.
-   */
-  defaultValue: Zen.ReadOnly<any>,
-  /**
-   * @readonly
-   * The unique uri that can be used to locate this user on the server
-   */
-  uri: Zen.ReadOnly<string>,
+
+  /** The default value of the configuration setting. */
+  defaultValue: any,
+
+  /** The unique uri that can be used to locate this user on the server */
+  uri: string,
 };
 
 class Configuration
   extends Zen.BaseModel<Configuration, RequiredValues, DefaultValues>
   implements Serializable<$Shape<BackendConfiguration>> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     description: '',
     defaultValue: '',
     uri: '',
@@ -75,4 +66,4 @@ class Configuration
   }
 }
 
-export default ((Configuration: any): Class<Zen.Model<Configuration>>);
+export default ((Configuration: $Cast): Class<Zen.Model<Configuration>>);

@@ -1,0 +1,213 @@
+.field-overview-page {
+  margin: 0 auto;
+  padding-top: $space-xxl-px;
+  width: 1000px;
+
+  &__button {
+    color: $blue-primary;
+
+    &:hover {
+      color: $blue-primary-hover;
+      cursor: pointer;
+    }
+  }
+
+  &__section {
+    border-right: 1px solid $gray;
+    padding-right: $space-s-px;
+  }
+}
+
+.field-overview-page-table {
+  background: #ffffff;
+  border: 1px solid $gray;
+  border-radius: 10px;
+  margin-bottom: initial;
+
+  // NOTE(stephen): Overriding default styles of the Table ui component. That
+  // component does not provide the necessary levers to do it with class names
+  // alone.
+  .zen-table {
+    background-color: initial;
+
+    &__header,
+    &__row {
+      border-bottom: 1px solid $gray;
+
+      // HACK(stephen): GIANT HACK. HTML table elements have quirky behavior
+      // compared to a div. One quirk is that padding is not supported. We want
+      // the bottom border of each table row to extend to the edge of the frame.
+      // However, we can't apply padding to each row in the table to achieve the
+      // desired effect, since it doesn't do anything. Instead, we apply a
+      // transparent border on the left and right side that performs the same
+      // function.
+      border-left: $space-m-px solid transparent;
+      border-right: $space-m-px solid transparent;
+    }
+
+    // The header should have the same spacing that the rows has (the default is
+    // half the spacing).
+    &__header-cell {
+      color: $slate-hover;
+      font-size: 16px;
+      font-weight: bold;
+      padding-bottom: $space-m-em;
+      padding-top: $space-m-em;
+    }
+
+    &__row {
+      &:last-child {
+        border-bottom: initial;
+      }
+    }
+  }
+
+  .zen-table-action-selector-container {
+    border-top: 1px solid $gray;
+    padding: $space-xs-px $space-m-px;
+  }
+
+  &__text-area-input {
+    @extend .zen-input-text;
+    height: auto;
+    min-height: 50px;
+    resize: vertical;
+  }
+}
+
+.category-filter-selector {
+  &__button {
+    align-items: center;
+    border-radius: 5px;
+    display: flex;
+    padding: 0 $space-s-px;
+
+    &:hover {
+      background-color: $gray-hover;
+    }
+
+    &--open,
+    &:active {
+      background-color: $gray-active;
+    }
+  }
+
+  &__button-content {
+    margin-right: $space-xs-px;
+  }
+
+  &__button-arrow {
+    margin-right: 0;
+  }
+
+  &__selector-container {
+    position: absolute;
+    z-index: 10000;
+  }
+}
+
+.create-calculation-indicator-view {
+  &__text-button {
+    color: $blue-primary;
+
+    &:hover {
+      color: $blue-primary-hover;
+    }
+  }
+
+  &__body {
+    padding-left: 10px;
+  }
+
+  &__formula-text {
+    align-items: center;
+    background-color: $white-hover;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: $space-l-px;
+    padding: $space-m-px;
+  }
+
+  &__formula-block {
+    background: $white;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    display: flex;
+    margin-top: $space-s-px;
+  }
+
+  &__edit-icon {
+    fill: $blue-primary;
+  }
+}
+
+.indicator-formula-modal {
+  // NOTE(yitian): These width percentages are placeholder values. Will set
+  // min/max width once designs are solidifed.
+  &__fields-section {
+    width: 33%;
+  }
+
+  &__formula-section {
+    width: 66%;
+  }
+}
+
+.data-catalog-cohort-display {
+  cursor: default;
+  pointer-events: none;
+
+  .cohort-group-title__actions {
+    visibility: hidden;
+  }
+
+  &__cohort-summary-bar {
+    align-items: center;
+    display: flex;
+    padding: $space-m-px 0px;
+  }
+
+  &__cohort-summary-bar-text {
+    color: $slate-hover;
+  }
+
+  &__cohort-block {
+    border: 1px solid $gray;
+    border-radius: 5px;
+  }
+
+  // Data catalog cohort display view is a non interactive cohort state, so we
+  // override all blue text and borders to slate.
+  .zen-borderless-input-text__text,
+  .segment-option-title__action,
+  .indicator-option__tag,
+  .time-interval-option__tag,
+  .cohort-group-operation-row__tag {
+    color: $slate;
+  }
+
+  .cohort-group-operation-row__tag {
+    border: 1px solid $slate;
+  }
+
+  .zen-borderless-input-text,
+  .indicator-option__tag,
+  .time-interval-option__tag {
+    border-bottom: 1px dashed $slate;
+  }
+}
+
+.fields-section {
+  &__fields-container {
+    background-color: $gray-light;
+    border-radius: 2px;
+    overflow-y: auto;
+    padding: $space-s-px;
+  }
+
+  &__title {
+    font-size: $font-l;
+    font-weight: bold;
+  }
+}

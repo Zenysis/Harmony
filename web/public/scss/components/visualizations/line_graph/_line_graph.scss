@@ -1,0 +1,93 @@
+.line-graph-viz {
+  display: flex;
+  height: 100%;
+  justify-content: space-between;
+  width: 100%;
+
+  &--legend-horizontal {
+    flex-direction: column;
+  }
+
+  &--legend-vertical {
+    flex-direction: row;
+
+    .line-graph-viz__legend-lines-section {
+      overflow-y: auto;
+    }
+  }
+
+  &__legend {
+    display: flex;
+    flex-direction: column;
+
+    & > div {
+      &:not(:first-of-type) {
+        border-top: 1px solid $gray;
+        margin-top: $space-xs-px;
+        padding-top: $space-xs-px;
+      }
+    }
+  }
+}
+
+.line-graph-controls-block {
+  &__band-settings-section {
+    margin-top: $space-l-px;
+  }
+
+  &__band-settings-title-block {
+    display: flex;
+  }
+
+  &__band-settings-title {
+    margin-bottom: 13px;
+  }
+
+  &__band-settings-button {
+    // Align the button icon centered with the header text. This cannot be done
+    // with flex box alignment due to css styles applied by <Icon> and the
+    // way that the header underline is applied.
+    line-height: 19px;
+  }
+}
+
+.line-graph-legend {
+  column-gap: $space-s-px;
+  display: grid;
+
+  &--horizontal {
+    grid-template-columns: repeat(auto-fit, minmax(15%, max-content));
+
+    // NOTE(stephen): Try to increase the amount of space available for legend
+    // items when the screen is small. Unfortunately, this doesn't handle the
+    // case where the container is small but the screen is big. That is the more
+    // general situation we should handle.
+    @media screen and (max-width: 500px) {
+      grid-template-columns: repeat(auto-fit, minmax(45%, max-content));
+    }
+  }
+}
+
+.line-graph-legend-item-row {
+  align-items: center;
+  display: flex;
+  max-width: 300px;
+  user-select: none;
+
+  &--disabled {
+    opacity: 0.4;
+  }
+
+  &__label {
+    font-size: 13px;
+    margin-left: $space-xs-px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__marker {
+    min-width: 30px;
+    width: 30px;
+  }
+}

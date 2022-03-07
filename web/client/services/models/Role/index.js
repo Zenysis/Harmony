@@ -1,6 +1,6 @@
 // @flow
 import * as Zen from 'lib/Zen';
-import type { ResourceType } from 'services/AuthorizationService';
+import type { ResourceType } from 'services/AuthorizationService/types';
 
 /**
  * The Role model is used by the `AuthorizationService` to represent an
@@ -48,4 +48,4 @@ class Role extends Zen.BaseModel<Role, Values> {
   }
 }
 
-export default ((Role: any): Class<Zen.Model<Role>>);
+export default ((Role: $Cast): Class<Zen.Model<Role>>);

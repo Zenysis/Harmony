@@ -1,0 +1,25 @@
+.embedded-query-app-container {
+  background-color: $white;
+
+  // HACK(stephen): Unset a bunch of CSS in zen-style.
+  overflow-x: auto;
+  overflow-y: auto;
+
+  // Unset the navbar height since it does not exist.
+  --navbar-height: 0;
+}
+
+.embedded-query-app {
+  position: relative;
+
+  &__export-button {
+    opacity: 0.7;
+    position: absolute;
+    right: 0;
+    top: $space-xs-em;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}

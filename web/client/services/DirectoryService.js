@@ -3,10 +3,10 @@ import Promise from 'bluebird';
 
 import * as Zen from 'lib/Zen';
 import APIService, { API_VERSION } from 'services/APIService';
+import Resource from 'services/models/Resource';
 import SecurityGroup from 'services/models/SecurityGroup';
 import User from 'services/models/User';
 import ZenError from 'util/ZenError';
-import ZenMap from 'util/ZenModel/ZenMap';
 import autobind from 'decorators/autobind';
 import type ResourceTypeRoleMap from 'services/models/ResourceTypeRoleMap';
 import type { HTTPService } from 'services/APIService';
@@ -14,6 +14,8 @@ import type { HTTPService } from 'services/APIService';
 // HACK(vedant) - Pagination should be supported via a Pagination Service.
 // The underlying service should not know or care.
 const MAXIMUM_PAGE_SIZE = 1000;
+
+const TEXT = t('services.DirectoryService');
 
 export type InviteeRequest = {
   name: string,
@@ -34,14 +36,12 @@ class DirectoryService {
    * Return the active user's username
    */
   getActiveUsername(): string {
-    // eslint-disable-line class-methods-use-this
     return window.__JSON_FROM_BACKEND.user.username;
   }
 
   /**
    * Returns client's user ID.
    */
-  // eslint-disable-next-line class-methods-use-this
   getUserId(): number {
     return window.__JSON_FROM_BACKEND.user.id;
   }
@@ -124,15 +124,15 @@ class DirectoryService {
    *
    * @param {SecurityGroup} group The group to update
    *
-   * @param {ZenMap<ResourceTypeRoleMap>} newRoles An object of resource types
+   * @param {Zen.Map<ResourceTypeRoleMap>} newRoles An object of resource types
    * to their corresponding RoleMap instance
    */
   @autobind
   updateGroupRoles(
     group: SecurityGroup,
-    newRoles: ZenMap<ResourceTypeRoleMap>,
+    newRoles: Zen.Map<ResourceTypeRoleMap>,
   ): Promise<void> {
-    const payload = newRoles.serialize();
+    const payload = Zen.serializeMap(newRoles);
 
     return new Promise((resolve, reject) => {
       this._httpService
@@ -158,7 +158,9 @@ class DirectoryService {
     return new Promise((resolve, reject) => {
       this._httpService
         .patch(API_VERSION.NONE, `${group.uri()}/users`, newUsers)
-        .then(response => resolve(response))
+        .then(() =>
+          resolve(window.toastr.success(TEXT.updateGroupUsersSuccess)),
+        )
         .catch(error => reject(error));
     });
   }
@@ -166,18 +168,38 @@ class DirectoryService {
   /**
    * Creates a new group with the specified name
    *
-   * @param {String} groupName The name for the new Group
-   *
-   * @returns {Promise<SecurityGroup>} The newly created group
+   * @param {SecurityGroup} group new group to be created
    */
   @autobind
-  createGroup(groupName: string): Promise<SecurityGroup> {
+  createGroup(group: SecurityGroup): Promise<void> {
+    const serializedGroup = group.serialize();
+    const roleURIs = group.roles().mapValues(role => role.uri());
+    const usernames = group.users().mapValues(user => user.username());
     return new Promise((resolve, reject) => {
       this._httpService
-        .post(API_VERSION.V2, 'group', { name: groupName })
-        .then(newGroupObject =>
-          resolve(SecurityGroup.deserialize(newGroupObject)),
-        )
+        .post(API_VERSION.V2, 'group', {
+          ...serializedGroup,
+          roles: roleURIs,
+          users: usernames,
+        })
+        .then(() => resolve(window.toastr.success(TEXT.createGroupSuccess)))
+        .catch(error => reject(error));
+    });
+  }
+
+  @autobind
+  updateGroup(group: SecurityGroup): Promise<void> {
+    const serializedGroup = group.serialize();
+    const roleURIs = group.roles().mapValues(role => role.uri());
+    const usernames = group.users().mapValues(user => user.username());
+    return new Promise((resolve, reject) => {
+      this._httpService
+        .patch(API_VERSION.NONE, group.uri(), {
+          ...serializedGroup,
+          roles: roleURIs,
+          users: usernames,
+        })
+        .then(() => resolve(window.toastr.success(TEXT.updateGroupSuccess)))
         .catch(error => reject(error));
     });
   }
@@ -193,7 +215,7 @@ class DirectoryService {
     return new Promise((resolve, reject) => {
       this._httpService
         .delete(API_VERSION.NONE, group.uri())
-        .then(() => resolve())
+        .then(() => resolve(window.toastr.success(TEXT.deleteGroupSuccess)))
         .catch(error => {
           reject(error);
         });
@@ -243,6 +265,35 @@ class DirectoryService {
         .then((result: Zen.Serialized<User>) => {
           resolve(User.deserialize(result));
         })
+        .catch(error => {
+          reject(error);
+        });
+    });
+  }
+
+  @autobind
+  getUserOwnership(userUri: string): Promise<Array<Resource>> {
+    return new Promise((resolve, reject) => {
+      this._httpService
+        .get(API_VERSION.NONE, `${userUri}/ownership`)
+        .then((result: Array<Zen.Serialized<Resource>>) => {
+          resolve(result.map(resource => Resource.deserialize(resource)));
+        })
+        .catch(error => {
+          reject(error);
+        });
+    });
+  }
+
+  @autobind
+  getIsUserInGroup(userUri: string, groupName: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this._httpService
+        .get(
+          API_VERSION.NONE,
+          `${userUri}/is_user_in_group?group_name=${groupName}`,
+        )
+        .then((result: boolean) => resolve(result))
         .catch(error => {
           reject(error);
         });
@@ -316,25 +367,6 @@ class DirectoryService {
   }
 
   /**
-   * Updates the specified user (including the roles assigned to them).
-   *
-   * @param {User} user The user to update
-   *
-   * @returns {Promise<User>} A promise that when completed successfully will
-   *                          contain the details of the updated user.
-   */
-  @autobind
-  updateUser(user: User): Promise<User> {
-    return new Promise((resolve, reject) => {
-      this._httpService
-        .patch(API_VERSION.NONE, `${user.uri()}`, user.serialize())
-        .then(() => this.updateUserRoles(user, user.roles()))
-        .then(response => resolve(User.deserialize(response)))
-        .catch(error => reject(error));
-    });
-  }
-
-  /**
    * Deletes the specified user. Deletion WILL fail if the User has any
    * Dashboards or other artifacts associated with them. To force delete
    * a user, refer to the `forceDelete` method.
@@ -380,19 +412,36 @@ class DirectoryService {
   }
 
   /**
+   * Update a user and all of its fields.
+   */
+  @autobind
+  updateUser(user: User, groups: $ReadOnlyArray<SecurityGroup>): Promise<User> {
+    return new Promise((resolve, reject) => {
+      this._httpService
+        .patch(API_VERSION.NONE, `${user.uri()}`, {
+          ...user.serialize(),
+          roles: user.roles().mapValues(r => r.uri()),
+          groups: groups.map(g => g.uri()),
+        })
+        .then(updatedUser => resolve(updatedUser))
+        .catch(error => reject(error));
+    });
+  }
+
+  /**
    * Updates the roles held by the user with the roles specified.
    *
    * @param {User} user The group to update
    *
-   * @param {ZenMap<ResourceTypeRoleMap>} newRoles An object of resource types
+   * @param {Zen.Map<ResourceTypeRoleMap>} newRoles An object of resource types
    *   to their corresponding RoleMap instance
    */
   @autobind
   updateUserRoles(
     user: User,
-    newRoles: ZenMap<ResourceTypeRoleMap>,
-  ): Promise<User> {
-    const payload = newRoles.serialize();
+    newRoles: Zen.Map<ResourceTypeRoleMap>,
+  ): Promise<Zen.Serialized<User>> {
+    const payload = Zen.serializeMap(newRoles);
 
     return new Promise((resolve, reject) => {
       this._httpService
@@ -401,6 +450,23 @@ class DirectoryService {
         .catch(error => reject(error));
     });
   }
+
+  /**
+   * Returns if user can export data
+   *
+   * @param {string} username The username to check
+   */
+  @autobind
+  canUserExportData(username: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.getUser(username).then(user => {
+        this._httpService
+          .get(API_VERSION.NONE, `${user.uri()}/can_export_data`)
+          .then(response => resolve(response))
+          .catch(error => reject(error));
+      });
+    });
+  }
 }
 
-export default new DirectoryService(APIService);
+export default (new DirectoryService(APIService): DirectoryService);

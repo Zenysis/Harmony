@@ -1,14 +1,26 @@
 import numbers
 
 from json import JSONDecoder, JSONEncoder
+from typing import List
+
+
+# PyPy speedup to use the optimized decoder if it is available.
+# pylint: disable=import-error
+try:
+    import _pypyjson
+except ImportError:
+    _pypyjson = None
 
 # Reuse the same encoder/decoder instead of using loads and dumps since those
 # versions construct a new encoder/decoder each time they are called.
-_JSON_DECODER = JSONDecoder()
 _JSON_ENCODER = JSONEncoder(ensure_ascii=False, check_circular=False, allow_nan=False)
 # NOTE(stephen): If we are fine with unicode escaping, this encoder will be
 # more performant.
 _JSON_ENCODER_ASCII = JSONEncoder(check_circular=False, allow_nan=False)
+
+# If we are using pypy, we should use the optimized decoder instead of the standard
+# json decoder.
+_DECODE_JSON = _pypyjson.loads if _pypyjson else JSONDecoder().decode
 
 # Processed pipeline sources will store their data as a child class
 # of BaseRow
@@ -18,9 +30,17 @@ class BaseRow:
 
     # These are the fields that will be used in the matching process
     # They are ordered
-    MAPPING_KEYS = []
+    MAPPING_KEYS: List[str] = []
 
-    def __init__(self, key_dict=None, data_dict=None, date='', source=''):
+    __slots__ = ('_internal',)
+
+    def __init__(
+        self,
+        key_dict: dict = None,
+        data_dict: dict = None,
+        date: str = '',
+        source: str = '',
+    ):
         self._internal = {
             'key': {},
             'data': {},
@@ -47,7 +67,7 @@ class BaseRow:
         return self._internal['data']
 
     @data.setter
-    def data(self, value):
+    def data(self, value: dict):
         # TODO(stephen): It'd be nice if there was a better way to enforce types
         assert isinstance(
             value, dict
@@ -100,7 +120,7 @@ class BaseRow:
 
     @classmethod
     def from_json(cls, line):
-        return cls.from_dict(_JSON_DECODER.decode(line))
+        return cls.from_dict(_DECODE_JSON(line))
 
     def _generate_id(self, values, delimiter='__'):
         return delimiter.join(values)
@@ -146,105 +166,3 @@ class BaseRow:
         row.update(self.key)
         line_ending = '\n' if newline else ''
         return '%s%s' % (_JSON_ENCODER_ASCII.encode(row), line_ending)
-
-
-class BaseMetaRow:
-    DATE_FIELD = 'Real_Date'
-    SOURCE_FIELD = 'source'
-
-    # These are the fields that will be used in the matching process
-    # They are ordered
-    MAPPING_KEYS = []
-
-    def __init__(self, key_dict, date_str, source, metrics_dict, properties_dict):
-        self._internal = {
-            'key': {},
-            'metrics': {},
-            'properties': set(),
-            self.DATE_FIELD: '',
-            self.SOURCE_FIELD: '',
-        }
-        self.key = key_dict
-        self.metrics = metrics_dict
-        self.properties = properties_dict
-        self.date = date_str
-        self.source = source
-
-    @property
-    def mapping_id(self):
-        values = [self.key.get(k, '') for k in self.MAPPING_KEYS]
-        return self._generate_id(values)
-
-    @property
-    def row_id(self):
-        values = [self.mapping_id, self.date]
-        return self._generate_id(values)
-
-    @property
-    def metrics(self):
-        return self._internal['metrics']
-
-    @metrics.setter
-    def metrics(self, value):
-        if not value:
-            value = {}
-        self._internal['metrics'] = value
-
-    @property
-    def properties(self):
-        return self._internal['properties']
-
-    @properties.setter
-    def properties(self, value):
-        if not value:
-            value = set()
-        self._internal['properties'] = value
-
-    @property
-    def key(self):
-        return self._internal['key']
-
-    @key.setter
-    def key(self, value):
-        if not value:
-            value = {}
-        self._internal['key'] = value
-
-    @property
-    def date(self):
-        return self._internal[self.DATE_FIELD]
-
-    @date.setter
-    def date(self, value):
-        self._internal[self.DATE_FIELD] = value
-
-    @property
-    def source(self):
-        return self._internal[self.SOURCE_FIELD]
-
-    @source.setter
-    def source(self, value):
-        self._internal[self.SOURCE_FIELD] = value
-
-    def to_dict(self):
-        self._internal['properties'] = list(self._internal['properties'])
-        return self._internal
-
-    def to_json(self, newline=False):
-        json_str = _JSON_ENCODER.encode(self.to_dict())
-        if newline:
-            return json_str + '\n'
-        return json_str
-
-    @classmethod
-    def from_json(cls, line):
-        return cls.from_dict(_JSON_DECODER.decode(line))
-
-    def _generate_id(self, values, delimiter='__'):  # pylint: disable=R0201
-        return delimiter.join(values)
-
-    @classmethod
-    def from_dict(cls, stored_instance):
-        output = cls()  # pylint: disable=E1120
-        output._internal = dict(stored_instance)  # pylint: disable=W0212
-        return output

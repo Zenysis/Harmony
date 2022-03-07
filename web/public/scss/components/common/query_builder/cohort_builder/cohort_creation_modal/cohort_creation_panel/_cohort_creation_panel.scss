@@ -1,0 +1,46 @@
+.cohort-creation-panel {
+  flex: 1;
+  overflow: auto;
+  padding: $space-m-px $space-l-px;
+
+  &__cohort-block {
+    border: 1px solid $gray;
+    border-radius: 5px;
+  }
+
+  &__formula {
+    align-self: flex-end;
+    flex: 1;
+    font-size: $font-xl;
+    font-weight: 700;
+  }
+}
+
+.cohort-group-operation-row {
+  align-items: center;
+  display: flex;
+  height: 0;
+  justify-content: center;
+
+  &__tag {
+    background-color: $white;
+    border: 1px solid $blue-primary;
+    border-radius: 20px;
+    color: $blue-primary;
+    font-size: 12px;
+    padding: $space-xxs-px $space-xs-px;
+
+    &:hover {
+      border: 1px solid $blue-primary-hover;
+      color: $blue-primary-hover;
+    }
+  }
+
+  &--union {
+    margin: $space-l-px 0;
+  }
+
+  &--intersect {
+    border-bottom: 1px solid $gray;
+  }
+}

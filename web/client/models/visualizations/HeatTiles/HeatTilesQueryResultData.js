@@ -2,15 +2,15 @@
 import Promise from 'bluebird';
 
 import * as Zen from 'lib/Zen';
-import { RESULT_VIEW_TYPES } from 'components/QueryResult/viewTypes';
 import {
   SORT_ALPHABETICAL,
   SORT_DESCENDING,
 } from 'components/QueryResult/graphUtil';
+import { applyCustomFieldsToDataObjects } from 'models/core/Field/CustomField/Formula/formulaUtil';
 import { defaultApplyTransformations } from 'models/core/QueryResultState/interfaces/QueryResultData';
-import { sortNumeric, sortAlphabetic } from 'util/util';
+import { sortNumeric, sortAlphabetic } from 'util/arrayUtil';
 import type CustomField from 'models/core/Field/CustomField';
-import type DataFilter from 'models/core/QueryResultSpec/QueryResultFilter/DataFilter';
+import type DataFilterGroup from 'models/core/QueryResultSpec/DataFilterGroup';
 import type QueryResultSpec from 'models/core/QueryResultSpec';
 import type {
   DataPoint,
@@ -24,8 +24,10 @@ type TotalsMap = {
   // Mapping from data point key (like location) to a mapping from Field ID to
   // total value for that field.
   +[string]: {
-    +[string]: number,
+    +[string]: number | null,
+    ...,
   },
+  ...,
 };
 
 type DefaultValues = {
@@ -101,7 +103,7 @@ class HeatTilesQueryResultData
   implements
     QueryResultData<HeatTilesQueryResultData>,
     Serializable<SerializedHeatTilesQueryResult> {
-  static defaultValues = {
+  static defaultValues: DefaultValues = {
     data: [],
     dates: [],
     totals: [],
@@ -124,57 +126,88 @@ class HeatTilesQueryResultData
     });
   }
 
-  _calculateNewTotals(customFields: $ReadOnlyArray<CustomField>): TotalsMap {
-    const output = {};
-    const curTotalsMap = this._.totalsMap();
-    Object.keys(curTotalsMap).forEach(key => {
-      const newTotals = { ...curTotalsMap[key] };
-      customFields.forEach(field => {
-        newTotals[field.id()] = field.formula().evaluateFormula(newTotals);
-      });
-      output[key] = newTotals;
-    });
-    return output;
-  }
-
-  _calculateNewData(
+  _calculateNewTotals(
     customFields: $ReadOnlyArray<CustomField>,
-  ): $ReadOnlyArray<DataPoint> {
-    return this._.data().map(dataObj => {
-      const newDataObj = { ...dataObj };
-      customFields.forEach(field => {
-        newDataObj[field.id()] = field.formula().evaluateFormula(newDataObj);
+    newData: $ReadOnlyArray<DataPoint>,
+  ): TotalsMap {
+    // iterate over all our newData, and for each dimension gather a total
+    // sum per custom field
+    const customFieldTotalsPerDimension: Map<
+      string,
+      Map<string, number | null>,
+    > = new Map();
+    newData.forEach(dataObj => {
+      Object.keys(dataObj.dimensions).forEach(dimId => {
+        const dimVal = dataObj.dimensions[dimId];
+        if (dimVal !== null) {
+          const totalsPerField =
+            customFieldTotalsPerDimension.get(dimVal) ||
+            new Map<string, number | null>();
+
+          customFields.forEach(field => {
+            const fieldId = field.id();
+            const fieldVal = dataObj[fieldId];
+            const currentTotal = totalsPerField.get(fieldId) || null;
+            const newTotal =
+              currentTotal === null && fieldVal === null
+                ? null
+                : Number(currentTotal) + Number(fieldVal);
+            totalsPerField.set(fieldId, newTotal);
+          });
+
+          customFieldTotalsPerDimension.set(dimVal, totalsPerField);
+        }
       });
-      return newDataObj;
     });
+
+    // now add all the totals for each custom field to the current `totalsMap`
+    const output = {};
+    customFieldTotalsPerDimension.forEach((totalsPerField, dimVal) => {
+      const oldTotals = this._.totalsMap()[dimVal];
+      const newTotals = { ...oldTotals };
+      totalsPerField.forEach((total, fieldId) => {
+        newTotals[fieldId] = total;
+      });
+      output[dimVal] = newTotals;
+    });
+
+    return output;
   }
 
   applyCustomFields(
     customFields: $ReadOnlyArray<CustomField>,
   ): Zen.Model<HeatTilesQueryResultData> {
+    const newData = applyCustomFieldsToDataObjects(customFields, {
+      useTimeSeriesRowWithNullableValues: true,
+      data: this._.data(),
+    });
+
     return this.modelValues({
-      data: this._calculateNewData(customFields),
-      totalsMap: this._calculateNewTotals(customFields),
+      data: newData,
+      totalsMap: this._calculateNewTotals(customFields, newData),
     });
   }
 
-  // TODO(nina, stephen): Support filtering for HeatTiles.
-  applyFilters(
-    // eslint-disable-next-line no-unused-vars
-    filterMap: Zen.Map<DataFilter>,
-  ): Zen.Model<HeatTilesQueryResultData> {
-    return this._;
+  applyFilters(filters: DataFilterGroup): Zen.Model<HeatTilesQueryResultData> {
+    return this._.data(
+      filters.filterRows(
+        this._.data(),
+        (row: DataPoint, fieldId: string) => row[fieldId],
+      ),
+    );
   }
 
   applySettings(
     queryResultSpec: QueryResultSpec,
   ): Zen.Model<HeatTilesQueryResultData> {
-    const controls = queryResultSpec.getVisualizationControls(
-      RESULT_VIEW_TYPES.HEATTILES,
-    );
-    const { selectedField, showTimeOnYAxis, sortOn, sortOrder } = controls;
+    const controls = queryResultSpec.getVisualizationControls('HEATTILES');
+    const {
+      selectedField,
+      showTimeOnYAxis,
+      sortOn,
+      sortOrder,
+    } = controls.modelValues();
     const isSortingAlpha = sortOrder === SORT_ALPHABETICAL;
-    const sortFn = isSortingAlpha ? sortAlphabetic : sortNumeric;
     const sortField = showTimeOnYAxis ? selectedField : sortOn;
 
     // Recreate the totals array based on the modified data and totalsMap.
@@ -182,11 +215,13 @@ class HeatTilesQueryResultData
 
     // Sort the totals based on the user settings.
     totals.sort((a, b) =>
-      sortFn(
-        isSortingAlpha ? a.key : a.totals[sortField],
-        isSortingAlpha ? b.key : b.totals[sortField],
-        sortOrder === SORT_DESCENDING,
-      ),
+      isSortingAlpha
+        ? sortAlphabetic(a.key, b.key, sortOrder === SORT_DESCENDING)
+        : sortNumeric(
+            a.totals[sortField],
+            b.totals[sortField],
+            sortOrder === SORT_DESCENDING,
+          ),
     );
     return this._.totals(totals);
   }
@@ -198,9 +233,14 @@ class HeatTilesQueryResultData
       return Promise.resolve(this._);
     }
 
-    return defaultApplyTransformations(this._, queryResultSpec).then(
-      queryResult => queryResult.applySettings(queryResultSpec),
-    );
+    return defaultApplyTransformations(
+      this._,
+      queryResultSpec,
+    ).then(queryResult => queryResult.applySettings(queryResultSpec));
+  }
+
+  isEmpty(): boolean {
+    return this._.data().length === 0;
   }
 
   serialize(): SerializedHeatTilesQueryResult {
@@ -217,6 +257,6 @@ class HeatTilesQueryResultData
   }
 }
 
-export default ((HeatTilesQueryResultData: any): Class<
+export default ((HeatTilesQueryResultData: $Cast): Class<
   Zen.Model<HeatTilesQueryResultData>,
 >);

@@ -15,24 +15,21 @@ import type { StyleObject } from 'types/jsCore';
  */
 opaque type UnsettableProp<T> = T;
 type ReactDraggableProps = {
-  style: UnsettableProp<StyleObject>,
+  style?: UnsettableProp<StyleObject>,
 };
 
 type Props = {
+  ...ReactDraggableProps,
+  onClickCapture: (event: SyntheticEvent<HTMLDivElement>) => boolean | void,
+  children: React.Element<React.ElementType>,
+
   /**
    * To avoid having `react-draggable` overwrite style attributes that we intend
    * to include, pass any additional style separately and handle merging
    * ourselves.
    */
-  additionalStyle: StyleObject,
-  children: React.Element<React.ElementType>,
-  className: string,
-} & ReactDraggableProps;
-
-const defaultProps = {
-  additionalStyle: {},
-  className: '',
-  style: {},
+  additionalStyle?: StyleObject,
+  className?: string,
 };
 
 /**
@@ -50,19 +47,20 @@ const defaultProps = {
  * component by the user. Exposing the props we want to override would not
  * allow us to override them as easily.
  */
-export default function DraggableChild(props: Props) {
-  const {
-    additionalStyle,
-    children,
-    className,
-    style,
-    ...passThroughProps
-  } = props;
-
+export default function DraggableChild({
+  children,
+  additionalStyle = {},
+  className = '',
+  style = undefined,
+  ...passThroughProps
+}: Props): React.Element<'div'> {
   // react-draggable merges these props in the opposite order. We would prefer
   // to be able to override specific style attributes set by react-draggable if
   // we want to.
-  const fullStyle: StyleObject = { ...style, ...additionalStyle };
+  const fullStyle = {
+    ...style,
+    ...additionalStyle,
+  };
 
   // Clear the default translate value that react-draggable adds since we don't
   // want to create a new stacking context if we don't have to.
@@ -76,5 +74,3 @@ export default function DraggableChild(props: Props) {
     </div>
   );
 }
-
-DraggableChild.defaultProps = defaultProps;

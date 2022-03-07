@@ -1,7 +1,26 @@
-.overview-page {
-  $inter-section-spacing: 50px;
+.dashboards-overview {
+  $inter-section-spacing: $space-xl-px;
   background-color: $site-background;
-  padding: 50px 150px;
+  min-width: 1000px;
+  padding: $space-xxl-px 150px;
+
+  &--feed-view {
+    flex: 1;
+    // separate dashboards overview page scrolling from feed scrolling
+    height: calc(100vh - #{$navbar-height});
+    overflow: auto;
+    padding: $space-xl-px;
+  }
+
+  &__head {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  &__head-title {
+    margin-bottom: 0px;
+  }
 
   &__action-btn {
     display: inline-block;
@@ -9,24 +28,24 @@
   }
 
   &__main-content {
-    margin-top: 40px;
-  }
-
-  &__dashboard-action-container {
-    float: right;
+    margin-top: $space-xxl-px;
   }
 
   &__dashboard-search {
-    width: 230px;
     margin-right: 10px;
+    width: 230px;
   }
 
-  &__section-header-spacing {
-    margin-bottom: 30px;
+  &__tabs-header-row {
+    margin-bottom: $space-l-px;
   }
 
-  &__section-contents-spacing {
+  &__dashboard-section-contents {
     margin-bottom: $inter-section-spacing;
+
+    .zen-tab-content-wrapper {
+      padding-top: 0;
+    }
   }
 
   &__section-header {
@@ -40,62 +59,68 @@
 
   &__section-contents {
     background: $white;
+    border: 1px solid $gray;
     border-radius: 5px;
-    box-shadow: 0 5px 20px 0 rgba(35, 36, 37, 0.15);
     padding: 30px;
-  }
-
-  &__recent-queries-heading {
-    flex: 1;
-  }
-
-  .zen-tabs__contents-container {
-    padding: 0;
   }
 
   &__official-dashboards-container {
     $spacing-left: 15px;
+    display: grid;
+    grid-gap: 16px 16px;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
     margin-left: -$spacing-left;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: $inter-section-spacing;
-    padding-top: 30px;
     padding-left: $spacing-left;
-    white-space: nowrap;
+    padding-top: $space-m-px;
   }
 
   &__dashboard-card {
-    border-radius: 3px;
-    box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.3), 0 5px 10px 0 rgba(35, 36, 37, 0.15);
+    border: 1px solid $gray;
+    border-radius: 4px;
     display: inline-block;
-    margin-right: 3%;
-    transition: all 200ms ease-in-out;
-    width: 22%;
-    text-align: center;
+    overflow: hidden;
+    transition: all 300ms ease-in-out;
+    width: 100%;
 
     &:hover {
-      box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.3), 0 5px 15px 0 rgba(35, 36, 37, 0.3);
+      box-shadow: 0 5px 12px 0 rgba(35, 36, 37, 0.15);
     }
   }
 
   &__dashboard-card-header {
+    align-items: center;
     background-color: $white;
-    border-bottom: 2px solid $blue-primary;
+    border-bottom: 1px solid $gray;
+    display: flex;
+    flex-wrap: wrap;
     font-size: 15px;
+    // We add a specific height here to keep all dashboards the same size,
+    // regardless of the title
+    height: 55px;
+    justify-content: center;
     overflow: hidden;
-    padding: 10px;
-    text-overflow: ellipsis;
+    padding: $space-xs-px $space-s-px $space-s-px $space-s-px;
   }
 
   &__dashboard-image {
+    background-color: $gray-light-active;
     width: 100%;
   }
 
   &__dashboard-loading-image {
     display: inline-block;
-    width: 10%;
-    padding-top: 22.5%;
-    padding-bottom: 22.5%;
+    padding-bottom: 24%;
+    padding-top: 24%;
+  }
+
+  &__hide-show-official-dashboards {
+    color: $blue-primary;
+    padding-top: $space-xs-px;
+
+    &:hover {
+      color: $blue-primary-hover;
+      cursor: pointer;
+    }
   }
 }
 
@@ -107,4 +132,74 @@
       margin: 0;
     }
   }
+}
+
+// NOTE(sophie): this is only used for the non-mobile styling
+.overview-page-feed-view {
+  display: flex;
+  flex-direction: row;
+
+  .overview-page__official-dashboards-container {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+}
+
+.overview-empty-state {
+  color: $slate-hover;
+  height: 350px;
+
+  &__title {
+    color: $slate-hover;
+    margin-bottom: $space-xxs-px;
+  }
+
+  &__subtitle {
+    font-size: 16px;
+    margin-bottom: $space-m-px;
+  }
+
+  &__other-dashboards-tip {
+    font-size: 14px;
+    margin-bottom: $space-xxl-px;
+    width: 275px;
+  }
+
+  &__icon {
+    height: 192px;
+    width: 192px;
+  }
+}
+
+.feed-mobile-button-wrapper {
+  background-color: white;
+  border-radius: 50%;
+  bottom: $space-s-px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.25);
+  // force height to be the same as width, which is padding + button height
+  height: calc(40px + #{$space-s-px} * 2);
+  padding: $space-s-px;
+  position: fixed;
+  right: $space-s-px;
+}
+
+.feed-mobile-button {
+  height: 40px;
+  width: 40px;
+}
+
+.feed-mobile-header {
+  align-items: center;
+  background: $site-background;
+  border-left: 1px solid $gray;
+  display: flex;
+  // HACK(sophie): add height to cover the navbar bottom border
+  height: calc(#{$navbar-height} + 2px);
+  justify-content: space-between;
+  left: 0;
+  padding: $space-s-px $space-xs-px;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  // cover the navbar, which is z-index 5000
+  z-index: 5001;
 }

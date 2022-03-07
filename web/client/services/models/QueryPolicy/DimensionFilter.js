@@ -2,17 +2,17 @@
 import * as Zen from 'lib/Zen';
 import type { Serializable } from 'lib/Zen';
 
-type BackendDimensionFilter = {
+type SerializedDimensionFilter = {
   allValues: boolean,
-  includeValues: Array<string>,
-  excludeValues: Array<string>,
+  includeValues: $ReadOnlyArray<string>,
+  excludeValues: $ReadOnlyArray<string>,
 };
 
 type RequiredValues = {
   /**
    * The name of the dimension that this filter represents restrictions for.
    */
-  dimensionName: Zen.ReadOnly<string>,
+  dimensionName: string,
 };
 
 type DefaultValues = {
@@ -37,18 +37,18 @@ type DefaultValues = {
  */
 class DimensionFilter
   extends Zen.BaseModel<DimensionFilter, RequiredValues, DefaultValues>
-  implements Serializable<BackendDimensionFilter> {
-  static defaultValues = {
+  implements Serializable<SerializedDimensionFilter> {
+  static defaultValues: DefaultValues = {
     allValues: false,
     excludeValues: Zen.Array.create(),
     includeValues: Zen.Array.create(),
   };
 
-  serialize(): BackendDimensionFilter {
+  serialize(): SerializedDimensionFilter {
     return {
       allValues: this._.allValues(),
-      excludeValues: this._.excludeValues().toArray(),
-      includeValues: this._.includeValues().toArray(),
+      excludeValues: this._.excludeValues().arrayView(),
+      includeValues: this._.includeValues().arrayView(),
     };
   }
 
@@ -83,4 +83,4 @@ class DimensionFilter
   }
 }
 
-export default ((DimensionFilter: any): Class<Zen.Model<DimensionFilter>>);
+export default ((DimensionFilter: $Cast): Class<Zen.Model<DimensionFilter>>);

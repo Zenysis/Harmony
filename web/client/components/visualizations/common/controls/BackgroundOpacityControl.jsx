@@ -12,18 +12,22 @@ import type {
   VisualizationControlProps,
 } from 'components/visualizations/common/controls/commonTypes';
 
-type Props<T: ColorPickerValueType> = VisualizationControlProps<T> & {
-  label: string,
+type DefaultProps = {
   labelClassName: string,
   className: string,
   includeTransparent: boolean,
 };
 
+type Props<T: ColorPickerValueType> = {
+  ...DefaultProps,
+  ...VisualizationControlProps<T>,
+  label: string,
+};
+
 export default class BackgroundOpacityControl<
   T: ColorPickerValueType,
 > extends React.PureComponent<Props<T>> {
-  static defaultProps = {
-    ...Control.defaultColumnCounts,
+  static defaultProps: DefaultProps = {
     className: '',
     labelClassName: '',
     includeTransparent: false,
@@ -33,14 +37,14 @@ export default class BackgroundOpacityControl<
   onColorChange(colorObject: ColorResult) {
     const { onValueChange, controlKey, includeTransparent } = this.props;
     if (includeTransparent) {
-      // $FlowFixMe - RGBColor is a valid type to pass to the callback.
+      // $FlowIssue[incompatible-call] - RGBColor is a valid type to pass to the callback.
       onValueChange(controlKey, colorObject.rgb);
     } else {
       onValueChange(controlKey, colorObject.hex);
     }
   }
 
-  maybeRenderAlphaControl() {
+  maybeRenderAlphaControl(): React.Node {
     const { value, includeTransparent } = this.props;
     if (!includeTransparent) {
       return null;
@@ -48,12 +52,14 @@ export default class BackgroundOpacityControl<
     return <Alpha color={value} onChange={this.onColorChange} />;
   }
 
-  render() {
+  render(): React.Node {
     const {
       value,
       className,
       includeTransparent,
       labelClassName,
+      controlKey,
+      onValueChange,
       ...passThroughControlProps
     } = this.props;
     return (

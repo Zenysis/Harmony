@@ -8,22 +8,31 @@ import autobind from 'decorators/autobind';
 
 type BaseModalProps = $Diff<
   React.ElementConfig<typeof BaseModal>,
-  { onPrimaryAction: * },
+  { onPrimaryAction: mixed },
 >;
 
-type Props = BaseModalProps & {
+type DefaultProps = {
   initialInputValue: string,
   onPrimaryAction?: (
     inputValue: string,
     event: SyntheticEvent<HTMLButtonElement>,
   ) => void,
   placeholder: string,
-  textElement: React.Element<any> | string,
+  textElement: React.MixedElement | string,
   useTextArea: boolean,
 };
 
-export default class InputModal extends React.Component<Props> {
-  static defaultProps = {
+type Props = {
+  ...BaseModalProps,
+  ...DefaultProps,
+};
+
+type State = {
+  inputValue: string,
+};
+
+export default class InputModal extends React.Component<Props, State> {
+  static defaultProps: DefaultProps = {
     initialInputValue: '',
     onPrimaryAction: undefined,
     placeholder: '',
@@ -31,45 +40,58 @@ export default class InputModal extends React.Component<Props> {
     useTextArea: false,
   };
 
-  _textAreaRef: $RefObject<typeof TextArea> = React.createRef();
-  _inputTextRef: $RefObject<typeof InputText.Uncontrolled> = React.createRef();
+  state: State = {
+    inputValue: this.props.initialInputValue,
+  };
+
+  @autobind
+  onInputValueChange(inputValue: string) {
+    this.setState({ inputValue });
+  }
 
   @autobind
   onPrimaryAction(event: SyntheticEvent<HTMLButtonElement>) {
-    const { onPrimaryAction, useTextArea } = this.props;
+    const { onPrimaryAction } = this.props;
+    const { inputValue } = this.state;
+
     if (onPrimaryAction) {
-      if (useTextArea && this._textAreaRef.current) {
-        onPrimaryAction(this._textAreaRef.current.getValue(), event);
-      } else if (!useTextArea && this._inputTextRef.current) {
-        onPrimaryAction(this._inputTextRef.current.getValue(), event);
-      }
+      onPrimaryAction(inputValue, event);
     }
   }
 
-  renderInputControl() {
-    if (this.props.useTextArea) {
+  renderInputControl(): React.Node {
+    const { placeholder, useTextArea } = this.props;
+    const { inputValue } = this.state;
+
+    if (useTextArea) {
       // TODO(pablo): Refactor this once we create our own <TextArea> component
       return (
         <TextArea
-          ref={this._textAreaRef}
-          initialValue={this.props.initialInputValue}
+          value={inputValue}
           minHeight="80%"
           maxHeight="80%"
+          onChange={this.onInputValueChange}
         />
       );
     }
     return (
-      <InputText.Uncontrolled
-        ref={this._inputTextRef}
-        initialValue={this.props.initialInputValue}
-        placeholder={this.props.placeholder}
+      <InputText
+        value={inputValue}
+        placeholder={placeholder}
+        onChange={this.onInputValueChange}
       />
     );
   }
 
-  render() {
-    const { onPrimaryAction, ...passThroughProps } = this.props;
-
+  render(): React.Element<typeof BaseModal> {
+    const {
+      initialInputValue,
+      onPrimaryAction,
+      placeholder,
+      textElement,
+      useTextArea,
+      ...passThroughProps
+    } = this.props;
     return (
       <BaseModal onPrimaryAction={this.onPrimaryAction} {...passThroughProps}>
         <p>{this.props.textElement}</p>

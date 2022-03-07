@@ -14,3 +14,7 @@
   {% include 'query_app_vendor_scripts.html' %}
   <script src="{{ bundle_resource_url('dataQuality.bundle.js') }}"></script>
 {% endblock %}
+
+{% block tracking_event %}
+<script>analytics.track('DQL view', {nonInteraction: 1});</script>
+{% endblock %}

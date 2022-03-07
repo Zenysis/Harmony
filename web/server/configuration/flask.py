@@ -1,9 +1,7 @@
-from builtins import object
 import tempfile
 
 from os import getenv, path
-
-from pylib.file.file_utils import FileUtils
+from typing import Optional
 
 import global_config
 from web.server.environment import IS_PRODUCTION
@@ -18,12 +16,20 @@ DEFAULT_DB_URI = 'postgresql:///%s' % DEFAULT_DATABASE_NAME
 # TODO(vedant) - Write a conversion method to uppercase all
 # configuration keys and disable this lint.
 # pylint:disable=C0103
-class FlaskConfiguration(object):
+class FlaskConfiguration:
     def __init__(self):
         # Flask settings
+        zen_env = getenv('ZEN_ENV')
         self.SECRET_KEY = getenv('SECRET_KEY', global_config.DEFAULT_SECRET_KEY)
         self.SQLALCHEMY_DATABASE_URI = getenv('DATABASE_URL', DEFAULT_DB_URI)
         self.SQLALCHEMY_TRACK_MODIFICATIONS = False
+        self.SQLALCHEMY_ENGINE_OPTIONS = {
+            # NOTE(solo): Set application name to be sent to post pg_stat_activity, useful
+            # for debugging idle, idle in transaction connections
+            'connect_args': {
+                'application_name': f'{zen_env} webserver' if zen_env else 'webserver'
+            }
+        }
         self.CSRF_ENABLED = True
 
         self.IS_PRODUCTION = IS_PRODUCTION
@@ -33,6 +39,10 @@ class FlaskConfiguration(object):
 
         # 128 mb max
         self.MAX_CONTENT_LENGTH = int(getenv('MAX_CONTENT_LENGTH', 128 * 1024 * 1024))
+
+        # Set JWT token expiration to 15 minutes, this can overriden
+        # by the JWT manager caller
+        self.JWT_TOKEN_EXPIRATION_TIME = 15 * 60
 
         # Flask-User settings
         self.USER_APP_NAME = 'Zenysis'
@@ -46,15 +56,15 @@ class FlaskConfiguration(object):
         self.USER_ENABLE_CONFIRM_EMAIL = False  # force users to confirm email
         # (requires USER_ENABLE_EMAIL=True)
         self.USER_ENABLE_FORGOT_PASSWORD = (
-            True
-        )  # requires USER_ENABLE_EMAIL=True, which
+            True  # requires USER_ENABLE_EMAIL=True, which
+        )
         # we do not use, so we have to override this view
         self.USER_SEND_REGISTERED_EMAIL = False  # requires USER_ENABLE_EMAIL=True
         self.USER_SEND_PASSWORD_CHANGED_EMAIL = False  # requires USER_ENABLE_EMAIL=True
         self.USER_SEND_USERNAME_CHANGED_EMAIL = False  # requires USER_ENABLE_EMAIL=True
         self.USER_SHOW_USERNAME_EMAIL_DOES_NOT_EXIST = (
-            True
-        )  # Show 'Username does not exist' error
+            True  # Show 'Username does not exist' error
+        )
         self.USER_RESET_PASSWORD_EXPIRATION = 2 * 24 * 3600  # 2 days
 
         # Don't automatically login the user on registration.
@@ -71,11 +81,11 @@ class FlaskConfiguration(object):
         self.USER_LOGIN_URL = '/login'  # url_for('user.login')
         self.USER_REGISTER_URL = '/zen/register'  # url_for('user.register')
         self.USER_FORGOT_PASSWORD_URL = (
-            '/user/forgot-password'
-        )  # url_for('user.forgot_password')
+            '/user/forgot-password'  # url_for('user.forgot_password')
+        )
         self.USER_RESET_PASSWORD_URL = (
-            '/user/reset-password/<token>'
-        )  # url_for('user.reset_password')
+            '/user/reset-password/<token>'  # url_for('user.reset_password')
+        )
 
         # flask-user maps endpoints using url_for, and maps empty endpoints to '/'
         self.USER_AFTER_LOGIN_ENDPOINT = ''
@@ -91,7 +101,7 @@ class FlaskConfiguration(object):
 
         # HACK(vedant) - This is to temporarily fix T2646. This is NOT the solution
         # The solution is to implement a paging service on the client.
-        self.POTION_MAX_PER_PAGE = 1000
+        self.POTION_MAX_PER_PAGE = 10000
         self.CACHE_TIMEOUT_SECONDS = 10 * 60  # 10 minutes
         self.CACHE_DIR = path.join(tempfile.gettempdir(), 'zenysis-webserver-cache')
 
@@ -100,3 +110,21 @@ class FlaskConfiguration(object):
         self.TWILIO_PHONE_NUMBER = getenv('TWILIO_PHONE_NUMBER', 'phone-number')
 
         self.ASYNC_NOTIFICATIONS_ENABLED = False
+
+        self.REDIS_HOST = getenv('REDIS_HOST', global_config.REDIS_HOST)
+        self.HASURA_HOST = getenv(
+            'HASURA_HOST',
+            global_config.HASURA_HOST if IS_PRODUCTION else 'http://localhost:8088',
+        )
+
+        # NOTE(nina): Flag to switch between dashboard app and new dashboard
+        # builder for testing
+        self.USE_NEW_DASHBOARD_APP = False
+
+    def apply_instance_config_overrides(self, instance_config: Optional[dict]) -> None:
+        if not instance_config:
+            return
+
+        self.ASYNC_NOTIFICATIONS_ENABLED = instance_config.get(
+            'async_notifications_enabled', self.ASYNC_NOTIFICATIONS_ENABLED
+        )

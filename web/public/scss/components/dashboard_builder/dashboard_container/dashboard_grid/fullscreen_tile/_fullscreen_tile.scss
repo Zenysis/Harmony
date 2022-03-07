@@ -1,0 +1,35 @@
+.gd-fullscreen-tile {
+  background-color: #091e42;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  // HACK(david): Using this rather than a modal as react-modal doesn't allow us
+  // us to forward refs to it which is needed for fullscreen mode.
+  z-index: 10000;
+
+  &__footer-bar {
+    color: $white;
+  }
+
+  &__button {
+    &:hover {
+      color: $white-active;
+    }
+  }
+
+  &__tile-container {
+    background-color: $white;
+    border-radius: 4px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  &__tile-content {
+    width: 100%;
+    height: 100%;
+  }
+}

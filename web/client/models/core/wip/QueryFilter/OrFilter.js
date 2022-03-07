@@ -44,4 +44,4 @@ class OrFilter extends Zen.BaseModel<OrFilter, Values>
   }
 }
 
-export default ((OrFilter: any): Class<Zen.Model<OrFilter>>);
+export default ((OrFilter: $Cast): Class<Zen.Model<OrFilter>>);

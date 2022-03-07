@@ -43,4 +43,4 @@ class NotFilter extends Zen.BaseModel<NotFilter, Values>
   }
 }
 
-export default ((NotFilter: any): Class<Zen.Model<NotFilter>>);
+export default ((NotFilter: $Cast): Class<Zen.Model<NotFilter>>);

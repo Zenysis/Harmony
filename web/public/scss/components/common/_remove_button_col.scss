@@ -2,4 +2,16 @@
   background: transparent;
   border-color: transparent;
   border-style: solid;
+
+  &__icon {
+    color: $slate;
+
+    &:hover {
+      color: $slate-hover;
+    }
+
+    &--disabled {
+      color: $gray;
+    }
+  }
 }

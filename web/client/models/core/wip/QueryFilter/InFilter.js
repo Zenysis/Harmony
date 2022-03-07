@@ -3,18 +3,16 @@ import Promise from 'bluebird';
 
 import * as Zen from 'lib/Zen';
 import Dimension from 'models/core/wip/Dimension';
-import DimensionService from 'services/wip/DimensionService';
-import type { JSONRef } from 'services/types/api';
 import type { Serializable } from 'lib/Zen';
 
 type Values = {
-  dimension: Dimension,
+  dimension: string,
   values: Zen.Array<string>,
 };
 
 type SerializedInFilter = {
   type: 'IN',
-  dimension: JSONRef,
+  dimension: string,
   values: $ReadOnlyArray<string>,
 };
 
@@ -31,23 +29,17 @@ class InFilter extends Zen.BaseModel<InFilter, Values>
   static deserializeAsync(
     values: SerializedInFilter,
   ): Promise<Zen.Model<InFilter>> {
-    const dimensionURI = values.dimension.$ref;
-    return DimensionService.get(
-      DimensionService.convertURIToID(dimensionURI),
-    ).then(dimension =>
+    return Promise.resolve(
       InFilter.create({
-        dimension,
+        dimension: Dimension.deserializeToString(values.dimension),
         values: Zen.Array.create(values.values),
       }),
     );
   }
 
   static UNSAFE_deserialize(values: SerializedInFilter): Zen.Model<InFilter> {
-    const dimension = DimensionService.UNSAFE_get(
-      DimensionService.convertURIToID(values.dimension.$ref),
-    );
     return InFilter.create({
-      dimension,
+      dimension: Dimension.deserializeToString(values.dimension),
       values: Zen.Array.create(values.values),
     });
   }
@@ -55,10 +47,10 @@ class InFilter extends Zen.BaseModel<InFilter, Values>
   serialize(): SerializedInFilter {
     return {
       type: this.tag,
-      dimension: this._.dimension().serialize(),
+      dimension: this._.dimension(),
       values: this._.values().arrayView(),
     };
   }
 }
 
-export default ((InFilter: any): Class<Zen.Model<InFilter>>);
+export default ((InFilter: $Cast): Class<Zen.Model<InFilter>>);

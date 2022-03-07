@@ -2,18 +2,32 @@
 import numeral from 'numeral';
 import { quantile } from 'd3-array';
 
+// NOTE(stephen): We sometimes are interchanging Maps with WeakMaps in
+// `_cachedComputation`. A union type unfortunately does not work since there
+// is a restriction on the Key type used in WeakMap that does not exist in Map
+// (limiting WeakMap to only have complex key types like objects or arrays).
+// This interface exposes the shared pieces of the maps that we will use without
+// restricting the keys.
+interface MapLike<K, V> {
+  get(key: K): V | void;
+  set(key: K, value: V): mixed;
+}
+
 // These are maps used to store the results of the different functions in this
 // file. Every function should have an associated cache to keep our filtering
 // operations efficient.
-const QUANTILE_VALUES_CACHE: Map<
+const QUANTILE_VALUES_CACHE: WeakMap<
   $ReadOnlyArray<?number>,
   Map<number, number>,
-> = new Map();
-const AVERAGE_VALUES_CACHE: Map<$ReadOnlyArray<?number>, number> = new Map();
-const SORTED_VALUES_CACHE: Map<
+> = new WeakMap();
+const AVERAGE_VALUES_CACHE: WeakMap<
+  $ReadOnlyArray<?number>,
+  number,
+> = new WeakMap();
+const SORTED_VALUES_CACHE: WeakMap<
   $ReadOnlyArray<?number>,
   Array<number>,
-> = new Map();
+> = new WeakMap();
 
 // filter out nulls and undefines from an array of maybe numbers
 // and convert any non-finite numbers to 0s (e.g. NaN and Infinity)
@@ -25,7 +39,7 @@ function _keepOnlyNumbers(values: $ReadOnlyArray<?number>): Array<number> {
 
 // helper function to add caching functionality to any function
 function _cachedComputation<K, V>(
-  cache: Map<K, V>,
+  cache: MapLike<K, V>,
   computationFunc: K => V,
 ): K => V {
   return (key: K) => {
@@ -83,8 +97,10 @@ export function getQuantile(
 }
 
 /**
- * Format a number to two decimal places only if necessary
+ * Round a number if necessary. For numbers less than 1, round to four decimal
+ * places. For all others, round to two decimal places.
  */
-export function twoDecimalPlaces(num: number): string {
-  return numeral(num).format('0,0.[00]');
+export function roundValue(num: number): string {
+  const numFormat = num < 1 ? '0,0.[0000]' : '0,0.[00]';
+  return numeral(num).format(numFormat);
 }

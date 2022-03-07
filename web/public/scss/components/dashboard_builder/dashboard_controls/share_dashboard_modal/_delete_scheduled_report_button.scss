@@ -1,0 +1,26 @@
+.gd-delete-report-button {
+  align-items: center;
+  border-radius: 5px;
+  display: flex;
+  font-size: 18px;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+
+  &:hover {
+    background-color: rgba($error-color-hover, 0.4);
+    cursor: pointer;
+
+    .gd-delete-report-button__icon {
+      color: $error-color;
+    }
+  }
+
+  &:active {
+    background-color: rgba($error-color-hover, 0.6);
+  }
+
+  &__icon {
+    color: $gray-active;
+  }
+}

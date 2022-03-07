@@ -3,48 +3,58 @@ import * as React from 'react';
 
 import Dropdown from 'components/ui/Dropdown';
 import DropdownControl from 'components/visualizations/common/controls/DropdownControl';
-import autobind from 'decorators/autobind';
 
-type DropdownControlProps = $Diff<
-  React.ElementConfig<typeof DropdownControl>,
-  { children: any },
->;
+type DropdownControlProps = {
+  ...$Diff<React.ElementConfig<typeof DropdownControl>, { children: mixed }>,
+};
 
-type Props = $Merge<
-  DropdownControlProps,
-  {
-    minValue: number,
-    maxValue: number,
-  },
->;
+type Props = {
+  ...DropdownControlProps,
+  minValue?: number,
+  maxValue?: number,
+};
 
-export default class NumericDropdownControl extends React.PureComponent<Props> {
-  static defaultProps = {
-    ...DropdownControl.defaultProps,
-    minValue: 1,
-    maxValue: 10,
-  };
-
-  @autobind
-  getDropdownOptions() {
-    const { minValue, maxValue } = this.props;
-    const options = [];
-    for (let i = minValue; i < maxValue + 1; i++) {
-      options.push(
-        <Dropdown.Option key={i} value={String(i)}>
-          {i}
-        </Dropdown.Option>,
-      );
-    }
-    return options;
-  }
-
-  render() {
-    const { minValue, maxValue, ...passThroughProps } = this.props;
-    return (
-      <DropdownControl {...passThroughProps}>
-        {this.getDropdownOptions()}
-      </DropdownControl>
+export default function NumericDropdownControl({
+  controlKey,
+  onValueChange,
+  value,
+  ariaName = undefined,
+  buttonMinWidth = undefined,
+  buttonWidth = undefined,
+  className = '',
+  label = '',
+  labelClassName = '',
+  maxValue = 10,
+  menuWidth = '100%',
+  minValue = 1,
+  showButtonContentsOnHover = false,
+  valueStyle = undefined,
+}: Props): React.Node {
+  const dropdownOptions: Array<React.Element<typeof Dropdown.Option>> = [];
+  for (let i = minValue; i < maxValue + 1; i++) {
+    dropdownOptions.push(
+      <Dropdown.Option key={i} value={i}>
+        {i}
+      </Dropdown.Option>,
     );
   }
+
+  return (
+    <DropdownControl
+      controlKey={controlKey}
+      value={value}
+      onValueChange={onValueChange}
+      ariaName={ariaName}
+      buttonMinWidth={buttonMinWidth}
+      buttonWidth={buttonWidth}
+      label={label}
+      labelClassName={labelClassName}
+      menuWidth={menuWidth}
+      className={className}
+      showButtonContentsOnHover={showButtonContentsOnHover}
+      valueStyle={valueStyle}
+    >
+      {dropdownOptions}
+    </DropdownControl>
+  );
 }

@@ -1,0 +1,59 @@
+.gd-dashboard-tile-menu {
+  background: $blue-selected-tile-btn;
+  border-radius: 3px;
+  box-shadow: 1px 2px 4px 0px $gray;
+  color: $white;
+  // halfway minus half of the total width of the element
+  left: calc(50% - 54px);
+  padding: $space-xxs-px;
+  position: absolute;
+  // height is 32px (icon size) + 8px padding (4 top 4 bottom) + 16px of
+  // space between it and tile container.
+  top: -48px;
+
+  &__menu-item {
+    border-radius: 3px;
+    fill: $white;
+    margin: 0px;
+    &:hover {
+      background-color: #227aff;
+    }
+    &:active {
+      background-color: #4891ff;
+    }
+  }
+
+  .zen-icon-button {
+    margin: 0;
+  }
+
+  &__legacy {
+    background: none;
+    box-shadow: none;
+    left: auto;
+    right: $space-s-px;
+    top: $space-xs-px;
+  }
+
+  // NOTE(stephen): Clear the styling that the dropdown normally uses. We are
+  // only showing a floating button.
+  &__dropdown-button {
+    background-color: initial !important;
+    border: initial !important;
+    font-size: 24px;
+    height: auto;
+    padding: 0;
+
+    .zen-dropdown-button__button-content {
+      display: flex;
+    }
+  }
+
+  .zen-dropdown {
+    display: flex;
+  }
+
+  &--open {
+    visibility: visible !important;
+  }
+}

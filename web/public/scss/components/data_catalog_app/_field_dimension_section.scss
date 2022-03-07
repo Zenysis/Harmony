@@ -1,0 +1,10 @@
+.field-dimension-section {
+  margin-top: $space-xxl-px;
+
+  // TODO(yitian, stephen, solo): Standardize styling of Table component across
+  // data catalog and have single way to set those styles.
+  &__table {
+    @extend .field-overview-page-table;
+    margin-top: $space-s-px;
+  }
+}

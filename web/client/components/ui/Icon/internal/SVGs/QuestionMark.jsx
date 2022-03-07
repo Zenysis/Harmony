@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import type { SVGProps } from 'components/ui/Icon/internal/SVGs/types';
 
-export default function QuestionMark(props: SVGProps) {
+export default function QuestionMark(props: SVGProps): React.Element<'svg'> {
   return (
     <svg
       width="24"

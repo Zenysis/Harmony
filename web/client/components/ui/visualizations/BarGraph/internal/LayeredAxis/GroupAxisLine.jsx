@@ -5,7 +5,13 @@ import autobind from 'decorators/autobind';
 import type { DimensionID } from 'components/ui/visualizations/BarGraph/types';
 import type { LayerValue } from 'components/ui/visualizations/BarGraph/internal/LayeredAxis/types';
 
+type DefaultProps = {
+  tickColor: string,
+  tickLength: number,
+};
+
 type Props = {
+  ...DefaultProps,
   chartWidth: number,
   end: number,
   layerDimensions: $ReadOnlyArray<DimensionID>,
@@ -15,9 +21,6 @@ type Props = {
     layerDimensions: $ReadOnlyArray<DimensionID>,
   ) => void,
   start: number,
-  tickColor: string,
-
-  tickLength: number,
 };
 
 /**
@@ -25,7 +28,7 @@ type Props = {
  * |_______|
  */
 export default class GroupAxisLine extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
     tickColor: '#000000',
     tickLength: 8,
   };
@@ -36,7 +39,7 @@ export default class GroupAxisLine extends React.PureComponent<Props> {
     onClick(layerValue, layerDimensions);
   }
 
-  maybeRenderTickStart() {
+  maybeRenderTickStart(): React.Element<'line'> | null {
     const { start, tickColor, tickLength } = this.props;
     if (start < 0) {
       return null;
@@ -47,7 +50,7 @@ export default class GroupAxisLine extends React.PureComponent<Props> {
     );
   }
 
-  maybeRenderTickEnd() {
+  maybeRenderTickEnd(): React.Element<'line'> | null {
     const { chartWidth, end, tickColor, tickLength } = this.props;
     if (end > chartWidth) {
       return null;
@@ -58,7 +61,7 @@ export default class GroupAxisLine extends React.PureComponent<Props> {
     );
   }
 
-  renderAxisLine() {
+  renderAxisLine(): React.Element<'line'> {
     const { chartWidth, end, start, tickColor } = this.props;
     return (
       <line
@@ -71,9 +74,9 @@ export default class GroupAxisLine extends React.PureComponent<Props> {
     );
   }
 
-  render() {
+  render(): React.Element<'g'> | null {
     const { chartWidth, end, start } = this.props;
-    if ((start < 0 && end < 0) || (start > chartWidth && end > chartWidth)) {
+    if (end < 0 || start > chartWidth) {
       return null;
     }
 

@@ -1,5 +1,4 @@
-############################################################################
-# GeoTimeAggregator settings
+from models.python.config.calendar_settings import CalendarSettings
 
 # Geo fields from least specific to most specific.
 GEO_FIELD_ORDERING = ['StateName', 'MunicipalityName']
@@ -20,13 +19,6 @@ DIMENSION_PARENTS = {'MunicipalityName': ['StateName']}
 DIMENSION_CATEGORIES = [('Geography', GEO_FIELD_ORDERING)]
 
 DIMENSION_ID_MAP = {'StateName': 'StateID', 'MunicipalityName': 'MunicipalityID'}
-# NOTE(stephen): Right now this must match the druid granularity IDs.
-ENABLED_GRANULARITIES = ['day', 'month', 'quarter', 'year']
-
-# The granularities that we allow uses the filter by in the AQT frontend.
-# Sometimes this varies from ENABLED_GRANULARITIES due to AQT style queries
-# being run in other parts of the APP (e.g. Data Quality).
-AQT_ENABLED_GRANULARITIES = ['month', 'quarter', 'year']
 
 # Map from whereType API query param to lat, lng fields.
 # TODO(ian): This should be renamed because dimensions are not just geos
@@ -35,25 +27,14 @@ GEO_TO_LATLNG_FIELD = {
     'MunicipalityName': ('MunicipalityLat', 'MunicipalityLon'),
     'CapitalName': ('CapitalLat', 'CapitalLon'),
     'StateName': ('StateLat', 'StateLon'),
-    'nation': None,
 }
 
-# List of queryable dimensions. Ordered to allow deterministic
-# key generation
-DIMENSIONS = ['MunicipalityName', 'StateName']
+# List of queryable dimensions.
+DIMENSIONS = [
+    dimension for _, dimensions in DIMENSION_CATEGORIES for dimension in dimensions
+]
 
-DIMENSION_ID_ORDERING = ['MunicipalityName']
-
-# Function with a method signature (start_date, end_date, granularity) that will
-# generate the set of date intervals for the given granularity within the
-# start and end date interval supplied. It is useful when the granularity
-# desired does not line up with a builtin granularity in druid.
-GRANULARITY_BUCKETING_FN = None
-
-# The start month of this deployment's fiscal calendar. A value of 1 (January) means
-# the fiscal calendar matches the Gregorian calendar directly and no special treatment
-# is needed.
-FISCAL_START_MONTH = 1
+CALENDAR_SETTINGS = CalendarSettings.create_default()
 
 # Mapping from Dimension ID to a comparator for sorting a list of dimensions,
 # and a display ID used by the frontend to communicate what sort is being used

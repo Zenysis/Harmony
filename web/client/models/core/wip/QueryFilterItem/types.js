@@ -2,6 +2,8 @@
 import * as Zen from 'lib/Zen';
 import type CustomizableTimeInterval from 'models/core/wip/QueryFilterItem/CustomizableTimeInterval';
 import type DimensionValueFilterItem from 'models/core/wip/QueryFilterItem/DimensionValueFilterItem';
+import type SimpleQueryFilterItem from 'models/core/wip/QueryFilterItem/SimpleQueryFilterItem';
+import type UnappliedQueryFilterItem from 'models/core/wip/QueryFilterItem/UnappliedQueryFilterItem';
 
 /**
  * This file holds the union types for a QueryFilterItem. This is NOT the same
@@ -22,6 +24,8 @@ import type DimensionValueFilterItem from 'models/core/wip/QueryFilterItem/Dimen
 type QueryFilterItemMap = {
   CUSTOMIZABLE_TIME_INTERVAL: CustomizableTimeInterval,
   DIMENSION_VALUE: DimensionValueFilterItem,
+  SIMPLE: SimpleQueryFilterItem,
+  UNAPPLIED: UnappliedQueryFilterItem,
 };
 
 export type QueryFilterItemType = $Keys<QueryFilterItemType>;
@@ -37,4 +41,8 @@ export type SerializedQueryFilterItem =
   | {
       type: 'DIMENSION_VALUE',
       item: Zen.Serialized<DimensionValueFilterItem>,
+    }
+  | {
+      type: 'SIMPLE',
+      item: Zen.Serialized<SimpleQueryFilterItem>,
     };

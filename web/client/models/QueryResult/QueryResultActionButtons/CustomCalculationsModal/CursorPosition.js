@@ -1,16 +1,18 @@
 // @flow
 import * as Zen from 'lib/Zen';
 
-type Values = {
+type DefaultValues = {
   lineNumber: number,
   offset: number,
 };
 
-class CursorPosition extends Zen.BaseModel<CursorPosition, {}, Values> {
-  static defaultValues = {
+// TODO(pablo): this does not need to be a ZenModel, it can just be a
+// read-only object
+class CursorPosition extends Zen.BaseModel<CursorPosition, {}, DefaultValues> {
+  static defaultValues: DefaultValues = {
     lineNumber: 0,
     offset: 0,
   };
 }
 
-export default ((CursorPosition: any): Class<Zen.Model<CursorPosition>>);
+export default ((CursorPosition: $Cast): Class<Zen.Model<CursorPosition>>);

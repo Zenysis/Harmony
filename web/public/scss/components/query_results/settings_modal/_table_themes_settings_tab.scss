@@ -1,0 +1,75 @@
+.table-themes-settings-tab {
+  display: flex;
+  flex-direction: column;
+
+  &__header-bar {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  &__curent-theme-subtitle {
+    color: $gray;
+    font-size: 14px;
+  }
+
+  &__theme-customizer {
+    background-color: $gray-light;
+    flex: 1;
+  }
+
+  &__theme-selector {
+    border-top: 1px solid $gray;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  &__theme-selector-thumbnail {
+    height: 180px;
+    width: 360px;
+  }
+
+  &__theme-selector-radio-button {
+    align-items: center;
+    border-radius: 5px;
+    display: flex;
+    height: 180px;
+    justify-content: center;
+    overflow: hidden;
+    width: 360px;
+
+    &--active {
+      border: solid 2px $blue-dark-active;
+    }
+
+    &--custom-theme {
+      // HACK(david): Force the custom theme to have a row of its own.
+      padding-right: 360px;
+    }
+
+    &:hover {
+      border: solid 2px $blue-dark-active;
+      cursor: pointer;
+    }
+  }
+
+  &__worksheet-theme-controls,
+  &__header-theme-controls,
+  &__total-theme-controls {
+    column-gap: $space-l-px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    row-gap: $space-m-px;
+  }
+
+  &__gridlines-theme-controls {
+    column-gap: $space-l-px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    row-gap: $space-m-px;
+  }
+}

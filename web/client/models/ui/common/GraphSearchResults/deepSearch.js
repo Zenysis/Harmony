@@ -7,10 +7,17 @@ type SearchResults<ParentValue, LeafValue> = {
   leavesThatMatchSearch: Set<LeafValue>,
   parentsThatMatchSearch: Set<ParentValue>,
   parentsWithChildrenThatMatchSearch: Set<ParentValue>,
+
+  /**
+   * Map each node ID to a match score of how well they match the search
+   * string
+   */
+  matchScores: Map<LeafValue | ParentValue, number>,
 };
 
 /**
  * Check if a given `node` matches the search regex.
+ * @returns {boolean} Did the node match the search regex
  */
 function _doesNodeMatchSearch<ParentValue, LeafValue, Node, Children>(
   NodeView: SearchableNodeView<ParentValue, LeafValue, Node, Children>,
@@ -18,6 +25,36 @@ function _doesNodeMatchSearch<ParentValue, LeafValue, Node, Children>(
   matcher: StringMatcher,
 ): boolean {
   return !!node && matcher.matchesAll(NodeView.searchableText(node));
+}
+
+/**
+ * Check if a node matches the regex, and calculate the match score if
+ * they do. A match score measures how strongly this node matched against
+ * the search terms. The score is a value between 0 and 1. The score is 0
+ * if there is no match.
+ *
+ * Currently, the match score is just a percentage calculation
+ * of the search term length divided by the node's text length. So the
+ * more of the total string length we match, the better.
+ *
+ * @returns {[boolean, number]} A tuple of boolean and number. The boolean
+ * indicates if the node matched the search regex. The number indicates
+ * the match score.
+ */
+function _calculateMatchScore<ParentValue, LeafValue, Node, Children>(
+  NodeView: SearchableNodeView<ParentValue, LeafValue, Node, Children>,
+  node: Node,
+  matcher: StringMatcher,
+): [boolean, number] {
+  const hasMatch = _doesNodeMatchSearch(NodeView, node, matcher);
+  let matchScore = 0;
+  if (hasMatch && node) {
+    const searchTermsLength = matcher
+      .getSearchTerms()
+      .reduce((len, t) => len + t.length, 0);
+    matchScore = searchTermsLength / NodeView.searchableText(node).length;
+  }
+  return [hasMatch, matchScore];
 }
 
 /**
@@ -60,9 +97,20 @@ function _processNode<ParentValue, LeafValue, Node, Children>(
     leavesThatMatchSearch,
     parentsThatMatchSearch,
     parentsWithChildrenThatMatchSearch,
+    matchScores,
   } = searchResults;
 
-  const matchedSearch = _doesNodeMatchSearch(NodeView, node, matcher);
+  const [matchedSearch, matchScore] = _calculateMatchScore(
+    NodeView,
+    node,
+    matcher,
+  );
+
+  // if we have a match, and we hadn't computed this match score before,
+  // then add it to our `matchScores` map
+  if (matchedSearch && !matchScores.has(value)) {
+    matchScores.set(value, matchScore);
+  }
 
   if (NodeView.isLeaf(node) && matchedSearch) {
     leavesThatMatchSearch.add(((value: $Cast): LeafValue));
@@ -99,6 +147,7 @@ export default function deepSearch<ParentValue, LeafValue, Node, Children>(
     leavesThatMatchSearch: new Set(),
     parentsThatMatchSearch: new Set(),
     parentsWithChildrenThatMatchSearch: new Set(),
+    matchScores: new Map(),
   };
 
   if (nodes) {

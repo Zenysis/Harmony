@@ -3,13 +3,13 @@ from enum import Enum
 
 import related
 
+
 from .visualization_specific_model import (  # pylint: disable=line-too-long
-    AnimatedMapSettings,
-    BarChartSettings,
     BarGraphSettings,
     BoxPlotSettings,
     BubbleChartSettings,
     BumpChartSettings,
+    EpiCurveSettings,
     ExpandoTreeSettings,
     FONT_12,
     FONT_14,
@@ -17,9 +17,10 @@ from .visualization_specific_model import (  # pylint: disable=line-too-long
     FONT_18,
     FONT_COLOR_DEFAULT,
     FONT_FAMILY_DEFAULT,
-    HeatMapSettings,
     HeatTileSettings,
     MapSettings,
+    NumberTrendSettings,
+    PieChartSettings,
     SunburstSettings,
     TableSettings,
     TimeSeriesSettings,
@@ -31,20 +32,83 @@ class SeriesObjectAxis(Enum):
     Y2_AXIS = 'y2Axis'
 
 
-class VisualizationType(Enum):
-    ANIMATED_MAP = 'ANIMATED_MAP'
+class ValueDisplayShape(Enum):
+    BAR = 'bar'
+    LINE = 'line'
+    DOTTED = 'dotted'
+
+
+class ViewType(Enum):
     BAR_GRAPH = 'BAR_GRAPH'
-    BOX = 'BOX'
+    BOX_PLOT = 'BOX_PLOT'
     BUBBLE_CHART = 'BUBBLE_CHART'
     BUMP_CHART = 'BUMP_CHART'
-    CHART = 'CHART'
+    EPICURVE = 'EPICURVE'
     EXPANDOTREE = 'EXPANDOTREE'
-    HEATMAP = 'HEATMAP'
     HEATTILES = 'HEATTILES'
     MAP = 'MAP'
+    NUMBER_TREND = 'NUMBER_TREND'
+    PIE = 'PIE'
     TABLE = 'TABLE'
     SUNBURST = 'SUNBURST'
     TIME = 'TIME'
+
+
+class VisualizationType(Enum):
+    '''VisualizationTypes are more specific versions of a ViewType.
+    For example, a BAR_STACKED and BAR_OVERLAPPING are both BAR_GRAPH
+    ViewTypes, but they have different settings configurations.
+    '''
+
+    BAR = 'BAR'
+    BAR_LINE = 'BAR_LINE'
+    BAR_OVERLAPPING = 'BAR_OVERLAPPING'
+    BAR_STACKED = 'BAR_STACKED'
+    BAR_HORIZONTAL = 'BAR_HORIZONTAL'
+    BAR_HORIZONTAL_LINE = 'BAR_HORIZONTAL_LINE'
+    BAR_HORIZONTAL_OVERLAPPING = 'BAR_HORIZONTAL_OVERLAPPING'
+    BAR_HORIZONTAL_STACKED = 'BAR_HORIZONTAL_STACKED'
+    BOXPLOT = 'BOXPLOT'
+    EPICURVE = 'EPICURVE'
+    HEATTILES = 'HEATTILES'
+    HIERARCHY = 'HIERARCHY'
+    LINE = 'LINE'
+    MAP = 'MAP'
+    MAP_ANIMATED = 'MAP_ANIMATED'
+    MAP_HEATMAP = 'MAP_HEATMAP'
+    MAP_HEATMAP_ANIMATED = 'MAP_HEATMAP_ANIMATED'
+    NUMBER_TREND = 'NUMBER_TREND'
+    NUMBER_TREND_SPARK_LINE = 'NUMBER_TREND_SPARK_LINE'
+    PIE = 'PIE'
+    RANKING = 'RANKING'
+    SCATTERPLOT = 'SCATTERPLOT'
+    SUNBURST = 'SUNBURST'
+    TABLE = 'TABLE'
+    TABLE_SCORECARD = 'TABLE_SCORECARD'
+
+
+@related.mutable(strict=True)
+class DataAction:
+    '''This class represents a data action that can be applied to a series. This is
+    equivalent to the frontend DataAction model. An array of these are converted into
+    a frontend DataActionGroup model when deserialized.
+    '''
+
+    rule = related.ChildField(dict)
+    color = related.StringField(required=False)
+    label = related.StringField(required=False)
+    transformedText = related.StringField(required=False)
+
+
+@related.mutable(strict=True)
+class DataActionRule:
+    '''A DataActionRule contains a series of DataActions and the fields
+    that those DataActions are applied to.
+    '''
+
+    id = related.StringField(required=True)
+    data_actions = related.SequenceField(DataAction, [], key='dataActions')
+    series = related.SetField(str, default=set())
 
 
 class LegendPlacement(Enum):
@@ -73,12 +137,6 @@ class LegendSettings:
 
 @related.mutable(strict=True)
 class XAxisSettings:
-    goal_line = related.StringField('', key='goalLine')
-    goal_line_font_size = related.StringField(FONT_14, key='goalLineFontSize')
-    goal_line_label = related.StringField('', key='goalLineLabel')
-    goal_line_color = related.StringField('black', key='goalLineColor')
-    goal_line_thickness = related.StringField('1', key='goalLineThickness')
-    goal_line_style = related.StringField('Solid', key='goalLineStyle')
     labels_font_size = related.StringField(FONT_16, key='labelsFontSize')
     title = related.StringField('')
     title_font_size = related.StringField(FONT_18, key='titleFontSize')
@@ -116,8 +174,12 @@ class SeriesSettingsObject:
     data_label_format = related.StringField('0%', key='dataLabelFormat')
     is_visible = related.BooleanField(True, key='isVisible')
     label = related.StringField('Other')
-    show_constituents = related.BooleanField(False, key='showConstituents')
+    bar_label_position = related.StringField('top', key='barLabelPosition')
+    null_value_display = related.StringField('No data', key='nullValueDisplay')
     show_series_value = related.BooleanField(False, key='showSeriesValue')
+    visual_display_shape = related.ChildField(
+        ValueDisplayShape, ValueDisplayShape.BAR, key='visualDisplayShape'
+    )
     y_axis = related.ChildField(SeriesObjectAxis, SeriesObjectAxis.Y1_AXIS, key='yAxis')
 
 
@@ -127,35 +189,7 @@ class SeriesSettings:
         SeriesSettingsObject, 'id', {}, key='seriesObjects'
     )
     series_order = related.SequenceField(str, [], key='seriesOrder')
-
-
-@related.mutable(strict=True)
-class AnimatedMap:
-    series_settings = related.ChildField(
-        SeriesSettings, SeriesSettings(), key='seriesSettings'
-    )
-    legend_settings = related.ChildField(
-        LegendSettings, LegendSettings(), key='legendSettings'
-    )
-    view_specific_settings = related.ChildField(
-        AnimatedMapSettings, AnimatedMapSettings(), key='viewSpecificSettings'
-    )
-    view_type = related.StringField('ANIMATED_MAP', key='viewType')
-
-
-@related.mutable(strict=True)
-class BarChart:
-    legend_settings = related.ChildField(
-        LegendSettings, LegendSettings(), key='legendSettings'
-    )
-    axes_settings = related.ChildField(AxesSettings, AxesSettings(), key='axesSettings')
-    series_settings = related.ChildField(
-        SeriesSettings, SeriesSettings(), key='seriesSettings'
-    )
-    view_specific_settings = related.ChildField(
-        BarChartSettings, BarChartSettings(), key='viewSpecificSettings'
-    )
-    view_type = related.StringField('CHART', key='viewType')
+    data_action_rules = related.SequenceField(DataActionRule, [], key='dataActionRules')
 
 
 @related.mutable(strict=True)
@@ -175,13 +209,14 @@ class BarGraph:
 
 @related.mutable(strict=True)
 class BoxPlot:
+    axes_settings = related.ChildField(AxesSettings, AxesSettings(), key='axesSettings')
     series_settings = related.ChildField(
         SeriesSettings, SeriesSettings(), key='seriesSettings'
     )
     view_specific_settings = related.ChildField(
         BoxPlotSettings, BoxPlotSettings(), key='viewSpecificSettings'
     )
-    view_type = related.StringField('BOX', key='viewType')
+    view_type = related.StringField('BOX_PLOT', key='viewType')
 
 
 @related.mutable(strict=True)
@@ -208,6 +243,18 @@ class BumpChart:
 
 
 @related.mutable(strict=True)
+class EpiCurve:
+    axes_settings = related.ChildField(AxesSettings, AxesSettings(), key='axesSettings')
+    series_settings = related.ChildField(
+        SeriesSettings, SeriesSettings(), key='seriesSettings'
+    )
+    view_specific_settings = related.ChildField(
+        EpiCurveSettings, EpiCurveSettings(), key='viewSpecificSettings'
+    )
+    view_type = related.StringField('EPICURVE', key='viewType')
+
+
+@related.mutable(strict=True)
 class ExpandoTree:
     series_settings = related.ChildField(
         SeriesSettings, SeriesSettings(), key='seriesSettings'
@@ -216,17 +263,6 @@ class ExpandoTree:
         ExpandoTreeSettings, ExpandoTreeSettings(), key='viewSpecificSettings'
     )
     view_type = related.StringField('EXPANDOTREE', key='viewType')
-
-
-@related.mutable(strict=True)
-class HeatMap:
-    series_settings = related.ChildField(
-        SeriesSettings, SeriesSettings(), key='seriesSettings'
-    )
-    view_specific_settings = related.ChildField(
-        HeatMapSettings, HeatMapSettings(), key='viewSpecificSettings'
-    )
-    view_type = related.StringField('HEATMAP', key='viewType')
 
 
 @related.mutable(strict=True)
@@ -256,6 +292,28 @@ class Map:
 
 
 @related.mutable(strict=True)
+class NumberTrend:
+    series_settings = related.ChildField(
+        SeriesSettings, SeriesSettings(), key='seriesSettings'
+    )
+    view_specific_settings = related.ChildField(
+        NumberTrendSettings, NumberTrendSettings(), key='viewSpecificSettings'
+    )
+    view_type = related.StringField('NUMBER_TREND', key='viewType')
+
+
+@related.mutable(strict=True)
+class PieChart:
+    series_settings = related.ChildField(
+        SeriesSettings, SeriesSettings(), key='seriesSettings'
+    )
+    view_specific_settings = related.ChildField(
+        PieChartSettings, PieChartSettings(), key='viewSpecificSettings'
+    )
+    view_type = related.StringField('PIE', key='viewType')
+
+
+@related.mutable(strict=True)
 class Sunburst:
     series_settings = related.ChildField(
         SeriesSettings, SeriesSettings(), key='seriesSettings'
@@ -268,6 +326,9 @@ class Sunburst:
 
 @related.mutable(strict=True)
 class Table:
+    legend_settings = related.ChildField(
+        LegendSettings, LegendSettings(), key='legendSettings'
+    )
     series_settings = related.ChildField(
         SeriesSettings, SeriesSettings(), key='seriesSettings'
     )
@@ -279,9 +340,6 @@ class Table:
 
 @related.mutable(strict=True)
 class TimeSeries:
-    legend_settings = related.ChildField(
-        LegendSettings, LegendSettings(), key='legendSettings'
-    )
     axes_settings = related.ChildField(AxesSettings, AxesSettings(), key='axesSettings')
     series_settings = related.ChildField(
         SeriesSettings, SeriesSettings(), key='seriesSettings'
@@ -300,24 +358,29 @@ def view_type(visualization_cls):
     return visualization_cls.__attrs_attrs__.view_type.default
 
 
+# NOTE(nina)/HACK(nina): Currently both AQT and GIS dashboard models make use
+# of the ViewTypeSettings class. Upgrade specification functions that modify
+# this model (or its descendants) and therefore Query settings should also
+# make sure to update GIS items with these changes. The
+# _upgrade_2021_04_16_specification function is a good example of this
 @related.mutable(strict=True)
 class ViewTypeSettings:
-    animated_map = related.ChildField(
-        AnimatedMap, required=False, key=view_type(AnimatedMap)
-    )
-    bar_chart = related.ChildField(BarChart, required=False, key=view_type(BarChart))
     bar_graph = related.ChildField(BarGraph, required=False, key=view_type(BarGraph))
     box_plot = related.ChildField(BoxPlot, required=False, key=view_type(BoxPlot))
     bubble_chart = related.ChildField(
         BubbleChart, required=False, key=view_type(BubbleChart)
     )
     bump_chart = related.ChildField(BumpChart, required=False, key=view_type(BumpChart))
+    epicurve = related.ChildField(EpiCurve, required=False, key=view_type(EpiCurve))
     expando_tree = related.ChildField(
         ExpandoTree, required=False, key=view_type(ExpandoTree)
     )
-    heat_map = related.ChildField(HeatMap, required=False, key=view_type(HeatMap))
     heat_tile = related.ChildField(HeatTile, required=False, key=view_type(HeatTile))
     map = related.ChildField(Map, required=False, key=view_type(Map))
+    number_trend = related.ChildField(
+        NumberTrend, required=False, key=view_type(NumberTrend)
+    )
+    pie_chart = related.ChildField(PieChart, required=False, key=view_type(PieChart))
     sunburst = related.ChildField(Sunburst, required=False, key=view_type(Sunburst))
     table = related.ChildField(Table, required=False, key=view_type(Table))
     time_series = related.ChildField(
@@ -341,6 +404,7 @@ class GroupByObject:
     type = related.StringField()
     display_value_format = related.StringField(key='displayValueFormat')
     label = related.StringField(required=False, default=None, key='label')
+    null_value_display = related.StringField('null', key='nullValueDisplay')
 
 
 @related.mutable(strict=True)

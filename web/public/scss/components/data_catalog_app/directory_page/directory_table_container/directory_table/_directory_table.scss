@@ -1,0 +1,59 @@
+// This is the primary table structure definition for the directory table.
+.dc-directory-table {
+  background-color: $white;
+  display: grid;
+
+  // Row height is automatically calculated.
+  grid-auto-rows: auto;
+
+  // NOTE(stephen): These values came directly from the design.
+  grid-template-rows: 56px auto;
+  width: 1126px;
+
+  // All rows of the table should apply the same grid styling.
+  & > * {
+    border-bottom: 1px solid $gray;
+    border-left: 1px solid $gray;
+    border-right: 1px solid $gray;
+    display: grid;
+    grid-column-gap: $space-m-px;
+    grid-template-columns: 18px 1fr 1fr 0.5fr 95px 90px;
+    padding: $row-padding;
+    width: 1126px;
+
+    &:last-of-type {
+      border-bottom: 1px solid $gray;
+      border-radius: 0 0 5px 5px;
+    }
+
+    // All column cells within each row should align center.
+    & > * {
+      align-items: flex-start;
+      display: flex;
+    }
+  }
+
+  &:hover {
+    .dc-directory-table-header__checkbox {
+      visibility: visible;
+    }
+  }
+
+  // If any rows are currently selected, make the checkbox visible for *all*
+  // rows.
+  &--has-selected-rows {
+    .dc-directory-row__select-box {
+      visibility: visible;
+    }
+  }
+
+  // HACK(stephen): Remove really annoying positioning that the Checkbox UI
+  // component will apply to the checkbox. I tried removing this value with
+  // `255ab06ce` but that caused positioning regressions across the codebase. I
+  // have no idea why this value is needed, but it would be great if the
+  // Checkbox component just took up the space that it needs in the DOM and
+  // doesn't have to bake in special alignments.
+  .zen-checkbox__input-item-wrapper {
+    top: 0;
+  }
+}

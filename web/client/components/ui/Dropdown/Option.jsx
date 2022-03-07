@@ -1,7 +1,6 @@
 // @flow
 /* eslint-disable react/no-unused-prop-types */
 import * as React from 'react';
-import classNames from 'classnames';
 
 import type { StyleObject } from 'types/jsCore';
 
@@ -12,18 +11,15 @@ import type { StyleObject } from 'types/jsCore';
 // directly because then they can override other props (e.g. depth, onSelect,
 // etc.) that can break things in the Dropdown.
 
-type Props<T> = {|
+type DefaultProps = {
+  /**
+   * The accessibility name for this option. If none is specified, we will
+   * use the option contents if it is a string or number.
+   */
+  ariaName: string | void,
   children: React.Node,
 
-  /**
-   * The value held by this option. **NOTE:** this is *not* what is rendered
-   * by the option. Whatever you want to render should be passed as the Option's
-   * children. The `value` is the Option's metadata, which is passed in the
-   * dropdown's `onSelectionChange` callback.
-   */
-  value: T,
-
-  /** Class name to attach to this div */
+  /** Class name to attach to this option */
   className: string,
 
   /** Any Option with `disableSearch` will always show up in search results */
@@ -38,7 +34,7 @@ type Props<T> = {|
    */
   searchableText: string,
 
-  /** CSS styles to pass to the Option div */
+  /** CSS styles to pass to this option */
   style: StyleObject | void,
 
   /** The class name for the `<li>` item that will wrap the Option */
@@ -46,7 +42,23 @@ type Props<T> = {|
 
   /** Make this Option unselectable */
   unselectable: boolean,
-|};
+
+  /** testId is used to add data-testid tag to element */
+  testId?: string,
+};
+
+type Props<T> = {
+  ...DefaultProps,
+  /**
+   * The value held by this option. **NOTE:** this is *not* what is rendered
+   * by the option. Whatever you want to render should be passed as the Option's
+   * children. The `value` is the Option's metadata, which is passed in the
+   * dropdown's `onSelectionChange` callback.
+   */
+  value: T,
+};
+
+const ELLIPSIS_LENGTH = 4;
 
 /**
  * `<Dropdown.Option>` should be used in conjunction with
@@ -58,7 +70,8 @@ type Props<T> = {|
  * @visibleName Dropdown.Option
  */
 export default class Option<T> extends React.PureComponent<Props<T>> {
-  static defaultProps = {
+  static defaultProps: DefaultProps = {
+    ariaName: undefined,
     children: null,
     className: '',
     disableSearch: false,
@@ -67,53 +80,31 @@ export default class Option<T> extends React.PureComponent<Props<T>> {
     style: undefined,
     wrapperClassName: '',
     unselectable: false,
+    testId: undefined,
   };
 
-  getTitleProp(): { title: string | void } {
-    const titleDetails = {};
-    if (this.shouldTrimOptionValue()) {
-      titleDetails.title = this.props.searchableText;
+  render(): React.Node {
+    const {
+      value,
+      maxOptionCharacterCount,
+      searchableText,
+      children,
+      testId,
+    } = this.props;
+    if (value === undefined) {
+      throw new Error('[Option] A dropdown option cannot be undefined');
     }
-    return titleDetails;
-  }
-
-  shouldTrimOptionValue(): boolean {
-    const { maxOptionCharacterCount, searchableText } = this.props;
-    return (
-      typeof maxOptionCharacterCount === 'number' &&
-      searchableText.length > maxOptionCharacterCount
-    );
-  }
-
-  renderOptionContent(): React.Node {
-    const { maxOptionCharacterCount, children } = this.props;
-    const ELLIPSIS_LENGTH = 4;
     let content = children;
-
-    if (typeof content === 'string' && this.shouldTrimOptionValue()) {
+    if (
+      typeof content === 'string' &&
+      maxOptionCharacterCount !== undefined &&
+      searchableText.length > maxOptionCharacterCount
+    ) {
       content = content
-        .slice(0, ((maxOptionCharacterCount: any): number) - ELLIPSIS_LENGTH)
+        .slice(0, maxOptionCharacterCount - ELLIPSIS_LENGTH)
         .concat(' ...');
     }
 
     return content;
-  }
-
-  render() {
-    const { className, style, value } = this.props;
-    if (value === undefined) {
-      throw new Error('[Option] A dropdown option cannot be undefined');
-    }
-
-    const divClassName = classNames(
-      'zen-dropdown-item zen-dropdown-option',
-      className,
-    );
-
-    return (
-      <div className={divClassName} style={style} {...this.getTitleProp()}>
-        {this.renderOptionContent()}
-      </div>
-    );
   }
 }

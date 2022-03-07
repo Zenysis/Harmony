@@ -2,6 +2,8 @@ DraggableItem examples:
 
 This item can be dragged anywhere on the page:
 ```jsx
+import Tag from 'components/ui/Tag';
+
 <DraggableItem style={{ display: 'inline-block' }}>
   <Tag>Drag me anywhere!</Tag>
 </DraggableItem>
@@ -9,6 +11,9 @@ This item can be dragged anywhere on the page:
 
 This item can only be dragged within the parent container:
 ```jsx
+import Tag from 'components/ui/Tag';
+import Well from 'components/ui/Well';
+
 const WELL_STYLE = {
   height: '80px',
   margin: 0,
@@ -27,6 +32,9 @@ const WELL_STYLE = {
 
 This item can only be dragged within containers that match the selector:
 ```jsx
+import Tag from 'components/ui/Tag';
+import Well from 'components/ui/Well';
+
 const WELL_STYLE = {
   height: '80px',
   margin: 0,
@@ -45,6 +53,8 @@ const WELL_STYLE = {
 
 This item can only be dragged within a bounding area:
 ```jsx
+import Tag from 'components/ui/Tag';
+
 const DRAG_BOUNDS = {
   bottom: 50,
   left: -50,
@@ -62,6 +72,9 @@ const DRAG_BOUNDS = {
 
 This item can only be dragged by its handle:
 ```jsx
+import DragHandle from 'components/ui/DraggableItem/DragHandle';
+import Tag from 'components/ui/Tag';
+
 <DraggableItem
   dragRestrictionSelector={DragHandle.DEFAULT_SELECTOR}
   style={{ display: 'inline-block' }}

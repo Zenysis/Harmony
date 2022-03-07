@@ -1,0 +1,154 @@
+.dc-directory-row {
+  background-color: $white;
+  cursor: pointer;
+
+  // The row controls and checkbox are hidden by default. They should only show
+  // up when the row is hovered.
+  // NOTE(stephen): Using a generic child selector so that each control can
+  // override their visibility if needed.
+  &__controls {
+    align-items: center !important;
+    // The controls should only take up the height of the actual icon that will
+    // be displayed on hover. It's ok for the children of the controls to be
+    // larger than this, but it should not affect the height of the row since
+    // the controls are only shown on hover.
+    align-self: center;
+    height: 24px;
+
+    // The controls should always aling to the right side.
+    margin-left: auto;
+
+    & > * {
+      visibility: hidden;
+    }
+  }
+
+  &__select-box {
+    visibility: hidden;
+  }
+
+  // In the editing state, the controls should be visible.
+  &--editing {
+    cursor: initial;
+
+    .dc-directory-row__controls {
+      margin-left: auto;
+
+      & > * {
+        visibility: visible;
+      }
+    }
+
+    .dc-directory-row-menu {
+      visibility: hidden;
+    }
+  }
+
+  // In the hover state, the controls and checkbox should be visible.
+  &:hover {
+    background-color: $white-hover;
+
+    .dc-directory-row__controls {
+      & > * {
+        visibility: visible;
+      }
+    }
+
+    .dc-directory-row__select-box {
+      visibility: visible;
+    }
+  }
+
+  &:active {
+    background-color: $white-active;
+  }
+
+  // When editing, the user cannot click to navigate to a child page. Set the
+  // background-color to match the hover color.
+  &--editing:active {
+    background-color: $white-hover;
+  }
+
+  // In the selected state, the checkbox should be visible and the row should
+  // take on a new background color.
+  &--selected {
+    background-color: rgba($blue-lightest, 0.7);
+    .dc-directory-row__select-box {
+      visibility: visible;
+    }
+
+    &:hover,
+    &:active {
+      background-color: $blue-lightest;
+    }
+  }
+
+  &__icon {
+    align-items: center;
+    border-radius: 5px;
+    display: flex;
+    height: 24px;
+    justify-content: center;
+    margin-right: $space-s-px;
+    min-width: 24px;
+    width: 24px;
+
+    &--category {
+      // Make sure the folder SVG icon has the correct background color. The SVG
+      // icon uses `fill="currentColor"` which takes on the `color` value set in
+      // CSS.
+      color: $slate;
+    }
+
+    &--field {
+      background-color: $aqt-indicator-item-color;
+
+      // NOTE(stephen): The SVG tag icon should be inset inside the icon
+      // container. The size is specified in the design spec.
+      svg {
+        height: 16px;
+        width: 16px;
+      }
+    }
+  }
+
+  // We need the *contents* of the `description` and `name` cells to have a
+  // max-height and overflow applied. We cannot apply it to the parent cells
+  // because flexbox is aligning our text in the center, and if we set
+  // `overflow: hidden` then we will only see the center content of the text and
+  // not the first lines of the text.
+  &__description,
+  &__name {
+    .editable-text-input__text {
+      max-height: $cell-height;
+      overflow: hidden;
+    }
+  }
+}
+
+.dc-directory-row-menu {
+  &--open {
+    visibility: visible;
+  }
+
+  &__dropdown-button-wrapper {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0;
+  }
+
+  &__dropdown-button {
+    &:hover,
+    &--active {
+      background-color: $gray-hover;
+    }
+
+    &:active {
+      background-color: $gray-active;
+    }
+  }
+
+  &--hidden {
+    visibility: hidden;
+  }
+}

@@ -1,0 +1,41 @@
+.gd-dashboard-tile-drag-button,
+.gd-dashboard-tile-menu {
+  // TODO(nina): There seems to be a bug where the controls are
+  // appearing when hovering over the tile, but they are below the specific
+  // tile being displayed (text, query item, etc). Setting the z index
+  // here makes them visible, but we need to investigate why it is happening
+  // in the first place. The first caught case is with GIS tiles, which
+  // has its own z-indexes within its tile. This could be a cause.
+  z-index: 2;
+}
+
+.gd-dashboard-tile-container {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+
+  &__button-wrapper {
+    overflow: visible;
+  }
+
+  &--modern {
+    border: 1px solid #dfe1e6;
+    border-radius: 4px;
+  }
+
+  &--legacy {
+    // NOTE(david): Legacy dashbaords using outline rather than border as all
+    // tiles have an outline on hover but only some have an outline by default.
+    // Using a border would result in a slighlt position offset on hover.
+    outline: 1px solid $gray;
+    overflow: hidden;
+    &:hover {
+      outline: 1px dashed $gray;
+    }
+  }
+
+  &--borderless {
+    border: none;
+    outline: none;
+  }
+}

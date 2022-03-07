@@ -1,0 +1,149 @@
+.data-upload-upload-page {
+  &__icon-label-wrapper {
+    align-items: center;
+    display: flex;
+  }
+
+  &__success-box {
+    background-color: #a7f0ba;
+    border: 1px solid $success-color-active;
+    border-radius: 5px;
+    padding: $space-m-px;
+    width: 780px;
+  }
+
+  &__success-box-text {
+    color: #0e6027;
+    font-size: 21px;
+    font-weight: bold;
+    letter-spacing: 1.17px;
+    line-height: 27px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+  }
+
+  &__success-box-button {
+    &:hover {
+      background-color: rgba(#091e42, 0.06);
+    }
+
+    &:active {
+      background-color: rgba(#091e42, 0.12);
+    }
+  }
+
+  &__success-box-icon {
+    height: 17px;
+  }
+
+  &__validated-icon {
+    color: $success-color-active;
+    display: block;
+    height: 20px;
+    width: 20px;
+  }
+
+  &__validated-label {
+    color: $slate-hover;
+  }
+}
+
+.data-upload-fileinput {
+  border-color: $gray;
+  border-radius: 5px;
+  border-style: dashed;
+  border-width: 1px;
+
+  &--disabled {
+    background-color: $gray-light;
+    color: $gray;
+  }
+
+  &__caption-text {
+    @extend .u-caption-text;
+
+    &--disabled {
+      color: $gray;
+    }
+
+    // Override the position so that the glyphicon will be center aligned
+    .glyphicon {
+      position: unset;
+    }
+  }
+
+  &__upload-input {
+    height: 156px;
+  }
+
+  &__tooltip {
+    width: 100%;
+  }
+
+  &__description {
+    border-color: $gray-light-active;
+    border-left-style: solid;
+    border-width: 1px;
+    color: $slate-hover;
+    height: 100%;
+    // NOTE(abby): The width include 24px of padding so 515px + 24px = 539px.
+    width: 539px;
+  }
+
+  &__description-example {
+    @extend .u-info-text;
+    align-items: flex-start;
+    background: $gray-light-active;
+    border-radius: 4px;
+    color: $slate;
+    padding: 16px;
+
+    &--disabled {
+      color: $gray;
+    }
+  }
+
+  &__description-text {
+    @extend .u-info-text;
+    color: $slate-hover;
+
+    &--disabled {
+      color: $gray;
+    }
+  }
+
+  &__headers-title {
+    @extend .u-paragraph-text;
+    color: $slate-hover;
+
+    &--disabled {
+      color: $gray;
+    }
+  }
+
+  &__learn-more-link {
+    @extend .u-caption-text;
+    color: $blue-dark;
+
+    &--disabled {
+      color: $gray;
+    }
+  }
+}
+
+.data-upload-dataprep-validation {
+  background: #ffebe6;
+  border: 1px dashed $error-color;
+  border-radius: 5px;
+
+  &__error-icon {
+    color: $error-color;
+    height: 32px;
+    width: 32px;
+  }
+
+  &__subheader {
+    font-size: 16px;
+  }
+}

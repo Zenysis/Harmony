@@ -3,7 +3,9 @@ import * as React from 'react';
 
 import type { SVGProps } from 'components/ui/Icon/internal/SVGs/types';
 
-export default function MapVisualization(props: SVGProps) {
+export default function MapVisualization(
+  props: SVGProps,
+): React.Element<'svg'> {
   return (
     <svg width="64" height="64" viewBox="0 0 64 64" color="#2D80C2" {...props}>
       <g fill="currentColor">

@@ -2,15 +2,16 @@
 import memoize from 'memoize-one';
 
 import type {
+  AccessorDescriptor,
   FieldDecoratorDescriptor,
   PropertyDescriptor,
 } from 'types/jsCore';
 
 type FuncDecorator<Func: () => mixed> = (
-  target: Object,
+  target: $AllowAny,
   funcName: string,
   descriptor: FieldDecoratorDescriptor<Func>,
-) => $Shape<PropertyDescriptor<Func>>;
+) => PropertyDescriptor<Func>;
 
 type EqualityFunc = (
   newArgs: $ReadOnlyArray<mixed>,
@@ -19,12 +20,12 @@ type EqualityFunc = (
 
 function memoizeDecorator<Func: () => mixed>(
   equalityFn: EqualityFunc | void,
-  target: Object,
+  target: $AllowAny,
   funcName: string,
   descriptor: FieldDecoratorDescriptor<Func>,
-): $Shape<PropertyDescriptor<Func>> {
+): AccessorDescriptor<Func> {
   // get the function from the descriptor
-  let func: any;
+  let func;
   if (descriptor.value) {
     // if the decorator was on a class function, then
     // the function will be in descriptor.value
@@ -34,6 +35,10 @@ function memoizeDecorator<Func: () => mixed>(
     // function is retrieved by calling descriptor.initializer()
 
     func = descriptor.initializer();
+  } else {
+    throw new SyntaxError(
+      '@memoizeOne decorator must be applied to a valid descriptor',
+    );
   }
 
   // check that what we got from the descriptor is actually a function
@@ -90,10 +95,10 @@ function memoizeDecorator<Func: () => mixed>(
  * utility function to easily check if the keys in an object have changed.
  */
 export default function memoizeOne<Func: () => mixed>(
-  targetOrEqualityFunc: Object | EqualityFunc | void,
+  targetOrEqualityFunc: EqualityFunc | void | $AllowAny,
   funcName: string,
   descriptor: FieldDecoratorDescriptor<Func>,
-): $Shape<PropertyDescriptor<Func>> | FuncDecorator<Func> {
+): PropertyDescriptor<Func> | FuncDecorator<Func> {
   // inspect the arguments to see if the decorator was used standalone
   // (i.e. `@memoizeOne`) or as a function (i.e. `@memoizeOne()`)
 
@@ -105,14 +110,14 @@ export default function memoizeOne<Func: () => mixed>(
   ) {
     const equalityFuncArg: EqualityFunc | void = targetOrEqualityFunc;
     return (
-      target: Object,
+      target: $AllowAny,
       fnName: string,
       propertyDescriptor: FieldDecoratorDescriptor<Func>,
-    ): $Shape<PropertyDescriptor<Func>> =>
+    ): PropertyDescriptor<Func> =>
       memoizeDecorator(equalityFuncArg, target, fnName, propertyDescriptor);
   }
 
   // This is a standalone decorator, i.e. its usage was `@memoizeOne`
-  const target: Object = targetOrEqualityFunc;
+  const target: $AllowAny = targetOrEqualityFunc;
   return memoizeDecorator(undefined, target, funcName, descriptor);
 }

@@ -1,17 +1,31 @@
-.aqt-customizable-tag {
-  display: block;
-  margin-right: 0;
+.aqt-customizable-indicator-tag {
+  background-color: $aqt-indicator-item-color;
+  background-image: $aqt-indicator-item-gradient;
+  color: $aqt-font-color-dark;
+}
 
-  .zen-tag__content {
-    align-items: center;
-    display: flex;
-  }
+.aqt-customizable-grouping-tag {
+  background-color: $aqt-grouping-item-color;
+  background-image: $aqt-grouping-item-gradient;
+  color: $aqt-font-color-dark;
+}
 
-  &__text {
-    flex: 1;
-  }
+.aqt-customizable-filter-tag:not(.customizable-filter-tag--date-unapplied) {
+  background-color: $white;
+  background-image: $aqt-filter-item-gradient;
+}
 
-  &__icon {
-    margin-right: 0.4em;
-  }
+.aqt-customizable-filter-tag {
+  border: 1px solid $gray;
+  color: $aqt-font-color-dark;
+}
+
+.aqt-customizable-filter-tag:hover {
+  /* background-image is used instead of background-color 
+  since we needed to override the blue gradient */
+  background-image: linear-gradient(
+    to right,
+    $gray-light-active,
+    $gray-light-active
+  );
 }

@@ -1,16 +1,23 @@
 // @flow
 import * as React from 'react';
 
+import * as Zen from 'lib/Zen';
 import ColumnWrapper from 'components/ui/HierarchicalSelector/MainColumnArea/ColumnWrapper';
 import HierarchyItem from 'models/ui/HierarchicalSelector/HierarchyItem';
 import ResultGroup from 'components/ui/HierarchicalSelector/MainColumnArea/SearchResultColumn/ResultGroup';
-import ZenArray from 'util/ZenModel/ZenArray';
 import autobind from 'decorators/autobind';
 import memoizeOne from 'decorators/memoizeOne';
 import type StringMatcher from 'lib/StringMatcher';
 import type { HierarchicalSearchResult } from 'models/ui/HierarchicalSelector/HierarchySearchResults/processGraphSearchResults';
+import type { NamedItem } from 'models/ui/HierarchicalSelector/types';
 
-type Props = {
+type DefaultProps = {
+  height?: number,
+  maxHeight?: number,
+};
+
+type Props<T> = {
+  ...DefaultProps,
   // The StringMatcher instance that was used to determined which search
   // results should be shown.
   matcher: StringMatcher,
@@ -18,21 +25,18 @@ type Props = {
   // callback for when any item is clicked - regardless of whether it's a
   // leaf or a category
   onItemClick: (
-    item: HierarchyItem,
+    item: HierarchyItem<T>,
     event: SyntheticEvent<HTMLElement>,
   ) => void,
 
   /**
    * This is called when a category breadcrumb is clicked
-   * @param {ZenArray<HierarchyItem>} path The list of all items leading to
+   * @param {Zen.Array<HierarchyItem<T>>} path The list of all items leading to
    * the clicked category. NOTE: The path starts at the last column that is
    * open. It does *NOT* start at the root of the entire hierarchical selector.
    */
-  onCategoryClick: (path: ZenArray<HierarchyItem>) => void,
-  searchResults: $ReadOnlyArray<HierarchicalSearchResult>,
-
-  height?: number,
-  maxHeight?: number,
+  onCategoryClick: (path: Zen.Array<HierarchyItem<T>>) => void,
+  searchResults: $ReadOnlyArray<HierarchicalSearchResult<T>>,
 };
 
 type State = {
@@ -44,22 +48,21 @@ const RESULTS_INCREMENT = 50;
 
 const TEXT = t('ui.HierarchicalSelector.SearchResults');
 
-export default class SearchResultColumn extends React.PureComponent<
-  Props,
-  State,
-> {
-  static defaultProps = {
+export default class SearchResultColumn<
+  T: NamedItem,
+> extends React.PureComponent<Props<T>, State> {
+  static defaultProps: DefaultProps = {
     height: undefined,
     maxHeight: undefined,
   };
 
-  state = {
+  state: State = {
     numResultsToShow: 50,
   };
 
   @memoizeOne
   getTotalSearchResults(
-    searchResults: $ReadOnlyArray<HierarchicalSearchResult>,
+    searchResults: $ReadOnlyArray<HierarchicalSearchResult<T>>,
   ): number {
     return searchResults.reduce(
       // NOTE(pablo): we add `+ 1` because the result group itself counts
@@ -84,7 +87,7 @@ export default class SearchResultColumn extends React.PureComponent<
     });
   }
 
-  renderSearchResults() {
+  renderSearchResults(): React.Node {
     const { onCategoryClick, onItemClick, matcher, searchResults } = this.props;
     const { numResultsToShow } = this.state;
 
@@ -125,13 +128,13 @@ export default class SearchResultColumn extends React.PureComponent<
     return processedResults;
   }
 
-  renderNoSearchResults() {
+  renderNoSearchResults(): React.Node {
     return (
       <div className="hierarchical-search-no-results">{TEXT.noResults}</div>
     );
   }
 
-  render() {
+  render(): React.Node {
     const { height, maxHeight, searchResults } = this.props;
     const content =
       searchResults.length > 0

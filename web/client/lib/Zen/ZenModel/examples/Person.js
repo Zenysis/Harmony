@@ -3,15 +3,15 @@ import * as Zen from 'lib/Zen';
 import type { Serializable } from 'lib/Zen';
 
 type RequiredValues = {
-  age: number,
-};
-
-type DefaultValues = {
   name: string,
 };
 
+type DefaultValues = {
+  +age: number,
+};
+
 type DerivedValues = {
-  fullName: string,
+  upperCasedName: string,
 };
 
 type SerializedPerson = {
@@ -26,12 +26,12 @@ type DeserializationConfig = {
 class Person
   extends Zen.BaseModel<Person, RequiredValues, DefaultValues, DerivedValues>
   implements Serializable<SerializedPerson, DeserializationConfig> {
-  static defaultValues = {
-    name: 'hey',
+  static defaultValues: DefaultValues = {
+    age: 100,
   };
 
-  static derivedConfig = {
-    fullName: [
+  static derivedConfig: Zen.DerivedConfig<Person, DerivedValues> = {
+    upperCasedName: [
       (prevPerson, currPerson) => prevPerson.name() !== currPerson.name(),
       p => p.name().toUpperCase(),
     ],
@@ -54,4 +54,4 @@ class Person
   }
 }
 
-export default ((Person: any): Class<Zen.Model<Person>>);
+export default ((Person: $Cast): Class<Zen.Model<Person>>);

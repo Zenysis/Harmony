@@ -1,11 +1,12 @@
 # Exposing certain unix utilities to python
+from builtins import object
 import os
 import tempfile
 
 from subprocess import CalledProcessError, check_call, PIPE, Popen
 
 # Create a named pipe in a temporary directory that can be used like a file
-class NamedPipe:
+class NamedPipe(object):
     def __init__(self, pipe_name='pipe'):
         self.path = None
         self._tmp_dir = None
@@ -38,7 +39,7 @@ class NamedPipe:
 
 # Create a managed background process that will be cleaned up and terminated
 # if the context is exited
-class BackgroundProcess:
+class BackgroundProcess(object):
     def __init__(self, command, check_exit_code=True):
         self.command = command
         self.process = Popen(self.command, shell=True, stderr=PIPE)

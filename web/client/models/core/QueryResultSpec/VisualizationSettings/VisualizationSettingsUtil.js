@@ -3,44 +3,22 @@ import * as Zen from 'lib/Zen';
 import AxesSettings from 'models/core/QueryResultSpec/VisualizationSettings/AxesSettings';
 import LegendSettings from 'models/core/QueryResultSpec/VisualizationSettings/LegendSettings';
 import SeriesSettings from 'models/core/QueryResultSpec/VisualizationSettings/SeriesSettings';
+import ViewSpecificSettingsUtil from 'models/visualizations/common/ViewSpecificSettingsUtil';
 import VisualizationSettings from 'models/core/QueryResultSpec/VisualizationSettings';
-import { RESULT_VIEW_CONTROLS_BLOCKS } from 'components/QueryResult/registry/resultViewControlBlocks';
-import type LegacyField from 'models/core/Field';
+import type Field from 'models/core/wip/Field';
 import type QueryResultGrouping from 'models/core/QueryResultSpec/QueryResultGrouping';
 import type { ResultViewType } from 'components/QueryResult/viewTypes';
-
-function getDefaultControls(
-  viewType: ResultViewType,
-  fieldIds: $ReadOnlyArray<string>,
-  groupings: Zen.Array<QueryResultGrouping>,
-  smallMode: boolean = false,
-) {
-  const ControlsBlock = RESULT_VIEW_CONTROLS_BLOCKS[viewType];
-
-  // some control blocks need one of the non-date groupings to use as
-  // one of the viz control's initial values
-  const groupingDimension = groupings
-    .filter(groupBy => groupBy.type() === 'STRING')
-    .last()
-    .id();
-  const newConfig = {
-    groupingDimension,
-    smallMode,
-    fields: fieldIds,
-  };
-  return ControlsBlock ? ControlsBlock.getDefaultControls(newConfig) : {};
-}
 
 export default class VisualizationSettingsUtil {
   static fromViewType(
     viewType: ResultViewType,
-    fields: $ReadOnlyArray<LegacyField>,
+    fields: $ReadOnlyArray<Field>,
     groupings: Zen.Array<QueryResultGrouping>,
     smallMode: boolean = false,
   ): VisualizationSettings {
-    const defaultControls = getDefaultControls(
+    const defaultControls = ViewSpecificSettingsUtil.createDefaultSettings(
       viewType,
-      fields.map(f => f.id()),
+      fields.map(f => f.get('id')),
       groupings,
       smallMode,
     );
@@ -86,7 +64,7 @@ export default class VisualizationSettingsUtil {
       viewType,
       axesSettings: AxesSettings.fromViewType(viewType),
       legendSettings: LegendSettings.fromViewType(viewType),
-      viewSpecificSettings: getDefaultControls(
+      viewSpecificSettings: ViewSpecificSettingsUtil.createDefaultSettings(
         viewType,
         seriesSettings.seriesOrder(),
         groupings,

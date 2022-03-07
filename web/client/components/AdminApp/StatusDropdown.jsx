@@ -1,5 +1,5 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 
 import Dropdown from 'components/ui/Dropdown';
 import { USER_STATUS_TRANSLATIONS } from 'components/AdminApp/constants';
@@ -26,7 +26,9 @@ const OPTIONS = Object.keys(USER_STATUS_TRANSLATIONS).map(
 
 const DEFAULT_TEXT = t('admin_app.status_dropdown_default');
 
-export default function StatusDropdown(props: Props) {
+export default function StatusDropdown(
+  props: Props,
+): React.Element<typeof Dropdown> {
   const { onSelectionChange, selectedUserStatus } = props;
   return (
     <Dropdown onSelectionChange={onSelectionChange} value={selectedUserStatus}>

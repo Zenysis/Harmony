@@ -1,6 +1,5 @@
 .query-tab-context-menu {
   @include zen-elevation-5();
-
   background-color: $white;
   bottom: 100%;
   font-size: 14px;
@@ -8,7 +7,6 @@
   left: -1px;
   letter-spacing: 0.2px;
   min-width: 150px;
-  position: absolute;
   z-index: 1;
 
   &__item {
