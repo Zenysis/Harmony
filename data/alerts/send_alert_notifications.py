@@ -16,13 +16,13 @@ from models.alchemy.permission import RESOURCE_ROLE_NAMES, ResourceRole
 from models.alchemy.security_group import GroupAcl, GroupUsers
 from models.alchemy.user import User, UserAcl
 
-ENABLED_DEPLOYMENTS = {'mz', 'pk', 'rw'}
+ENABLED_DEPLOYMENTS = {}
 
-MAILGUN_API_KEY = 'key-f0d288df2bf0332dbd422b1ae75692b3'
-MAILGUN_NAME = 'mg.zenysis.com'
-MAILGUN_SENDER = 'noreply@mg.zenysis.com'
+MAILGUN_API_KEY = ''
+MAILGUN_NAME = ''
+MAILGUN_SENDER = ''
 
-ALERT_LINK_OVERRIDE_MAP = {'mz': 'case-management'}
+ALERT_LINK_OVERRIDE_MAP = {}
 DEFAULT_ALERT_URL_SUFFIX = 'alerts'
 
 ALERT_RESOURCE_ROLES_NAMES = [

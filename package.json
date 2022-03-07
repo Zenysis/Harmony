@@ -135,6 +135,6 @@
     "start": "yarn run webpack & yarn run server",
     "styleguide": "yarn run styleguidist server --config web/client/styleguide/styleguide.config.js",
     "translations": "yarn cli-translations watch --verbose",
-    "webpack": "node_modules/.bin/webpack-cli serve --config web/webpack.config.js --mode 'development'",
+    "webpack": "node_modules/.bin/webpack-cli serve --config web/webpack.config.js --mode 'development'"
   }
 }
