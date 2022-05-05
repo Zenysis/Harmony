@@ -5,6 +5,7 @@ from typing import DefaultDict, List, Set
 from config.general import DEPLOYMENT_NAME, DEPLOYMENT_FULL_NAME, DEPLOYMENT_BASE_URL
 from config.ui import DEFAULT_LOCALE, FULL_PLATFORM_NAME
 from log import LOG
+from global_config import MAILGUN_NAME, MAILGUN_SENDER, MAILGUN_API_KEY
 from web.python_client.alerts_service.model import AlertDefinition, AlertNotification
 from web.server.data.data_access import Transaction
 from web.server.errors import NotificationError
@@ -17,10 +18,6 @@ from models.alchemy.security_group import GroupAcl, GroupUsers
 from models.alchemy.user import User, UserAcl
 
 ENABLED_DEPLOYMENTS = {}
-
-MAILGUN_API_KEY = ''
-MAILGUN_NAME = ''
-MAILGUN_SENDER = ''
 
 ALERT_LINK_OVERRIDE_MAP = {}
 DEFAULT_ALERT_URL_SUFFIX = 'alerts'
