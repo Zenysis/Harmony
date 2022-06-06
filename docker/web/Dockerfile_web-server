@@ -47,3 +47,4 @@ COPY graphql graphql
 COPY util util
 COPY web/*.py web/
 COPY web/server web/server
+COPY global_config.py global_config.py
