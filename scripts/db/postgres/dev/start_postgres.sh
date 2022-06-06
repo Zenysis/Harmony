@@ -6,11 +6,12 @@ set -o pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" ; pwd -P)
 POSTGRES_SYSTEM_USER="$("${SCRIPT_DIR}/get_postgres_system_user.sh")"
+POSTGRES_PATH="$("${SCRIPT_DIR}/get_postgres_path.sh")"
 
 function pg () {
   local arg="$1"
 
-  sudo -u "${POSTGRES_SYSTEM_USER}" pg_ctl -D /usr/local/var/postgres "${arg}"
+  sudo -u "${POSTGRES_SYSTEM_USER}" pg_ctl -D "${POSTGRES_PATH}" "${arg}"
 }
 
 if ! command -v pg_ctl &> /dev/null ; then

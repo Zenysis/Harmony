@@ -66,6 +66,10 @@ if [[ "${DEV_MODE}" == "et-jcc-staging" ]]; then
   ZEN_PG_HOSTNAME="harmony-staging.clnkgy7qwr3r.us-east-1.rds.amazonaws.com"
   ZEN_PG_USERNAME="${ZEN_PG_USERNAME}"
 fi
+if [[ "${DEV_MODE}" == "nv-prod" ]]; then
+  echo 'Using NV prod database...'
+  ZEN_PG_HOSTNAME="ideonvn.asuscomm.com"
+fi
 
 
 echo 'Enter postgres password when prompted...'
@@ -95,6 +99,9 @@ if [[ "${DEV_MODE}" == "et-jcc-prod" ]]; then
 fi
 if [[ "${DEV_MODE}" == "et-jcc-staging" ]]; then
   echo 'JCC staging credential: https://phab.zenysis.com/K242'
+fi
+if [[ "${DEV_MODE}" == "nv-prod" ]]; then
+  echo 'NV prod credential: test_pwd'
 fi
 
 DB_ADMIN_PASSWORD=$(openssl rand -base64 32)

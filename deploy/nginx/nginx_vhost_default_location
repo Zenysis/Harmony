@@ -1,0 +1,43 @@
+# This nginx config is used in Docker-based deployments (nginx-proxy)
+
+location ^~ /.well-known/acme-challenge/ {
+    auth_basic off;
+    allow all;
+    root /usr/share/nginx/html;
+    try_files $uri =404;
+    break;
+}
+
+# Serve assets that will never change with a long expiration.
+location ~* ^/(js/.*|build/min/.*(eot|png|svg|ttf|woff|woff2))$ {
+    expires 60d;
+    add_header Pragma "public";
+    add_header Cache-Control "public";
+    root /usr/share/nginx/html/zenysis_static;
+    try_files $uri = 404;
+}
+
+# Serve changeable assets without an expiration but allow caching through
+# etags to work.
+location ~* ^/(build/min|js|images)/.*$ {
+    add_header Pragma "public";
+    add_header Cache-Control "public";
+    root /usr/share/nginx/html/zenysis_static;
+    try_files $uri = 404;
+}
+
+# If adjusting these timeouts, also adjust gunicorn timeout in
+# docker/web/scripts/run_web_gunicorn.sh
+send_timeout 600;
+proxy_send_timeout 600;
+proxy_read_timeout 600;
+
+client_max_body_size 256M;
+client_body_buffer_size 64M;
+gzip on;
+gzip_vary on;
+gzip_comp_level 6;
+gzip_buffers 16 8k;
+gzip_http_version 1.1;
+gzip_types text/html text/plain text/css text/xml application/xml application/xml+rss application/javascript application/x-javascript application/json text/javascript;
+

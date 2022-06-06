@@ -1,3 +1,7 @@
+test
+instance_config.json
+.vscode
+deploy/.env
 venv
 
 ### Vim ###
