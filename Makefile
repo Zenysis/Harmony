@@ -44,11 +44,11 @@ web_configure:
 	docker context create $(DOCKER_WEB_CONTEXT) --docker "host=ssh://$(DOCKER_REMOTE_SSH)"
 
 web_deploy:
-	docker-compose --env-file $(ENV_FILE) --context $(DOCKER_WEB_CONTEXT) --file deploy/docker-compose.yml pull
-	docker-compose --env-file $(ENV_FILE) --context $(DOCKER_WEB_CONTEXT) --file deploy/docker-compose.yml up -d --force-recreate
+	docker-compose --context $(DOCKER_WEB_CONTEXT) --env-file $(ENV_FILE) --file deploy/docker-compose.yml pull
+	docker-compose --context $(DOCKER_WEB_CONTEXT) --env-file $(ENV_FILE) --file deploy/docker-compose.yml up -d --force-recreate
 
 web_stop:
-	docker-compose --env-file $(ENV_FILE) --context $(DOCKER_WEB_CONTEXT) --file deploy/docker-compose.yml down
+	docker-compose --context $(DOCKER_WEB_CONTEXT) --env-file $(ENV_FILE) --file deploy/docker-compose.yml down
 
 web_ssh:
 	ssh $(DOCKER_REMOTE_SSH)

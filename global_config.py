@@ -40,4 +40,4 @@ POSTGRES_DB_URI = 'postgresql://username:password@hostname/db-name'
 # access keys across worker threads)
 REDIS_HOST = 'ideonvn.asuscomm.com'
 
-HASURA_HOST = 'hasura'
+HASURA_HOST = 'http://hasura'
