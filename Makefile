@@ -21,7 +21,7 @@ web_build:
 	docker build -t $(DOCKER_SOURCE)/$(DOCKER_PROJECT_ID)/web:$(DOCKER_BRANCH_NAME) \
 		-f docker/web/Dockerfile_web \
 		--build-arg SOURCE=$(DOCKER_SOURCE) \
-		--build-arg PROJECT=$(DOCKER_DOCKER_PROJECT_ID) \
+		--build-arg PROJECT=$(DOCKER_PROJECT_ID) \
 		--build-arg TAG=$(DOCKER_BRANCH_NAME)  .
 
 web_push:
