@@ -173,17 +173,17 @@ You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to 
     For Ubuntu, the postgres permissions (the `hba_file` file) will also need to be updated:
     Run `sudo -u postgres psql -c "SHOW hba_file;"` to get the file location. Then, add the following lines to that file:
 
-         ```
-         host all all 127.0.0.1/32 trust
-         host all all  ::1/0 trust
-         ```
+```
+      host all all 127.0.0.1/32 trust
+      host all all  ::1/0 trust
+```
 
     Then restart the Postgres cluster for the changes to take effect. Run `pg_lsclusters` to get the version and name of the cluster. Then run `sudo systemctl restart postgresql@<version>-<name>`
     ​
 
 3.  Enter psql client to check server success: `psql postgres`. If that does not work, try `sudo -u postgres psql postgres`.
     ​
-4.  Create a local postgres database: `create db "<ZEN_ENV>-local";` and seed its tables: `./scripts/db/postgres/dev/init_db.py <ZEN_ENV>`
+4.  Create a local postgres database: `create database "<ZEN_ENV>local";` and seed its tables: `./scripts/db/postgres/dev/init_db.py <ZEN_ENV>`
 
 5.  Populate the Data Catalog tables
 
