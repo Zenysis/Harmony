@@ -182,7 +182,7 @@ You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to 
 
 3.  Enter psql client to check server success: `psql postgres`. If that does not work, try `sudo -u postgres psql postgres`.
     ​
-4.  Create a local postgres database: `create database "<ZEN_ENV>local";` and seed its tables: `./scripts/db/postgres/dev/init_db.py <ZEN_ENV>`
+4.  Create a local postgres database: `create database "<ZEN_ENV>-local";` and seed its tables: `./scripts/db/postgres/dev/init_db.py <ZEN_ENV>`
 
 5.  Populate the Data Catalog tables
 
