@@ -15,12 +15,6 @@ export default class FieldSetupApp extends React.Component<{}> {
   }
 
   render(): React.Node {
-    // NOTE: Only render for dev. This is a incomplete feature. Use at
-    // your own risk.
-    if (!__DEV__) {
-      return null;
-    }
-
     return (
       <RelayEnvironmentProvider environment={environment}>
         <div className="field-setup min-full-page-height">
