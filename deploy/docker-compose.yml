@@ -53,10 +53,8 @@ services:
       - ZEN_ENV=${ZEN_WEB_ENV}
       - DONT_SYNC_SOURCEMAPS=true
       - DATABASE_URL=${POSTGRES_DB_URI}
-      - ZEN_LOG_CFG=/zenysis/log/log.prod-stackdriver.cfg
       - HSTS=off
       - SSL_POLICY=Mozilla-Modern
-      - GOOGLE_APPLICATION_CREDENTIALS=/zenysis/log/zenysis-log-cred.json
       - VIRTUAL_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_EMAIL=${ZEN_WEB_EMAIL}
@@ -76,7 +74,6 @@ services:
     environment:
       - ZEN_ENV=${ZEN_WEB_ENV}
       - ZEN_LOG_CFG=/zenysis/log/log.prod-stackdriver.cfg
-      - GOOGLE_APPLICATION_CREDENTIALS=/zenysis/log/zenysis-log-cred.json
       - BROKER_URL=redis://redis:6379/0
     volumes:
       - ${OUTPUT_PATH}/logs:/logs

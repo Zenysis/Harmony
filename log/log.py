@@ -10,6 +10,3 @@ LOG_CONFIG = PROD_CONFIG if IS_PRODUCTION else DEV_CONFIG
 dictConfig(LOG_CONFIG)
 
 LOG = logging.getLogger('ZenysisLogger')
-
-def setup_stackdriver_logger(logger):
-    pass
