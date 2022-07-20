@@ -1,5 +1,7 @@
 # Documentation Contents
 
+Introduction to Harmony:
+
 1. [Harmony overview](#harmony-overview)
 
 Server/environment setup:
@@ -9,7 +11,7 @@ Server/environment setup:
 4. [Production pipeline server setup](#production-pipeline-server-setup)
 5. [Production Druid server setup](#production-druid-server-setup)
 
-Code base customization
+Code base customization:
 
 6. [Writing integrations](#writing-integrations)
 7. [Contributions](#contributions)
@@ -17,12 +19,13 @@ Code base customization
 
 ## Harmony overview
 
-Harmony is an analytical platform that consists of two parts:
+The Harmony Analytics Platform (Harmony), developed by [Zenysis Technologies](https://www.zenysis.com/), helps make sense of messy data by transforming, cleaning and enriching data from multiple sources. With Harmony, disparate data are displayed within a single analytical view, giving you a complete picture of your data through triangulated queries and customizable visualizations and dashboards. Harmony is available as an open source solution under the [GNU General Public License v3 (GPL v3)](https://github.com/Zenysis/Harmony/blob/master/LICENSE).
 
-- A frontend for running queries, constructing dashboards, and performing other analytical duties, and
-- A pipeline for ingesting incompatible data streams and transforming them into a standard, joinable format.
+Harmony technology supports two critical workflows for organizations:
+- **Data Integration**: Through its data pipeline, Harmony ingests raw data from various sources, harmonizes it into a consistent format, and stores it in a database. Source data systems remain unaltered and unaffected–Harmony essentially serves as a data integration layer that sits on top of source data systems.
+- **Advanced Analytics**: Harmony enables you to analyze millions of data points at sub-second speed, and quickly uncover insights you can use to make better decisions. Users can easily access and query newly integrated data in Harmony via a web browser.
 
-Data pipelines tend to run regularly and extract data from all sorts of data systems, ranging from Excel spreadsheets to custom SQL databases. After processing, data is dumped into a [Druid](https://druid.apache.org) database and then queried by the frontend.
+We developed Harmony to serve in a variety of global health and development contexts, including HIV, tuberculosis and malaria programs, supply chain management, emergency response, immunization and vaccination campaigns, and resource allocation and coordination. Harmony works with structured data sources typically found in these settings, including health management information systems (e.g. DHIS2), logistic management information systems (e.g. OpenLMIS), Excel and CSV files, survey data (e.g. Demographic and Health Surveys) and scorecards. Governments in more than eight low- and middle-income countries in Asia, Africa, and Latin America have leveraged Harmony’s core functionality to improve and manage their health and development programs.
 
 ## Project initialization
 
