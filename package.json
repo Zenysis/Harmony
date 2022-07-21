@@ -124,7 +124,6 @@
   },
   "version": "0.0.0",
   "scripts": {
-    "nv-server": "ZEN_ENV=nv yarn server",
     "build": "NODE_ENV=production webpack --config web/webpack.prod.config.js --mode 'production'",
     "build-clean": "yarn run clean && yarn run build",
     "clean": "rm -rf ./web/public/build/",
