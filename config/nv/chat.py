@@ -1,3 +1,0 @@
-ENABLE_CHAT = False
-
-CHAT_HOST = None

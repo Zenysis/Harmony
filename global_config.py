@@ -14,20 +14,20 @@ MAILGUN_SENDER = 'noreply@mg.hostname.com'
 # URL of your Druid instance
 # Druid is a real time analytics data base. We use it to store all of our
 # analytical data (i.e. data that can be queried in AQT).
-DEFAULT_DRUID_HOST = 'http://ideonvn.asuscomm.com'
+DEFAULT_DRUID_HOST = 'https://druid.hostname.com'
 
 # Phabricator settings
 # We use Passphrase to store credentials. Any other credential manager can
 # be used instead by substituting all Passphrase usages with another service.
-PASSPHRASE_ENDPOINT = 'https://phab.zenysis.com/api/passphrase.query'
+PASSPHRASE_ENDPOINT = 'https://phab.hostname.com/api/passphrase.query'
 
 # Mail
 # These are the emails for newly generated alert notifications for a list of recipients
-NOREPLY_EMAIL = 'noreply@mg.zenysis.com'
-SUPPORT_EMAIL = 'support@zenysis.com'
-RENDERBOT_EMAIL = 'renderbot@zenysis.com'
+NOREPLY_EMAIL = 'noreply@mg.hostname.com'
+SUPPORT_EMAIL = 'support@hostname.com'
+RENDERBOT_EMAIL = 'render_bot@hostname.com'
 
-DATA_UPLOAD_DEFAULT_NOTIFY = ['ideon@zenysis.com']
+DATA_UPLOAD_DEFAULT_NOTIFY = ['foo@hostname.com', 'bar@hostname.com']
 
 # In order to read and write from google sheet you will need proper authorization.
 # https://developers.google.com/identity/protocols/oauth2
@@ -38,6 +38,4 @@ POSTGRES_DB_URI = 'postgresql://username:password@hostname/db-name'
 
 # in-memory key-value store (used by web to persist things like
 # access keys across worker threads)
-REDIS_HOST = 'ideonvn.asuscomm.com'
-
-HASURA_HOST = 'http://hasura:8080'
+REDIS_HOST = 'redis'
