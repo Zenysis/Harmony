@@ -29,12 +29,12 @@ We developed Harmony to serve in a variety of global health and development cont
 
 ## Project initialization
 
-We refer to Harmony setups as "deployments". Each deployment has its own databases, data sources, and is hosted separately. 
+We refer to Harmony setups as "deployments". Each deployment has its own databases, data sources, and is hosted separately.
 
 The next step in setting up your Harmony project is to configure its deployment. Configurations are created in the `config/` directory. There is a configuration template in `config/template` and an example configuration in `config/br`. Typically, configuration directories are named after two or three-letter project codes. You'll now need to choose a project code and create your own configuration directory.
 
 
-**Creating a new configuration**
+### Creating a new configuration
 
 To create a new configuration, copy the `config/template` directory into a new directory named for your project code.
 
@@ -45,11 +45,39 @@ At minimum, the following configuration files must be updated (documentation ins
 After you have written your first data integration (see [writing integrations](#writing-integrations)):
 - Create dimensions for querying in `datatypes.py`
 - Customize aggregation options in `aggregation.py`
-- Add indicators based on the field ids you created in the pipeline step 
+- Add indicators based on the field ids you created in the pipeline step
 
 We are working on making this customization easier (and configurable from a frontend) in future releases.
 
-**Misc. notes**
+## Generating a Maxbox Access Token
+
+### Introduction
+
+Harmony currently uses [maxbox](https://www.mapbox.com/) for all Map UI visiualisations. In order to use our map visiualisations you would need to have your own `Maxbox Access Token`
+
+### Getting Started
+
+First you would need to create your own mabox account, you can signup [here](https://account.mapbox.com/auth/signup/).
+
+> Already have an account, sign in [here](https://account.mapbox.com/auth/signin/).
+
+### Access Token
+
+> You can read more on access tokens [here](https://docs.mapbox.com/help/getting-started/access-tokens/#how-access-tokens-work).
+
+#### Finding your token
+
+Once logged in you will find your **Default public token** on the homepage, the token will typically start with `pk.`. You can also access your tokens under the [Acccess tokens](https://account.mapbox.com/access-tokens/) page.
+
+#### Updating your token
+
+You can update your token in the Harmony codebase in the `config/<DEPLOYMENT>` directory in `ui.py`, updating the `MAPBOX_ACCESS_TOKEN` variable, example config [here](https://github.com/Zenysis/Harmony/blob/master/config/br/ui.py#L126).
+
+### Mapbox Pricing
+
+Mapbox has a free tier, however there are paid options available. For most users the free tier will be sufficient since you get 50,000 monthly loads, refer to [pricing](https://www.mapbox.com/pricing/#map-loads-for-web) for more.
+
+## Misc. notes
 
 - Some of the config variables require your Druid and PostreSQL hosts to be set up. See [Production Druid server setup](#production-druid-server-setup).
 
@@ -177,7 +205,7 @@ You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to 
     Run `sudo -u postgres psql -c "SHOW hba_file;"` to get the file location. Then, add the following lines to that file:
 
      `host all all 127.0.0.1/32 trust`
-     
+
      `host all all  ::1/0 trust`
 
     Then restart the Postgres cluster for the changes to take effect. Run `pg_lsclusters` to get the version and name of the cluster. Then run `sudo systemctl restart postgresql@<version>-<name>`
@@ -216,7 +244,7 @@ The platform is built on [Flask](http://flask.palletsprojects.com/en/1.1.x/). To
 The pipeline server runs the data pipeline to generate datasources (typically, daily). These pipeline server setup instructions were developed for Linux/Ubuntu.
 
 1. Configure your server's users, firewall, etc. Sign in as root.
-2. Update system packages. 
+2. Update system packages.
       ```
       sudo apt-get update # updates available package version list
       sudo apt-get upgrade # update packages
@@ -254,8 +282,8 @@ The pipeline server runs the data pipeline to generate datasources (typically, d
        gfortran \
        libopenblas-dev \
        liblapack-dev
-      apt-get clean 
-      rm -rf /var/lib/apt/lists/* 
+      apt-get clean
+      rm -rf /var/lib/apt/lists/*
       curl \
        -o /usr/local/bin/mc \
        https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2021-11-16T20-37-36Z
@@ -264,7 +292,7 @@ The pipeline server runs the data pipeline to generate datasources (typically, d
       (You may not need to install minio depending on your cloud storage choices.)
 6. Clone your fork of the Harmony repo.
       `git clone <URL of Harmony clone>`
-8. cd into the Harmony source directory and create two Python virtual environments. One is for regular python, one for pypy (which has a faster runtime and may be used for pipelines). 
+8. cd into the Harmony source directory and create two Python virtual environments. One is for regular python, one for pypy (which has a faster runtime and may be used for pipelines).
       ```
       # First set up the normal python3 venv
       python3 -m venv venv
@@ -391,7 +419,7 @@ Contributions are welcome! Use Github's Issues and Pull Requests features to rep
 
 We have an open [Google Group mailing list zenysis-harmony@googlegroups.com](https://groups.google.com/forum/#!forum/zenysis-harmony), which you can join or email with questions and other discussion. For general open source matters at Zenysis you may contact open-source@zenysis.com.
 
-## Harmony Products 
+## Harmony Products
 
 ### Homepage
 
@@ -449,7 +477,7 @@ There are two data quality areas being assessed in DQL:
 1. Indicator Characteristics: this tab summarizes some basic facts about the indicator that may impact reporting or data quality, as well as explaining how they affect the score. After choosing an indicator, you’ll see cards displaying the indicator’s age, time since the last report, reporting completeness trend and estimated reporting periods. Both age and freshness are counted in terms of the number of estimated reporting periods (i.e. months if it’s a monthly report).
 1. Reporting Completeness: The score is based on the consistency in the number of reports received per reporting period. The more consistent, the better it is for the score. Within this tab, there are investigative tools designed to enable you to identify where reporting completeness issues may be coming from.
 
-### Platform Administration 
+### Platform Administration
 
 The Admin interface is used by administrators of the platform to manage user access and permissions. The interface allows administrators to give or revoke access to users, to create and manage user groups and to edit access and permissions levels for users on the platform.
 
@@ -464,13 +492,13 @@ To access the Admin App, click on the menu button at the top right corner of yo
 
 ![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/9SSfiiRI7OYgS9Ks2jTU5CXl.png)
 
-### Data Catalog 
+### Data Catalog
 
 Data Catalog enables Data Managers to manage their indicators and augment them with useful information. Specifically this allows:
 
-- Organizing datasets into a hierarchical structure that is surfaced in the Analyze tool 
+- Organizing datasets into a hierarchical structure that is surfaced in the Analyze tool
 - Provide useful metadata to indicators (e.g. definitions, operations etc.)
-- Create new custom calculations 
+- Create new custom calculations
 
 In Data Catalog, the Analyze hierarchical selector is organized in the form of a directory table that resembles a ‘file system’. This allows us to navigate and organize categories (folders) and indicators (files) in a familiar format. The indicators themselves are the files in the file system. Each file is its own page called the Indicator Details page. This page contains metadata about each indicator and options to edit that metadata.
 
@@ -480,6 +508,6 @@ In Data Catalog, the Analyze hierarchical selector is organized in the form of a
 
 The Data Digest tool is an internal tool that can be used by administrators to manage aspects of the integration pipeline. For example:
 
-- Pipeline overview: this includes information about the most recent pipeline and a summary of location matching. 
-- Data source overview: this includes an overview of the number of data points, indicators, mapped and unmatched location for each data source integrated via the pipeline. 
-- Mapping files and CSV validation: allows users to download the location mapping files for level of the geographic hierarchy, update these offline, and reupload them with new matches. 
+- Pipeline overview: this includes information about the most recent pipeline and a summary of location matching.
+- Data source overview: this includes an overview of the number of data points, indicators, mapped and unmatched location for each data source integrated via the pipeline.
+- Mapping files and CSV validation: allows users to download the location mapping files for level of the geographic hierarchy, update these offline, and reupload them with new matches.
