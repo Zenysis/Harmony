@@ -1,7 +1,5 @@
 # Documentation Contents
 
-Introduction to Harmony:
-
 1. [Harmony overview](#harmony-overview)
 
 Server/environment setup:
@@ -9,13 +7,15 @@ Server/environment setup:
 2. [Project setup](#project-initialization)
 3. [Local development setup](#local-development-setup)
 4. [Production pipeline server setup](#production-pipeline-server-setup)
-5. [Production Druid server setup](#production-druid-server-setup)
+5. [Production PostgreSQL server setup](#production-postgres-server-setup)
+6. [Production web server setup](#production-web-server-setup)
+7. [Production Druid server setup](#production-druid-server-setup)
 
-Code base customization:
+Code base customization
 
-6. [Writing integrations](#writing-integrations)
-7. [Contributions](#contributions)
-8. [Product overview](#harmony-products)
+8. [Writing integrations](#writing-integrations)
+9. [Contributions](#contributions)
+10. [Product overview](#harmony-products)
 
 ## Harmony overview
 
@@ -79,7 +79,7 @@ Mapbox has a free tier, however there are paid options available. For most users
 
 ## Misc. notes
 
-- Some of the config variables require your Druid and PostreSQL hosts to be set up. See [Production Druid server setup](#production-druid-server-setup).
+- Some of the config variables require your Druid and PostreSQL hosts to be set up. See [Production PostgreSQL server setup](#production-postgres-server-setup) and [Production Druid server setup](#production-druid-server-setup).
 
 - When you run a script or the web server, select a configuration by setting the `ZEN_ENV` environmental variable. This environmental variable maps directly to folder names in `config/`, and will cause the `config` module to export the contents of that particular configuration.
 
@@ -314,6 +314,14 @@ The pipeline server runs the data pipeline to generate datasources (typically, d
 10. Configure necessary permissions for your cloud storage service. For example, if you're using Minio, you'll need to set up `~/.mc/config` on the server.
 11. Optionally, you may want to configure an automated task runner like GitLab, CircleCI, or Jenkins (to automate pipeline runs).
 
+## Production Postgres server setup
+
+Coming soon.
+
+## Production web server setup
+
+Coming soon.
+
 ## Production Druid server setup
 
 Druid database is an OLAP database built to handle large analytical queries. It is:
@@ -419,7 +427,8 @@ Contributions are welcome! Use Github's Issues and Pull Requests features to rep
 
 We have an open [Google Group mailing list zenysis-harmony@googlegroups.com](https://groups.google.com/forum/#!forum/zenysis-harmony), which you can join or email with questions and other discussion. For general open source matters at Zenysis you may contact open-source@zenysis.com.
 
-## Harmony Products
+
+## Harmony Products 
 
 ### Homepage
 
