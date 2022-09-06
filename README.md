@@ -334,6 +334,8 @@ THe database will require the `power_user` to be created as a **SUPERUSER**.
 Follow the [instructions](https://www.postgresql.org/download/linux/ubuntu/) to install postgres on linux (ubuntu).
 Once the database is up and running, create the `power_user` by running the below script:
 
+> Provide your own, secure password for the `power_user`, **keep it safe!**
+
 ```sql
 CREATE USER "power_user" WITH
   LOGIN
