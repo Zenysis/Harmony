@@ -1,7 +1,6 @@
 #!/bin/bash
 
 destination="/druid/extensions"
-# Current latest version: 0.22.1
 version=${ZEN_DRUID_VERSION}
 extensions=(
     "druid-aggregatable-first-last"
@@ -9,6 +8,12 @@ extensions=(
     "druid-nested-json-parser"
     "druid-tuple-sketch-expansion"
 )
+
+if [ -z "$version" ]
+then
+    echo "ZEN_DRUID_VERSION environment variable cannot be empty!"
+    exit 1
+fi
 
 rm -r $destination/*
 mkdir -p $destination
