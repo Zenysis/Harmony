@@ -36,7 +36,7 @@ services:
     volumes:
       - zen_extensions:/druid/extensions
     environment:
-      - ZEN_DRUID_VERSION=0.22.1
+      - ZEN_DRUID_VERSION=${DRUID_VERSION}
 
   postgres:
     container_name: postgres
@@ -52,7 +52,7 @@ services:
   # Need 3.5 or later for container nodes
   zookeeper:
     container_name: zookeeper
-    image: zookeeper:3.5
+    image: zookeeper:${ZOOKEEPER_VERSION}
     restart: always
     ports:
       - "2181:2181"
@@ -60,7 +60,7 @@ services:
       - ZOO_MY_ID=1
 
   coordinator:
-    image: apache/druid:0.22.1
+    image: apache/druid:${DRUID_VERSION}
     container_name: coordinator
     restart: always
     volumes:
@@ -79,7 +79,7 @@ services:
       - environment
 
   broker:
-    image: apache/druid:0.22.1
+    image: apache/druid:${DRUID_VERSION}
     container_name: broker
     restart: always
     volumes:
@@ -98,7 +98,7 @@ services:
       - environment
 
   historical:
-    image: apache/druid:0.22.1
+    image: apache/druid:${DRUID_VERSION}
     container_name: historical
     restart: always
     volumes:
@@ -118,7 +118,7 @@ services:
       - environment
 
   middlemanager:
-    image: apache/druid:0.22.1
+    image: apache/druid:${DRUID_VERSION}
     container_name: middlemanager
     restart: always
     volumes:
@@ -139,7 +139,7 @@ services:
       - environment
 
   router:
-    image: apache/druid:0.22.1
+    image: apache/druid:${DRUID_VERSION}
     container_name: router
     restart: always
     volumes:
