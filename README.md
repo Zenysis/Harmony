@@ -219,14 +219,14 @@ You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to 
     - macOS: `psql postgres`
     - Ubuntu: `psql -U postgres`
 
-5.  Create and upgrade the local postgres database: `./scripts/db/postgres/dev/init_db.py`. This command will create a database for each deployment defined in config, you can optionally run the command for just one like `./scripts/db/postgres/dev/init_db.py <ZEN_ENV>`
+5.  Create and upgrade the local postgres database as well as populate the Data Catalog tables: `./scripts/db/postgres/dev/init_db.py --populate_indicators`
 
-6.  Populate the Data Catalog tables: `./scripts/db/postgres/dev/init_db.py --populate_indicators`
+    This command will create a database for each deployment defined in config, you can optionally run the command for just one deployment like `./scripts/db/postgres/dev/init_db.py <ZEN_ENV> --populate_indicators`. Also you can run just `./scripts/db/postgres/dev/init_db.py` to only upgrade the database and not populate Data Catalog.
 
-7. If a user was not created (it would have been logged), create one for your local web app like below.
+6. If a user was not created (it would have been logged), create an admin user for your local web app like below.
 
       ```
-      ./scripts/create_user.py -f <first name> -l <last name> -u <email> -p <password> -d <postgresql://postgres:@localhost/{ZEN_ENV}-local>
+      ./scripts/create_user.py -f <first name> -l <last name> -u <email> -p <password> -a -d postgresql://postgres:@localhost/{ZEN_ENV}-local
       ```
 
 ### Hasura
