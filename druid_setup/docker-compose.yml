@@ -49,6 +49,13 @@ services:
       - POSTGRES_USER=druid
       - POSTGRES_DB=druid
 
+  memcache:
+    container_name: memcache
+    image: memcached
+    restart: always
+    ports:
+      - "11211:11211"
+
   # Need 3.5 or later for container nodes
   zookeeper:
     container_name: zookeeper
@@ -76,7 +83,8 @@ services:
     command:
       - coordinator
     env_file:
-      - environment
+      - environment/common.env
+      - environment/coordinator.env
 
   broker:
     image: apache/druid:${DRUID_VERSION}
@@ -88,6 +96,7 @@ services:
     depends_on:
       - zookeeper
       - postgres
+      - memcache
       - coordinator
       - extension_loader
     ports:
@@ -95,7 +104,8 @@ services:
     command:
       - broker
     env_file:
-      - environment
+      - environment/common.env
+      - environment/broker.env
 
   historical:
     image: apache/druid:${DRUID_VERSION}
@@ -108,6 +118,7 @@ services:
     depends_on:
       - zookeeper
       - postgres
+      - memcache
       - coordinator
       - extension_loader
     ports:
@@ -115,7 +126,8 @@ services:
     command:
       - historical
     env_file:
-      - environment
+      - environment/common.env
+      - environment/historical.env
 
   middlemanager:
     image: apache/druid:${DRUID_VERSION}
@@ -136,7 +148,8 @@ services:
     command:
       - middleManager
     env_file:
-      - environment
+      - environment/common.env
+      - environment/middlemanager.env
 
   router:
     image: apache/druid:${DRUID_VERSION}
@@ -155,4 +168,4 @@ services:
     command:
       - router
     env_file:
-      - environment
+      - environment/common.env
