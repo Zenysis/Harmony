@@ -342,7 +342,7 @@ A new Druid collection is created every time the pipeline runs. This ensures tha
 
 ### On an (Ubuntu) server dedicated to running Druid, follow these instructions:
 
-This setup makes use of [docker-compose](https://docs.docker.com/compose/) to easlity spin up and manage a druid cluster. For configuration we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file) cluster configuration.
+This setup makes use of [docker-compose](https://docs.docker.com/compose/) to easlity spin up and manage a druid cluster. For configuration we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file) for cluster configuration.
 
 > The configuration below will spin up a druid cluster on a **single** server. Druid recommends having a [Clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on **multiple** servers.
 
