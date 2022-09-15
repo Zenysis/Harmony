@@ -342,13 +342,13 @@ A new Druid collection is created every time the pipeline runs. This ensures tha
 
 ### On an (Ubuntu) server dedicated to running Druid, follow these instructions:
 
-This setup makes use of [docker-compose](https://docs.docker.com/compose/) to easlity spin up and manage a druid cluster. For configuration we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file) for cluster configuration.
+This setup makes use of [docker-compose](https://docs.docker.com/compose/) to easlity spin up and manage a druid cluster. For cluster configuration we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file).
 
-> The configuration below will spin up a druid cluster on a **single** server. Druid recommends having a [Clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on **multiple** servers.
+> The configuration below will spin up a druid cluster on a **single** server. Druid recommends having a [Clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on **multiple** servers for larger production instances.
 
 #### Custom Setup (Optimised configuration)
 
-Druid resources settings are usually tied to the hardware specifications. The Optimised configuration is what works for Harmony, but this can be increased/changed based on your usage requirements - See [Duird Configuration](https://druid.apache.org/docs/latest/tutorials/docker.html#configuration) for more.
+Druid resources settings are usually tied to the hardware specifications. The Optimised configuration in `environment` works for most Harmony deployments. This can be increased/changed based on your usage requirements - See [Duird Configuration](https://druid.apache.org/docs/latest/tutorials/docker.html#configuration) for more.
 
 ```sh
 # For remote deployments docker contexts can be used
