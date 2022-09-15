@@ -340,9 +340,15 @@ A new Druid collection is created every time the pipeline runs. This ensures tha
 
 ---
 
-On an (Ubuntu) server dedicated to running Druid, follow these instructions:
+### On an (Ubuntu) server dedicated to running Druid, follow these instructions:
 
-Custom Setup (Optimised configuration)
+This setup makes use of [docker-compose](https://docs.docker.com/compose/) to easlity spin up and manage a druid cluster. For configuration we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file) cluster configuration.
+
+> The configuration below will spin up a druid cluster on a **single** server. Druid recommends having a [Clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on **multiple** servers.
+
+#### Custom Setup (Optimised configuration)
+
+Druid resources settings are usually tied to the hardware specifications. The Optimised configuration is what works for Harmony, but this can be increased/changed based on your usage requirements - See [Duird Configuration](https://druid.apache.org/docs/latest/tutorials/docker.html#configuration) for more.
 
 ```sh
 # For remote deployments docker contexts can be used
@@ -350,7 +356,7 @@ cd druid_setup
 docker-compose --env-file environment/common.env up
 ```
 
-Bare Setup (Default configuration)
+#### Bare Setup (Default configuration)
 
 ```
 sudo apt-get install -y docker-compose
