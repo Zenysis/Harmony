@@ -34,7 +34,7 @@ We refer to Harmony setups as "deployments". Each deployment has its own databas
 The next step in setting up your Harmony project is to configure its deployment. Configurations are created in the `config/` directory. There is a configuration template in `config/template` and an example configuration in `config/br`. Typically, configuration directories are named after two or three-letter project codes. You'll now need to choose a project code and create your own configuration directory.
 
 
-**Creating a new configuration**
+### Creating a new configuration
 
 To create a new configuration, copy the `config/template` directory into a new directory named for your project code.
 
@@ -49,7 +49,35 @@ After you have written your first data integration (see [writing integrations](#
 
 We are working on making this customization easier (and configurable from a frontend) in future releases.
 
-**Misc. notes**
+## Generating a Maxbox Access Token
+
+### Introduction
+
+Harmony currently uses [maxbox](https://www.mapbox.com/) for all Map UI visiualisations. In order to use our map visiualisations you would need to have your own `Maxbox Access Token`
+
+### Getting Started
+
+First you would need to create your own mabox account, you can signup [here](https://account.mapbox.com/auth/signup/).
+
+> Already have an account, sign in [here](https://account.mapbox.com/auth/signin/).
+
+### Access Token
+
+> You can read more on access tokens [here](https://docs.mapbox.com/help/getting-started/access-tokens/#how-access-tokens-work).
+
+#### Finding your token
+
+Once logged in you will find your **Default public token** on the homepage, the token will typically start with `pk.`. You can also access your tokens under the [Acccess tokens](https://account.mapbox.com/access-tokens/) page.
+
+#### Updating your token
+
+You can update your token in the Harmony codebase in the `config/<DEPLOYMENT>` directory in `ui.py`, updating the `MAPBOX_ACCESS_TOKEN` variable, example config [here](https://github.com/Zenysis/Harmony/blob/master/config/br/ui.py#L126).
+
+### Mapbox Pricing
+
+Mapbox has a free tier, however there are paid options available. For most users the free tier will be sufficient since you get 50,000 monthly loads, refer to [pricing](https://www.mapbox.com/pricing/#map-loads-for-web) for more.
+
+## Misc. notes
 
 - Some of the config variables require your Druid and PostreSQL hosts to be set up. See [Production PostgreSQL server setup](#production-postgres-server-setup) and [Production Druid server setup](#production-druid-server-setup).
 
@@ -166,36 +194,40 @@ You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to 
 1.  Install postgres.
 
     - macOS: `brew install postgresql`
-    - Ubuntu: `sudo apt install postgresql postgresql-contrib`
+    - Ubuntu: `sudo apt install postgresql`
 
-2.  Start postgres server:
+2.  Start postgres server: `./scripts/db/postgres/dev/start_postgres.sh`
 
-    - macOS: `./scripts/db/postgres/dev/start_postgres.sh`
-    - Ubuntu: `sudo systemctl start postgresql.service`
+3. [Ubuntu only as this is the default setup on macOS]: The postgresql authentication rules will need to change to allow easier access and the server to connect to postgres. This requires editing the `pg_hba.conf` file and restarting postgres. Here is more information about the configuration file and what changes are being made https://www.postgresql.org/docs/current/auth-pg-hba-conf.html.
 
-    For Ubuntu, the postgres permissions (the `hba_file` file) will also need to be updated:
-    Run `sudo -u postgres psql -c "SHOW hba_file;"` to get the file location. Then, add the following lines to that file:
+   Find the configuration file by running `sudo -u postgres psql -c "SHOW hba_file;"`. Edit the first uncommented line of that file to be
+      ```
+      local   all             postgres                                trust
+      ```
+   Then, add the following lines at the bottom:
+      ```
+      # Allow any user on the local system using local loopback TCP/IP connections
+      # to connect to any database with any database user name.
+      host    all             all             127.0.0.1/32            trust
+      # The same over IPv6.
+      host    all             all             ::1/128                 trust
+      ```
+   Finally, run `sudo service postgresql restart` for the changes to take effect.    ​
 
-     `host all all 127.0.0.1/32 trust`
+4.  Enter psql client to check server success. If it works, then you can exit psql.
 
-     `host all all  ::1/0 trust`
+    - macOS: `psql postgres`
+    - Ubuntu: `psql -U postgres`
 
-    Then restart the Postgres cluster for the changes to take effect. Run `pg_lsclusters` to get the version and name of the cluster. Then run `sudo systemctl restart postgresql@<version>-<name>`
-    ​
+5.  Create and upgrade the local postgres database as well as populate the Data Catalog tables: `./scripts/db/postgres/dev/init_db.py --populate_indicators`
 
-3.  Enter psql client to check server success: `psql postgres`. If that does not work, try `sudo -u postgres psql postgres`.
-    ​
-4.  Create a local postgres database: `create database "<ZEN_ENV>-local";` and seed its tables: `./scripts/db/postgres/dev/init_db.py <ZEN_ENV>`
+    This command will create a database for each deployment defined in config, you can optionally run the command for just one deployment like `./scripts/db/postgres/dev/init_db.py <ZEN_ENV> --populate_indicators`. Also you can run just `./scripts/db/postgres/dev/init_db.py` to only upgrade the database and not populate Data Catalog.
 
-5.  Populate the Data Catalog tables
+6. If a user was not created (it would have been logged), create an admin user for your local web app like below.
 
-`./scripts/db/postgres/dev/init_db.py <ZEN_ENV> --populate_indicators`
-
-6. Create a user for your local web app.
-
-```
-$ ./scripts/create_user.py -f <first name> -l <last name> -u <email> -p <password> -d <postgresql://postgres:@localhost/{ZEN_ENV}>
-```
+      ```
+      ./scripts/create_user.py -f <first name> -l <last name> -u <email> -p <password> -a -d postgresql://postgres:@localhost/{ZEN_ENV}-local
+      ```
 
 ### Hasura
 
