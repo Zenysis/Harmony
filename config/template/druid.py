@@ -41,4 +41,4 @@ UNFILTERABLE_DIMENSIONS = [
     d for pieces in GEO_TO_LATLNG_FIELD.values() for d in pieces
 ] + list(set(DIMENSIONS) - set(FILTER_DIMENSIONS))
 
-DRUID_HOST = global_config.AWS_DRUID_HOST
+DRUID_HOST = global_config.DEFAULT_DRUID_HOST
