@@ -9,5 +9,5 @@ AUTHORIZABLE_DIMENSIONS = set()
 
 # List of dimensions that will display in the filter dropdown and be filterable.
 FILTER_DIMENSIONS = (
-    set(DIMENSIONS) - EXCLUDE_FILTER_DIMENSIONS + AUTHORIZABLE_DIMENSIONS
+    set(DIMENSIONS).union(AUTHORIZABLE_DIMENSIONS) - EXCLUDE_FILTER_DIMENSIONS
 )

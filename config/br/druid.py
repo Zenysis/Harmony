@@ -3,6 +3,7 @@ import global_config
 from config.druid_base import FIELD_NAME
 from config.br.aggregation import DIMENSIONS, DIMENSION_ID_MAP, GEO_TO_LATLNG_FIELD
 from config.br.datatypes import BaseRowType
+from config.br.filters import EXCLUDE_FILTER_DIMENSIONS
 
 
 def build_druid_dimensions():
