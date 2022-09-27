@@ -320,14 +320,15 @@ The pipeline server runs the data pipeline to generate datasources (typically, d
 
 You will have to set up a [PostgreSQL](https://www.postgresql.org/) database to host relational data and web application state.
 
-### Power User
-
-By default the `power_user` account on these databases has access to all databases on the server. We do not share the `power_user` credentials with the instance. It is **recommended** to not store these credentials on your local machine in an insecure fashion. The instance has its own credentials and ability to manage its own database.
-
 ### Getting Started
 
-Postgres can be installed directly on the server or via docker.
-THe database will require the `power_user` to be created as a **SUPERUSER**.
+If not using a relational database cloud service like Amazon RDS, Postgres can be installed on a server manually or via Docker.
+
+Regardless of installation approach, the database will require the `power_user` to be created as a **SUPERUSER**.
+
+#### Power User
+
+By default the `power_user` account on these databases has access to all databases on the server. We do not share the `power_user` credentials with the instance. It is **recommended** to not store these credentials on your local machine in an insecure fashion. The instance has its own credentials and ability to manage its own database.
 
 #### Direct Installation
 
@@ -358,7 +359,7 @@ docker run -d --name postgres \
     -e POSTGRES_USER=power_user \
     -e POSTGRES_PASSWORD=$(read -s;echo $REPLY) \
     -p 1994:5432 \
-    postgres:latest
+    postgres:14
 ```
 
 ### Deployment Database
