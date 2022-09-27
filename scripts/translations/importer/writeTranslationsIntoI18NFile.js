@@ -166,7 +166,7 @@ function _writeTranslationIntoAST(i18nAST, translations, locale, filename) {
  * @param {string} i18nFilename i18n.js file to add `translation` to
  * @returns {void}
  */
-function writeTranslatedValueIntoI18NFile(translations, locale, i18nFilename) {
+function writeTranslationsIntoI18NFile(translations, locale, i18nFilename) {
   const groupedTranslations = _consolidateTranslations(translations);
   const validFilepathPromise = isI18NFilepathValid(i18nFilename);
 
@@ -185,4 +185,4 @@ function writeTranslatedValueIntoI18NFile(translations, locale, i18nFilename) {
     });
 }
 
-module.exports = writeTranslatedValueIntoI18NFile;
+module.exports = writeTranslationsIntoI18NFile;

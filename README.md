@@ -194,36 +194,40 @@ You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to 
 1.  Install postgres.
 
     - macOS: `brew install postgresql`
-    - Ubuntu: `sudo apt install postgresql postgresql-contrib`
+    - Ubuntu: `sudo apt install postgresql`
 
-2.  Start postgres server:
+2.  Start postgres server: `./scripts/db/postgres/dev/start_postgres.sh`
 
-    - macOS: `./scripts/db/postgres/dev/start_postgres.sh`
-    - Ubuntu: `sudo systemctl start postgresql.service`
+3. [Ubuntu only as this is the default setup on macOS]: The postgresql authentication rules will need to change to allow easier access and the server to connect to postgres. This requires editing the `pg_hba.conf` file and restarting postgres. Here is more information about the configuration file and what changes are being made https://www.postgresql.org/docs/current/auth-pg-hba-conf.html.
 
-    For Ubuntu, the postgres permissions (the `hba_file` file) will also need to be updated:
-    Run `sudo -u postgres psql -c "SHOW hba_file;"` to get the file location. Then, add the following lines to that file:
+   Find the configuration file by running `sudo -u postgres psql -c "SHOW hba_file;"`. Edit the first uncommented line of that file to be
+      ```
+      local   all             postgres                                trust
+      ```
+   Then, add the following lines at the bottom:
+      ```
+      # Allow any user on the local system using local loopback TCP/IP connections
+      # to connect to any database with any database user name.
+      host    all             all             127.0.0.1/32            trust
+      # The same over IPv6.
+      host    all             all             ::1/128                 trust
+      ```
+   Finally, run `sudo service postgresql restart` for the changes to take effect.    ​
 
-     `host all all 127.0.0.1/32 trust`
+4.  Enter psql client to check server success. If it works, then you can exit psql.
 
-     `host all all  ::1/0 trust`
+    - macOS: `psql postgres`
+    - Ubuntu: `psql -U postgres`
 
-    Then restart the Postgres cluster for the changes to take effect. Run `pg_lsclusters` to get the version and name of the cluster. Then run `sudo systemctl restart postgresql@<version>-<name>`
-    ​
+5.  Create and upgrade the local postgres database as well as populate the Data Catalog tables: `./scripts/db/postgres/dev/init_db.py --populate_indicators`
 
-3.  Enter psql client to check server success: `psql postgres`. If that does not work, try `sudo -u postgres psql postgres`.
-    ​
-4.  Create a local postgres database: `create database "<ZEN_ENV>-local";` and seed its tables: `./scripts/db/postgres/dev/init_db.py <ZEN_ENV>`
+    This command will create a database for each deployment defined in config, you can optionally run the command for just one deployment like `./scripts/db/postgres/dev/init_db.py <ZEN_ENV> --populate_indicators`. Also you can run just `./scripts/db/postgres/dev/init_db.py` to only upgrade the database and not populate Data Catalog.
 
-5.  Populate the Data Catalog tables
+6. If a user was not created (it would have been logged), create an admin user for your local web app like below.
 
-`./scripts/db/postgres/dev/init_db.py <ZEN_ENV> --populate_indicators`
-
-6. Create a user for your local web app.
-
-```
-$ ./scripts/create_user.py -f <first name> -l <last name> -u <email> -p <password> -d <postgresql://postgres:@localhost/{ZEN_ENV}>
-```
+      ```
+      ./scripts/create_user.py -f <first name> -l <last name> -u <email> -p <password> -a -d postgresql://postgres:@localhost/{ZEN_ENV}-local
+      ```
 
 ### Hasura
 
@@ -528,14 +532,15 @@ Contributions are welcome! Use Github's Issues and Pull Requests features to rep
 
 We have an open [Google Group mailing list zenysis-harmony@googlegroups.com](https://groups.google.com/forum/#!forum/zenysis-harmony), which you can join or email with questions and other discussion. For general open source matters at Zenysis you may contact open-source@zenysis.com.
 
-
 ## Harmony Products
 
-### Homepage
+### Overview Page
 
-The Homepage is a personalized ‘landing’ page you see when you log into the platform. It is intended to provide you with an overview and easy access to the different parts of the platform you regularly work with.
+The Overview Page is a personalized ‘landing’ page you see when you log into the platform. It is intended to provide you with an overview and easy access to the different parts of the platform you regularly work with.
 
-From the Homepage, you can easily access official dashboards and other dashboards you or your colleagues have created. For each dashboard, key information such as date of creation, your last date of visit, and number of views is displayed.
+From the Overview Page, you can easily access official dashboards and other dashboards you or your colleagues have created. For each dashboard, key information such as date of creation, your last date of visit, and number of views is displayed.
+
+![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/CX3qZsFy_HPrSk5XAt512Znw.png)
 
 ### Analyze
 
@@ -566,7 +571,17 @@ Dashboards also support different types of content such as text, images, divider
 
 In addition, users can add dashboard-level filters and aggregations. For example, a user can modify the date range, geographical filters and level of aggregation of data within the dashboard directly. In this way, your personal dashboard becomes a dynamic tool which you can use for monitoring key data points across various dimensions and do further exploratory analysis.
 
-![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/AN8QVulnqrp-KCeaDub23oRr.png)
+![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/8U7BgpOLDCNwIzjt6Uc34lVL.png)
+
+In the top navigation bar for a dashboard, users can click
+- Play - enter a presentation mode with full screen view, where each tile is its own slide
+- Share - export the dashboard as a link, email, or download
+- Add content - add a text box, visualization, iFrame, spacer, or divider to the dashboard
+- The percentage to modify page fit
+- Settings - modify the following capabilities of the dashboard:
+
+![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/FUYhGhSa94jAIcN20738bFNh.png)
+
 
 ### Alerts
 
@@ -587,9 +602,9 @@ There are two data quality areas being assessed in DQL:
 1. Indicator Characteristics: this tab summarizes some basic facts about the indicator that may impact reporting or data quality, as well as explaining how they affect the score. After choosing an indicator, you’ll see cards displaying the indicator’s age, time since the last report, reporting completeness trend and estimated reporting periods. Both age and freshness are counted in terms of the number of estimated reporting periods (i.e. months if it’s a monthly report).
 1. Reporting Completeness: The score is based on the consistency in the number of reports received per reporting period. The more consistent, the better it is for the score. Within this tab, there are investigative tools designed to enable you to identify where reporting completeness issues may be coming from.
 
-### Platform Administration
+### Admin App
 
-The Admin interface is used by administrators of the platform to manage user access and permissions. The interface allows administrators to give or revoke access to users, to create and manage user groups and to edit access and permissions levels for users on the platform.
+The Admin App is used by administrators of the platform to manage user access and permissions. The interface allows administrators to give or revoke access to users, to create and manage user groups and to edit access and permissions levels for users on the platform.
 
 The Admin option is only available to users with administrative permissions, which can only be granted by another platform administrator.
 
@@ -607,12 +622,14 @@ To access the Admin App, click on the menu button at the top right corner of yo
 Data Catalog enables Data Managers to manage their indicators and augment them with useful information. Specifically this allows:
 
 - Organizing datasets into a hierarchical structure that is surfaced in the Analyze tool
+- Hide or make visible specific groups of data 
 - Provide useful metadata to indicators (e.g. definitions, operations etc.)
 - Create new custom calculations
 
 In Data Catalog, the Analyze hierarchical selector is organized in the form of a directory table that resembles a ‘file system’. This allows us to navigate and organize categories (folders) and indicators (files) in a familiar format. The indicators themselves are the files in the file system. Each file is its own page called the Indicator Details page. This page contains metadata about each indicator and options to edit that metadata.
 
 ![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/aWreLFOT62th7O9mV_pznYCF.png)
+
 
 ### Data Digest
 
@@ -621,3 +638,11 @@ The Data Digest tool is an internal tool that can be used by administrators to m
 - Pipeline overview: this includes information about the most recent pipeline and a summary of location matching.
 - Data source overview: this includes an overview of the number of data points, indicators, mapped and unmatched location for each data source integrated via the pipeline.
 - Mapping files and CSV validation: allows users to download the location mapping files for level of the geographic hierarchy, update these offline, and reupload them with new matches.
+
+### Field Setup
+
+The Field Setup App allows users to set up fields that are in Druid and not yet in Data Catalog, and therefore visible to end users to be queried. 
+
+The app is populated with the id, data source, and default sum calculation for each field and users can edit the name, description, calculation, and category. Once the fields are ready, they can be published to Data Catalog. 
+
+![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/71BllLgN_UIJ0yWjjAaSxi2X.png)

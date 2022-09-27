@@ -4,7 +4,7 @@ const { I18N_TEMPLATE_FILEPATH } = require('./config');
 const LOCALE_REGEX = RegExp('^[a-z]{2}: {},$');
 
 /**
- * Collects all ISO codes from the provided string.
+ * Collects all ISO 3166-1 alpha-2 codes from the provided string.
  *
  * @param {string} templateContents string contents of file to search for
  * locales

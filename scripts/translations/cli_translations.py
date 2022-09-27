@@ -7,10 +7,14 @@ from scripts.translations.translations_export import translations_export
 from scripts.translations.translations_generate import translations_generate
 from scripts.translations.translations_watch import translations_watch
 from scripts.translations.translations_list_dangling import translations_list_dangling
+from scripts.translations.translations_list_dangling_ref import (
+    translations_list_dangling_ref,
+)
 from scripts.translations.translations_list_out_of_sync import (
     translations_list_out_of_sync,
 )
 from scripts.translations.translations_import import translations_import
+from scripts.translations.translations_add_locale import translations_add_locale
 
 
 def main():
@@ -85,6 +89,12 @@ def main():
     )
 
     Command.register_command(
+        name='list_dangling_references',
+        description='List the IDs of all translation references that do not match a translation.',
+        func=translations_list_dangling_ref,
+    )
+
+    Command.register_command(
         name='watch',
         description='Watch for new translations and automatically update i18n.js files',
         func=translations_watch,
@@ -120,6 +130,17 @@ def main():
                 required_params=('--locale', '--input_file'),
                 description='Import new I18N translations for a given locale '
                 'from the csv specified in --input_file',
+            )
+        ],
+    )
+
+    Command.register_command(
+        name='add_locale',
+        description='Add a new locale to the project',
+        func=translations_add_locale,
+        params=[
+            Command.ParamCombination(
+                required_params=('--locale'), description='ISO code for new locale'
             )
         ],
     )
