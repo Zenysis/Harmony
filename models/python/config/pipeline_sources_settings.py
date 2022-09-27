@@ -4,7 +4,6 @@ from typing import List, Optional, Set
 
 # The shared pipeline steps that require a list of sources.
 class SharedPipelineStepType(Enum):
-    UNIFY_DIMENSIONS = 'unify_dimensions'
     FILL_DIMENSION_DATA = 'fill_dimension_data'
     SYNC_DIGEST_FILES = 'sync_digest_files'
     POPULATE_PIPELINE_RUN_METADATA = 'populate_pipeline_run_metadata'
@@ -17,7 +16,6 @@ class SharedPipelineStepType(Enum):
 # By default, these steps are run for all pipeline sources. To add a pipeline step that is
 # only run for some sources, add it to the extra_shared_steps list for the required sources.
 DEFAULT_SHARED_STEPS = [
-    SharedPipelineStepType.UNIFY_DIMENSIONS,
     SharedPipelineStepType.FILL_DIMENSION_DATA,
     SharedPipelineStepType.SYNC_DIGEST_FILES,
     SharedPipelineStepType.POPULATE_PIPELINE_RUN_METADATA,

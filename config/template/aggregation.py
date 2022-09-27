@@ -17,10 +17,6 @@ DIMENSION_SLICES = {
 
 DIMENSION_PARENTS = DIMENSION_PARENTS
 
-# When the server starts, query for distinct values along these dimensions and
-# build a geo hierarchy in memory.  Used to populate geo filter dropdown.
-DISTINCT_GEOS_TO_QUERY = HIERARCHICAL_DIMENSIONS
-
 DIMENSION_ID_MAP = {
     dimension: dimension.replace('Name', 'ID') for dimension in HIERARCHICAL_DIMENSIONS
 }

@@ -27,13 +27,20 @@ DIMENSION_PARENTS = {
     for parent_index, parent in enumerate(HIERARCHICAL_DIMENSIONS[1:])
 }
 
+NON_HIERARCHICAL_DIMENSIONS = []
 
 # pylint: disable=invalid-name
 TemplateCamelNameDimensionFactory = DimensionFactory(
-    HIERARCHICAL_DIMENSIONS, [], RAW_PREFIX, CLEANED_PREFIX, CANONICAL_PREFIX
+    HIERARCHICAL_DIMENSIONS,
+    NON_HIERARCHICAL_DIMENSIONS,
+    RAW_PREFIX,
+    CLEANED_PREFIX,
+    CANONICAL_PREFIX,
 )
 
-BaseRowType = BaseRowFactory(Dimension, HIERARCHICAL_DIMENSIONS, DIMENSION_PARENTS)
+BaseRowType = BaseRowFactory(
+    Dimension, HIERARCHICAL_DIMENSIONS, DIMENSION_PARENTS, NON_HIERARCHICAL_DIMENSIONS
+)
 DimensionFactoryType = TemplateCamelNameDimensionFactory
 
 
