@@ -1,0 +1,7 @@
+#!/bin/bash -eu
+set -o pipefail
+
+"${PIPELINE_SRC_ROOT}/scripts/field_setup/populate_unused_fields.py" \
+ --deployment="SAMPLE" \
+ --druid_fields_input_file="${PIPELINE_TMP_DIR}/druid_fields.csv" \
+ --db_fields_input_file="${PIPELINE_TMP_DIR}/db_fields.csv"
