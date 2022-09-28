@@ -3,6 +3,7 @@ import global_config
 from config.druid_base import FIELD_NAME
 from config.br.aggregation import DIMENSIONS, DIMENSION_ID_MAP, GEO_TO_LATLNG_FIELD
 from config.br.datatypes import BaseRowType
+from config.br.filters import EXCLUDE_FILTER_DIMENSIONS
 
 
 def build_druid_dimensions():
@@ -32,9 +33,8 @@ DIMENSIONS = build_druid_dimensions()
 
 # The list of dimensions that will never need to be filtered on in a Druid query and can
 # be stored in a more optimal way during indexing.
-UNFILTERABLE_DIMENSIONS = [d for pieces in GEO_TO_LATLNG_FIELD.values() for d in pieces]
-
-# Extra metrics to compute during druid indexing
-EXTRA_METRICS = []
+UNFILTERABLE_DIMENSIONS = [
+    d for pieces in GEO_TO_LATLNG_FIELD.values() for d in pieces
+] + list(EXCLUDE_FILTER_DIMENSIONS)
 
 DRUID_HOST = global_config.DEFAULT_DRUID_HOST

@@ -1,18 +1,13 @@
-# Geography filter dimensions are required. They are hierarchical, ordered from
-# biggest to smallest.
-_GEOGRAPHY_FILTER_DIMENSIONS = ['_all', 'StateName', 'MunicipalityName']
+from config.br.aggregation import DIMENSIONS
+from config.br.datatypes import BaseRowType, Dimension
 
-# Map from filter ID to an ordered list of dimensions that will display in the
-# filter dropdown.
-FILTER_DIMENSIONS = {
-    'geography': _GEOGRAPHY_FILTER_DIMENSIONS,
-    # Non-geo filters go below.
-    # ...
-    'source': ['_all', 'source'],
-}
+# Dimensions that should not be filterable for users
+EXCLUDE_FILTER_DIMENSIONS = set()
 
-# Configuration of filters for public portal.
-PUBLIC_FILTER_DIMENSIONS = {}
+# List of dimensions that will display in the filter dropdown and be filterable.
+# Include the source dimension and any others in AQT, exclude the dimensions
+# that aren't filterable.
+FILTER_DIMENSIONS = {BaseRowType.SOURCE_FIELD, *DIMENSIONS} - EXCLUDE_FILTER_DIMENSIONS
 
 # Dimensions that we are able to restrict querying on
-AUTHORIZABLE_DIMENSIONS = set(['source', 'StateName'])
+AUTHORIZABLE_DIMENSIONS = {BaseRowType.SOURCE_FIELD, Dimension.STATE}

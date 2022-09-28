@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 '''Generates the list of sources to be used by various pipeline steps. The main
 steps that are run for every source included in the config are:
-- 'unify_dimensions' (Occasionally called unify_locations) (process 90_shared/02_unify_dimensions)
 - 'fill_dimension_data' (process 90_shared/10_fill_dimension_data)
 - 'sync_digest_files' (process 90_shared/20_sync_digest_files)
 - 'populate_pipeline_run_metadata' (index 05_data_digest/00_populate_pipeline_run_metadata)

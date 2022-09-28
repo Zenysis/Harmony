@@ -7,7 +7,7 @@ from config.template.aggregation import (
     GEO_TO_LATLNG_FIELD,
 )
 from config.template.datatypes import BaseRowType
-from config.template.filters import FILTER_DIMENSIONS
+from config.template.filters import EXCLUDE_FILTER_DIMENSIONS
 
 
 def build_druid_dimensions():
@@ -39,6 +39,6 @@ DIMENSIONS = build_druid_dimensions()
 # be stored in a more optimal way during indexing.
 UNFILTERABLE_DIMENSIONS = [
     d for pieces in GEO_TO_LATLNG_FIELD.values() for d in pieces
-] + list(set(DIMENSIONS) - set(FILTER_DIMENSIONS))
+] + list(EXCLUDE_FILTER_DIMENSIONS)
 
 DRUID_HOST = global_config.DEFAULT_DRUID_HOST
