@@ -12,6 +12,7 @@ DIMENSION_SLICES = {
 
 DIMENSION_CATEGORIES = [
     ('Geography', GEO_FIELD_ORDERING),
+    ('Yellow Fever', [Dimension.AGE, Dimension.SEX, Dimension.DEATH]),
 ]
 
 DIMENSION_ID_MAP = {

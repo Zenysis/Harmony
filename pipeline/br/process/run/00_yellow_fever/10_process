@@ -1,0 +1,23 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+SetupEnvForPyPy
+
+pushd "${PIPELINE_TMP_DIR}" &> /dev/null
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/scripts/process_csv.py" \
+  --delimiter ';' \
+  --rename_cols 'COD_MUN_LPI:MunicipalityName' 'SEXO:Sex' 'IDADE:Age' 'OBITO:Death' \
+  --date 'DT_IS' \
+  --prefix 'yellow_fever' \
+  --sourcename 'yellow_fever' \
+  --set_cols 'cases:1' \
+  --fields 'cases' \
+  --input="${PIPELINE_FEED_DIR}/yellow_fever_cases.csv" \
+  --output_locations="${PIPELINE_TMP_DIR}/locations.csv" \
+  --output_fields="${PIPELINE_TMP_DIR}/fields.csv" \
+  --output_rows="${PIPELINE_TMP_DIR}/processed_data.json.lz4"
+
+popd &> /dev/null
