@@ -187,9 +187,6 @@ api_log
 .vscode/
 *.code-workspace
 
-# Atom for Nina
-save-commands.json
-
 # Jupyter notebook checkpoints
 **/.ipynb_checkpoints
 
