@@ -1,0 +1,581 @@
+CleanStateName,CleanMunicipalityName,CanonicalStateName,CanonicalMunicipalityName
+,140005,Roraima,Alto Alegre
+,140045,Roraima,Pacaraima
+,210060,Maranhão,Amarante do Maranhão
+,150270,Pará,Conceição do Araguaia
+,130410,Amazonas,Tapauá
+,130356,Amazonas,Rio Preto da Eva
+,130255,Amazonas,Manaquiri
+,130250,Amazonas,Manacapuru
+,130110,Amazonas,Careiro
+,130010,Amazonas,Anori
+,130185,Amazonas,Iranduba
+,130406,Amazonas,Tabatinga
+,130040,Amazonas,Barcelos
+,130260,Amazonas,Manaus
+,500660,Mato Grosso do Sul,Ponta Porã
+,130360,Amazonas,Santa Isabel do Rio Negro
+,110020,Rondônia,Porto Velho
+,150050,Pará,Almeirim
+,150030,Pará,Afuá
+,510558,Mato Grosso,Marcelândia
+,130353,Amazonas,Presidente Figueiredo
+,150613,Pará,Redenção
+,150310,Pará,Gurupá
+,150510,Pará,Óbidos
+,150125,Pará,Bannach
+,150304,Pará,Floresta do Araguaia
+,150360,Pará,Itaituba
+,140030,Roraima,Mucajaí
+,140028,Roraima,Iracema
+,510260,Mato Grosso,Campinápolis
+,150180,Pará,Breves
+,171850,Tocantins,Recursolândia
+,130190,Amazonas,Itacoatiara
+,510880,Mato Grosso,Nova Guarita
+,170100,Tocantins,Ananás
+,171650,Tocantins,Pedro Afonso
+,150658,Pará,Santa Maria das Barreiras
+,170765,Tocantins,Figueirópolis
+,510642,Mato Grosso,Peixoto de Azevedo
+,130070,Amazonas,Boca do Acre
+,170930,Tocantins,Guaraí
+,130320,Amazonas,Novo Airão
+,140017,Roraima,Cantá
+,140070,Roraima,Uiramutã
+,170384,Tocantins,Campos Lindos
+,521308,Goiás,Minaçu
+,171620,Tocantins,Paranã
+,521460,Goiás,Niquelândia
+,520890,Goiás,Goiás
+,520060,Goiás,Alto Paraíso de Goiás
+,522000,Goiás,São João d'Aliança
+,520552,Goiás,Colinas do Sul
+,520530,Goiás,Cavalcante
+,510180,Mato Grosso,Barra do Garças
+,520725,Goiás,Doverlândia
+,170240,Tocantins,Arraias
+,521280,Goiás,Mara Rosa
+,520590,Goiás,Corumbaíba
+,510706,Mato Grosso,Querência
+,521490,Goiás,Nova Roma
+,170040,Tocantins,Almas
+,520082,Goiás,Amaralina
+,522108,Goiás,Teresina de Goiás
+,521760,Goiás,Planaltina
+,520790,Goiás,Flores de Goiás
+,521560,Goiás,Padre Bernardo
+,521305,Goiás,Mimoso de Goiás
+,520357,Goiás,Bonópolis
+,510680,Mato Grosso,Porto dos Gaúchos
+,510350,Mato Grosso,Diamantino
+,521520,Goiás,Novo Brasil
+,510590,Mato Grosso,Nobres
+,521220,Goiás,Jussara
+,522160,Goiás,Uruaçu
+,522230,Goiás,Vila Propício
+,354570,São Paulo,Santa Albertina
+,522170,Goiás,Uruana
+,521180,Goiás,Jaraguá
+,520280,Goiás,Avelinópolis
+,520580,Goiás,Corumbá de Goiás
+,530010,Distrito Federal,Brasília
+,510621,Mato Grosso,Nova Canaã do Norte
+,314437,Minas Gerais,Natalândia
+,521060,Goiás,Itaguaru
+,290910,Bahia,Coribe
+,510515,Mato Grosso,Juína
+,521925,Goiás,Santa Fé de Goiás
+,315160,Minas Gerais,Planura
+,522050,Goiás,Serranópolis
+,170270,Tocantins,Aurora do Tocantins
+,520400,Goiás,Cabeceiras
+,520030,Goiás,Alexânia
+,520420,Goiás,Cachoeira de Goiás
+,150070,Pará,Anajás
+,120038,Acre,Plácido de Castro
+,314050,Minas Gerais,Martinho Campos
+,313830,Minas Gerais,Leandro Ferreira
+,314520,Minas Gerais,Nova Serrana
+,316040,Minas Gerais,Santo Antônio do Monte
+,310740,Minas Gerais,Bom Despacho
+,311760,Minas Gerais,Conceição do Pará
+,315140,Minas Gerais,Pitangui
+,313880,Minas Gerais,Luz
+,316210,Minas Gerais,São Gotardo
+,312320,Minas Gerais,Dores do Indaiá
+,312470,Minas Gerais,Estrela do Indaiá
+,314710,Minas Gerais,Pará de Minas
+,150309,Pará,Goianésia do Pará
+,510330,Mato Grosso,Comodoro
+,150390,Pará,Juruti
+,130080,Amazonas,Borba
+,510682,Mato Grosso,Porto Esperidião
+,130120,Amazonas,Coari
+,316710,Minas Gerais,Serro
+,310240,Minas Gerais,Alvorada de Minas
+,315680,Minas Gerais,Sabinópolis
+,312800,Minas Gerais,Guanhães
+,316610,Minas Gerais,Senhora do Porto
+,510250,Mato Grosso,Cáceres
+,314060,Minas Gerais,Materlândia
+,510800,Mato Grosso,Tapurah
+,130440,Amazonas,Urucurituba
+,510795,Mato Grosso,Tangará da Serra
+,150553,Pará,Parauapebas
+,130130,Amazonas,Codajás
+,510624,Mato Grosso,Nova Ubiratã
+,140023,Roraima,Caroebe
+,521190,Goiás,Jataí
+,130290,Amazonas,Maués
+,520870,Goiás,Goiânia
+,510510,Mato Grosso,Juara
+,520860,Goiás,Goianésia
+,521250,Goiás,Luziânia
+,521730,Goiás,Pirenópolis
+,500220,Mato Grosso do Sul,Bonito
+,520450,Goiás,Caldas Novas
+,520630,Goiás,Cristianópolis
+,520010,Goiás,Abadiânia
+,521890,Goiás,Rubiataba
+,500020,Mato Grosso do Sul,Água Clara
+,521290,Goiás,Marzagão
+,500540,Mato Grosso do Sul,Maracaju
+,520640,Goiás,Crixás
+,520510,Goiás,Catalão
+,510628,Mato Grosso,Novo São Joaquim
+,500124,Mato Grosso do Sul,Aral Moreira
+,317040,Minas Gerais,Unaí
+,500710,Mato Grosso do Sul,Ribas do Rio Pardo
+,411325,Paraná,Laranjal
+,510410,Mato Grosso,Guarantã do Norte
+,352760,São Paulo,Luís Antônio
+,354890,São Paulo,São Carlos
+,150506,Pará,Novo Repartimento
+,430150,Rio Grande do Sul,Augusto Pestana
+,431750,Rio Grande do Sul,Santo Ângelo
+,431455,Rio Grande do Sul,Pirapó
+,431115,Rio Grande do Sul,Jóia
+,430250,Rio Grande do Sul,Bossoroca
+,430750,Rio Grande do Sul,Espumoso
+,355120,São Paulo,Sarutaiá
+,353880,São Paulo,Piraju
+,352350,São Paulo,Itatinga
+,350800,São Paulo,Buri
+,431680,Rio Grande do Sul,Santa Cruz do Sul
+,432270,Rio Grande do Sul,Vera Cruz
+,350450,São Paulo,Avaré
+,510370,Mato Grosso,Feliz Natal
+,316990,Minas Gerais,Ubá
+,510830,Mato Grosso,União do Sul
+,431020,Rio Grande do Sul,Ijuí
+,500320,Mato Grosso do Sul,Corumbá
+,150110,Pará,Bagre
+,150795,Pará,Tailândia
+,150020,Pará,Acará
+,150480,Pará,Monte Alegre
+,522020,Goiás,São Miguel do Araguaia
+,520660,Goiás,Cumari
+,350460,São Paulo,Bady Bassitt
+,522010,Goiás,São Luís de Montes Belos
+,522045,Goiás,Senador Canedo
+,130200,Amazonas,Itapiranga
+,354340,São Paulo,Ribeirão Preto
+,311340,Minas Gerais,Caratinga
+,313700,Minas Gerais,Ladainha
+,313920,Minas Gerais,Malacacheta
+,312680,Minas Gerais,Frei Gaspar
+,313270,Minas Gerais,Itambacuri
+,315015,Minas Gerais,Piedade de Caratinga
+,313055,Minas Gerais,Imbé de Minas
+,317005,Minas Gerais,Ubaporanga
+,312385,Minas Gerais,Entre Folhas
+,313120,Minas Gerais,Ipanema
+,313090,Minas Gerais,Inhapim
+,314530,Minas Gerais,Novo Cruzeiro
+,315240,Minas Gerais,Poté
+,310060,Minas Gerais,Água Boa
+,313320,Minas Gerais,Itanhomi
+,315950,Minas Gerais,Santa Rita do Itueto
+,316450,Minas Gerais,São Sebastião do Maranhão
+,354690,São Paulo,Santa Lúcia
+,316860,Minas Gerais,Teófilo Otoni
+,314840,Minas Gerais,Paulistas
+,312120,Minas Gerais,Delfinópolis
+,313770,Minas Gerais,Lajinha
+,320245,Espírito Santo,Ibatiba
+,320290,Espírito Santo,Itarana
+,310780,Minas Gerais,Bom Jesus do Galho
+,313655,Minas Gerais,José Raydan
+,313410,Minas Gerais,Itueta
+,354640,São Paulo,Santa Cruz do Rio Pardo
+,315725,Minas Gerais,Santa Bárbara do Leste
+,316555,Minas Gerais,Setubinha
+,315820,Minas Gerais,Santa Maria do Suaçuí
+,317060,Minas Gerais,Vargem Bonita
+,320400,Espírito Santo,Pancas
+,172210,Tocantins,Xambioá
+,311280,Minas Gerais,Capitólio
+,320010,Espírito Santo,Afonso Cláudio
+,320495,Espírito Santo,São Roque do Canaã
+,316760,Minas Gerais,Simonésia
+,313940,Minas Gerais,Manhuaçu
+,350170,São Paulo,Américo Brasiliense
+,320370,Espírito Santo,Muniz Freire
+,320316,Espírito Santo,Laranja da Terra
+,320150,Espírito Santo,Colatina
+,330130,Rio de Janeiro,Casimiro de Abreu
+,150040,Pará,Alenquer
+,320265,Espírito Santo,Irupi
+,315890,Minas Gerais,Santana do Manhuaçu
+,316350,Minas Gerais,São José do Jacuri
+,320500,Espírito Santo,Serra
+,320530,Espírito Santo,Vitória
+,320450,Espírito Santo,Santa Leopoldina
+,311680,Minas Gerais,Coluna
+,316360,Minas Gerais,São José do Mantimento
+,311740,Minas Gerais,Conceição de Ipanema
+,314180,Minas Gerais,Minas Novas
+,310220,Minas Gerais,Alvarenga
+,313130,Minas Gerais,Ipatinga
+,313520,Minas Gerais,Januária
+,315190,Minas Gerais,Pocrane
+,320080,Espírito Santo,Baixo Guandu
+,353120,São Paulo,Monte Alegre do Sul
+,320490,Espírito Santo,São Mateus
+,320190,Espírito Santo,Domingos Martins
+,320455,Espírito Santo,Santa Maria de Jetibá
+,310110,Minas Gerais,Aimorés
+,320130,Espírito Santo,Cariacica
+,320140,Espírito Santo,Castelo
+,330240,Rio de Janeiro,Macaé
+,315400,Minas Gerais,Raul Soares
+,350950,São Paulo,Campinas
+,320115,Espírito Santo,Brejetuba
+,320510,Espírito Santo,Viana
+,320334,Espírito Santo,Marechal Floriano
+,311170,Minas Gerais,Canaã
+,311600,Minas Gerais,Chalé
+,330270,Rio de Janeiro,Maricá
+,314400,Minas Gerais,Mutum
+,355495,São Paulo,Tuiuti
+,330560,Rio de Janeiro,Silva Jardim
+,330460,Rio de Janeiro,Santa Maria Madalena
+,350040,São Paulo,Águas da Prata
+,320460,Espírito Santo,Santa Teresa
+,313950,Minas Gerais,Manhumirim
+,311300,Minas Gerais,Caraí
+,312352,Minas Gerais,Durandé
+,320170,Espírito Santo,Conceição do Castelo
+,315415,Minas Gerais,Reduto
+,320270,Espírito Santo,Itaguaçu
+,320380,Espírito Santo,Muqui
+,520090,Goiás,Amorinópolis
+,315935,Minas Gerais,Santa Rita de Minas
+,312540,Minas Gerais,Felício dos Santos
+,312410,Minas Gerais,Esmeraldas
+,314053,Minas Gerais,Martins Soares
+,350590,São Paulo,Batatais
+,314630,Minas Gerais,Padre Paraíso
+,,,
+,314860,Minas Gerais,Peçanha
+,316280,Minas Gerais,São João Evangelista
+,314430,Minas Gerais,Nanuque
+,314620,Minas Gerais,Ouro Verde de Minas
+,312675,Minas Gerais,Franciscópolis
+,317065,Minas Gerais,Vargem Grande do Rio Pardo
+,314090,Minas Gerais,Matipó
+,320255,Espírito Santo,Ibitirama
+,320320,Espírito Santo,Linhares
+,320335,Espírito Santo,Marilândia
+,320060,Espírito Santo,Aracruz
+,311840,Minas Gerais,Conselheiro Pena
+,311230,Minas Gerais,Capelinha
+,311330,Minas Gerais,Carangola
+,312640,Minas Gerais,Fortuna de Minas
+,320503,Espírito Santo,Vargem Alta
+,312200,Minas Gerais,Divino
+,320120,Espírito Santo,Cachoeiro de Itapemirim
+,313580,Minas Gerais,Jequitinhonha
+,320506,Espírito Santo,Venda Nova do Imigrante
+,320160,Espírito Santo,Conceição da Barra
+,320030,Espírito Santo,Alfredo Chaves
+,353050,São Paulo,Mococa
+,320035,Espírito Santo,Alto Rio Novo
+,316430,Minas Gerais,São Roque de Minas
+,330480,Rio de Janeiro,São Fidélis
+,313670,Minas Gerais,Juiz de Fora
+,320240,Espírito Santo,Guarapari
+,310340,Minas Gerais,Araçuaí
+,330410,Rio de Janeiro,Porciúncula
+,313230,Minas Gerais,Itaipé
+,350190,São Paulo,Amparo
+,320040,Espírito Santo,Anchieta
+,311940,Minas Gerais,Coronel Fabriciano
+,311290,Minas Gerais,Caputira
+,312595,Minas Gerais,Fervedouro
+,330610,Rio de Janeiro,Valença
+,130030,Amazonas,Autazes
+,330060,Rio de Janeiro,Bom Jesus do Itabapoana
+,330080,Rio de Janeiro,Cachoeiras de Macacu
+,354910,São Paulo,São João da Boa Vista
+,352340,São Paulo,Itatiba
+,330185,Rio de Janeiro,Guapimirim
+,352590,São Paulo,Jundiaí
+,355210,São Paulo,Socorro
+,352850,São Paulo,Mairiporã
+,310900,Minas Gerais,Brumadinho
+,350900,São Paulo,Caieiras
+,350410,São Paulo,Atibaia
+,353240,São Paulo,Nazaré Paulista
+,314480,Minas Gerais,Nova Lima
+,311400,Minas Gerais,Carmo da Mata
+,314000,Minas Gerais,Mariana
+,310570,Minas Gerais,Barra Longa
+,313980,Minas Gerais,Mar de Espanha
+,352220,São Paulo,Itapecerica da Serra
+,352520,São Paulo,Jarinu
+,312738,Minas Gerais,Goianá
+,313190,Minas Gerais,Itabirito
+,330580,Rio de Janeiro,Teresópolis
+,315480,Minas Gerais,Rio Acima
+,315230,Minas Gerais,Porto Firme
+,311000,Minas Gerais,Caeté
+,316190,Minas Gerais,São Gonçalo do Rio Abaixo
+,315670,Minas Gerais,Sabará
+,317130,Minas Gerais,Viçosa
+,315780,Minas Gerais,Santa Luzia
+,315080,Minas Gerais,Piranga
+,315720,Minas Gerais,Santa Bárbara
+,310540,Minas Gerais,Barão de Cocais
+,355030,São Paulo,São Paulo
+,353860,São Paulo,Piracaia
+,350760,São Paulo,Bragança Paulista
+,351630,São Paulo,Francisco Morato
+,351640,São Paulo,Franco da Rocha
+,353780,São Paulo,Piedade
+,330290,Rio de Janeiro,Miguel Pereira
+,330390,Rio de Janeiro,Petrópolis
+,330340,Rio de Janeiro,Nova Friburgo
+,315570,Minas Gerais,Rio Piracicaba
+,352050,São Paulo,Indaiatuba
+,315210,Minas Gerais,Ponte Nova
+,314070,Minas Gerais,Mateus Leme
+,315390,Minas Gerais,Raposos
+,316000,Minas Gerais,Santo Antônio do Aventureiro
+,312820,Minas Gerais,Guaraciaba
+,330160,Rio de Janeiro,Duas Barras
+,330450,Rio de Janeiro,Rio das Flores
+,330620,Rio de Janeiro,Vassouras
+,316750,Minas Gerais,Simão Pereira
+,330110,Rio de Janeiro,Cantagalo
+,330570,Rio de Janeiro,Sumidouro
+,351518,São Paulo,Espírito Santo do Pinhal
+,350390,São Paulo,Arujá
+,313900,Minas Gerais,Machado
+,351300,São Paulo,Cotia
+,351880,São Paulo,Guarulhos
+,355060,São Paulo,São Roque
+,354680,São Paulo,Santa Isabel
+,350960,São Paulo,Campo Limpo Paulista
+,352020,São Paulo,Igaratá
+,314770,Minas Gerais,Passa Tempo
+,314020,Minas Gerais,Maripá de Minas
+,313540,Minas Gerais,Jeceaba
+,314610,Minas Gerais,Ouro Preto
+,313380,Minas Gerais,Itaúna
+,315310,Minas Gerais,Presidente Bernardes
+,316520,Minas Gerais,São Thomé das Letras
+,310230,Minas Gerais,Alvinópolis
+,312400,Minas Gerais,Ervália
+,310690,Minas Gerais,Bicas
+,311780,Minas Gerais,Conceição dos Ouros
+,315590,Minas Gerais,Rio Preto
+,310560,Minas Gerais,Barbacena
+,313220,Minas Gerais,Itaguara
+,316600,Minas Gerais,Senhora de Oliveira
+,310080,Minas Gerais,Aguanil
+,315580,Minas Gerais,Rio Pomba
+,310040,Minas Gerais,Acaiaca
+,315540,Minas Gerais,Rio Novo
+,316440,Minas Gerais,São Sebastião da Bela Vista
+,316850,Minas Gerais,Teixeiras
+,313390,Minas Gerais,Itaverava
+,311450,Minas Gerais,Carmópolis de Minas
+,353870,São Paulo,Piracicaba
+,355650,São Paulo,Várzea Paulista
+,351970,São Paulo,Ibiúna
+,330370,Rio de Janeiro,Paraíba do Sul
+,330120,Rio de Janeiro,Carmo
+,315530,Minas Gerais,Rio Manso
+,314440,Minas Gerais,Natércia
+,311860,Minas Gerais,Contagem
+,314230,Minas Gerais,Moeda
+,330330,Rio de Janeiro,Niterói
+,330010,Rio de Janeiro,Angra dos Reis
+,330385,Rio de Janeiro,Paty do Alferes
+,330490,Rio de Janeiro,São Gonçalo
+,330440,Rio de Janeiro,Rio Claro
+,330180,Rio de Janeiro,Engenheiro Paulo de Frontin
+,314080,Minas Gerais,Matias Barbosa
+,311535,Minas Gerais,Catas Altas
+,312170,Minas Gerais,Diogo de Vasconcelos
+,310640,Minas Gerais,Belo Vale
+,316200,Minas Gerais,São Gonçalo do Sapucaí
+,313170,Minas Gerais,Itabira
+,315930,Minas Gerais,Santa Rita de Jacutinga
+,315010,Minas Gerais,Piau
+,314590,Minas Gerais,Ouro Branco
+,314730,Minas Gerais,Paraisópolis
+,316100,Minas Gerais,São Domingos do Prata
+,314880,Minas Gerais,Pedra do Anta
+,311830,Minas Gerais,Conselheiro Lafaiete
+,310250,Minas Gerais,Amparo do Serra
+,314160,Minas Gerais,Mercês
+,314930,Minas Gerais,Pedro Leopoldo
+,314830,Minas Gerais,Paula Cândido
+,314950,Minas Gerais,Pequeri
+,315860,Minas Gerais,Santana do Deserto
+,315520,Minas Gerais,Rio Espera
+,312840,Minas Gerais,Guarani
+,313860,Minas Gerais,Lima Duarte
+,313620,Minas Gerais,João Monlevade
+,313660,Minas Gerais,Nova União
+,316070,Minas Gerais,Santos Dumont
+,311870,Minas Gerais,Coqueiral
+,311630,Minas Gerais,Cipotânea
+,355620,São Paulo,Valinhos
+,311320,Minas Gerais,Carandaí
+,330630,Rio de Janeiro,Volta Redonda
+,313740,Minas Gerais,Lagoa Dourada
+,311310,Minas Gerais,Caranaíba
+,315910,Minas Gerais,Santana dos Montes
+,316380,Minas Gerais,São Miguel do Anta
+,310620,Minas Gerais,Belo Horizonte
+,311800,Minas Gerais,Congonhas
+,311850,Minas Gerais,Consolação
+,330400,Rio de Janeiro,Piraí
+,330590,Rio de Janeiro,Trajano de Moraes
+,330350,Rio de Janeiro,Nova Iguaçu
+,352210,São Paulo,Itanhaém
+,351500,São Paulo,Embu das Artes
+,354870,São Paulo,São Bernardo do Campo
+,316570,Minas Gerais,Senador Firmino
+,354780,São Paulo,Santo André
+,350030,São Paulo,Aguaí
+,350710,São Paulo,Bom Jesus dos Perdões
+,352330,São Paulo,Itariri
+,351510,São Paulo,Embu-Guaçu
+,354060,São Paulo,Porto Feliz
+,314660,Minas Gerais,Paiva
+,310890,Minas Gerais,Brazópolis
+,310290,Minas Gerais,Antônio Carlos
+,315727,Minas Gerais,Santa Bárbara do Monte Verde
+,312590,Minas Gerais,Ferros
+,312230,Minas Gerais,Divinópolis
+,317120,Minas Gerais,Vespasiano
+,310770,Minas Gerais,Bom Jesus do Amparo
+,311390,Minas Gerais,Carmo da Cachoeira
+,310590,Minas Gerais,Barroso
+,313780,Minas Gerais,Lambari
+,315960,Minas Gerais,Santa Rita do Sapucaí
+,310750,Minas Gerais,Bom Jardim de Minas
+,352610,São Paulo,Juquiá
+,355020,São Paulo,São Miguel Arcanjo
+,353230,São Paulo,Natividade da Serra
+,352990,São Paulo,Miracatu
+,353200,São Paulo,Morungaba
+,354530,São Paulo,Salto de Pirapora
+,354990,São Paulo,São José dos Campos
+,353980,São Paulo,Poá
+,354860,São Paulo,São Bento do Sapucaí
+,354880,São Paulo,São Caetano do Sul
+,311360,Minas Gerais,Careaçu
+,354995,São Paulo,São Lourenço da Serra
+,312920,Minas Gerais,Heliodora
+,310210,Minas Gerais,Alto Rio Doce
+,330050,Rio de Janeiro,Bom Jardim
+,330540,Rio de Janeiro,Sapucaia
+,330515,Rio de Janeiro,São José do Vale do Rio Preto
+,352620,São Paulo,Juquitiba
+,316540,Minas Gerais,Sapucaí-Mirim
+,330030,Rio de Janeiro,Barra do Piraí
+,311070,Minas Gerais,Cambuquira
+,315440,Minas Gerais,Ressaquinha
+,355350,São Paulo,Tapiraí
+,353170,São Paulo,Monteiro Lobato
+,330380,Rio de Janeiro,Paraty
+,314780,Minas Gerais,Passa-Vinte
+,330395,Rio de Janeiro,Pinheiral
+,352400,São Paulo,Itupeva
+,311060,Minas Gerais,Cambuí
+,353760,São Paulo,Peruíbe
+,352550,São Paulo,Joanópolis
+,310490,Minas Gerais,Baependi
+,350850,São Paulo,Caçapava
+,353720,São Paulo,Pedro de Toledo
+,353080,São Paulo,Mogi Mirim
+,352030,São Paulo,Iguape
+,355540,São Paulo,Ubatuba
+,330225,Rio de Janeiro,Itatiaia
+,314390,Minas Gerais,Muriaé
+,313490,Minas Gerais,Jacutinga
+,355200,São Paulo,Silveiras
+,330190,Rio de Janeiro,Itaboraí
+,351870,São Paulo,Guarujá
+,330260,Rio de Janeiro,Mangaratiba
+,330600,Rio de Janeiro,Três Rios
+,352260,São Paulo,Itapira
+,330205,Rio de Janeiro,Italva
+,330420,Rio de Janeiro,Resende
+,355070,São Paulo,São Sebastião
+,315090,Minas Gerais,Piranguçu
+,330430,Rio de Janeiro,Rio Bonito
+,355410,São Paulo,Taubaté
+,350860,São Paulo,Cachoeira Paulista
+,355330,São Paulo,Tambaú
+,354750,São Paulo,Santa Rita do Passa Quatro
+,355480,São Paulo,Tremembé
+,355100,São Paulo,São Vicente
+,351050,São Paulo,Caraguatatuba
+,351480,São Paulo,Eldorado
+,352120,São Paulo,Iporanga
+,352460,São Paulo,Jacupiranga
+,350990,São Paulo,Cananéia
+,355160,São Paulo,Serra Negra
+,410950,Paraná,Guaraqueçaba
+,410020,Paraná,Adrianópolis
+,350925,São Paulo,Cajati
+,353620,São Paulo,Pariquera-Açu
+,355180,São Paulo,Sete Barras
+,354260,São Paulo,Registro
+,350540,São Paulo,Barra do Turvo
+,411820,Paraná,Paranaguá
+,410120,Paraná,Antonina
+,412550,Paraná,São José dos Pinhais
+,411620,Paraná,Morretes
+,410960,Paraná,Guaratuba
+,354280,São Paulo,Ribeira
+,420910,Santa Catarina,Joinville
+,350270,São Paulo,Apiaí
+,354300,São Paulo,Ribeirão Branco
+,412080,Paraná,Quatro Barras
+,130170,Amazonas,Humaitá
+,352215,São Paulo,Itaóca
+,150085,Pará,Anapu
+,420810,Santa Catarina,Itaiópolis
+,150680,Pará,Santarém
+,421580,Santa Catarina,São Bento do Sul
+,420890,Santa Catarina,Jaraguá do Sul
+,420240,Santa Catarina,Blumenau
+,421320,Santa Catarina,Pomerode
+,420750,Santa Catarina,Indaial
+,120001,Acre,Acrelândia
+,420320,Santa Catarina,Camboriú
+,421230,Santa Catarina,Paulo Lopes
+,421590,Santa Catarina,São Bonifácio
+,420060,Santa Catarina,Águas Mornas
+,420110,Santa Catarina,Anitápolis
+,421900,Santa Catarina,Urussanga
+,421780,Santa Catarina,Taió
+,150520,Pará,Oeiras do Pará

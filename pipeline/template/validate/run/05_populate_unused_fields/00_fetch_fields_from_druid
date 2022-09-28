@@ -1,0 +1,6 @@
+#!/bin/bash -eu
+set -o pipefail
+
+"${PIPELINE_SRC_ROOT}/scripts/field_setup/fetch_fields_from_druid.py" \
+ --deployment_name="${ZEN_ENV}" \
+ --output_file="${PIPELINE_TMP_DIR}/druid_fields.csv" \

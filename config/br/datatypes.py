@@ -17,6 +17,11 @@ class Dimension:
     STATE = 'StateName'
     MUNICIPALITY = 'MunicipalityName'
 
+    # Yellow Fever dimensions
+    SEX = 'Sex'
+    AGE = 'Age'
+    DEATH = 'Death'
+
 
 HIERARCHICAL_DIMENSIONS = [
     Dimension.STATE,

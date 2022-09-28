@@ -1,0 +1,50 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# Load the utilities file to use the 'SetupEnvForPyPy' command.
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+# Enters the pypy virtual environment for better performance.
+SetupEnvForPyPy
+
+# This data will still need to be process by the shared steps, so put it in
+# the temp directory for intermediate outputs.
+pushd "${PIPELINE_TMP_DIR}" &> /dev/null
+
+# Clear past processed data if step is run multiple times.
+rm -rf "${PIPELINE_TMP_DIR}"/*
+
+# The process_csv script takes in data in the Zenysis Base Format, cleans it,
+# and transforms it into the optimal format for final processing. To explain
+# each input parameter:
+#   delimiter: The data is semicolon delimited.
+#   rename_cols: Rename the dimensions into their platform names. Use the
+#     input Municipality Code column so it is 1) unique (some municipalities
+#     in different states have the same name) and 2) easier to map to the
+#     canonical name.
+#   date: This input column holds the date.
+#   prefix: Use the source id for the field prefix.
+#   sourcename: This should match the source id used for the process folder.
+#   set_cols: This file did not have an input field column. Create one by
+#     creating the column "cases" and setting its value as 1 for all rows.
+#   fields: This data is in the pivoted format, so list the field columns. Use
+#     the "cases" field that was created.
+#   input: Use the same file that was fetched in 00_fetch.
+#   output_locations: This output file can be used to get all locations matched.
+#   output_fields: This output file lists all field ids that were found in the
+#     data.
+#   output_rows: This output file contains the processed data rows.
+"${PIPELINE_SRC_ROOT}/data/pipeline/scripts/process_csv.py" \
+  --delimiter ';' \
+  --rename_cols 'COD_MUN_LPI:MunicipalityName' 'SEXO:Sex' 'IDADE:Age' 'OBITO:Death' \
+  --date 'DT_IS' \
+  --prefix 'yellow_fever' \
+  --sourcename 'yellow_fever' \
+  --set_cols 'cases:1' \
+  --fields 'cases' \
+  --input="${PIPELINE_FEED_DIR}/yellow_fever_cases.csv" \
+  --output_locations="${PIPELINE_TMP_DIR}/locations.csv" \
+  --output_fields="${PIPELINE_TMP_DIR}/fields.csv" \
+  --output_rows="${PIPELINE_TMP_DIR}/processed_data.json.lz4"
+
+popd &> /dev/null
