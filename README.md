@@ -320,7 +320,108 @@ The pipeline server runs the data pipeline to generate datasources (typically, d
 
 ## Production Postgres server setup
 
-Coming soon.
+### Introduction
+
+You will have to set up a [PostgreSQL](https://www.postgresql.org/) database to host relational data and web application state.
+
+### Getting Started
+
+If not using a relational database cloud service like Amazon RDS, Postgres can be installed on a server manually or via Docker.
+
+Regardless of installation approach, the database will require the `power_user` to be created as a **SUPERUSER**.
+
+#### Power User
+
+By default the `power_user` account on these databases has access to all databases on the server. We do not share the `power_user` credentials with the instance. It is **recommended** to not store these credentials on your local machine in an insecure fashion. The instance has its own credentials and ability to manage its own database.
+
+#### Direct Installation
+
+Follow the [instructions](https://www.postgresql.org/download/linux/ubuntu/) to install postgres on linux (ubuntu).
+Once the database is up and running, create the `power_user` by running the below script:
+
+> Provide your own, secure password for the `power_user`, **keep it safe!**
+
+```sql
+CREATE USER "power_user" WITH
+  LOGIN
+  SUPERUSER
+  CONNECTION LIMIT -1
+  PASSWORD '[YOUR_PASSWORD]';
+COMMIT;
+```
+
+#### Docker Installation
+
+Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install docker on linux (ubuntu).
+Once docker is up and running, start the database by running the below script:
+
+> The terminal will prompt for the `power_user` password to use, **keep it safe!**
+
+```sh
+docker run -d --name postgres \
+    --restart always \
+    -e POSTGRES_USER=power_user \
+    -e POSTGRES_PASSWORD=$(read -s;echo $REPLY) \
+    -p 1994:5432 \
+    postgres:14
+```
+
+### Deployment Database
+
+Postgres should now be up and running with the `power_user` **SUPERUSER**, now the database instance for the deloyment needs to be created.
+
+Running the below script, replace `[YOUR_HOSTNAME]` with the hostname/IP of your postgres instance (example: *localhost*) and `[YOUR_DATABASE_NAME]` with the database name you want to use (example: *harmony*).
+
+```sh
+./scripts/create_deployment_database.sh [YOUR_HOSTNAME] [YOUR_DATABASE_NAME] power_user
+# Log output only
+# ZEN_DB_LOG_ONLY=1 ./scripts/create_deployment_database.sh [YOUR_HOSTNAME] [YOUR_DATABASE_NAME] power_user
+```
+
+> If you cannot connect directly to your postgres instance, you can run the script to log the output only by using the `ZEN_DB_LOG_ONLY=1` environment variable. The output will have all the raw SQL commands for you to run.
+
+The database is now ready and the instance database connection string is outputted to the console.
+
+### Setting Up Your Environment
+
+By default, Flask will look for the SQLite Database to retrieve user information. You can override the database that Flask uses by setting `DATABASE_URL`. It is recommended you do this in your environment initialization step. For example, this is what a sample value for `DATABASE_URL` can look like.
+
+```sh
+export DATABASE_URL='postgresql://test_admin:test_pwd@my.postgres.host/harmony'
+```
+
+### Seeding The Database
+
+Once we've created our application database, we need to initialize it with seed data. This section will deal with upgrading the database schema to ensure that it is consistent with the latest version. By default, our application will not start unless the database schema version matches the latest version in the source tree.
+
+First, make sure `DATABASE_URL` is set
+
+```sh
+echo "${DATABASE_URL}"
+```
+
+We first need to create all the Tables in the Database and set up all constraints, sequences and other details contained in the Database Schema.
+If `DATABASE_URL` is not set, this step will 'upgrade' the hard-coded database.
+
+Upgrade the database by running the below script:
+
+> `ZEN_ENV` needs to be set with a valid environment configured
+
+```sh
+scripts/upgrade_database.sh
+# Example
+# ZEN_ENV=br scripts/upgrade_database.sh
+```
+
+> If you cannot run the above, the database upgrade is also done on initialization of the web container
+
+Once we've upgraded the database and populated the appropriate seed values, we'll need to create a user account so that we can login via the Web UI.
+
+```sh
+scripts/create_user.py -a -f "[YOUR_FIRST_NAME]" -l "[YOUR_LAST_NAME]" -u "[YOUR_EMAIL]"
+# Example
+# scripts/create_user.py -a -f "Test" -l "User" -u "test@test.com"
+```
 
 ## Production web server setup
 
@@ -447,14 +548,15 @@ Contributions are welcome! Use Github's Issues and Pull Requests features to rep
 
 We have an open [Google Group mailing list zenysis-harmony@googlegroups.com](https://groups.google.com/forum/#!forum/zenysis-harmony), which you can join or email with questions and other discussion. For general open source matters at Zenysis you may contact open-source@zenysis.com.
 
-
 ## Harmony Products
 
-### Homepage
+### Overview Page
 
-The Homepage is a personalized ‘landing’ page you see when you log into the platform. It is intended to provide you with an overview and easy access to the different parts of the platform you regularly work with.
+The Overview Page is a personalized ‘landing’ page you see when you log into the platform. It is intended to provide you with an overview and easy access to the different parts of the platform you regularly work with.
 
-From the Homepage, you can easily access official dashboards and other dashboards you or your colleagues have created. For each dashboard, key information such as date of creation, your last date of visit, and number of views is displayed.
+From the Overview Page, you can easily access official dashboards and other dashboards you or your colleagues have created. For each dashboard, key information such as date of creation, your last date of visit, and number of views is displayed.
+
+![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/CX3qZsFy_HPrSk5XAt512Znw.png)
 
 ### Analyze
 
@@ -485,7 +587,17 @@ Dashboards also support different types of content such as text, images, divider
 
 In addition, users can add dashboard-level filters and aggregations. For example, a user can modify the date range, geographical filters and level of aggregation of data within the dashboard directly. In this way, your personal dashboard becomes a dynamic tool which you can use for monitoring key data points across various dimensions and do further exploratory analysis.
 
-![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/AN8QVulnqrp-KCeaDub23oRr.png)
+![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/8U7BgpOLDCNwIzjt6Uc34lVL.png)
+
+In the top navigation bar for a dashboard, users can click
+- Play - enter a presentation mode with full screen view, where each tile is its own slide
+- Share - export the dashboard as a link, email, or download
+- Add content - add a text box, visualization, iFrame, spacer, or divider to the dashboard
+- The percentage to modify page fit
+- Settings - modify the following capabilities of the dashboard:
+
+![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/FUYhGhSa94jAIcN20738bFNh.png)
+
 
 ### Alerts
 
@@ -506,9 +618,9 @@ There are two data quality areas being assessed in DQL:
 1. Indicator Characteristics: this tab summarizes some basic facts about the indicator that may impact reporting or data quality, as well as explaining how they affect the score. After choosing an indicator, you’ll see cards displaying the indicator’s age, time since the last report, reporting completeness trend and estimated reporting periods. Both age and freshness are counted in terms of the number of estimated reporting periods (i.e. months if it’s a monthly report).
 1. Reporting Completeness: The score is based on the consistency in the number of reports received per reporting period. The more consistent, the better it is for the score. Within this tab, there are investigative tools designed to enable you to identify where reporting completeness issues may be coming from.
 
-### Platform Administration
+### Admin App
 
-The Admin interface is used by administrators of the platform to manage user access and permissions. The interface allows administrators to give or revoke access to users, to create and manage user groups and to edit access and permissions levels for users on the platform.
+The Admin App is used by administrators of the platform to manage user access and permissions. The interface allows administrators to give or revoke access to users, to create and manage user groups and to edit access and permissions levels for users on the platform.
 
 The Admin option is only available to users with administrative permissions, which can only be granted by another platform administrator.
 
@@ -526,12 +638,14 @@ To access the Admin App, click on the menu button at the top right corner of yo
 Data Catalog enables Data Managers to manage their indicators and augment them with useful information. Specifically this allows:
 
 - Organizing datasets into a hierarchical structure that is surfaced in the Analyze tool
+- Hide or make visible specific groups of data 
 - Provide useful metadata to indicators (e.g. definitions, operations etc.)
 - Create new custom calculations
 
 In Data Catalog, the Analyze hierarchical selector is organized in the form of a directory table that resembles a ‘file system’. This allows us to navigate and organize categories (folders) and indicators (files) in a familiar format. The indicators themselves are the files in the file system. Each file is its own page called the Indicator Details page. This page contains metadata about each indicator and options to edit that metadata.
 
 ![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/aWreLFOT62th7O9mV_pznYCF.png)
+
 
 ### Data Digest
 
@@ -540,3 +654,11 @@ The Data Digest tool is an internal tool that can be used by administrators to m
 - Pipeline overview: this includes information about the most recent pipeline and a summary of location matching.
 - Data source overview: this includes an overview of the number of data points, indicators, mapped and unmatched location for each data source integrated via the pipeline.
 - Mapping files and CSV validation: allows users to download the location mapping files for level of the geographic hierarchy, update these offline, and reupload them with new matches.
+
+### Field Setup
+
+The Field Setup App allows users to set up fields that are in Druid and not yet in Data Catalog, and therefore visible to end users to be queried. 
+
+The app is populated with the id, data source, and default sum calculation for each field and users can edit the name, description, calculation, and category. Once the fields are ready, they can be published to Data Catalog. 
+
+![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/71BllLgN_UIJ0yWjjAaSxi2X.png)

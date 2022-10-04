@@ -1,0 +1,17 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# All fetched files should be put in the feed directory.
+pushd "${PIPELINE_FEED_DIR}" &> /dev/null
+
+# Clear past fetched data if step is run multiple times.
+rm -rf "${PIPELINE_FEED_DIR}"/*
+
+# For data persistence with cloud storage, this should be moved to the
+# generate step and this file would fetch the data from the cloud.
+# Fetch the data, convert the file encoding to UTF-8, and save to file.
+curl 'https://s3.sa-east-1.amazonaws.com/ckan.saude.gov.br/Febre+Amarela/fa_casoshumanos_1994-2021.csv' \
+    | iconv -f ISO-8859-1 -t UTF-8//TRANSLIT \
+    > yellow_fever_cases.csv
+
+popd &> /dev/null

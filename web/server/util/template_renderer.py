@@ -106,7 +106,6 @@ class TemplateRenderer:
             'sessionTimeout': ui_configuration.SESSION_TIMEOUT,
             'isSessionPersisted': is_session_persisted(),
             'customColors': ui_configuration.CUSTOM_COLORS,
-            'isHarmony': ui_configuration.IS_HARMONY,
         }
 
     def build_user_params(self):
@@ -187,7 +186,6 @@ class TemplateRenderer:
             'dqlMapDimensions': ui_configuration.DQL_MAP_DIMENSIONS,
             'mapOverlayGeoJson': ui_configuration.MAP_GEOJSON_LOCATION,
             'mapboxAccessToken': ui_configuration.MAPBOX_ACCESS_TOKEN,
-            'mapboxAdminURLS': ui_configuration.MAP_MAPBOX_ADMIN_URLS,
             'IS_PRODUCTION': IS_PRODUCTION,
             'IS_TEST': IS_TEST,
             'IS_DEMO': request.args.get('demo') == '1',
@@ -218,7 +216,6 @@ class TemplateRenderer:
             'dataDigestAppOptions': {
                 'canonicalPrefix': current_app.zen_config.datatypes.CANONICAL_PREFIX,
                 'cleanedPrefix': current_app.zen_config.datatypes.CLEANED_PREFIX,
-                'slabURL': general_configuration.SLAB_URL,
             },
         }
 

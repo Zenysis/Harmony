@@ -39,16 +39,7 @@ class DimensionValuesLookup(object):
         self.authorizable_dimensions = authorizable_dimensions
         self.geo_field_ordering = geo_field_ordering
 
-        # TODO(abby): $ConfigRefactor remove once all config filter dimensions are converted.
-        if isinstance(filter_dimensions, list):
-            self.filter_dimensions = filter_dimensions
-        else:
-            self.filter_dimensions = [
-                dimension
-                for dimension_list in filter_dimensions.values()
-                for dimension in dimension_list
-                if dimension != '_all'
-            ]
+        self.filter_dimensions = filter_dimensions
 
     def load_dimensions_from_druid(self):
         base_query = GroupByQueryBuilder(

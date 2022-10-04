@@ -1,32 +1,28 @@
+from config.br.datatypes import DIMENSION_PARENTS, HIERARCHICAL_DIMENSIONS, Dimension
 from models.python.config.calendar_settings import CalendarSettings
 
 # Geo fields from least specific to most specific.
-GEO_FIELD_ORDERING = ['StateName', 'MunicipalityName']
-
-# When the server starts, query for distinct values along these dimensions and
-# build a geo hierarchy in memory.  Used to populate geo filter dropdown.
-DISTINCT_GEOS_TO_QUERY = ['StateName', 'MunicipalityName']
+GEO_FIELD_ORDERING = HIERARCHICAL_DIMENSIONS
 
 # Given a query on a field, which fields should we ask Druid for?
 # Unless otherwise specified, querying on a field will just ask for itself.
 DIMENSION_SLICES = {
-    'MunicipalityName': ['MunicipalityName', 'StateName'],
-    'StateName': ['StateName'],
+    dimension: [dimension] + parents for dimension, parents in DIMENSION_PARENTS.items()
 }
 
-DIMENSION_PARENTS = {'MunicipalityName': ['StateName']}
+DIMENSION_CATEGORIES = [
+    ('Geography', GEO_FIELD_ORDERING),
+    ('Yellow Fever', [Dimension.AGE, Dimension.SEX, Dimension.DEATH]),
+]
 
-DIMENSION_CATEGORIES = [('Geography', GEO_FIELD_ORDERING)]
+DIMENSION_ID_MAP = {
+    dimension: dimension.replace('Name', 'ID') for dimension in HIERARCHICAL_DIMENSIONS
+}
 
-DIMENSION_ID_MAP = {'StateName': 'StateID', 'MunicipalityName': 'MunicipalityID'}
-
-# Map from whereType API query param to lat, lng fields.
-# TODO(ian): This should be renamed because dimensions are not just geos
-# anymore.
+# Map from whereType API query param to latlng fields.
 GEO_TO_LATLNG_FIELD = {
-    'MunicipalityName': ('MunicipalityLat', 'MunicipalityLon'),
-    'CapitalName': ('CapitalLat', 'CapitalLon'),
-    'StateName': ('StateLat', 'StateLon'),
+    dimension: (dimension.replace('Name', 'Lat'), dimension.replace('Name', 'Lon'))
+    for dimension in HIERARCHICAL_DIMENSIONS
 }
 
 # List of queryable dimensions.
@@ -35,14 +31,3 @@ DIMENSIONS = [
 ]
 
 CALENDAR_SETTINGS = CalendarSettings.create_default()
-
-# Mapping from Dimension ID to a comparator for sorting a list of dimensions,
-# and a display ID used by the frontend to communicate what sort is being used
-BACKEND_SORTS = {}
-
-# Generate a unique aggregation key for a given set of data based
-# on the location the data is representing,
-def get_data_key(data):
-    # NOTE(stephen): Need to OR with an empty string since the data object
-    # can actually contain None as a value which breaks string operations
-    return '__'.join([(data.get(f) or '') for f in DIMENSIONS]).lower()

@@ -144,7 +144,7 @@ function exportTranslations(
           enTranslations.forEach(translation => {
             const id = translation.getId();
             const englishValue = translation.getValue();
-            const targetPluralTranslation = targetTranslationsLookup.get(id);
+            const targetTranslation = targetTranslationsLookup.get(id);
             if (typeof englishValue === 'string') {
               // singular translation
               const outputRow = _buildTranslationExport(
@@ -153,7 +153,7 @@ function exportTranslations(
                 missing,
                 outOfSync,
                 englishValue,
-                targetPluralTranslation,
+                targetTranslation,
               );
               if (outputRow !== undefined) {
                 rows.push(outputRow);
@@ -167,7 +167,7 @@ function exportTranslations(
                   missing,
                   outOfSync,
                   englishValue,
-                  targetPluralTranslation,
+                  targetTranslation,
                   key,
                 );
                 if (outputRow !== undefined) {

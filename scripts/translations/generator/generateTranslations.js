@@ -28,7 +28,7 @@ const {
   writeFile,
 } = require('../util/io');
 
-// an array of all filepaths that import I18N (EXCEPT files named i18n.js)
+// Array of all filepaths that import I18N (EXCEPT files named i18n.js)
 let FILES_THAT_IMPORT_I18N = [];
 function _resetFileCache() {
   FILES_THAT_IMPORT_I18N = [];
@@ -201,13 +201,13 @@ function generateTranslations(filepaths, verbose = false) {
 
       print('Collecting all translations...', LogColor.YELLOW, verbose);
 
-      // collect all filepaths to process. For every file we received, we might
+      // Collect all filepaths to process. For every file we received, we might
       // also have to process adjacent files in this same directory, so we need
       // to collect those.
       return _getFilepathsToProcess(filepaths);
     })
     .then(allFilepathsToProcess => {
-      // Now we can finally start collecting all translations from each file
+      // Now we can finally start collecting all translations from each file.
       const filenameToTranslationGroup = filename =>
         readFile(filename).then(contents =>
           collectTranslationsFromFile(filename, contents),
@@ -220,13 +220,13 @@ function generateTranslations(filepaths, verbose = false) {
       return Promise.all([
         allTranslationGroupsPromise,
 
-        // read in the template file
+        // Read in the template file.
         readFile(I18N_TEMPLATE_FILEPATH),
       ]);
     })
     .then(([allTranslationGroups, templateContents]) => {
-      // all translations have been collected, so check for duplicate ids now
-      // We will throw an error if there are errors in our translations.
+      // All translations have been collected, so check for duplicate ids.
+      // Throw an error if there are any duplicates in our translations.
       print('Validating translations...', LogColor.YELLOW, verbose);
       const errors = checkTranslationsForDuplicates(allTranslationGroups);
       if (errors.length > 0) {
@@ -236,7 +236,7 @@ function generateTranslations(filepaths, verbose = false) {
         throw new Error(LogColor.text(errorMsg));
       }
 
-      // map directory paths to array of translations
+      // Map directory paths to array of translations.
       const translationsByDir = new Map();
       allTranslationGroups.forEach(group => {
         const dirname = path.dirname(group.filename);
@@ -248,8 +248,7 @@ function generateTranslations(filepaths, verbose = false) {
         }
       });
 
-      // we passed validation! so now let's merge in all translations into the
-      // i18n.js ASTs
+      // Validation passed -> now merge all translations into i18n.js ASTs.
       print('Updating i18n.js files...', LogColor.YELLOW, verbose);
 
       const availableLocales = collectLocaleCodesFromTemplate(templateContents);
@@ -259,8 +258,8 @@ function generateTranslations(filepaths, verbose = false) {
           const i18nFilename = `${dirname}/${I18N_FILENAME}`;
 
           if (translations.length === 0 && fileExistsSync(i18nFilename)) {
-            // delete the i18n.js file if there are no translations in this
-            // directory
+            // Delete the i18n.js file if there are no translations in this
+            // directory.
             return deleteI18NFile(i18nFilename).then(() => 'DELETED');
           }
 
@@ -283,8 +282,8 @@ function generateTranslations(filepaths, verbose = false) {
               );
 
               if (!hasChanged) {
-                // there were no changes to the AST, so do not waste time
-                // writing the file back
+                // There were no changes to the AST, so do not waste time
+                // writing the file back.
                 return 'NO CHANGE';
               }
 
@@ -297,12 +296,12 @@ function generateTranslations(filepaths, verbose = false) {
             });
           }
 
-          // this should never happen
+          // This should never happen.
           return undefined;
         },
       );
 
-      // count how many ASTs have changed so that we can print a useful message
+      // Count how many ASTs have changed in order to print useful message.
       return Promise.all(i18nASTPromises).then(results => {
         const numChanged = results.filter(
           r => r === 'CHANGED' || r === 'DELETED',
@@ -327,7 +326,7 @@ function generateTranslations(filepaths, verbose = false) {
     })
     .then(haveTranslationsChanged => {
       // Find all files that import I18N library, and all i18n.js files.
-      // We will use these to determine which i18n.js files should not
+      // Use these to determine which i18n.js files should not
       // exist anymore.
       return Promise.all([
         _findFilesThatImportI18N(),
@@ -335,7 +334,7 @@ function generateTranslations(filepaths, verbose = false) {
           ignore: `${cwd}/${I18N_ROOT}/${I18N_FILENAME}`,
         }),
       ]).then(([filesThatImportI18N, i18nFiles]) => {
-        // determine if there are any unnecessary i18n.js files to delete
+        // Determine if there are any unnecessary i18n.js files to delete.
         const { filesToKeep, filesToRemove } = categorizeI18NFiles(
           i18nFiles,
           filesThatImportI18N,
@@ -366,7 +365,7 @@ function generateTranslations(filepaths, verbose = false) {
       });
     })
     .then(([haveTranslationsChanged, i18nFilenames]) => {
-      // at this stage all translations have been written, and any unnecessary
+      // At this stage all translations have been written, and any unnecessary
       // i18n.js files have been cleaned up. So now we have to make sure that
       // all i18n.js files are correctly importing each other.
       print('Resolving i18n imports...', LogColor.YELLOW, verbose);
@@ -390,7 +389,7 @@ function generateTranslations(filepaths, verbose = false) {
         print(
           'Successfully updated all translation files',
           LogColor.GREEN,
-          true, // always print a success result
+          true, // Always print a success result.
         );
       } else {
         print('No translation files needed updating.', LogColor.GREEN, verbose);

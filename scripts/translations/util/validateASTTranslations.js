@@ -47,7 +47,9 @@ function isPluralTranslation(node) {
       i18nValue[key.name] = value.value;
     });
     invariant(
-      i18nValue.one && i18nValue.other && i18nValue.zero,
+      i18nValue.one !== undefined &&
+        i18nValue.other !== undefined &&
+        i18nValue.zero !== undefined,
       `Pluralized value must include 'zero, 'one', and 'other' translation keys.`,
     );
     return true;

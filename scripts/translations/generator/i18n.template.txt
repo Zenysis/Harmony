@@ -1,4 +1,5 @@
 // @flow
+
 /* eslint-disable */
 import type { TranslationDictionary } from 'lib/I18N';
 /**
@@ -15,8 +16,10 @@ import type { TranslationDictionary } from 'lib/I18N';
 
 const translations: TranslationDictionary = {
   en: {},
+  pt: {},
+  vn: {},
   am: {},
   fr: {},
-  pt: {},
+  br: {},
 };
 export default translations;

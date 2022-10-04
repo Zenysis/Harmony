@@ -14,7 +14,12 @@ def get_keys_from_dimension(Dimension, exclude=None, exclude_shared_keys=True):
     return sorted(ret)
 
 
-def BaseRowFactory(dimension_class, hierarchical_dimensions, parent_relationships):
+def BaseRowFactory(
+    dimension_class,
+    hierarchical_dimensions,
+    parent_relationships,
+    non_hierarchical_dimensions,
+):
     '''
     Return a simple class with the attributes MAPPING_KEYS, PARENT_LEVELS, and
     UNMAPPED_KEYS, which are used by the BaseRow implementation.
@@ -31,7 +36,8 @@ def BaseRowFactory(dimension_class, hierarchical_dimensions, parent_relationship
             'MAPPING_KEYS': hierarchical_dimensions,
             'PARENT_LEVELS': parent_relationships,
             'UNMAPPED_KEYS': get_keys_from_dimension(
-                dimension_class, exclude=hierarchical_dimensions
+                dimension_class,
+                exclude=hierarchical_dimensions + non_hierarchical_dimensions,
             ),
         },
     )

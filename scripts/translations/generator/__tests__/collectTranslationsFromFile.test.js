@@ -58,16 +58,6 @@ describe('i18n generator: collectTranslationsFromFile', () => {
     expect(() => collectTranslationsFromFile(FILENAME, code)).toThrow();
   });
 
-  test('Throw error when <I18N> has a non-string-literal id', () => {
-    const code = `
-    import I18N from 'lib/I18N';
-    export default function MyComponent({ foo }) {
-      return <I18N id={foo}>Hello</I18N>;
-    }
-    `;
-    expect(() => collectTranslationsFromFile(FILENAME, code)).toThrow();
-  });
-
   test('Collect <I18N> translations', () => {
     const code = `
     import I18N from 'lib/I18N';
@@ -93,6 +83,27 @@ describe('i18n generator: collectTranslationsFromFile', () => {
           'Hello this is a multiline test',
           'Hello this is a multiline test',
         ),
+      ]),
+    );
+  });
+
+  test('Collect <I18N> translation with periods', () => {
+    const code = `
+    import I18N from 'lib/I18N';
+    export default function MyComponent() {
+      return (
+        <div>
+          <I18N>Period.</I18N>
+          <I18N>No dots. Please.</I18N>
+        </div>
+      );
+    }
+    `;
+
+    expect(collectTranslationsFromFile(FILENAME, code)).toEqual(
+      makeTranslationGroup(FILENAME, [
+        makeTranslation('Period_', 'Period.'),
+        makeTranslation('No dots_ Please_', 'No dots. Please.'),
       ]),
     );
   });
@@ -201,6 +212,21 @@ describe('i18n generator: collectTranslationsFromFile', () => {
       makeTranslationGroup(FILENAME, [
         makeTranslation('Hello', 'Hello'),
         makeTranslation('Hello this is a test', 'Hello this is a test'),
+      ]),
+    );
+  });
+
+  test('Collect I18N.text() translations with periods', () => {
+    const code = `
+    import I18N from 'lib/I18N';
+    export const val1 = I18N.text('Period.');
+    export const val2 = I18N.text('No dots. Please.');
+    `;
+
+    expect(collectTranslationsFromFile(FILENAME, code)).toEqual(
+      makeTranslationGroup(FILENAME, [
+        makeTranslation('Period_', 'Period.'),
+        makeTranslation('No dots_ Please_', 'No dots. Please.'),
       ]),
     );
   });
