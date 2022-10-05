@@ -106,14 +106,7 @@ If you are exclusively interested in running the pipeline locally, and not the w
 
 1. Install python (any version 3.8 - 3.10).
 2. Update package managers.
-   1. macOS: install [homebrew](https://brew.sh/), and then install the following dependencies. Note that Node@17 doesn't work with post-css dependency, so we pin it at version 14.
-      ```
-      brew install wget curl cmake node@14 freetds sqlite3 geos yarn jq pigz lz4 minio/stable/mc openconnect watchman postgresql proj php@7.4 lefthook
-      brew link --overwrite --force php@7.4
-      
-      brew install coreutils grep
-      echo 'export PATH="/usr/local/opt/coreutils/libexec/gnubin:/usr/local/opt/grep/libexec/gnubin:${PATH}"' >> ~/.zshrc
-      ```
+   1. macOS: install [homebrew](https://brew.sh/)
    2. Ubuntu:
       ```
       sudo apt-get update # updates available package version list
@@ -148,6 +141,17 @@ If you are exclusively interested in running the pipeline locally, and not the w
 Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you may want to fork the repo and clone the fork — that way you can use version control for your customization.
 ​
 
+### Dev dependencies
+
+1. Install dev dependencies
+      ```
+      brew install wget curl cmake freetds sqlite3 geos yarn jq pigz lz4 minio/stable/mc openconnect watchman postgresql proj php@7.4 lefthook
+      brew link --overwrite --force php@7.4
+      
+      brew install coreutils grep
+      echo 'export PATH="/usr/local/opt/coreutils/libexec/gnubin:/usr/local/opt/grep/libexec/gnubin:${PATH}"' >> ~/.zshrc
+      brew install pypy3
+      ```
 ### Python dependencies
 
 1. Update `PYTHONPATH`. In your bash profile (or z profile, etc.), set the `PYTHONPATH` environment variable to include the path to your clone of Harmony. Run `echo 'export PYTHONPATH="${PYTHONPATH}:<path to repo>"' >> ~/.bash_profile` (or `.bashrc`, `.zshrc`, etc.). Note that anytime you update your bash profile, you either have to restart your terminal or run `source ~/.bash_profile`.
@@ -189,7 +193,7 @@ We use [yarn](https://yarnpkg.com/) as a node.js package manager.
      ​
 2. Install node.
    ​
-   - macOS: `brew install node`
+   - macOS: `brew install node@14`
    - Ubuntu: `sudo apt install nodejs`
      ​
 3. `yarn install` will install everything in `package.json`.
