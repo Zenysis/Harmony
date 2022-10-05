@@ -143,7 +143,7 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
 
 ### Dev dependencies
 
-1. Install dev dependencies
+1. On macOS, install dev dependencies
       ```
       brew install wget curl cmake freetds sqlite3 geos yarn jq pigz lz4 minio/stable/mc openconnect watchman postgresql proj php@7.4 lefthook
       brew link --overwrite --force php@7.4
