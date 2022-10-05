@@ -145,7 +145,7 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
 
 1. Update `PYTHONPATH`. In your bash profile (or z profile, etc.), set the `PYTHONPATH` environment variable to include the path to your clone of Harmony. Run `echo 'export PYTHONPATH="${PYTHONPATH}:<path to repo>"' >> ~/.bash_profile` (or `.bashrc`, `.zshrc`, etc.). Note that anytime you update your bash profile, you either have to restart your terminal or run `source ~/.bash_profile`.
 
-2. Create a python3 virtual environment. Change into the source directory (ie `~/Harmony`). Run the following:
+2. Create a python3 virtual environment and a pypy environment. Change into the source directory (ie `~/Harmony`). Run the following:
    ```
    python3 -m venv venv
    source venv/bin/activate
@@ -155,9 +155,17 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
    pip install -r requirements-web.txt
    pip install -r requirements-dev.txt
    deactivate
+   
+   pypy3 -m venv venv_pypy3
+   source venv_pypy3/bin/activate
+   pip install --upgrade pip setuptools
+   pip install -r requirements.txt
+   pip install -r requirements-pipeline.txt
+   deactivate
    ```
    ​
    If you see wheel-related errors here, run `pip install wheel` before iterating over the requirements files.
+   
    ​
 3. To enter the virtual environment, run `source venv/bin/activate`.
    ​
