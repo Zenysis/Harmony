@@ -15,6 +15,3 @@ DEPLOYMENT_BASE_URL = 'https://template_deployment_code.zenysis.com'
 
 # Ids of deployment project managers
 PROJECT_MANAGER_IDS = []
-
-# Relevant Delivery Slab Link.
-SLAB_URL = 'https://zenysis.slab.com/topics/countries-9zob1d1c'

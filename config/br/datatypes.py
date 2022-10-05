@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
-from enum import Enum
-from config.br.aggregation import DIMENSION_PARENTS, GEO_FIELD_ORDERING
+############################################################################
+# Datatypes
+
 from data.pipeline.datatypes.base_row import BaseRow
+from data.pipeline.datatypes.base_row_factory import BaseRowFactory
 from data.pipeline.datatypes.dimension_factory import DimensionFactory
 
 # Output field information
@@ -9,48 +10,39 @@ RAW_PREFIX = 'Raw'
 CLEANED_PREFIX = 'Clean'
 CANONICAL_PREFIX = 'Canonical'
 
-HIERARCHICAL_DIMENSIONS = GEO_FIELD_ORDERING
+
+class Dimension:
+    SOURCE = (BaseRow.SOURCE_FIELD,)
+    DATE = (BaseRow.DATE_FIELD,)
+    STATE = 'StateName'
+    MUNICIPALITY = 'MunicipalityName'
+
+    # Yellow Fever dimensions
+    SEX = 'Sex'
+    AGE = 'Age'
+    DEATH = 'Death'
 
 
-class BaseBrRow(BaseRow):
-    # These are the fields that will be used in the matching process
-    # They are ordered by granularity
-    MAPPING_KEYS = GEO_FIELD_ORDERING
-    PARENT_LEVELS = DIMENSION_PARENTS
-    UNMAPPED_KEYS = []
-
-    # TODO(stephen, ian): allow passing of data in constructor
-    def __init__(
-        self, region='', state='', capital='', municipality='', date='', source=''
-    ):
-        # TODO(vinh): Figure out what we want to do with capital vs municipality.
-        key = {
-            'RegionName': region,
-            'StateName': state,
-            'CapitalName': capital,
-            'MunicipalityName': municipality,
-        }
-        super(BaseBrRow, self).__init__(key, {}, date, source)
-
-    @classmethod
-    def from_dict(cls, stored_instance):
-        output = cls()
-        output._internal = stored_instance
-        return output
+HIERARCHICAL_DIMENSIONS = [
+    Dimension.STATE,
+    Dimension.MUNICIPALITY,
+]
+DIMENSION_PARENTS = {
+    parent: HIERARCHICAL_DIMENSIONS[: parent_index + 1]
+    for parent_index, parent in enumerate(HIERARCHICAL_DIMENSIONS[1:])
+}
+NON_HIERARCHICAL_DIMENSIONS = []
 
 
 BrazilDimensionFactory = DimensionFactory(
-    HIERARCHICAL_DIMENSIONS, [], RAW_PREFIX, CLEANED_PREFIX, CANONICAL_PREFIX
+    HIERARCHICAL_DIMENSIONS,
+    NON_HIERARCHICAL_DIMENSIONS,
+    RAW_PREFIX,
+    CLEANED_PREFIX,
+    CANONICAL_PREFIX,
 )
 
-BaseRowType = BaseBrRow
+BaseRowType = BaseRowFactory(
+    Dimension, HIERARCHICAL_DIMENSIONS, DIMENSION_PARENTS, NON_HIERARCHICAL_DIMENSIONS
+)
 DimensionFactoryType = BrazilDimensionFactory
-
-
-class LocationTypeEnum(Enum):
-    NATION = 1
-    STATE = 2
-    MUNICIPALITY = 3
-
-
-LOCATION_TYPES = set([location_type.name for location_type in LocationTypeEnum])

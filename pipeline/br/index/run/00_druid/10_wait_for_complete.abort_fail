@@ -1,0 +1,25 @@
+#!/bin/bash -eu
+set -o pipefail
+
+TASK_ID_FILE="${PIPELINE_TMP_DIR}/task_id"
+
+# It is possible for the 00_index step to exit successfully and not produce a
+# task_id. This normally happens if the data files designated for indexing are
+# the same as the most recently indexed version.
+# TODO(stephen): Ideally, Jenkins should just skip the index step entireley.
+# Figure out a way to expose the "new data" test so that Jenkins can use it.
+if ! [ -f "${TASK_ID_FILE}" ] ; then
+  echo 'No indexing task was created. Skipping'
+  exit 0
+fi
+
+TASK_ID=$(cat "${TASK_ID_FILE}")
+
+# Wait for the indexing task to complete
+"${PIPELINE_SRC_ROOT}/db/druid/indexing/scripts/fetch_status.py" \
+  --task_id="${TASK_ID}" \
+  --block_until_completed
+
+# Wait for the new datasource to propagate to the whole cluster
+# TODO(stephen): Make a script for this and remove the lazy sleeping
+sleep 120

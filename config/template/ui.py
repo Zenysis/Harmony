@@ -57,9 +57,6 @@ MAP_DEFAULT_ZOOM = 4
 # GeoJson Tile Overlay
 MAP_GEOJSON_LOCATION = ''
 
-# Mapbox Admin url boundaries.
-MAP_MAPBOX_ADMIN_URLS = {}
-
 # Mapbox access token.
 MAPBOX_ACCESS_TOKEN = ''
 
@@ -99,6 +96,3 @@ SESSION_TIMEOUT = 1800
 
 # Up to nine custom colors for the deployment
 CUSTOM_COLORS = []
-
-# Whether this is a "Harmony" deployment. If true, will disable some features.
-IS_HARMONY = False
