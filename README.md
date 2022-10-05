@@ -165,7 +165,6 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
    ```
    ​
    If you see wheel-related errors here, run `pip install wheel` before iterating over the requirements files.
-   
    ​
 3. To enter the virtual environment, run `source venv/bin/activate`.
    ​
