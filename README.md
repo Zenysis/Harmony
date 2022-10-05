@@ -235,13 +235,13 @@ Start Hasura: `./scripts/db/hasura/dev/start_hasura.sh <ZEN_ENV>-local`
 
 ### Run webpack locally
 
-Run command: `webpack-dashboard -- webpack-dev-server --config web/webpack.config.js --mode 'development'`
+Run command: `node_modules/.bin/webpack-cli serve --config web/webpack.config.js --mode 'development'`
 
 ### Run web server locally
 
 The platform is built on [Flask](http://flask.palletsprojects.com/en/1.1.x/). To run a local development server, run:
 
-`ZEN_ENV=<ZEN_ENV>-local FLASK_ENV=development python ./web/runserver.py`
+`ZEN_ENV=<ZEN_ENV> FLASK_ENV=development python ./web/runserver.py`
 
 ## Production pipeline server setup
 
