@@ -154,8 +154,8 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
    ```
 2. Ubuntu:
    ```
-   apt-get update
-   apt-get install --no-install-recommends -y \
+   sudo apt-get update
+   sudp apt-get install --no-install-recommends -y \
    wget \
    curl \
    cmake \
