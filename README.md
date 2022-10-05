@@ -143,7 +143,7 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
 
 ### Dev dependencies
 
-1. On macOS, install dev dependencies
+1. On macOS:
    ```
    brew install wget curl cmake freetds sqlite3 geos yarn jq pigz lz4 minio/stable/mc openconnect watchman postgresql proj php@7.4 lefthook
    brew link --overwrite --force php@7.4
@@ -152,7 +152,7 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
    echo 'export PATH="/usr/local/opt/coreutils/libexec/gnubin:/usr/local/opt/grep/libexec/gnubin:${PATH}"' >> ~/.zshrc
    brew install pypy3
    ```
-2. Ubuntu
+2. Ubuntu:
    ```
    apt-get update
    apt-get install --no-install-recommends -y \
