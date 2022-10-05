@@ -144,14 +144,36 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
 ### Dev dependencies
 
 1. On macOS, install dev dependencies
-      ```
-      brew install wget curl cmake freetds sqlite3 geos yarn jq pigz lz4 minio/stable/mc openconnect watchman postgresql proj php@7.4 lefthook
-      brew link --overwrite --force php@7.4
+   ```
+   brew install wget curl cmake freetds sqlite3 geos yarn jq pigz lz4 minio/stable/mc openconnect watchman postgresql proj php@7.4 lefthook
+   brew link --overwrite --force php@7.4
       
-      brew install coreutils grep
-      echo 'export PATH="/usr/local/opt/coreutils/libexec/gnubin:/usr/local/opt/grep/libexec/gnubin:${PATH}"' >> ~/.zshrc
-      brew install pypy3
-      ```
+   brew install coreutils grep
+   echo 'export PATH="/usr/local/opt/coreutils/libexec/gnubin:/usr/local/opt/grep/libexec/gnubin:${PATH}"' >> ~/.zshrc
+   brew install pypy3
+   ```
+2. Ubuntu
+   ```
+   apt-get update
+   apt-get install --no-install-recommends -y \
+   wget \
+   curl \
+   cmake \
+   sqlite3 \
+   geos \
+   yarn \
+   jq \
+   pigz \
+   lz4 \
+   openconnect \
+   watchman \
+   proj \
+   lefthook \
+   coreutils \
+   grep \
+   pypy3 \
+   ```
+  
 ### Python dependencies
 
 1. Update `PYTHONPATH`. In your bash profile (or z profile, etc.), set the `PYTHONPATH` environment variable to include the path to your clone of Harmony. Run `echo 'export PYTHONPATH="${PYTHONPATH}:<path to repo>"' >> ~/.bash_profile` (or `.bashrc`, `.zshrc`, etc.). Note that anytime you update your bash profile, you either have to restart your terminal or run `source ~/.bash_profile`.
