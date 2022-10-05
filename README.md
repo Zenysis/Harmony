@@ -223,7 +223,7 @@ You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to 
 
     This command will create a database for each deployment defined in config, you can optionally run the command for just one deployment like `./scripts/db/postgres/dev/init_db.py <ZEN_ENV> --populate_indicators`. Also you can run just `./scripts/db/postgres/dev/init_db.py` to only upgrade the database and not populate Data Catalog.
 
-6. If a user was not created (it would have been logged), create an admin user for your local web app like below.
+6. Create an admin user for your local web app like below.
 
       ```
       ./scripts/create_user.py -f <first name> -l <last name> -u <email> -p <password> -a -d postgresql://postgres:@localhost/{ZEN_ENV}-local

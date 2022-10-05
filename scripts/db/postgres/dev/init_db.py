@@ -77,26 +77,7 @@ def run_database_upgrade(
         print_log('Upgraded')
         return
 
-    # If the database was created for the first time, add a default admin user
-    # so the engineer can start working quickly.
     print_log('Created')
-
-    create_user_result = run_dev_script(
-        'create_default_zenysis_admin_user.py', False, db_name
-    )
-    print_log(create_user_result.stdout.strip())
-
-    if create_user_result.returncode == 0:
-        return
-
-    # There are two possible failure cases. The non-fatal version occurs if the we
-    # cannot find an appropriate @zenysis.com email address for the current developer.
-    if result.returncode == 7:
-        return
-
-    # The second failure condition is a catch-all. The create user command was issued
-    # but an error occured trying to populate the database.
-    create_user_result.check_returncode()
 
 
 def run_database_downgrade(
