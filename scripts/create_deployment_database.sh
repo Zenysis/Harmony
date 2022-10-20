@@ -27,9 +27,6 @@ if [ -z "$ZEN_DB_LOG_ONLY" ]; then
 else
   echo "Logging only enabled..."
 fi
-if [[ "${DEV_MODE}" == "nv-prod" ]]; then
-  echo 'NV prod credential: test_pwd'
-fi
 
 DB_ADMIN_PASSWORD=$(openssl rand -base64 32)
 
