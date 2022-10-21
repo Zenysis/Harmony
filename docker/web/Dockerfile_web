@@ -62,7 +62,6 @@ COPY --from=client-build /client/ web/public/
 
 # Copy over various utilities.
 COPY docker/entrypoint_web.sh docker/entrypoint_web.sh
-COPY docker/entrypoint_test_web.sh docker/entrypoint_test_web.sh
 COPY scripts scripts
 
 # Copy all utilities used by the docker web container to the source root.
