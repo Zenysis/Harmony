@@ -1,9 +1,8 @@
-ARG SOURCE
-ARG PROJECT
+ARG NAMESPACE
 ARG TAG
 
-FROM ${SOURCE}/${PROJECT}/web-client:${TAG} AS client-build
-FROM ${SOURCE}/${PROJECT}/web-server:${TAG} AS server-build
+FROM ${NAMESPACE}/harmony-web-client:${TAG} AS client-build
+FROM ${NAMESPACE}/harmony-web-server:${TAG} AS server-build
 
 # Copy everything into the distroless python build. Use the debug version so
 # we can still use simple shell tools.
