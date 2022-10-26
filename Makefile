@@ -18,7 +18,7 @@ web_server_push:
 web_build:
 	@docker build -t $(DOCKER_NAMESPACE)/harmony-web:$(DOCKER_TAG) \
 		-f docker/web/Dockerfile_web \
-		--build-arg SOURCE=$(DOCKER_NAMESPACE) \
+		--build-arg NAMESPACE=$(DOCKER_NAMESPACE) \
 		--build-arg TAG=$(DOCKER_TAG)  .
 
 web_push:
