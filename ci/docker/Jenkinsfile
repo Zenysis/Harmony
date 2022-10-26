@@ -1,0 +1,35 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent any
+
+    stages {
+        // Checkout github project
+        // TODO: set to master branch before merge
+        stage('Checkout') {
+          steps {
+            git url: "https://github.com/Zenysis/Harmony.git", branch: 'harmony-docker-prod'
+          }
+        }
+        // Build all docker web containers
+        stage('Web Build') {
+            steps {
+                sh 'make web_client_build'
+                sh 'make web_server_build'
+                sh 'make web_build'
+            }
+        }
+        // Push all docker web containers to https://hub.docker.com/u/zengineering
+        stage('Web Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-io-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
+                    sh 'make web_client_push'
+                    sh 'make web_server_push'
+                    sh 'make web_push'
+                    sh 'docker logout'
+                }
+            }
+        }
+    }
+}
