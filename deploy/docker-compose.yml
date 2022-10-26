@@ -9,8 +9,9 @@ x-logging:
 
 services:
   nginx:
-    image: jwilder/nginx-proxy:latest
+    image: nginxproxy/nginx-proxy:alpine
     restart: always
+    pull_policy: always
     ports:
       - 80:80
       - 443:443
@@ -30,8 +31,9 @@ services:
     logging: *default-logging
 
   nginx-letsencrypt-companion:
-    image: jrcs/letsencrypt-nginx-proxy-companion:latest
+    image: nginxproxy/acme-companion:latest
     restart: always
+    pull_policy: always
     environment:
       - DHPARAM_BITS=4096
     volumes:
@@ -42,11 +44,13 @@ services:
       - /etc/ssl/certs:/etc/nginx/certs:rw
       - nginx_vhost:/etc/nginx/vhost.d
       - nginx_html:/usr/share/nginx/html
+      - nginx-acme:/etc/acme.sh
     logging: *default-logging
 
   web:
-    image: docker.irithmetic.com/zen-local/web:harmony-local
+    image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
     restart: always
+    pull_policy: always
     ports:
       - 5000:5000
     environment:
@@ -67,8 +71,9 @@ services:
     logging: *default-logging
 
   worker:
-    image: docker.irithmetic.com/zen-local/web:harmony-local
+    image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
     restart: always
+    pull_policy: always
     ports:
       - 61234:61234
     environment:
@@ -91,6 +96,7 @@ services:
   web-renderer:
     image: ianw/url-to-pdf-api:latest
     restart: always
+    pull_policy: always
     ports:
       - 9000:9000
     environment:
@@ -100,11 +106,14 @@ services:
   redis:
     image: redis:latest
     restart: always
+    pull_policy: always
     ports:
       - 6379:6379
 
   hasura:
     image: hasura/graphql-engine:latest.cli-migrations-v2
+    restart: always
+    pull_policy: always
     ports:
       - 8080:8080
     environment:
@@ -121,3 +130,8 @@ volumes:
   # This html directory is only used to write let's encrypt challenge
   # files during the cert issuing process.
   nginx_html:
+  # The acme.sh diretory stores the generated certificate state
+  # This prevents re-issuing of the certificate if the container is restarted/re-created
+  # It should only issue if there is no certificate or it is close to expiry.
+  # Read more here: https://github.com/nginx-proxy/acme-companion/issues/510
+  nginx-acme:
