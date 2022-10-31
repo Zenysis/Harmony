@@ -453,6 +453,8 @@ Druid resources settings are usually tied to the hardware specifications. The Op
 
 > The below commands uses `*_DOCKER_HOST` (found in `.env`) over ssh with public key authentication. Confirm the IP(s) specified is reachable & [public key authentication](https://kb.iu.edu/d/aews) is enabled before proceeding.
 
+> **Clustered Server**: There are some additional environment variables that will have to be configured for the server to run optinally. Common config can be found in `druid_setup/cluster/environment/common.env`:  `druid_zk_service_host`, `druid_metadata_storage_connector_connectURI` and `druid_cache_hosts`. Coordinator config can be found in `druid_setup/cluster/environment/coordinator.env`: `druid_host`. Historical config can be found in `druid_setup/cluster/environment/historical.env`: `druid_host`.
+
 ```sh
 cd druid_setup
 # Deploy single server mode

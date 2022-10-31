@@ -42,10 +42,6 @@ services:
       - historical_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
-      # - zookeeper
-      # - postgres
-      # - memcache
-      # - coordinator
       - extension_loader
     ports:
       - "8083:8083"
@@ -64,9 +60,6 @@ services:
       - middle_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
-      # - zookeeper
-      # - postgres
-      # - coordinator
       - extension_loader
     ports:
       - "8091:8091"
