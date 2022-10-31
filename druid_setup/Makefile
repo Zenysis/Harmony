@@ -1,7 +1,7 @@
 ENV_FILE=.env
 ENV_COMMON=environment/common.env
 
-PROJECT_NAME=
+PROJECT_NAME=harmony
 
 include $(ENV_FILE)
 
