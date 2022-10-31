@@ -66,6 +66,7 @@ services:
       - ${OUTPUT_PATH}:/data/output
       - ${OUTPUT_PATH}/logs:/logs
       - ${INSTANCE_CONFIG}:/zenysis/instance_config.json
+      - ${GLOBAL_CONFIG}:/zenysis/global_config.py
       - ${UPLOADS_DIR}:/zenysis/uploads
     command: ["/zenysis/docker/entrypoint_web.sh"]
     logging: *default-logging
@@ -83,6 +84,7 @@ services:
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
       - ${INSTANCE_CONFIG}:/zenysis/instance_config.json
+      - ${GLOBAL_CONFIG}:/zenysis/global_config.py
     command: [
       "celery",
       "-A",
