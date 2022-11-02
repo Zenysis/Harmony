@@ -96,7 +96,7 @@ services:
     logging: *default-logging
 
   web-renderer:
-    image: ianw/url-to-pdf-api:latest
+    image: zengineering/url-to-pdf-api:latest
     restart: always
     pull_policy: always
     ports:
