@@ -474,7 +474,6 @@ scripts/create_user.py -a -f "[YOUR_FIRST_NAME]" -l "[YOUR_LAST_NAME]" -u "[YOUR
 - Ensure you have the following running and accessible
   - Postgres database, see [Production Postgres server setup](#production-postgres-server-setup)
   - Druid database, see [Production Druid server setup](#production-druid-server-setup)
-  - Redis in-memory database, see [Redis](https://redis.io/docs/getting-started/)
   - Passphrase management, see [Phabricator](https://www.phacility.com/phabricator/)
 
 

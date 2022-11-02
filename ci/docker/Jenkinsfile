@@ -5,10 +5,9 @@ pipeline {
 
     stages {
         // Checkout github project
-        // TODO: set to master branch before merge
         stage('Checkout') {
           steps {
-            git url: "https://github.com/Zenysis/Harmony.git", branch: 'harmony-docker-prod'
+            git url: "https://github.com/Zenysis/Harmony.git", branch: 'master'
           }
         }
         // Build all docker web containers
