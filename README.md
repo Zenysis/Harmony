@@ -481,7 +481,29 @@ A new Druid collection is created every time the pipeline runs. This ensures tha
 
 ---
 
-On an (Ubuntu) server dedicated to running Druid, follow these instructions:
+### On an (Ubuntu) server dedicated to running Druid, follow these instructions:
+
+This setup makes use of [docker-compose](https://docs.docker.com/compose/) to easlity spin up and manage a druid cluster. For cluster configuration we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file).
+
+> The configuration below will spin up a druid cluster on a **single** server. Druid recommends having a [Clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on **multiple** servers for larger production instances.
+
+#### Custom Setup (Optimised configuration)
+
+Druid resources settings are usually tied to the hardware specifications. The Optimised configuration in `environment` works for most Harmony deployments. This can be increased/changed based on your usage requirements - See [Duird Configuration](https://druid.apache.org/docs/latest/tutorials/docker.html#configuration) for more.
+
+> The below commands uses `*_DOCKER_HOST` (found in `.env`) over ssh with public key authentication. Confirm the IP(s) specified is reachable & [public key authentication](https://kb.iu.edu/d/aews) is enabled before proceeding.
+
+> **Clustered Server**: There are some additional environment variables that will have to be configured for the server to run optinally. Common config can be found in `druid_setup/cluster/environment/common.env`:  `druid_zk_service_host`, `druid_metadata_storage_connector_connectURI` and `druid_cache_hosts`. Coordinator config can be found in `druid_setup/cluster/environment/coordinator.env`: `druid_host`. Historical config can be found in `druid_setup/cluster/environment/historical.env`: `druid_host`.
+
+```sh
+cd druid_setup
+# Deploy single server mode
+make single_server_up
+# Deploy cluster server mode
+make cluster_server_up
+```
+
+#### Bare Setup (Default configuration)
 
 ```
 sudo apt-get install -y docker-compose
@@ -662,7 +684,7 @@ To access the Admin App, click on the menu button at the top right corner of yo
 Data Catalog enables Data Managers to manage their indicators and augment them with useful information. Specifically this allows:
 
 - Organizing datasets into a hierarchical structure that is surfaced in the Analyze tool
-- Hide or make visible specific groups of data 
+- Hide or make visible specific groups of data
 - Provide useful metadata to indicators (e.g. definitions, operations etc.)
 - Create new custom calculations
 
@@ -681,8 +703,8 @@ The Data Digest tool is an internal tool that can be used by administrators to m
 
 ### Field Setup
 
-The Field Setup App allows users to set up fields that are in Druid and not yet in Data Catalog, and therefore visible to end users to be queried. 
+The Field Setup App allows users to set up fields that are in Druid and not yet in Data Catalog, and therefore visible to end users to be queried.
 
-The app is populated with the id, data source, and default sum calculation for each field and users can edit the name, description, calculation, and category. Once the fields are ready, they can be published to Data Catalog. 
+The app is populated with the id, data source, and default sum calculation for each field and users can edit the name, description, calculation, and category. Once the fields are ready, they can be published to Data Catalog.
 
 ![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/71BllLgN_UIJ0yWjjAaSxi2X.png)

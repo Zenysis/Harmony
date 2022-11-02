@@ -1,0 +1,84 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+version: "2.2"
+
+volumes:
+  zen_extensions: {}
+  metadata_data: {}
+  coordinator_var: {}
+
+
+services:
+  extension_loader:
+    build:
+      context: ../extensions
+    volumes:
+      - zen_extensions:/druid/extensions
+    environment:
+      - ZEN_DRUID_VERSION=${DRUID_VERSION}
+
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    restart: always
+    volumes:
+      - metadata_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=FoolishPassword
+      - POSTGRES_USER=druid
+      - POSTGRES_DB=druid
+
+  memcache:
+    container_name: memcache
+    image: memcached
+    restart: always
+    ports:
+      - "11211:11211"
+
+  # Need 3.5 or later for container nodes
+  zookeeper:
+    container_name: zookeeper
+    image: zookeeper:${ZOOKEEPER_VERSION}
+    restart: always
+    ports:
+      - "2181:2181"
+    environment:
+      - ZOO_MY_ID=1
+
+  coordinator:
+    image: apache/druid:${DRUID_VERSION}
+    container_name: coordinator
+    restart: always
+    volumes:
+      - /mnt/druid_shared/shared:/opt/shared
+      - coordinator_var:/opt/druid/var
+      - zen_extensions:/var/lib/zen/extensions/
+    depends_on:
+      - zookeeper
+      - postgres
+      - extension_loader
+    ports:
+      - "8081:8081"
+    command:
+      - coordinator
+    env_file:
+      - environment/common.env
+      - environment/coordinator.env
