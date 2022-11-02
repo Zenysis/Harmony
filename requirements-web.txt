@@ -9,7 +9,7 @@ MarkupSafe==0.23
 WTForms==2.1
 Werkzeug==0.16.1
 blinker==1.4
-celery==4.4.6
+celery==5.2.2
 flask-caching==2.0.1
 flask-login==0.4.1
 flask-user==0.6.21 ; platform_python_implementation != 'PyPy'
