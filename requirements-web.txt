@@ -19,7 +19,7 @@ redis==3.2.1
 scipy>=1.2.1
 twilio==6.24.1
 rollbar==0.14.7
-PyJWT==1.7.1
+PyJWT==2.4.0
 openpyxl>=3.0.9
 typing_extensions==3.10.0.2
 
