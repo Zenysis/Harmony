@@ -26,7 +26,7 @@ google-cloud-logging==1.11.0 ; platform_python_implementation != 'PyPy'
 
 # Issue with 1.16.[0-2] numpy version with pypy. Use older version for pypy.
 numpy==1.21.0 ; platform_python_implementation != 'PyPy'
-numpy==1.15.4 ; platform_python_implementation == 'PyPy'
+numpy==1.22.0 ; platform_python_implementation == 'PyPy'
 
 # Prod setup tools and utilities
 python-nginx==1.2
