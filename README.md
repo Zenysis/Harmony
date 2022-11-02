@@ -147,7 +147,7 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
    ```
    brew install wget curl cmake freetds sqlite3 geos yarn jq pigz lz4 minio/stable/mc openconnect watchman postgresql proj php@7.4 lefthook
    brew link --overwrite --force php@7.4
-      
+
    brew install coreutils grep
    echo 'export PATH="/usr/local/opt/coreutils/libexec/gnubin:/usr/local/opt/grep/libexec/gnubin:${PATH}"' >> ~/.zshrc
    brew install pypy3
@@ -173,7 +173,7 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
    grep \
    pypy3 \
    ```
-  
+
 ### Python dependencies
 
 1. Update `PYTHONPATH`. In your bash profile (or z profile, etc.), set the `PYTHONPATH` environment variable to include the path to your clone of Harmony. Run `echo 'export PYTHONPATH="${PYTHONPATH}:<path to repo>"' >> ~/.bash_profile` (or `.bashrc`, `.zshrc`, etc.). Note that anytime you update your bash profile, you either have to restart your terminal or run `source ~/.bash_profile`.
@@ -188,7 +188,7 @@ Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you m
    pip install -r requirements-web.txt
    pip install -r requirements-dev.txt
    deactivate
-   
+
    pypy3 -m venv venv_pypy3
    source venv_pypy3/bin/activate
    pip install --upgrade pip setuptools
@@ -465,7 +465,95 @@ scripts/create_user.py -a -f "[YOUR_FIRST_NAME]" -l "[YOUR_LAST_NAME]" -u "[YOUR
 
 ## Production web server setup
 
-Coming soon.
+### Before you begin
+
+- Ensure you have active accounts for the following
+  - Mapbox access token, see [Generating a Maxbox Access Token](#generating-a-maxbox-access-token)
+  - Mailgun API key, see [Mailgun](https://signup.mailgun.com/new/signup)
+  - No reply & support email accounts
+- Ensure you have the following running and accessible
+  - Postgres database, see [Production Postgres server setup](#production-postgres-server-setup)
+  - Druid database, see [Production Druid server setup](#production-druid-server-setup)
+  - Passphrase management, see [Phabricator](https://www.phacility.com/phabricator/)
+
+
+### Getting Started
+
+Before deploying the web server we need to setup some configuration to ensure everything will connect up, for this you will need:
+
+> Recommedned to **NOT** check this in with source code
+
+1. Instance Config File
+
+Create the instance config file as `instance_config.json` in the `/deploy` directory and copy paste the below.
+
+```json
+{}
+```
+
+2. Global Config
+
+Copy `global_config.py` from the root directory into the `/deploy` directory and update all values as needed.
+
+3. Environment File
+
+Create the environment file as `.env` in the `/deploy` directory and copy paste the below, updating all values as needed.
+
+```properties
+ZEN_WEB_ENV=br
+ZEN_WEB_REMOTE=ubuntu@localhost
+
+ZEN_WEB_HOST=harmony.yourdomain.com
+ZEN_WEB_EMAIL=harmony@yourdomain.com
+
+POSTGRES_DB_URI="postgresql://harmony-admin:[PASSWORD]@postgres.yourdomain.com:5432/harmony"
+GRAPHQL_DATABASE_URL="postgresql://harmony-admin:[PASSWORD_URL_ENCODED]@postgres.yourdomain.com:5432/harmony"
+
+OUTPUT_PATH=/data/output
+NGINX_DEFAULT_VHOST_CONFIG=/home/ubuntu/nginx_vhost_default_location
+INSTANCE_CONFIG=/home/ubuntu/instance_config.json
+GLOBAL_CONFIG=/home/ubuntu/global_config.py
+UPLOADS_DIR=/home/ubuntu/uploads
+
+DOCKER_NAMESPACE=zengineering
+DOCKER_TAG=latest
+```
+
+### Docker Builds
+
+#### Pre Built
+
+There are pre-built Harmony docker images that can be found at [hub.docker.com](https://hub.docker.com/r/zengineering/harmony-web) for:
+- harmony-web-server
+- harmony-web-client
+- harmony-web
+
+#### Custom Builds
+
+In certain cases you would want to make changes to Harmony or setup your own config pre-built in the docker image, for that you can run the below:
+
+> Set DOCKER_NAMESPACE & DOCKER_TAG in the `Makefile` found in the root directory
+
+```sh
+make all_build all_push
+```
+
+### Deploying Web
+
+You should now we all set up and ready to deploy harmony web.
+
+> The below commands uses `ZEN_WEB_REMOTE` over ssh with public key authentication. Confirm the IP specified is reachable & [public key authentication](https://kb.iu.edu/d/aews) is enabled before proceeding.
+
+```sh
+# Navigate to the deploy directory
+cd deploy
+# Initial setup for the web server
+make web_configure
+# Deploy to remote server
+make web_deploy
+```
+
+Once deployed you should be able to login at your domain specified in `ZEN_WEB_HOST`, logging in with the credentials created in [Seeding The Database](#seeding-the-database).
 
 ## Production Druid server setup
 

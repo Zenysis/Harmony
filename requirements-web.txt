@@ -3,12 +3,14 @@ Flask-Migrate==2.5.2
 Flask-Principal==0.4.0
 Flask-SQLAlchemy==2.4.0
 Flask==1.0.1
-Jinja2==2.11.3
+# Flask 1.0.1 requires Jinja 2.10.1 or py unit tests fail
+Jinja2==2.10.1
 MarkupSafe==0.23
 WTForms==2.1
 Werkzeug==0.16.1
 blinker==1.4
 celery==4.4.6
+flask-caching==2.0.1
 flask-login==0.4.1
 flask-user==0.6.21 ; platform_python_implementation != 'PyPy'
 gunicorn[gevent]==20.0.4
@@ -20,11 +22,9 @@ rollbar==0.14.7
 PyJWT==1.7.1
 openpyxl>=3.0.9
 typing_extensions==3.10.0.2
-itsdangerous==2.0.1
 
 alembic>=1.7.1
 
-# NOTE(david, toshi): Directly use our own fork of Flask-Potion to remove a bug
-# where flask potion tries to incorrectly infer the response schemas from type
-# annotaions. Flask-Potion is no longer under active devleopment.
--e git+https://github.com/Zenysis/potion.git@bd398c18e8710a4e7cc87d9abb6ba9a95e7ba792#egg=Flask-Potion
+# Pinning it's dangerous to this version as the latest version is broken
+# https://stackoverflow.com/questions/71189819/python-docker-importerror-cannot-import-name-json-from-itsdangerous
+itsdangerous==2.0.1

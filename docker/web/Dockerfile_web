@@ -1,7 +1,8 @@
+ARG NAMESPACE
 ARG TAG
 
-FROM gcr.io/zen-1234/web-client:${TAG} AS client-build
-FROM gcr.io/zen-1234/web-server:${TAG} AS server-build
+FROM ${NAMESPACE}/harmony-web-client:${TAG} AS client-build
+FROM ${NAMESPACE}/harmony-web-server:${TAG} AS server-build
 
 # Copy everything into the distroless python build. Use the debug version so
 # we can still use simple shell tools.
@@ -60,7 +61,6 @@ COPY --from=client-build /client/ web/public/
 
 # Copy over various utilities.
 COPY docker/entrypoint_web.sh docker/entrypoint_web.sh
-COPY docker/entrypoint_test_web.sh docker/entrypoint_test_web.sh
 COPY scripts scripts
 
 # Copy all utilities used by the docker web container to the source root.

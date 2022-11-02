@@ -8,7 +8,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" ; pwd -P)
 POSTGRES_SYSTEM_USER="$("${SCRIPT_DIR}/get_postgres_system_user.sh")"
 
 # `pg_ctl` is the command used on mac and `service postgresql` is the command
-# used on ubuntu. First check for `pg_ctl` to construct the `pg` command, 
+# used on ubuntu. First check for `pg_ctl` to construct the `pg` command,
 # then check for `service postgresql`.
 if ! command -v pg_ctl &> /dev/null ; then
   if ! command -v service postgresql &> /dev/null ; then

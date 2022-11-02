@@ -39,3 +39,6 @@ POSTGRES_DB_URI = 'postgresql://username:password@hostname/db-name'
 # in-memory key-value store (used by web to persist things like
 # access keys across worker threads)
 REDIS_HOST = 'redis'
+
+# Hasura host
+HASURA_HOST = 'http://hasura:8080'
