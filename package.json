@@ -1,5 +1,5 @@
 {
-  "name": "Zenysis",
+  "name": "zenysis",
   "description": "Zenysis App!",
   "dependencies": {
     "@emotion/react": "^11.4.1",

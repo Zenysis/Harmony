@@ -89,7 +89,22 @@ Mapbox has a free tier, however there are paid options available. For most users
       export ZEN_ENV='usa'
       ```
 
-## Local development setup
+## Local development setup (using Docker containers)
+
+In order to run a local web server or run data pipeline steps on the command line, you'll need to set up a local development environment. This is distinct from setting up production servers (explained in other sections).
+
+Running your development environment in Docker should work on any operating system that is capable of running
+the latest version of Docker.
+
+### System requirements
+
+1. Install the latest version of [Docker](https://docs.docker.com/get-docker/).
+2. Clone repo: `git clone https://github.com/Zenysis/Harmony`. (Alternatively, you may want to fork the repo and clone the fork — that way you can use version control for your customization.)
+3. Build your development environment `docker compose build`
+4. Start your development environment `docker compose up`
+```
+
+## Local development setup (running natively on your machine)
 
 In order to run a local web server or run data pipeline steps on the command line, you'll need to set up a local development environment. This is distinct from setting up production servers (explained in other sections).
 
