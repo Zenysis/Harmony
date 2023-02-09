@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:13.7-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: zenysis
+      POSTGRES_DB: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      start_period: 0s
+      interval: 10s
+      timeout: 30s
+      retries: 3
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      timeout: 30s
+      start_period: 0s
+      retries: 3
+  hasura:
+    image: hasura/graphql-engine:v2.11.3.cli-migrations-v2
+    ports:
+      - 8088:8080
+    environment:
+      HASURA_GRAPHQL_ENABLE_TELEMETRY: 'false'
+      HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT: 500
+      HASURA_GRAPHQL_DATABASE_URL: postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
+    healthcheck:
+      test: "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080'"
+      interval: 30s
+      timeout: 30s
+      start_period: 0s
+      retries: 3
+  web:
+    build:
+      dockerfile: Dockerfile_dev
+    volumes:
+      - .:/app
+      - /app/venv
+      - /app/node_modules
+    environment:
+      - ZEN_HOME=/app
+      - PYTHONPATH=/app:/usr/bin
+      - DATABASE_HOST=postgres
+      - DATABASE_USER=postgres
+      - DATABASE_URL=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
+      - ZEN_ENV=${ZEN_ENV}
+      - DEFAULT_DRUID_HOST=${DEFAULT_DRUID_HOST-https://druid.hostname.com}
+      - FLASK_APP=web.server.app_base
+      - FLASK_ENV=development
+    ports:
+      - "5000:5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      hasura:
+        condition: service_started
+volumes:
+  pgdata-volume:

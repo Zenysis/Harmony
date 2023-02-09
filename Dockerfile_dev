@@ -1,0 +1,64 @@
+# This Dockerfile used for local development.
+# Not to be confused with what we used in production.
+# The development environment is very different from production w.r.t. tools
+# installed etc.
+FROM ubuntu:22.04
+
+RUN apt-get update \
+    && apt-get -y upgrade \
+    && apt-get -y install --no-install-recommends build-essential \
+    git \
+    cmake \
+    curl \
+    libtiff-dev \
+    sqlite3 \
+    wget \
+    libsqlite3-dev \
+    libcurl4-openssl-dev \
+    gcc \
+    libpq-dev \
+    libnetcdf-dev \
+    gfortran \
+    libgeos-dev \
+    libyaml-dev \
+    libffi-dev \
+    libbz2-dev \
+    apt-transport-https \
+    ca-certificates \
+    postgresql-client \
+    lz4 \
+    && update-ca-certificates
+
+# Bring in the exact version of node we currently use:
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+    && apt-get install -y nodejs
+
+# Bring in the exact version of python we currently use:
+ADD https://www.python.org/ftp/python/3.9.16/Python-3.9.16.tgz /tmp/Python-3.9.16.tgz
+RUN cd /tmp && tar -xvf Python-3.9.16.tgz && cd Python-3.9.16 \
+    && ./configure --prefix=/opt/python/3.9.16/ --enable-optimizations --with-lto --with-computed-gotos --with-system-ffi \
+    && make -j "$(nproc)" \
+    && make altinstall
+
+WORKDIR /app
+
+# Update setup and create venv
+RUN /opt/python/3.9.16/bin/python3.9 -m pip install --upgrade pip setuptools \
+    && /opt/python/3.9.16/bin/python3.9 -m venv venv \
+    && . venv/bin/activate && python -m pip install --upgrade pip setuptools
+# Install dependencies
+COPY requirements.txt requirements-web.txt requirements-dev.txt requirements-pipeline.txt ./
+RUN . venv/bin/activate \
+    && python -m pip install -r requirements.txt \
+    && python -m pip install -r requirements-web.txt \
+    && python -m pip install -r requirements-dev.txt \
+    && python -m pip install -r requirements-pipeline.txt
+
+RUN npm install -g yarn
+
+COPY package.json yarn.lock ./
+RUN yarn install
+
+EXPOSE 5000
+
+CMD [ "./docker/dev/scripts/start.sh" ]

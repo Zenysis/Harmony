@@ -184,7 +184,7 @@ def get_script_runner(
 
 
 def build_initialization_functions(
-    downgrade: bool, populate_indicators: bool, additional_scripts: [str]
+    downgrade: bool, populate_indicators: bool, additional_scripts: List[str]
 ) -> List[Callable[[str, str, Callable[[str], None]], None]]:
     '''Build a list of initialization functions to run against a specific database.'''
     output = [run_database_upgrade if not downgrade else run_database_downgrade]
@@ -259,11 +259,6 @@ def main():
             'Only a single database can be downgraded at a time.',
         )
         return 1
-
-    # Ensure the Postgres database is running locally and has received its initial
-    # setup (like creating the postgres db admin user).
-    run_dev_script('start_postgres.sh', True)
-    run_dev_script('create_postgres_admin_user.sh', True)
 
     TermColor.PrintStr('Beginning database initialization', 'PURPLE', False)
 

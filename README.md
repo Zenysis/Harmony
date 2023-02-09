@@ -93,16 +93,24 @@ Mapbox has a free tier, however there are paid options available. For most users
 
 In order to run a local web server or run data pipeline steps on the command line, you'll need to set up a local development environment. This is distinct from setting up production servers (explained in other sections).
 
-Running your development environment in Docker should work on any operating system that is capable of running
-the latest version of Docker.
+Running your development environment in Docker should work on any operating system that is capable of running the latest version of Docker.
 
-### System requirements
+The provided `docker-compose.yml` file in the root directory of the project is intended to assist developer in quickly getting a locally running instance of Harmony up along with several services it relies on (postgres, redis & hasura). The local filesystem is mounted in, so any changes made to the codebase will be reflected in the running web container.
 
 1. Install the latest version of [Docker](https://docs.docker.com/get-docker/).
-2. Clone repo: `git clone https://github.com/Zenysis/Harmony`. (Alternatively, you may want to fork the repo and clone the fork — that way you can use version control for your customization.)
-3. Build your development environment `docker compose build`
-4. Start your development environment `docker compose up`
-```
+2. Clone the git repository: `git clone https://github.com/Zenysis/Harmony`. (Alternatively, you may want to fork the repo and clone the fork — that way you can use version control for your customization.)
+3. Build your development docker images: `docker compose build` (this will take some time!)
+4. Start your development environment: `DEFAULT_DRUID_HOST=??? ZEN_ENV=??? docker compose up` (you need to specify druid host and environment)
+5. In a seperate terminate, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py --u me@mydomain.com -p admin --first_name=admin --last_name=istrator -a"`
+6. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 5.
+
+
+### Next steps & useful tips
+
+- You can do a lot with docker compose that's beyond the scope of this document, but a good starting point is `docker compose --help`
+- Know what containers are running: `docker compose ps`
+- It's useful to have a terminal open on the web instance: `docker compose exec web /bin/bash` ; furthermore running `source venv/bin/activate` will activate the python virtual environment.
+
 
 ## Local development setup (running natively on your machine)
 
