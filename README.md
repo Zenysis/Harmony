@@ -49,11 +49,11 @@ After you have written your first data integration (see [writing integrations](#
 
 We are working on making this customization easier (and configurable from a frontend) in future releases.
 
-## Generating a Maxbox Access Token
+## Generating a Mapbox Access Token
 
 ### Introduction
 
-Harmony currently uses [maxbox](https://www.mapbox.com/) for all Map UI visiualisations. In order to use our map visiualisations you would need to have your own `Maxbox Access Token`
+Harmony currently uses [mapbox](https://www.mapbox.com/) for all Map UI visiualisations. In order to use our map visiualisations you would need to have your own `Mapbox Access Token`
 
 ### Getting Started
 
@@ -492,7 +492,7 @@ scripts/create_user.py -a -f "[YOUR_FIRST_NAME]" -l "[YOUR_LAST_NAME]" -u "[YOUR
 
 Harmony uses numerous external servives (some free, some paid) that need to be instantiated or swapped out from the codebase.
 - Ensure you have active accounts for the following
-  - Mapbox access token, see [Generating a Maxbox Access Token](#generating-a-maxbox-access-token)
+  - Mapbox access token, see [Generating a Mapbox Access Token](#generating-a-mapbox-access-token)
   - Mailgun API key, see [Mailgun](https://signup.mailgun.com/new/signup)
   - AWS EC2, currently use to host the web machine, Druid, and the pipleine maching. See [setup instructions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html). This can be swapped with any VM running Ubuntu 18 LTS & up (docker installed) open ports: 22, 80, 443
   - AWS S3 for cloud storage, see [setup instructions](https://aws.amazon.com/pm/serv-s3/?trk=fecf68c9-3874-4ae2-a7ed-72b6d19c8034&sc_channel=ps&s_kwcid=AL!4422!3!536456034896!p!!g!!s3%20cloud%20storage&ef_id=CjwKCAiArY2fBhB9EiwAWqHK6uoDGaUc7ThsxZ_W_o5j_WwqSuOTpNzAC71GuUORqMdwIIeC7WaNuBoCmfgQAvD_BwE:G:s&s_kwcid=AL!4422!3!536456034896!p!!g!!s3%20cloud%20storage). This be swapped out with [MinIO](https://min.io/docs/minio/linux/index.html).
