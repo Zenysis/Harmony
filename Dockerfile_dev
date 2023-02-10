@@ -2,6 +2,7 @@
 # Not to be confused with what we used in production.
 # The development environment is very different from production w.r.t. tools
 # installed etc.
+# This Dockerfile installs dependencies for the web app and the pipeline.
 FROM ubuntu:22.04
 
 RUN apt-get update \
@@ -27,21 +28,50 @@ RUN apt-get update \
     ca-certificates \
     postgresql-client \
     lz4 \
-    && update-ca-certificates
+    proj-bin \
+    libproj-dev \
+    && update-ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install minio client
+RUN case $(uname -m) in \
+        "x86_64")\
+            wget https://dl.minio.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc;\
+        ;;\
+        "aarch64")\
+            wget https://dl.minio.io/client/mc/release/linux-arm64/mc -O /usr/local/bin/mc;\
+        ;;\
+    esac;
 
 # Bring in the exact version of node we currently use:
 RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
     && apt-get install -y nodejs
 
-# Bring in the exact version of python we currently use:
+# Bring in the exact version of CPython we currently use:
 ADD https://www.python.org/ftp/python/3.9.16/Python-3.9.16.tgz /tmp/Python-3.9.16.tgz
 RUN cd /tmp && tar -xvf Python-3.9.16.tgz && cd Python-3.9.16 \
     && ./configure --prefix=/opt/python/3.9.16/ --enable-optimizations --with-lto --with-computed-gotos --with-system-ffi \
     && make -j "$(nproc)" \
     && make altinstall
 
+# Bring in the exact version of PyPy we currently use:
+RUN case $(uname -m) in \
+        "x86_64")\
+            wget -q https://downloads.python.org/pypy/pypy3.9-v7.3.11-linux64.tar.bz2 -O /tmp/pypy3.9-v7.3.11-linux64.tar.bz2;\
+            cd /tmp && tar -xf pypy3.9-v7.3.11-linux64.tar.bz2;\
+            mv /tmp/pypy3.9-v7.3.11-linux64 /opt/pypy3.9-v7.3.11;\
+        ;;\
+        "aarch64")\
+            wget -q https://downloads.python.org/pypy/pypy3.9-v7.3.11-aarch64.tar.bz2 -O /tmp/pypy3.9-v7.3.11-aarch64.tar.bz2;\
+            cd /tmp && tar -xf pypy3.9-v7.3.11-aarch64.tar.bz2;\
+            mv /tmp/pypy3.9-v7.3.11-aarch64 /opt/pypy3.9-v7.3.11;\
+        ;;\
+    esac;
+
 WORKDIR /app
 
+# Cpython
 # Update setup and create venv
 RUN /opt/python/3.9.16/bin/python3.9 -m pip install --upgrade pip setuptools \
     && /opt/python/3.9.16/bin/python3.9 -m venv venv \
@@ -54,6 +84,17 @@ RUN . venv/bin/activate \
     && python -m pip install -r requirements-dev.txt \
     && python -m pip install -r requirements-pipeline.txt
 
+# PyPy
+# Update setup and create venv
+RUN /opt/pypy3.9-v7.3.11/bin/pypy3 -m ensurepip \
+    && /opt/pypy3.9-v7.3.11/bin/pypy3 -m pip install --upgrade pip setuptools \
+    && /opt/pypy3.9-v7.3.11/bin/pypy3 -m venv venv_pypy3
+# Install pypy dependencies
+RUN . venv_pypy3/bin/activate \
+    && pypy3 -m pip install --upgrade pip setuptools \
+    && pypy3 -m pip install -r requirements.txt \
+    && pypy3 -m pip install -r requirements-pipeline.txt
+
 RUN npm install -g yarn
 
 COPY package.json yarn.lock ./
@@ -61,4 +102,4 @@ RUN yarn install
 
 EXPOSE 5000
 
-CMD [ "./docker/dev/scripts/start.sh" ]
+CMD [ "./docker/dev/scripts/start_web.sh" ]

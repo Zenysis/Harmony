@@ -67,5 +67,24 @@ services:
         condition: service_healthy
       hasura:
         condition: service_started
+  pipeline:
+    profiles:
+      - pipeline
+    build:
+      dockerfile: Dockerfile_dev
+    volumes:
+      - .:/app
+      - /app/venv
+      - /app/venv_pypy3
+      - /app/node_modules
+    environment:
+      - DATABASE_URL=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
+      - ZEN_ENV=${ZEN_ENV}
+      - DEFAULT_DRUID_HOST=${DEFAULT_DRUID_HOST-https://druid.hostname.com}
+      - COMMAND=${COMMAND-./pipeline/br/generate/zeus_generate run}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["/bin/bash", "-c", "./docker/dev/scripts/start_pipeline.sh"]
 volumes:
   pgdata-volume:
