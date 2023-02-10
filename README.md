@@ -124,6 +124,7 @@ or
 - Know what containers are running: `docker compose ps`
 - It's useful to have a terminal open on the web instance: `docker compose exec web /bin/bash` ; furthermore running `source venv/bin/activate` will activate the python virtual environment.
 - You can start a container and attach to the shell with: `docker compose run web /bin/bash`
+- Use a `.env` file to set environment variables so you can you can just type `docker compose up` instead of specifying the environment variables every time. (Be aware that host's environment variables will take precedence over those in the `.env` file.)
 
 ## Production pipeline server setup
 
