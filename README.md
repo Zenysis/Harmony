@@ -89,7 +89,7 @@ Mapbox has a free tier, however there are paid options available. For most users
       export ZEN_ENV='usa'
       ```
 
-## Local development setup (using Docker containers)
+## Local development setup
 
 In order to run a local web server or run data pipeline steps on the command line, you'll need to set up a local development environment. This is distinct from setting up production servers (explained in other sections).
 
@@ -100,7 +100,7 @@ The provided `docker-compose.yml` file in the root directory of the project is i
 1. Install the latest version of [Docker](https://docs.docker.com/get-docker/).
 2. Clone the git repository: `git clone https://github.com/Zenysis/Harmony`. (Alternatively, you may want to fork the repo and clone the fork — that way you can use version control for your customization.)
 3. Build your development docker images: `docker compose build` (this will take some time!)
-4. Start your development environment: `DEFAULT_DRUID_HOST=??? ZEN_ENV=??? docker compose up` (you need to specify druid host and environment)
+4. Start your development environment: `DEFAULT_DRUID_HOST=<public production Druid server IP> ZEN_ENV=<specify environment> docker compose up` (you need to specify druid host and environment)
 5. In a seperate terminate, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py --u me@mydomain.com -p admin --first_name=admin --last_name=istrator -a"`
 6. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 5.
 
