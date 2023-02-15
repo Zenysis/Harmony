@@ -17,16 +17,6 @@ services:
       interval: 10s
       timeout: 30s
       retries: 3
-  redis:
-    image: redis
-    ports:
-      - 6379:6379
-    healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-      interval: 10s
-      timeout: 30s
-      start_period: 0s
-      retries: 3
   hasura:
     image: hasura/graphql-engine:v2.11.3.cli-migrations-v2
     ports:
@@ -51,18 +41,14 @@ services:
     environment:
       - ZEN_HOME=/app
       - PYTHONPATH=/app:/usr/bin
-      - DATABASE_HOST=postgres
-      - DATABASE_USER=postgres
       - DATABASE_URL=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
       - ZEN_ENV=${ZEN_ENV}
-      - DEFAULT_DRUID_HOST=${DEFAULT_DRUID_HOST-https://druid.hostname.com}
+      - DEFAULT_DRUID_HOST=${DEFAULT_DRUID_HOST}
       - FLASK_APP=web.server.app_base
       - FLASK_ENV=development
     ports:
       - "5000:5000"
     depends_on:
-      redis:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       hasura:
@@ -80,8 +66,9 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
       - ZEN_ENV=${ZEN_ENV}
-      - DEFAULT_DRUID_HOST=${DEFAULT_DRUID_HOST-https://druid.hostname.com}
-      - COMMAND=${COMMAND-./pipeline/br/generate/zeus_generate run}
+      - DEFAULT_DRUID_HOST=${DEFAULT_DRUID_HOST}
+      - COMMAND=${COMMAND-echo Specify a pipeline command, e.g. "./pipeline/br/generate/zeus_generate run"}
+      - PYTHONPATH=/app
     depends_on:
       postgres:
         condition: service_healthy

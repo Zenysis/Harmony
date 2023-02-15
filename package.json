@@ -127,6 +127,7 @@
     "build": "NODE_ENV=production webpack --config web/webpack.prod.config.js --mode 'production'",
     "build-clean": "yarn run clean && yarn run build",
     "clean": "rm -rf ./web/public/build/",
+    "develop": "./node_modules/.bin/concurrently --kill-others-on-fail -n flow,webpack,translations,mypy 'yarn flow --continuous_scroll' 'yarn webpack' 'yarn cli-translations watch' 'yarn mypy --continuous_scroll'",
     "flow-check": "echo skipping flow check",
     "init-db": "scripts/db/postgres/dev/init_db.py",
     "postgres": "scripts/db/postgres/dev/connect.py",

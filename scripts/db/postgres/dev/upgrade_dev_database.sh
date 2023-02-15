@@ -9,11 +9,11 @@ ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
 
 
 # Test to see if the destination database already exists.
-DB_EXISTS_TEST=$(psql -h ${DATABASE_HOST:-localhost} -U postgres postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'")
+DB_EXISTS_TEST=$(psql -h ${DATABASE_HOST:-postgres} -U postgres postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'")
 
 if [[ "${DB_EXISTS_TEST}" == '' ]] ; then
   echo "Creating database ${DB_NAME}"
-  psql -h ${DATABASE_HOST:-localhost} -U postgres postgres -tAc "CREATE DATABASE \"${DB_NAME}\""
+  psql -h ${DATABASE_HOST:-postgres} -U postgres postgres -tAc "CREATE DATABASE \"${DB_NAME}\""
 fi
 
 pushd "${ZEN_SRC_ROOT}" &> /dev/null
@@ -25,7 +25,7 @@ pushd "${ZEN_SRC_ROOT}" &> /dev/null
 # NOTE(stephen): Using the simplified base app since we don't need to import all
 # the extra crap that is needed to actually start the full flask server. We only
 # need the core.
-export DATABASE_URL="postgresql://postgres:@${DATABASE_HOST:-localhost}/${DB_NAME}"
+export DATABASE_URL="postgresql://postgres:zenysis@${DATABASE_HOST:-postgres}/${DB_NAME}"
 export FLASK_APP='web.server.app_base'
 export ZEN_ENV="${DEPLOYMENT_CODE}"
 flask db upgrade 2>&1 \
