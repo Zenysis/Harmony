@@ -41,6 +41,9 @@ services:
       timeout: 30s
       start_period: 0s
       retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
   web:
     build:
       dockerfile: Dockerfile_dev
@@ -61,8 +64,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      hasura:
-        condition: service_started
   pipeline:
     profiles:
       - pipeline

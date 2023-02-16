@@ -108,16 +108,21 @@ Specify druid host in `global_config.py`: `DEFAULT_DRUID_HOST = '<public product
 
 ### Run Web Server
 
-1. Start your development environment: `DEFAULT_DRUID_HOST=http://<public production Druid server IP> ZEN_ENV=<specify environment> docker compose up` e.g. : `DEFAULT_DRUID_HOST=http://aws-druid.corp.clambda.com ZEN_ENV=br docker compose up`
-```
-2. In a seperate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py --u me@mydomain.com -p admin --first_name=admin --last_name=istrator -a"`
-3. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 2.
+1. Prepare the database: `ZEN_ENV=<specify environment> docker compose run web /bin/bash -c "source venv/bin/activate && ./scripts/db/postgres/dev/init_db.py --populate_indicators"` e.g. : `ZEN_ENV=br docker compose run web /bin/bash -c "source venv/bin/activate && ./scripts/db/postgres/dev/init_db.py --populate_indicators"`
+2. Start your development environment: `DEFAULT_DRUID_HOST=http://<public production Druid server IP> ZEN_ENV=<specify environment> docker compose up` e.g. : `DEFAULT_DRUID_HOST=http://aws-druid.corp.clambda.com ZEN_ENV=br docker compose up`
+3. In a seperate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py --u me@mydomain.com -p admin --first_name=admin --last_name=istrator -a"`
+4. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 3.
 
 ### Run Pipeline
 
 1. Execute the pipeline `COMMAND="./pipeline/br/generate/zeus_generate run" docker compose --profile=pipeline up pipeline`
 or
 1. Get a terminal on the pipeline container `docker compose --profile=pipeline run pipeline /bin/bash`
+
+### Run development tools
+
+1. Run mypy: `docker compose exec web /bin/bash -c "source venv/bin/activate && yarn mypy --continuous_scroll"`
+2. Run translations: `docker compose exec web /bin/bash -c "source venv/bin/activate && yarn cli-translations watch"`
 
 ### Next steps & useful tips
 
