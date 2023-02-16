@@ -93,9 +93,7 @@ Mapbox has a free tier, however there are paid options available. For most users
 
 In order to run a local web server or run data pipeline steps on the command line, you'll need to set up a local development environment. This is distinct from setting up production servers (explained in other sections).
 
-Running your development environment in Docker should work on any operating system that is capable of running the latest version of Docker.
-
-The provided `docker-compose.yml` file in the root directory of the project is intended to assist developer in quickly getting a locally running instance of Harmony up along with several services it relies on (postgres, redis & hasura). The local filesystem is mounted, so any changes made to the codebase will be reflected in the running web container.
+The instructions found below are for running a local development environment using Docker. It is possible to run a local development environment without Docker on Linux or MacOs, but instructions for doing so are not provided here.
 
 ### Druid setup
 ​
@@ -106,12 +104,14 @@ Specify druid host in `global_config.py`: `DEFAULT_DRUID_HOST = '<public product
 2. Clone the git repository: `git clone https://github.com/Zenysis/Harmony`. (Alternatively, you may want to fork the repo and clone the fork — that way you can use version control for your customization.)
 3. Build your development docker images: `docker compose build` (this will take some time!)
 
-### Run Web Server
+### Prepare Database
 
 1. Prepare the database: `ZEN_ENV=<specify environment> docker compose run web /bin/bash -c "source venv/bin/activate && ./scripts/db/postgres/dev/init_db.py --populate_indicators"` e.g. : `ZEN_ENV=br docker compose run web /bin/bash -c "source venv/bin/activate && ./scripts/db/postgres/dev/init_db.py --populate_indicators"`
-2. Start your development environment: `DEFAULT_DRUID_HOST=http://<public production Druid server IP> ZEN_ENV=<specify environment> docker compose up` e.g. : `DEFAULT_DRUID_HOST=http://aws-druid.corp.clambda.com ZEN_ENV=br docker compose up`
-3. In a seperate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py --u me@mydomain.com -p admin --first_name=admin --last_name=istrator -a"`
-4. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 3.
+
+### Run Web Server
+1. Start your development environment: `DEFAULT_DRUID_HOST=http://<public production Druid server IP> ZEN_ENV=<specify environment> docker compose up` e.g. : `DEFAULT_DRUID_HOST=http://aws-druid.corp.clambda.com ZEN_ENV=br docker compose up`
+2. In a seperate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py --u me@mydomain.com -p admin --first_name=admin --last_name=istrator -a"`
+3. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 2.
 
 ### Run Pipeline
 
