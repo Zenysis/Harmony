@@ -43,18 +43,21 @@ RUN apt-get update \
     unzip \
     libopenblas-dev \
     liblapack-dev \
+    # Watchman warns not to use Ubuntu supplied version, but the current version
+    # doesn't build on arm64, and they don't provide and arm64 .deb package.
+    watchman \
     && update-ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Install minio client
 RUN case $(uname -m) in \
-        "x86_64")\
-            wget https://dl.minio.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc;\
-        ;;\
-        "aarch64")\
-            wget https://dl.minio.io/client/mc/release/linux-arm64/mc -O /usr/local/bin/mc;\
-        ;;\
+    "x86_64")\
+    wget https://dl.minio.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc;\
+    ;;\
+    "aarch64")\
+    wget https://dl.minio.io/client/mc/release/linux-arm64/mc -O /usr/local/bin/mc;\
+    ;;\
     esac;
 
 # Bring in the exact version of node we currently use:
@@ -66,25 +69,27 @@ ADD https://www.python.org/ftp/python/3.9.16/Python-3.9.16.tgz /tmp/Python-3.9.1
 RUN cd /tmp && tar -xvf Python-3.9.16.tgz && cd Python-3.9.16 \
     && ./configure --prefix=/opt/python/3.9.16/ --enable-optimizations --with-lto --with-computed-gotos --with-system-ffi \
     && make -j "$(nproc)" \
-    && make altinstall
+    && make altinstall \
+    && rm -rf /tmp/Python-3.9.16*
 
 # Bring in the exact version of PyPy we currently use:
 RUN case $(uname -m) in \
-        "x86_64")\
-            wget -q https://downloads.python.org/pypy/pypy3.9-v7.3.11-linux64.tar.bz2 -O /tmp/pypy3.9-v7.3.11-linux64.tar.bz2;\
-            cd /tmp && tar -xf pypy3.9-v7.3.11-linux64.tar.bz2;\
-            mv /tmp/pypy3.9-v7.3.11-linux64 /opt/pypy3.9-v7.3.11;\
-        ;;\
-        "aarch64")\
-            wget -q https://downloads.python.org/pypy/pypy3.9-v7.3.11-aarch64.tar.bz2 -O /tmp/pypy3.9-v7.3.11-aarch64.tar.bz2;\
-            cd /tmp && tar -xf pypy3.9-v7.3.11-aarch64.tar.bz2;\
-            mv /tmp/pypy3.9-v7.3.11-aarch64 /opt/pypy3.9-v7.3.11;\
-        ;;\
-    esac;
+    "x86_64")\
+    wget -q https://downloads.python.org/pypy/pypy3.9-v7.3.11-linux64.tar.bz2 -O /tmp/pypy3.9-v7.3.11-linux64.tar.bz2;\
+    cd /tmp && tar -xf pypy3.9-v7.3.11-linux64.tar.bz2;\
+    mv /tmp/pypy3.9-v7.3.11-linux64 /opt/pypy3.9-v7.3.11;\
+    ;;\
+    "aarch64")\
+    wget -q https://downloads.python.org/pypy/pypy3.9-v7.3.11-aarch64.tar.bz2 -O /tmp/pypy3.9-v7.3.11-aarch64.tar.bz2;\
+    cd /tmp && tar -xf pypy3.9-v7.3.11-aarch64.tar.bz2;\
+    mv /tmp/pypy3.9-v7.3.11-aarch64 /opt/pypy3.9-v7.3.11;\
+    ;;\
+    esac; \
+    rm /tmp/pypy3.9*;
 
 WORKDIR /app
 
-# Cpython
+# CPython
 # Update setup and create venv
 RUN /opt/python/3.9.16/bin/python3.9 -m pip install --upgrade pip setuptools \
     && /opt/python/3.9.16/bin/python3.9 -m venv venv \
@@ -107,6 +112,20 @@ RUN . venv_pypy3/bin/activate \
     && pypy3 -m pip install --upgrade pip setuptools \
     && pypy3 -m pip install -r requirements.txt \
     && pypy3 -m pip install -r requirements-pipeline.txt
+
+# Not currently installing flow.
+# RUN case $(uname -m) in \
+#     "x86_64")\
+#     wget https://github.com/facebook/flow/releases/download/v0.200.0/flow-linux64-v0.200.0.zip -O /tmp/flow.zip;\
+#     ;;\
+#     "aarch64")\
+#     wget https://github.com/facebook/flow/releases/download/v0.200.0/flow-linux-arm64-v0.200.0.zip -O /tmp/flow.zip;\
+#     ;;\
+#     esac;
+# RUN cd /tmp \
+#     && unzip flow.zip \
+#     && mv flow/flow /usr/local/bin/flow \
+#     && rm -rf flow*
 
 RUN npm install -g yarn
 

@@ -17,6 +17,16 @@ services:
       interval: 10s
       timeout: 30s
       retries: 3
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      timeout: 30s
+      start_period: 0s
+      retries: 3
   hasura:
     image: hasura/graphql-engine:v2.11.3.cli-migrations-v2
     ports:
@@ -72,6 +82,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["/bin/bash", "-c", "./docker/dev/scripts/start_pipeline.sh"]
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        "./docker/dev/scripts/start_pipeline.sh"
+      ]
 volumes:
   pgdata-volume:
