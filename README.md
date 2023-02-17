@@ -467,22 +467,26 @@ scripts/create_user.py -a -f "[YOUR_FIRST_NAME]" -l "[YOUR_LAST_NAME]" -u "[YOUR
 
 ### Before you begin
 
-Harmony uses numerous external servives (some free, some paid) that need to be instantiated or swapped out from the codebase.
+Harmony uses numerous external servives that need to be instantiated or swapped out from the codebase.
 - Ensure you have active accounts for the following
   - Mapbox access token, see [Generating a Maxbox Access Token](#generating-a-maxbox-access-token)
   - Mailgun API key, see [Mailgun](https://signup.mailgun.com/new/signup)
+
+- Ensure you have active accounts for either the following or their resepctive alternative services
   - AWS EC2, currently use to host the web machine, Druid, and the pipleine maching. See [setup instructions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html). This can be swapped with any VM running Ubuntu 18 LTS & up (docker installed) open ports: 22, 80, 443
   - AWS S3 for cloud storage, see [setup instructions](https://aws.amazon.com/pm/serv-s3/?trk=fecf68c9-3874-4ae2-a7ed-72b6d19c8034&sc_channel=ps&s_kwcid=AL!4422!3!536456034896!p!!g!!s3%20cloud%20storage&ef_id=CjwKCAiArY2fBhB9EiwAWqHK6uoDGaUc7ThsxZ_W_o5j_WwqSuOTpNzAC71GuUORqMdwIIeC7WaNuBoCmfgQAvD_BwE:G:s&s_kwcid=AL!4422!3!536456034896!p!!g!!s3%20cloud%20storage). This be swapped out with [MinIO](https://min.io/docs/minio/linux/index.html).
-  - Google Domains for DNS management, this is paid. See [setup instructions](https://cloud.google.com/dns/docs/set-up-dns-records-domain-name).
-  - [LogDNA aka Mezmo](https://www.mezmo.com/) for logging (paid), [Grafana](https://grafana.com/) for operational dashboards(has a free tier), [Uptime Robot](https://grafana.com/) for monitoring server status and alerts engineers to outages (free).
-
+  - Google Domains for DNS management. See [setup instructions](https://cloud.google.com/dns/docs/set-up-dns-records-domain-name).
   - No reply & support email accounts
- 
+  - Passphrase management, see [Phabricator](https://www.phacility.com/phabricator/). This is a free open source tool.
+
 - Ensure you have the following running and accessible
   - Postgres database, see [Production Postgres server setup](#production-postgres-server-setup)
   - Druid database, see [Production Druid server setup](#production-druid-server-setup)
-  - Passphrase management, see [Phabricator](https://www.phacility.com/phabricator/). This is a free open source tool.
 
+- Optional development tools for logging and oversight
+  - [LogDNA aka Mezmo](https://www.mezmo.com/) for logging (paid)
+  - [Grafana](https://grafana.com/) for operational dashboards(has a free tier)
+  - [Uptime Robot](https://grafana.com/) for monitoring server status and alerts engineers to outages (free).
 
 ### Getting Started
 
