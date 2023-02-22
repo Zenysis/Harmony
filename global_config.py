@@ -16,7 +16,7 @@ MAILGUN_SENDER = 'noreply@mg.hostname.com'
 # URL of your Druid instance
 # Druid is a real time analytics data base. We use it to store all of our
 # analytical data (i.e. data that can be queried in AQT).
-DEFAULT_DRUID_HOST = os.getenv('DRUID_HOST', 'https://druid.hostname.com')
+DEFAULT_DRUID_HOST = os.getenv('DRUID_HOST')
 
 # Phabricator settings
 # We use Passphrase to store credentials. Any other credential manager can
