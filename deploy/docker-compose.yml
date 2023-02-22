@@ -7,6 +7,14 @@ x-logging:
     max-size: 10m
     max-file: "10"
 
+networks:
+  harmony_network:
+    name: harmony_network
+    driver: bridge
+  druid_network:
+    name: druid_network
+    driver: bridge
+
 services:
   postgres:
     # Postgres included for ease of testing. The configuration for postgres
@@ -14,7 +22,7 @@ services:
     # For production, postgres should be configured to be highly available
     # and should have appropriate backup and recovery procedures in place.
     profiles:
-      - demonstration
+      - postgres
     image: postgres:13.7-alpine
     restart: always
     environment:
@@ -36,13 +44,15 @@ services:
     #     reservations:
     #       cpus: '0.25'
     #       memory: 20M
+    networks:
+      - harmony_network
   minio:
     # Minio included for ease of testing. The configuration for minio
     # included here is not production ready!
     # For production, minio should be configured to be highly available
     # and should have appropriate backup and recovery procedures in place.
     profiles:
-      - demonstration
+      - minio
     image: minio/minio
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
@@ -56,6 +66,8 @@ services:
     volumes:
       - minio-data-volume:/data
     command: [ "server", "/data", "--console-address", ":9090" ]
+    networks:
+      - harmony_network
   nginx:
     image: nginxproxy/nginx-proxy:alpine
     restart: always
@@ -69,7 +81,7 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       # Bind the SSL certificate path from the host system to the
       # directory the nginx container uses for all certs.
-      - /etc/ssl/certs:/etc/nginx/certs:ro
+      - ssl-certs:/etc/nginx/certs:ro
       - nginx_vhost:/etc/nginx/vhost.d
       - nginx_html:/usr/share/nginx/html
       # Include Zenysis static assets and serve them directly from nginx.
@@ -77,6 +89,8 @@ services:
       # Set a custom vhost default configuration that includes compression and caching.
       - ${NGINX_DEFAULT_VHOST_CONFIG}:/etc/nginx/vhost.d/default:ro
     logging: *default-logging
+    networks:
+      - harmony_network
 
   nginx-letsencrypt-companion:
     image: nginxproxy/acme-companion:latest
@@ -89,11 +103,13 @@ services:
       # These are the same volumes used by the nginx image.
       # This is on purpose since the letsencrypt companion container works
       # with the nginx container collaboratively to generate SSL certs.
-      - /etc/ssl/certs:/etc/nginx/certs:rw
+      - ssl-certs:/etc/nginx/certs:rw
       - nginx_vhost:/etc/nginx/vhost.d
       - nginx_html:/usr/share/nginx/html
       - nginx-acme:/etc/acme.sh
     logging: *default-logging
+    networks:
+      - harmony_network
 
   web:
     # build:
@@ -114,6 +130,7 @@ services:
       - VIRTUAL_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_EMAIL=${ZEN_WEB_EMAIL}
+      - DRUID_HOST=${DRUID_HOST}
     volumes:
       - ${OUTPUT_PATH}:/data/output
       - ${OUTPUT_PATH}/logs:/logs
@@ -122,6 +139,9 @@ services:
       - ${UPLOADS_DIR}:/zenysis/uploads
     command: [ "/zenysis/docker/entrypoint_web.sh" ]
     logging: *default-logging
+    networks:
+      - harmony_network
+      - druid_network
 
   worker:
     platform: linux/amd64
@@ -148,6 +168,8 @@ services:
         "--loglevel=INFO"
       ]
     logging: *default-logging
+    networks:
+      - harmony_network
 
   web-renderer:
     platform: linux/amd64
@@ -159,6 +181,8 @@ services:
     environment:
       - ALLOW_HTTP=true
       - PORT=9000
+    networks:
+      - harmony_network
 
   redis:
     image: redis:latest
@@ -166,6 +190,8 @@ services:
     pull_policy: always
     ports:
       - 6379:6379
+    networks:
+      - harmony_network
 
   hasura:
     image: hasura/graphql-engine:latest.cli-migrations-v2
@@ -179,6 +205,22 @@ services:
       - HASURA_GRAPHQL_DATABASE_URL=${GRAPHQL_DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
+    networks:
+      - harmony_network
+
+  utility:
+    # Convenience container for debugging. It can be useful to jump
+    # onto a container that has curl/ping etc. installed to troubleshoot
+    # from within the container context.
+    # `docker compose run utility /bin/bash`
+    build:
+      context: utility
+      dockerfile: Dockerfile
+    networks:
+      - harmony_network
+      - druid_network
+    profiles:
+      - utility
 
 volumes:
   # Let's Encrypt container needs to configure the vhosts during
@@ -213,3 +255,9 @@ volumes:
     #   o: bind
     #   device: "${MINIO_DATA_VOLUME:-/var/lib/minio/data}"
 
+  ssl-certs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "${SSL_CERTS:-/etc/ssl/certs}"
