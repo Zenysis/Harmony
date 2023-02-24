@@ -59,8 +59,6 @@ services:
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     hostname: minio
     ports:
-      # web-renderer uses 9000, so we bump up to 9001
-      # minio API runs on 9000
       - 9000:9000
       - 9090:9090
     volumes:
@@ -111,14 +109,37 @@ services:
     networks:
       - harmony_network
 
+  web_client:
+    build:
+      dockerfile: docker/web/Dockerfile_web-client
+      context: ../
+      args:
+        NAMESPACE: zengineering
+        TAG: latest
+  web_server:
+    build:
+      dockerfile: docker/web/Dockerfile_web-server
+      context: ../
+      args:
+        NAMESPACE: zengineering
+        TAG: latest
   web:
-    # build:
-    #   dockerfile: Dockerfile
-    #   context: ../
-    platform: linux/amd64
-    image: ${DOCKER_NAMESPACE}/${DOCKER_IMAGE:-harmony-web}:${DOCKER_TAG}
+    depends_on:
+      - web_client
+      - web_server
+    build:
+      # We build from scratch, to be sure that our local image matches the codebase.
+      dockerfile: docker/web/Dockerfile_web
+      context: ../
+      args:
+        NAMESPACE: zengineering
+        TAG: latest
     restart: always
-    pull_policy: always
+    # We set the pull policy to never, in order to allow usage of locally built image.
+    # e.g. if you run `make web_client_build ; make web_server_build ; make web_build`
+    # you'll have a locally built copy. If the pull_policy were set to always, docker
+    # would never use it, and always pull from remote.
+    pull_policy: never
     ports:
       - 5000:5000
     environment:
@@ -139,6 +160,21 @@ services:
       - ${UPLOADS_DIR}:/zenysis/uploads
     command: [ "/zenysis/docker/entrypoint_web.sh" ]
     logging: *default-logging
+    networks:
+      - harmony_network
+      - druid_network
+
+  pipeline:
+    profiles:
+      - pipeline
+    restart: "no" # Once the pipeline is done running, we exit
+    build:
+      context: ../
+      dockerfile: docker/pipeline_2/Dockerfile
+    volumes:
+      # we want the output retained, so we map the output directory to the host
+      - ./pipeline/out:/src/zenysis/pipeline/out
+      - ./deploy/mc.config.json:/root/.mc/config.json
     networks:
       - harmony_network
       - druid_network
@@ -177,6 +213,7 @@ services:
     restart: always
     pull_policy: always
     ports:
+      # minio uses 9000, so we bumped it to 9001
       - 9001:9000
     environment:
       - ALLOW_HTTP=true
