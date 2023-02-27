@@ -18,11 +18,6 @@
 #
 version: "2.2"
 
-networks:
-  druid_network:
-    name: druid_network
-    driver: bridge
-
 volumes:
   zen_extensions: {}
   metadata_data: {}
@@ -32,6 +27,7 @@ volumes:
   coordinator_var: {}
   router_var: {}
   druid_shared: {}
+
 
 services:
   extension_loader:
@@ -52,8 +48,6 @@ services:
       - POSTGRES_PASSWORD=FoolishPassword
       - POSTGRES_USER=druid
       - POSTGRES_DB=druid
-    networks:
-      - druid_network
 
   memcache:
     container_name: memcache
@@ -61,8 +55,6 @@ services:
     restart: always
     ports:
       - "11211:11211"
-    networks:
-      - druid_network
 
   # Need 3.5 or later for container nodes
   zookeeper:
@@ -73,11 +65,8 @@ services:
       - "2181:2181"
     environment:
       - ZOO_MY_ID=1
-    networks:
-      - druid_network
 
   coordinator:
-    platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
     container_name: coordinator
     restart: always
@@ -96,11 +85,8 @@ services:
     env_file:
       - environment/common.env
       - environment/coordinator.env
-    networks:
-      - druid_network
 
   broker:
-    platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
     container_name: broker
     restart: always
@@ -120,11 +106,8 @@ services:
     env_file:
       - environment/common.env
       - environment/broker.env
-    networks:
-      - druid_network
 
   historical:
-    platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
     container_name: historical
     restart: always
@@ -145,11 +128,8 @@ services:
     env_file:
       - environment/common.env
       - environment/historical.env
-    networks:
-      - druid_network
 
   middlemanager:
-    platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
     container_name: middlemanager
     restart: always
@@ -170,11 +150,8 @@ services:
     env_file:
       - environment/common.env
       - environment/middlemanager.env
-    networks:
-      - druid_network
 
   router:
-    platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
     container_name: router
     restart: always
@@ -192,5 +169,3 @@ services:
       - router
     env_file:
       - environment/common.env
-    networks:
-      - druid_network

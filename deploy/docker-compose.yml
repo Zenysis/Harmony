@@ -7,66 +7,7 @@ x-logging:
     max-size: 10m
     max-file: "10"
 
-networks:
-  harmony_network:
-    name: harmony_network
-    driver: bridge
-  druid_network:
-    name: druid_network
-    driver: bridge
-    external: true
-
 services:
-  postgres:
-    # Postgres included for ease of testing. The configuration for postgres
-    # included here is not production ready!
-    # For production, postgres should be configured to be highly available
-    # and should have appropriate backup and recovery procedures in place.
-    profiles:
-      - postgres
-    image: postgres:13.7-alpine
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata-volume:/var/lib/postgresql/data
-    # If resource management is required - see:
-    # https://docs.docker.com/compose/compose-file/deploy/#resources
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '0.50'
-    #       memory: 50M
-    #       pids: 1
-    #     reservations:
-    #       cpus: '0.25'
-    #       memory: 20M
-    networks:
-      - harmony_network
-  minio:
-    # Minio included for ease of testing. The configuration for minio
-    # included here is not production ready!
-    # For production, minio should be configured to be highly available
-    # and should have appropriate backup and recovery procedures in place.
-    profiles:
-      - minio
-    image: minio/minio
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-    hostname: minio
-    ports:
-      - 9000:9000
-      - 9090:9090
-    volumes:
-      - minio-data-volume:/data
-    command: [ "server", "/data", "--console-address", ":9090" ]
-    networks:
-      - harmony_network
   nginx:
     image: nginxproxy/nginx-proxy:alpine
     restart: always
@@ -80,7 +21,7 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       # Bind the SSL certificate path from the host system to the
       # directory the nginx container uses for all certs.
-      - ssl-certs:/etc/nginx/certs:ro
+      - /etc/ssl/certs:/etc/nginx/certs:ro
       - nginx_vhost:/etc/nginx/vhost.d
       - nginx_html:/usr/share/nginx/html
       # Include Zenysis static assets and serve them directly from nginx.
@@ -88,8 +29,6 @@ services:
       # Set a custom vhost default configuration that includes compression and caching.
       - ${NGINX_DEFAULT_VHOST_CONFIG}:/etc/nginx/vhost.d/default:ro
     logging: *default-logging
-    networks:
-      - harmony_network
 
   nginx-letsencrypt-companion:
     image: nginxproxy/acme-companion:latest
@@ -102,51 +41,16 @@ services:
       # These are the same volumes used by the nginx image.
       # This is on purpose since the letsencrypt companion container works
       # with the nginx container collaboratively to generate SSL certs.
-      - ssl-certs:/etc/nginx/certs:rw
+      - /etc/ssl/certs:/etc/nginx/certs:rw
       - nginx_vhost:/etc/nginx/vhost.d
       - nginx_html:/usr/share/nginx/html
       - nginx-acme:/etc/acme.sh
     logging: *default-logging
-    networks:
-      - harmony_network
 
-  web_client:
-    platform: linux/amd64
-    image: ${DOCKER_NAMESPACE}/harmony-web-client:${DOCKER_TAG}
-    build:
-      dockerfile: docker/web/Dockerfile_web-client
-      context: ../
-      args:
-        NAMESPACE: zengineering
-        TAG: latest
-  web_server:
-    platform: linux/amd64
-    image: ${DOCKER_NAMESPACE}/harmony-web-server:${DOCKER_TAG}
-    build:
-      dockerfile: docker/web/Dockerfile_web-server
-      context: ../
-      args:
-        NAMESPACE: zengineering
-        TAG: latest
   web:
-    platform: linux/amd64
     image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
-    depends_on:
-      - web_client
-      - web_server
-    build:
-      # We build from scratch, to be sure that our local image matches the codebase.
-      dockerfile: docker/web/Dockerfile_web
-      context: ../
-      args:
-        NAMESPACE: zengineering
-        TAG: latest
     restart: always
-    # We set the pull policy to never, in order to allow usage of locally built image.
-    # e.g. if you run `make web_client_build ; make web_server_build ; make web_build`
-    # you'll have a locally built copy. If the pull_policy were set to always, docker
-    # would never use it, and always pull from remote.
-    pull_policy: never
+    pull_policy: always
     ports:
       - 5000:5000
     environment:
@@ -158,37 +62,17 @@ services:
       - VIRTUAL_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_EMAIL=${ZEN_WEB_EMAIL}
-      - DRUID_HOST=${DRUID_HOST}
     volumes:
       - ${OUTPUT_PATH}:/data/output
       - ${OUTPUT_PATH}/logs:/logs
       - ${INSTANCE_CONFIG}:/zenysis/instance_config.json
       - ${GLOBAL_CONFIG}:/zenysis/global_config.py
       - ${UPLOADS_DIR}:/zenysis/uploads
-    command: [ "/zenysis/docker/entrypoint_web.sh" ]
+    command: ["/zenysis/docker/entrypoint_web.sh"]
     logging: *default-logging
-    networks:
-      - harmony_network
-      - druid_network
-
-  pipeline:
-    profiles:
-      - pipeline
-    restart: "no" # Once the pipeline is done running, we exit
-    build:
-      context: ../
-      dockerfile: docker/pipeline_2/Dockerfile
-    volumes:
-      # we want the output retained, so we map the output directory to the host
-      - ./pipeline/out:/src/zenysis/pipeline/out
-      - ./deploy/mc.config.json:/root/.mc/config.json
-    networks:
-      - harmony_network
-      - druid_network
 
   worker:
-    platform: linux/amd64
-    image: ${DOCKER_NAMESPACE}/${DOCKER_IMAGE:-harmony-web}:${DOCKER_TAG}
+    image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
     restart: always
     pull_policy: always
     ports:
@@ -201,32 +85,25 @@ services:
       - ${OUTPUT_PATH}/logs:/logs
       - ${INSTANCE_CONFIG}:/zenysis/instance_config.json
       - ${GLOBAL_CONFIG}:/zenysis/global_config.py
-    command:
-      [
-        "celery",
-        "-A",
-        "web.background_worker.celery",
-        "worker",
-        "--beat",
-        "--loglevel=INFO"
-      ]
+    command: [
+      "celery",
+      "-A",
+      "web.background_worker.celery",
+      "worker",
+      "--beat",
+      "--loglevel=INFO"
+    ]
     logging: *default-logging
-    networks:
-      - harmony_network
 
   web-renderer:
-    platform: linux/amd64
     image: zengineering/url-to-pdf-api:latest
     restart: always
     pull_policy: always
     ports:
-      # minio uses 9000, so we bumped it to 9001
-      - 9001:9000
+      - 9000:9000
     environment:
       - ALLOW_HTTP=true
       - PORT=9000
-    networks:
-      - harmony_network
 
   redis:
     image: redis:latest
@@ -234,8 +111,6 @@ services:
     pull_policy: always
     ports:
       - 6379:6379
-    networks:
-      - harmony_network
 
   hasura:
     image: hasura/graphql-engine:latest.cli-migrations-v2
@@ -249,59 +124,16 @@ services:
       - HASURA_GRAPHQL_DATABASE_URL=${GRAPHQL_DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
-    networks:
-      - harmony_network
-
-  utility:
-    # Convenience container for debugging. It can be useful to jump
-    # onto a container that has curl/ping etc. installed to troubleshoot
-    # from within the container context.
-    # `docker compose run utility /bin/bash`
-    build:
-      context: utility
-      dockerfile: Dockerfile
-    networks:
-      - harmony_network
-      - druid_network
-    profiles:
-      - utility
 
 volumes:
   # Let's Encrypt container needs to configure the vhosts during
   # cert issuing.
-  nginx_vhost: # This html directory is only used to write let's encrypt challenge
-
+  nginx_vhost:
+  # This html directory is only used to write let's encrypt challenge
   # files during the cert issuing process.
-  nginx_html: # The acme.sh diretory stores the generated certificate state
-
+  nginx_html:
+  # The acme.sh diretory stores the generated certificate state
   # This prevents re-issuing of the certificate if the container is restarted/re-created
   # It should only issue if there is no certificate or it is close to expiry.
   # Read more here: https://github.com/nginx-proxy/acme-companion/issues/510
   nginx-acme:
-
-  # This volume is used to store the postgres data.
-  pgdata-volume:
-    # We may want to point this to a specific location on the host system,
-    # in that case - uncomment the following lines and set the PG_DATA_VOLUME
-    # driver: local
-    # driver_opts:
-    #   type: none
-    #   o: bind
-    #   device: "${PG_DATA_VOLUME:-/var/lib/postgresql/data}"
-
-  # This volume is used to store the minio data.
-  minio-data-volume:
-    # We may want to point this to a specific location on the host system,
-    # in that case - uncomment the following lines and set the MINIO_DATA_VOLUME
-    # driver: local
-    # driver_opts:
-    #   type: none
-    #   o: bind
-    #   device: "${MINIO_DATA_VOLUME:-/var/lib/minio/data}"
-
-  ssl-certs:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: "${SSL_CERTS:-/etc/ssl/certs}"
