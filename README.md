@@ -9,7 +9,7 @@ Server/environment setup:
 2. [Project initialization](#project-initialization)
 3. [Local development setup](#local-development-setup)
 4. [Production pipeline server setup](#production-pipeline-server-setup)
-5. [Production PostgreSQL server setup](#production-postgres-server-setup)
+5. [Production PostgreSQL server setup](#production-postgresql-server-setup)
 6. [Production web server setup](#production-web-server-setup)
 7. [Production Druid server setup](#production-druid-server-setup)
 
