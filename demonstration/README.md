@@ -19,6 +19,15 @@ docker compose up
 ```
 
 ## Harmony
+Optional - build Harmony images (images should build automatically when doing docker compose up.
+```
+cd demonstration/harmony
+docker compose build web_client
+docker compose build web_server
+docker compose build web
+docker compose build pipeline
+```
+
 Start harmony:
 ```
 cd demonstration/harmony
