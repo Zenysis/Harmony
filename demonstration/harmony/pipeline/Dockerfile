@@ -10,8 +10,21 @@
 # virtualenv's are very tightly coupled to their environment - so we can't just have
 # nicely seperate build stages and a clean runtime stage.
 # 
-# TODO: The common step should be broken out to a different image (would have to move a few things around) 
-#       We're really don't need to install all the common ubuntu packages from scratch on every build! 
+FROM ubuntu:22.04 as mc
+
+RUN apt-get update && apt-get install -y wget
+
+# Install minio client
+RUN case $(uname -m) in \
+    "x86_64")\
+    wget https://dl.minio.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc;\
+    ;;\
+    "aarch64")\
+    wget https://dl.minio.io/client/mc/release/linux-arm64/mc -O /usr/local/bin/mc;\
+    ;;\
+    esac;
+
+
 FROM ubuntu:22.04 as common
 # Tell apt-get we're never going to be able to give manual input
 RUN export DEBIAN_FRONTEND=noninteractive
@@ -127,15 +140,7 @@ FROM cpython-builder as runtime
 
 
 # Install minio client
-RUN case $(uname -m) in \
-    "x86_64")\
-    wget https://dl.minio.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc;\
-    ;;\
-    "aarch64")\
-    wget https://dl.minio.io/client/mc/release/linux-arm64/mc -O /usr/local/bin/mc;\
-    ;;\
-    esac;
-RUN chmod +x /usr/local/bin/mc
+COPY --chmod=755 --from=mc /usr/local/bin/mc /usr/local/bin/mc
 
 # Set system environment variables
 ENV PYTHONUNBUFFERED 1
@@ -165,26 +170,3 @@ RUN mkdir /root/.mc/
 
 COPY . .
 RUN git init
-
-# CMD [ "/src/docker-entrypoint.sh" ]
-
-# Refer to docker-compose-etl-pipeline.yml for instructions on how to build and run.
-
-# TODO: check Ideons raw commands given my changes.
-
-# docker run --rm -it -v $(pwd):/src/zenysis \
-#     -e ZEN_DEPLOYMENT=zen \
-#     -e ZEN_STEP=generate \
-#     pipeline:debian
-
-# docker run --rm -it -v $(pwd)/pipeline/out:/src/zenysis/pipeline/out \
-#     pipeline:debian \
-#     /bin/bash -c \
-#     'cd /src/zenysis/pipeline/zen/generate/ \
-#     && ./zeus_generate run run/00_uptime/00_fetch'
-
-# docker run --rm -it -v /Users/ideonvanniekerk/.ssh/:/root/.ssh/ \
-#     -v $(pwd)/pipeline/out:/src/zenysis/pipeline/out \
-#     -e ZEN_DEPLOYMENT=zen \
-#     -e ZEN_STEP=generate \
-#     pipeline:debian

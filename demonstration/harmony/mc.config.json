@@ -1,0 +1,12 @@
+{
+    "version": "10",
+    "aliases": {
+        "zen": {
+            "url": "http://minio:9000",
+            "api": "S3v4",
+            "path": "auto",
+            "accessKey": "miniozenysis",
+            "secretKey": "miniozenysis"
+        }
+    }
+}

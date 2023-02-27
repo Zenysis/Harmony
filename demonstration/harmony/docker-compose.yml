@@ -176,12 +176,14 @@ services:
       - pipeline
     restart: "no" # Once the pipeline is done running, we exit
     build:
-      context: ../
-      dockerfile: docker/pipeline_2/Dockerfile
+      context: ../../
+      dockerfile: demonstration/harmony/pipeline/Dockerfile
     volumes:
       # we want the output retained, so we map the output directory to the host
-      - ./pipeline/out:/src/zenysis/pipeline/out
-      - ./deploy/mc.config.json:/root/.mc/config.json
+      # TODO: map source
+      # - ../../pipeline/out:/src/zenysis/pipeline/out
+      - ./mc.config.json:/root/.mc/config.json
+      - ../../:/src/zenysis
     networks:
       - harmony_network
       - druid_network

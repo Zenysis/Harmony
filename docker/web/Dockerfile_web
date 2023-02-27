@@ -69,4 +69,25 @@ COPY docker/web/scripts/* ./
 # Web server runs on port 5000.
 EXPOSE 5000
 
+# RUN \
+#   export DEBIAN_FRONTEND=noninteractive && \
+#   apt-get update && \
+#   apt-get install --no-install-recommends -y git libpq-dev build-essential && \
+#   apt-get clean && \
+#   rm -rf /var/lib/apt/lists/*
+
+# COPY requirements.txt requirements.txt
+# COPY requirements-web.txt requirements-web.txt
+# RUN \
+#   python -m pip install --upgrade pip && \
+#   pip install \
+#   --cache-dir /pip.cache \
+#   --src /usr/local/src \
+#   -r requirements.txt && \
+#   pip install \
+#   --cache-dir /pip.cache \
+#   --src /usr/local/src \
+#   -r requirements-web.txt && \
+#   pip install psycopg2-binary psycopg2
+
 CMD ./docker/entrypoint_web.sh
