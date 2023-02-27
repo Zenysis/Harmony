@@ -1,18 +1,28 @@
 
 # Demonstration
 
-TBD - more information to go here.
+This folder contains docker-compose files for druid and harmony to easily run a demonstration of the platform by running all dependencies in docker containers.
 
-## Start druid
+The two docker-compose files:
+- ./demonstration/druid/docker-compose.yml
+- ./demonstration/harmony/docker-compose.yml
+
+
+Harmony and druid run in seperate docker networks, but Harmony has access to the Druid network.
+
+## Druid
+Start druid:
 ```
-cd druid
+cd demonstration/druid
 cp .env.example .env
 docker compose up
 ```
 
-## Start harmony
+## Harmony
+Start harmony:
 ```
-cd harmony
+cd demonstration/harmony
+# create instance configuration
 echo "{}" > instance_config.json
 cp .env.example .env
 # make appropriate changes to .env!!!
@@ -22,6 +32,8 @@ docker compose up
 ### Run the pipeline
 ```
 docker compose run pipeline /bin/bash
+source venv/bin/activate
+./pipeline/br/generate/zeus_generate run
 ```
 
 ### Notes on minio
