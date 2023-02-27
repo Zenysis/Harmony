@@ -179,11 +179,12 @@ services:
       context: ../../
       dockerfile: demonstration/harmony/pipeline/Dockerfile
     volumes:
-      # we want the output retained, so we map the output directory to the host
-      # TODO: map source
-      # - ../../pipeline/out:/src/zenysis/pipeline/out
       - ./mc.config.json:/root/.mc/config.json
-      - ../../:/src/zenysis
+      - ../..:/src/zenysis
+      # exclude these folders:
+      - /src/zenysis/venv
+      - /src/zenysis/venv_pypy3
+      - /src/zenysis/node_modules
     networks:
       - harmony_network
       - druid_network
