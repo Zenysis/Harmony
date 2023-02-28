@@ -412,7 +412,7 @@ def main():
         type=str,
         required=False,
         help='The SQL Connection String to use to connect to the SQL '
-        'Database. Can also be specified via the 'DATABASE_URL' '
+        'Database. Can also be specified via the \'DATABASE_URL\' '
         'environment variable. The inline parameter takes priority'
         'over the environment variable.',
     )

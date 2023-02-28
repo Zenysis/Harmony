@@ -106,7 +106,7 @@ Specify druid host in `global_config.py`: `DEFAULT_DRUID_HOST = '<public product
 
 ### Prepare Database
 
-1. Prepare the database: `ZEN_ENV=<specify environment> docker compose run web /bin/bash -c "source venv/bin/activate && ./scripts/db/postgres/dev/init_db.py --populate_indicators"` e.g. : `ZEN_ENV=br docker compose run web /bin/bash -c "source venv/bin/activate && ./scripts/db/postgres/dev/init_db.py --populate_indicators"`
+1. Prepare the database: `ZEN_ENV=<specify environment> docker compose run web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"` e.g. : `ZEN_ENV=br docker compose run web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"`
 
 ### Run Web Server
 1. Start your development environment: `DEFAULT_DRUID_HOST=http://<public production Druid server IP> ZEN_ENV=<specify environment> docker compose up` e.g. : `DEFAULT_DRUID_HOST=http://aws-druid.corp.clambda.com ZEN_ENV=br docker compose up`
