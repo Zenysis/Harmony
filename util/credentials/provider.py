@@ -9,6 +9,4 @@ CREDENTIALS = {
 
 @contextmanager
 def CredentialProvider(instance_configuration):
-    print(f"going to yield {CREDENTIALS}")
-    print(f'os.getenv("DATABASE_URL") = {os.getenv("DATABASE_URL")}')
     yield CREDENTIALS
