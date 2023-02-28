@@ -130,7 +130,6 @@
     "cli-translations": "./scripts/translations/cli_translations.py",
     "mypy": "scripts/watch/watch_mypy.py",
     "develop": "./node_modules/.bin/concurrently --kill-others-on-fail -n webpack,translations,mypy 'yarn webpack' 'yarn cli-translations watch' 'yarn mypy --continuous_scroll'",
-    "flow-check": "echo skipping flow check",
     "init-db": "scripts/db/postgres/dev/init_db.py",
     "postgres": "scripts/db/postgres/dev/connect.py",
     "server": "BUILD_TAG=$(git rev-parse --abbrev-ref HEAD || echo 'dev') FLASK_ENV=development python ./web/runserver.py",

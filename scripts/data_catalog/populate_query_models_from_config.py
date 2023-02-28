@@ -42,14 +42,14 @@ from web.server.configuration.instance import load_instance_configuration_from_f
 # List of properties that will potentially appear on a raw indicator definition that are
 # necessary for creating its raw calculation.
 INDICATOR_CALCULATION_PROPERTIES = (
-    "children",
-    "filter_field",
-    "sources",
-    "stock_granularity",
-    "subtype",
-    "theta_sketch_field",
-    "theta_sketch_size",
-    "type",
+    'children',
+    'filter_field',
+    'sources',
+    'stock_granularity',
+    'subtype',
+    'theta_sketch_field',
+    'theta_sketch_size',
+    'type',
 )
 
 
@@ -63,22 +63,22 @@ def get_session(sql_connection_string):
 
 
 def get_indicator_calculation(ind_id):
-    """Build a dictionary containing the low level properties that are needed to
+    '''Build a dictionary containing the low level properties that are needed to
     describe this indicator's calculation. This calculation is the same thing that
     exists on the *raw* indicator definition and is more specific than the Query
     Tool's calculation type that exists for the field.
-    """
+    '''
     # Use config.indicators.ID_LOOKUP to get the original indicator definition for
     # non-calculated indicators.
     indicator = indicators.ID_LOOKUP[ind_id]
-    ind_type = indicator.get("type")
+    ind_type = indicator.get('type')
 
     # If there is no indicator type, then this indicator is either a calculated
-    # indicator or it uses the default "SUM" indicator type.
+    # indicator or it uses the default 'SUM' indicator type.
     if not ind_type:
         formula = calculated_indicators.CALCULATED_INDICATOR_FORMULAS.get(ind_id)
         if formula:
-            return {"formula": formula, "type": "calculated_indicator"}
+            return {'formula': formula, 'type': 'calculated_indicator'}
         # TODO(yitian, stephen): Maybe we should store `type: SUM` for these default
         # indicators? Right now `aggregation_rules.py` doesn't explicitly check for it
         # so adding it in could break things.
@@ -95,10 +95,10 @@ def get_indicator_calculation(ind_id):
 
 
 def build_formula_calculation(field_id, id_to_fields, dimension_id_map):
-    """Try to build a FormulaCalculation for the provided calculated indicator field.
+    '''Try to build a FormulaCalculation for the provided calculated indicator field.
     This requires building every constituent calculation and attaching it to the
     FormulaCalculation returned.
-    """
+    '''
     formula = calculated_indicators.CALCULATED_INDICATOR_FORMULAS[field_id]
     constituent_ids = calculated_indicators.CALCULATED_INDICATOR_CONSTITUENTS[field_id]
     constituents = []
@@ -118,11 +118,11 @@ def build_formula_calculation(field_id, id_to_fields, dimension_id_map):
                 constituent_id, aggregation_rules.CALCULATIONS_FOR_FIELD
             )
             name = indicators.ID_LOOKUP.get(constituent_id, {}).get(
-                "text", constituent_id
+                'text', constituent_id
             )
 
         # NOTE(stephen): We cannot use the calculation we found for this constituent
-        # directly, we still must attempt to build the "final" calculation
+        # directly, we still must attempt to build the 'final' calculation
         # representation. This is because the constituent calculation itself could be
         # `COMPLEX` and require unpacking into its final form. This would not be
         # necessary if the Query Tool mock data generator produced FormulaCalculations
@@ -139,15 +139,15 @@ def build_formula_calculation(field_id, id_to_fields, dimension_id_map):
 
 
 def build_final_calculation(field_id, calculation, id_to_fields, dimension_id_map):
-    """Build the calculation that should be stored in the database. This method exists
+    '''Build the calculation that should be stored in the database. This method exists
     so that we can handle ComplexCalculations in a special way. The Query
     Tool mock data generator will still produce ComplexCalculations until we
     are confident in the calculation models we build to handle all the edge
     cases that ComplexCalculation glosses over.
-    """
+    '''
     # If this calculation is not COMPLEX, that means the Query Tool can
     # already handle the calculation type natively.
-    if calculation.type != "COMPLEX":
+    if calculation.type != 'COMPLEX':
         return calculation
 
     # Handle calculated indicator formulas.
@@ -167,10 +167,10 @@ def build_final_calculation(field_id, calculation, id_to_fields, dimension_id_ma
 
 
 def split_categories_by_type(categories, field_metadata, dimensions):
-    """In Data Catalog, field categories are stored separately from dimension
+    '''In Data Catalog, field categories are stored separately from dimension
     categories. Split the original categories into lists for each type and preserve the
     order of categories as they were originally defined.
-    """
+    '''
 
     def recursively_find_categories(category, collection):
         if not category or category.id in collection:
@@ -204,16 +204,16 @@ def populate_data_sources(
     data_source_id_set = set()
     for data_source in data_sources:
         if clean_data_sources:
-            data_source_id_set.add(data_source["id"])
+            data_source_id_set.add(data_source['id'])
         existing_data_source = transaction.find_by_id(
-            PipelineDatasource, data_source["id"]
+            PipelineDatasource, data_source['id']
         )
         if not existing_data_source:
             transaction.add_or_update(
-                PipelineDatasource(id=data_source["id"], name=data_source["name"])
+                PipelineDatasource(id=data_source['id'], name=data_source['name'])
             )
         else:
-            existing_data_source.name = data_source["name"]
+            existing_data_source.name = data_source['name']
             transaction.add_or_update(existing_data_source)
 
     # Manually clean dimension table if we are only updating dimensions and data
@@ -229,7 +229,7 @@ def populate_data_sources(
     #                 transaction.delete(field_mapping)
     #             transaction.delete(data_source)
 
-    LOG.info("Successfully populated data sources")
+    LOG.info('Successfully populated data sources')
 
 
 def populate_dimensions(dimensions, transaction, clean_dimensions):
@@ -259,22 +259,22 @@ def populate_dimensions(dimensions, transaction, clean_dimensions):
                 transaction.delete(dimension)
 
     transaction.run_raw().flush()
-    LOG.info("Successfully populated dimensions")
+    LOG.info('Successfully populated dimensions')
 
 
 def populate_dimension_category_mappings(dimensions, transaction):
     mappings = []
     for dimension in dimensions:
         mapping_object = {
-            "category_id": dimension.category.id,
-            "dimension_id": dimension.id,
+            'category_id': dimension.category.id,
+            'dimension_id': dimension.id,
         }
         if not transaction.find_all_by_fields(
             DimensionCategoryMapping, mapping_object
         ).first():
             mappings.append(mapping_object)
     transaction.run_raw().bulk_insert_mappings(DimensionCategoryMapping, mappings)
-    LOG.info("Successfully populated dimension to category mappings")
+    LOG.info('Successfully populated dimension to category mappings')
 
 
 def populate_categories(categories, category_model_cls, transaction):
@@ -282,8 +282,8 @@ def populate_categories(categories, category_model_cls, transaction):
 
     # NOTE(stephen): The root category should always exist in the DB. Make sure that we
     # repopulate it here first since this script truncates the tables.
-    if not transaction.find_by_id(category_model_cls, "root"):
-        transaction.add_or_update(category_model_cls(id="root", name="__root__"))
+    if not transaction.find_by_id(category_model_cls, 'root'):
+        transaction.add_or_update(category_model_cls(id='root', name='__root__'))
     for category in categories:
         category_stack = []
         category_stack.append((category.id, category.name))
@@ -299,7 +299,7 @@ def populate_categories(categories, category_model_cls, transaction):
             if not transaction.find_by_id(category_model_cls, curr_parent_id):
                 transaction.add_or_update(
                     category_model_cls(
-                        id=curr_parent_id, name=curr_parent_name, parent_id="root"
+                        id=curr_parent_id, name=curr_parent_name, parent_id='root'
                     )
                 )
             categories_added.add(curr_parent_id)
@@ -321,7 +321,7 @@ def populate_categories(categories, category_model_cls, transaction):
     # Need to flush the categories added to the DB so that any foreign key dependencies
     # on this table are available to be referenced (i.e. field category mappings).
     transaction.run_raw().flush()
-    LOG.info("Successfully populated %s categories", category_model_cls.__name__)
+    LOG.info('Successfully populated %s categories', category_model_cls.__name__)
 
 
 def populate_fields(
@@ -350,21 +350,21 @@ def populate_fields(
         serialized_calculation = related.to_dict(calculation, dict_factory=dict)
         new_fields.append(
             {
-                "id": field_id,
-                "calculation": serialized_calculation,
-                "description": metadata.description,
-                "name": field.canonical_name,
-                "short_name": field.short_name,
+                'id': field_id,
+                'calculation': serialized_calculation,
+                'description': metadata.description,
+                'name': field.canonical_name,
+                'short_name': field.short_name,
             }
         )
         new_field_category_mappings.append(
-            {"category_id": metadata.category.id, "field_id": field_id}
+            {'category_id': metadata.category.id, 'field_id': field_id}
         )
         if field_id in field_pipeline_mapping:
             new_datasource_mappings.append(
                 {
-                    "field_id": field_id,
-                    "pipeline_datasource_id": field_pipeline_mapping[field_id],
+                    'field_id': field_id,
+                    'pipeline_datasource_id': field_pipeline_mapping[field_id],
                 }
             )
 
@@ -379,7 +379,7 @@ def populate_fields(
             )
             for enabled_dimension in enabled_dimensions:
                 new_field_dimension_mappings.append(
-                    {"dimension_id": enabled_dimension, "field_id": field_id}
+                    {'dimension_id': enabled_dimension, 'field_id': field_id}
                 )
 
     # NOTE(stephen): Significant performance improvement if we use the bulk insert.
@@ -396,32 +396,32 @@ def populate_fields(
     )
     session.bulk_insert_mappings(FieldDimensionMapping, new_field_dimension_mappings)
     session.flush()
-    LOG.info("Successfully populated fields")
+    LOG.info('Successfully populated fields')
 
 
 def main():
-    """Populates the various query models -- fields, dimensions, pipeline
+    '''Populates the various query models -- fields, dimensions, pipeline
     datasources, categories, etc.
 
     To run locally:
         ./scripts/data_catalog/populate_query_models_from_config.py
-    """
+    '''
     Flags.PARSER.add_argument(
-        "-d",
-        "--sql_connection_string",
+        '-d',
+        '--sql_connection_string',
         type=str,
         required=False,
-        help="The SQL Connection String to use to connect to the SQL "
-        "Database. Can also be specified via the 'DATABASE_URL' "
-        "environment variable. The inline parameter takes priority"
-        "over the environment variable.",
+        help='The SQL Connection String to use to connect to the SQL '
+        'Database. Can also be specified via the 'DATABASE_URL' '
+        'environment variable. The inline parameter takes priority'
+        'over the environment variable.',
     )
     Flags.PARSER.add_argument(
-        "--populate_dimensions_and_datasources_only",
-        action="store_true",
+        '--populate_dimensions_and_datasources_only',
+        action='store_true',
         required=False,
         default=False,
-        help="Only populate dimension and datasource related tables.",
+        help='Only populate dimension and datasource related tables.',
     )
 
     Flags.InitArgs()
@@ -430,9 +430,9 @@ def main():
     if not sql_connection_string:
         instance_configuration = load_instance_configuration_from_file()
         with CredentialProvider(instance_configuration) as credential_provider:
-            sql_connection_string = credential_provider.get("SQLALCHEMY_DATABASE_URI")
+            sql_connection_string = credential_provider.get('SQLALCHEMY_DATABASE_URI')
 
-    LOG.info("Generating Query mock data")
+    LOG.info('Generating Query mock data')
     query_data = generate_query_mock_data(
         {},
         indicators.DATA_SOURCES,
@@ -444,7 +444,7 @@ def main():
         aggregation.DIMENSION_ID_MAP,
         {},
     )
-    LOG.info("Finished generating Query mock data")
+    LOG.info('Finished generating Query mock data')
 
     populate_dimensions_and_datasources_only = (
         Flags.ARGS.populate_dimensions_and_datasources_only
@@ -455,7 +455,7 @@ def main():
     # feature is still in active development.
     field_dimension_usage_cache = None
     if not populate_dimensions_and_datasources_only and os.getenv(
-        "POPULATE_FIELD_DIMENSION_MAPPING"
+        'POPULATE_FIELD_DIMENSION_MAPPING'
     ):
         field_dimension_usage_cache = FieldDimensionUsageCache(
             DEPLOYMENT_NAME, DRUID_HOST, [d.id for d in query_data.dimensions]
@@ -481,13 +481,13 @@ def main():
 
     if not populate_dimensions_and_datasources_only:
         # NOTE(abby): This will also clear the SelfServeSource table.
-        table_param = ", ".join(table.__tablename__ for table in tables)
+        table_param = ', '.join(table.__tablename__ for table in tables)
 
         # Issue the truncate query to postgres. Pylint does not understand the dynamic
         # session object very well.
         # pylint: disable=no-member
         session.connection().execute(
-            f"TRUNCATE {table_param} CONTINUE IDENTITY CASCADE"
+            f'TRUNCATE {table_param} CONTINUE IDENTITY CASCADE'
         )
         session.commit()
 
@@ -497,7 +497,7 @@ def main():
 
     field_datasource_cache = FieldDatasourcesCache(DEPLOYMENT_NAME, session)
 
-    LOG.info("Beginning data population...")
+    LOG.info('Beginning data population...')
 
     with Transaction(get_session=lambda: session) as transaction:
         populate_data_sources(
@@ -529,5 +529,5 @@ def main():
             )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())

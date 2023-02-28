@@ -1,3 +1,4 @@
+name: harmony-dev
 services:
   postgres:
     image: postgres:13.7-alpine
@@ -48,8 +49,11 @@ services:
     build:
       dockerfile: Dockerfile_dev
     volumes:
+      # Map source code to host so that we can edit files and see changes immediately.
       - .:/app
+      # Don't map venv and node modules to host. We need to use the container version.
       - /app/venv
+      - /app/venv_pypy3
       - /app/node_modules
     environment:
       - ZEN_HOME=/app
@@ -70,7 +74,9 @@ services:
     build:
       dockerfile: Dockerfile_dev
     volumes:
+      # Map source code to host so that we can edit files and see changes immediately.
       - .:/app
+      # Don't map venv and node modules to host. We need to use the container version.
       - /app/venv
       - /app/venv_pypy3
       - /app/node_modules

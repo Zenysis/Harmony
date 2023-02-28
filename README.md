@@ -110,12 +110,12 @@ Specify druid host in `global_config.py`: `DEFAULT_DRUID_HOST = '<public product
 
 ### Run Web Server
 1. Start your development environment: `DEFAULT_DRUID_HOST=http://<public production Druid server IP> ZEN_ENV=<specify environment> docker compose up` e.g. : `DEFAULT_DRUID_HOST=http://aws-druid.corp.clambda.com ZEN_ENV=br docker compose up`
-2. In a seperate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py --u me@mydomain.com -p admin --first_name=admin --last_name=istrator -a"`
+2. In a separate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py -u me@mydomain.com -p password --first_name=admin --last_name=istrator -a"`
 3. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 2.
 
 ### Run Pipeline
 
-1. Execute the pipeline `COMMAND="./pipeline/br/generate/zeus_generate run" docker compose --profile=pipeline up pipeline`
+1. Execute a command on the pipeline container `COMMAND="<your command here> run" docker compose --profile=pipeline up pipeline`
 or
 1. Get a terminal on the pipeline container `docker compose --profile=pipeline run pipeline /bin/bash`
 
