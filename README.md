@@ -116,20 +116,10 @@ If you are exclusively interested in running the pipeline locally, and not the w
       sudo apt-get autoremove # remove old packages
       sudo do-release-upgrade # update os version
       ```
-3. Install docker.
+3. Install Docker.
 
-   1. macOS: Install [docker desktop](https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=dd-smartbutton&utm_location=header) and start it by opening the app.
-   2. Ubuntu:
-      ```
-      sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-      sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-      sudo apt-get update
-      sudo apt-get install -y docker-ce
-      sudo service docker start
-      sudo groupadd docker || true
-      sudo gpasswd -a $USER docker
-      ```
+   1. macOS: Install [Docker Desktop](https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=dd-smartbutton&utm_location=header) and start it by opening the app.
+   2. Ubuntu: Follow [Setup Instructions](https://docs.docker.com/engine/install/ubuntu/)
 
 4. On macOS, change the freetds version so python wheels will build correctly.
    ```
@@ -380,10 +370,11 @@ It is highly recommended to use a relational database cloud service like Amazon 
 
 #### Docker installation
 
-Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install docker on linux (ubuntu).
-Once docker is up and running, start the database by running the below script:
+Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install Docker on Linux (Ubuntu).
 
-> The terminal will prompt for the `power_user` password to use, **keep it safe!**
+Once Docker is up and running, start the database by running the below script:
+
+> The terminal will prompt for the `power_user` password to use. **Keep it safe!**
 
 ```sh
 docker run -d --name postgres \
@@ -514,7 +505,7 @@ DOCKER_TAG=latest
 
 #### Pre-built
 
-There are pre-built Harmony docker images that can be found at [hub.docker.com](https://hub.docker.com/r/zengineering/harmony-web) for:
+There are pre-built Harmony Docker images that can be found at [hub.docker.com](https://hub.docker.com/r/zengineering/harmony-web) for:
 
 - harmony-web-server
 - harmony-web-client
@@ -522,7 +513,7 @@ There are pre-built Harmony docker images that can be found at [hub.docker.com](
 
 #### Custom Builds
 
-In certain cases you would want to make changes to Harmony or setup your own config pre-built in the docker image, for that you can run the below:
+In certain cases you would want to make changes to Harmony or setup your own config pre-built in the Docker image, for that you can run the below:
 
 > Set DOCKER_NAMESPACE & DOCKER_TAG in the `Makefile` found in the root directory
 
@@ -561,7 +552,7 @@ Harmony uses Druid as a datastore for queryable data produced by the ETL pipelin
 
 ### Setup overview
 
-This setup makes use of [docker-compose](https://docs.docker.com/compose/) to easily spin up and manage Druid. For cluster configuration, we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file).
+This setup makes use of [docker compose](https://docs.docker.com/compose/) to easily spin up and manage Druid. For cluster configuration, we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file).
 
 > The instructions describe how to spin up a Druid cluster on a **single** server _or_ on **multiple** servers. Druid recommends having a [clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on multiple servers for production instances.
 
@@ -595,7 +586,7 @@ Once all containers are running, the Druid router console should be available at
 
 ### Troubleshooting
 
-- If running Compose V2 (installed via the `docker-compose-plugin` package), update all `druid_setup/Makefile` commands to call `docker compose ...` instead of `docker-compose ...`. (Replace the hyphen with a space.)
+- If running Compose V1 (now deprecated), install the [docker-compose-plugin](https://docs.docker.com/compose/install/) package. Otherwise you will need to update all `druid_setup/Makefile` commands to call `docker-compose ...` instead of `docker compose ...`. (Replace the space with a hyphen.)
 
 - If running your `make *_server_up` command causes a `org.freedesktop.secrets` error, run `sudo apt install gnupg2 pass`.
 
