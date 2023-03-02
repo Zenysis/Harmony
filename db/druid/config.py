@@ -2,6 +2,7 @@ import os
 
 import global_config
 
+
 class BaseDruidConfig:
     def __init__(self, druid_host: str, always_use_router: bool = False):
         self._druid_host = druid_host
@@ -60,7 +61,7 @@ def construct_druid_configuration(druid_host=None):
     # If no druid host can be derived, return the default config with the default druid
     # host set.
     if not druid_host:
-        return BaseDruidConfig(global_config.DEFAULT_DRUID_HOST)
+        return BaseDruidConfig(global_config.DRUID_HOST)
 
     return BaseDruidConfig(druid_host)
 

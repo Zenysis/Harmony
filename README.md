@@ -97,7 +97,7 @@ The instructions found below are for running a local development environment usi
 
 ### Druid setup
 ​
-Specify druid host in `global_config.py`: `DEFAULT_DRUID_HOST = '<public production Druid server IP>'`
+Specify druid host in `global_config.py`: `DRUID_HOST = '<public production Druid server IP>'`
 ### Prepare environment
 
 1. Install the latest version of [Docker](https://docs.docker.com/get-docker/). 
@@ -109,7 +109,7 @@ Specify druid host in `global_config.py`: `DEFAULT_DRUID_HOST = '<public product
 1. Prepare the database: `ZEN_ENV=<specify environment> docker compose run web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"` e.g. : `ZEN_ENV=br docker compose run web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"`
 
 ### Run Web Server
-1. Start your development environment: `DEFAULT_DRUID_HOST=http://<public production Druid server IP> ZEN_ENV=<specify environment> docker compose up` e.g. : `DEFAULT_DRUID_HOST=http://aws-druid.corp.clambda.com ZEN_ENV=br docker compose up`
+1. Start your development environment: `DRUID_HOST=http://<public production Druid server IP> ZEN_ENV=<specify environment> docker compose up` e.g. : `DRUID_HOST=http://aws-druid.corp.clambda.com ZEN_ENV=br docker compose up`
 2. In a separate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py -u me@mydomain.com -p password --first_name=admin --last_name=istrator -a"`
 3. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 2.
 

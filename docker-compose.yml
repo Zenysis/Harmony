@@ -61,7 +61,7 @@ services:
       - PYTHONPATH=/app:/usr/bin
       - DATABASE_URL=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
       - ZEN_ENV=${ZEN_ENV}
-      - DEFAULT_DRUID_HOST=${DEFAULT_DRUID_HOST}
+      - DRUID_HOST=${DRUID_HOST}
       - HASURA_HOST=${HASURA_HOST-http://hasura:8080}
       - FLASK_APP=web.server.app_base
       - FLASK_ENV=development
@@ -85,7 +85,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
       - ZEN_ENV=${ZEN_ENV}
-      - DEFAULT_DRUID_HOST=${DEFAULT_DRUID_HOST}
+      - DRUID_HOST=${DRUID_HOST}
       - COMMAND=${COMMAND-echo Specify a pipeline command, e.g. "./pipeline/br/generate/zeus_generate run"}
       - PYTHONPATH=/app
     depends_on:
