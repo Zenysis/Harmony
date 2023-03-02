@@ -75,13 +75,10 @@ def main():
     # NOTE(stephen): Intentionally hardcoding the DB username/password/host since
     # this script is only used in development. Only allow overriding if the user has
     # explicitly stated they have a database URI to connect using.
-    db_uri = (
-        os.getenv(
-            'DATABASE_URL',  # First check for `DATABASE_URL` env
-            Flags.ARGS.db_uri,  # Second check for `--db_uri` arg
-        )
-        or f'postgresql://postgres:@postgres/{db_name}'
-    )  # Fallback to hardcoded local DB
+    db_uri = os.getenv(
+        'DATABASE_URL',  # First check for `DATABASE_URL` env
+        Flags.ARGS.db_uri,  # Second check for `--db_uri` arg
+    )
 
     # HACK(stephen): It's not very safe to manipulate Python's in-memory environment
     # variables dict, but I wanted to make sure that any downstream modules that
