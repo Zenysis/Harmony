@@ -32,7 +32,7 @@ def translations_watch(verbose: bool = False) -> None:
     translations_generate(verbose)
 
     subprocess.run(
-        f'watchman-wait {SRC_ROOT} -p '{I18N_ROOT}/**/*.js' '{I18N_ROOT}/**/*.jsx' '
+        f"watchman-wait {SRC_ROOT} -p '{I18N_ROOT}/**/*.js' '{I18N_ROOT}/**/*.jsx' "
         f'--max-events 0 | node {TRANSLATIONS_MAIN} {SRC_ROOT} {verbose_arg}',
         cwd=SRC_ROOT,
         shell=True,
