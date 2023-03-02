@@ -33,7 +33,8 @@ services:
     ports:
       - 8088:8080
     environment:
-      HASURA_GRAPHQL_ENABLE_TELEMETRY: 'false'
+      HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT: 500
       HASURA_GRAPHQL_DATABASE_URL: postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
     healthcheck:
@@ -61,6 +62,7 @@ services:
       - DATABASE_URL=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
       - ZEN_ENV=${ZEN_ENV}
       - DEFAULT_DRUID_HOST=${DEFAULT_DRUID_HOST}
+      - HASURA_HOST=${HASURA_HOST-http://hasura:8080}
       - FLASK_APP=web.server.app_base
       - FLASK_ENV=development
     ports:
