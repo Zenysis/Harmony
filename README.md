@@ -62,20 +62,12 @@ After you have written your first data integration (see [writing integrations](#
 
 We are working on making this customization easier (and configurable from a frontend) in future releases.
 
-<<<<<<< HEAD
-## Generating a Mapbox Access Token
-=======
 ### Requisite access tokens
->>>>>>> origin/master
 
 Harmony depends on several external servives that need to be instantiated or swapped out from the codebase. Ensure you have active accounts for the following:
 
-<<<<<<< HEAD
-Harmony currently uses [mapbox](https://www.mapbox.com/) for all Map UI visiualisations. In order to use our map visiualisations you would need to have your own `Mapbox Access Token`
-=======
 - Mailgun API key; see [Instructions](https://signup.mailgun.com/new/signup)
 - Mapbox access token; see [Generating a Mapbox Access Token](#generating-a-mapbox-access-token) below
->>>>>>> origin/master
 
 #### Generating a Mapbox Access Token
 
