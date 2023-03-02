@@ -31,6 +31,7 @@ def translations_watch(verbose: bool = False) -> None:
     # first, generate all translations to make sure we are up-to-date
     translations_generate(verbose)
 
+    # now start up the watchman server to detect any new changes
     subprocess.run(
         f"watchman-wait {SRC_ROOT} -p '{I18N_ROOT}/**/*.js' '{I18N_ROOT}/**/*.jsx' "
         f'--max-events 0 | node {TRANSLATIONS_MAIN} {SRC_ROOT} {verbose_arg}',
