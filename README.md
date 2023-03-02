@@ -1,17 +1,19 @@
-# Documentation Contents
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
+## Documentation Contents
 
 1. [Harmony overview](#harmony-overview)
 
 Server/environment setup:
 
-2. [Project setup](#project-initialization)
+2. [Project initialization](#project-initialization)
 3. [Local development setup](#local-development-setup)
 4. [Production pipeline server setup](#production-pipeline-server-setup)
-5. [Production PostgreSQL server setup](#production-postgres-server-setup)
+5. [Production PostgreSQL server setup](#production-postgresql-server-setup)
 6. [Production web server setup](#production-web-server-setup)
 7. [Production Druid server setup](#production-druid-server-setup)
 
-Code base customization
+Codebase customization
 
 8. [Writing integrations](#writing-integrations)
 9. [Contributions](#contributions)
@@ -19,9 +21,10 @@ Code base customization
 
 ## Harmony overview
 
-The Harmony Analytics Platform (Harmony), developed by [Zenysis Technologies](https://www.zenysis.com/), helps make sense of messy data by transforming, cleaning and enriching data from multiple sources. With Harmony, disparate data are displayed within a single analytical view, giving you a complete picture of your data through triangulated queries and customizable visualizations and dashboards. Harmony is available as an open source solution under the [GNU General Public License v3 (GPL v3)](https://github.com/Zenysis/Harmony/blob/master/LICENSE).
+The Harmony Analytics Platform (Harmony), developed by [Zenysis Technologies](https://www.zenysis.com/), helps make sense of messy data by transforming, cleaning and enriching data from multiple sources. With Harmony, disparate data are displayed within a single analytical view, giving you a complete picture of your data through triangulated queries and customizable visualizations and dashboards.
 
-Harmony technology supports two critical workflows for organizations:
+Harmony supports two critical workflows for organizations:
+
 - **Data Integration**: Through its data pipeline, Harmony ingests raw data from various sources, harmonizes it into a consistent format, and stores it in a database. Source data systems remain unaltered and unaffected–Harmony essentially serves as a data integration layer that sits on top of source data systems.
 - **Advanced Analytics**: Harmony enables you to analyze millions of data points at sub-second speed, and quickly uncover insights you can use to make better decisions. Users can easily access and query newly integrated data in Harmony via a web browser.
 
@@ -29,59 +32,66 @@ We developed Harmony to serve in a variety of global health and development cont
 
 ## Project initialization
 
-We refer to Harmony setups as "deployments". Each deployment has its own databases, data sources, and is hosted separately.
+### Repository setup
 
-The next step in setting up your Harmony project is to configure its deployment. Configurations are created in the `config/` directory. There is a configuration template in `config/template` and an example configuration in `config/br`. Typically, configuration directories are named after two or three-letter project codes. You'll now need to choose a project code and create your own configuration directory.
+While you're welcome to create a public fork of Harmony for your project, you likely want to maintain a private mirror of the repository to protect information like your API tokens.
 
+```
+$ git clone --bare  https://github.com/Zenysis/Harmony.git
+$ cd Harmony.git && git push --mirror https://github.com/EXAMPLE-USER/NEW-REPOSITORY.git
+```
 
 ### Creating a new configuration
 
-To create a new configuration, copy the `config/template` directory into a new directory named for your project code.
+We refer to Harmony projects as "deployments". Each deployment has its own databases, data sources, and is hosted separately.
+
+Deployment configurations are created in the `config/` directory. There is a configuration template in `config/template` and an example configuration in `config/br`. The first step in setting up your Harmony deployment is to select a two or three-letter project code and create your own `config/<project code>` directory. (🎉) Next, copy the `config/template` directory into your new directory.
 
 At minimum, the following configuration files must be updated (documentation inside the files provides instructions):
+
 - Define global constants in `global_config.py`
 - Customize basic settings (e.g. site name) in `config/<project code>/general.py` and `config/<project code>/ui.py`
 
+Some of the config variables require your Druid and PostgreSQL hosts to be set up. See [Production PostgreSQL server setup](#production-postgres-server-setup) and [Production Druid server setup](#production-druid-server-setup).
+
 After you have written your first data integration (see [writing integrations](#writing-integrations)):
+
 - Create dimensions for querying in `datatypes.py`
 - Customize aggregation options in `aggregation.py`
 - Add indicators based on the field ids you created in the pipeline step
 
 We are working on making this customization easier (and configurable from a frontend) in future releases.
 
+<<<<<<< HEAD
 ## Generating a Mapbox Access Token
+=======
+### Requisite access tokens
+>>>>>>> origin/master
 
-### Introduction
+Harmony depends on several external servives that need to be instantiated or swapped out from the codebase. Ensure you have active accounts for the following:
 
+<<<<<<< HEAD
 Harmony currently uses [mapbox](https://www.mapbox.com/) for all Map UI visiualisations. In order to use our map visiualisations you would need to have your own `Mapbox Access Token`
+=======
+- Mailgun API key; see [Instructions](https://signup.mailgun.com/new/signup)
+- Mapbox access token; see [Generating a Mapbox Access Token](#generating-a-mapbox-access-token) below
+>>>>>>> origin/master
 
-### Getting Started
+#### Generating a Mapbox Access Token
 
-First you would need to create your own mabox account, you can signup [here](https://account.mapbox.com/auth/signup/).
+Harmony currently uses [mapbox](https://www.mapbox.com/) for all Map UI visiualisations. In order to use our map visiualisations, you need to have your own `Mapbox Access Token`.
 
-> Already have an account, sign in [here](https://account.mapbox.com/auth/signin/).
+> You can read more about access tokens [here](https://docs.mapbox.com/help/getting-started/access-tokens/#how-access-tokens-work).
 
-### Access Token
+1. Open your Mapbox account (Sign up [here](https://account.mapbox.com/auth/signup/) or sign in [here](https://account.mapbox.com/auth/signin/)).
+2. You will find your **Default public token** on the homepage (the token will typically start with `pk`). You can also access your tokens under the [Acccess tokens](https://account.mapbox.com/access-tokens/) page.
+3. In your Harmony project, assign your Mapbox access token to `MAPBOX_ACCESS_TOKEN` in `config/<project code>/ui.py`.
 
-> You can read more on access tokens [here](https://docs.mapbox.com/help/getting-started/access-tokens/#how-access-tokens-work).
+For many Harmony projects, the free tier of Mapbox will be sufficient. Refer to [pricing](https://www.mapbox.com/pricing/#map-loads-for-web) for more information.
 
-#### Finding your token
+### Misc. initialization notes
 
-Once logged in you will find your **Default public token** on the homepage, the token will typically start with `pk.`. You can also access your tokens under the [Acccess tokens](https://account.mapbox.com/access-tokens/) page.
-
-#### Updating your token
-
-You can update your token in the Harmony codebase in the `config/<DEPLOYMENT>` directory in `ui.py`, updating the `MAPBOX_ACCESS_TOKEN` variable, example config [here](https://github.com/Zenysis/Harmony/blob/master/config/br/ui.py#L126).
-
-### Mapbox Pricing
-
-Mapbox has a free tier, however there are paid options available. For most users the free tier will be sufficient since you get 50,000 monthly loads, refer to [pricing](https://www.mapbox.com/pricing/#map-loads-for-web) for more.
-
-## Misc. notes
-
-- Some of the config variables require your Druid and PostreSQL hosts to be set up. See [Production PostgreSQL server setup](#production-postgres-server-setup) and [Production Druid server setup](#production-druid-server-setup).
-
-- When you run a script or the web server, select a configuration by setting the `ZEN_ENV` environmental variable. This environmental variable maps directly to folder names in `config/`, and will cause the `config` module to export the contents of that particular configuration.
+When you run a script or the web server, select a configuration by setting the `ZEN_ENV` environmental variable. This environmental variable maps directly to folder names in `config/`, and will cause the `config` module to export the contents of that particular configuration.
 
       Say there is configuration directory named `usa`. We can specify that configuration with the following:
 
@@ -134,117 +144,96 @@ or
 
 ## Production pipeline server setup
 
-The pipeline server runs the data pipeline to generate datasources (typically, daily). These pipeline server setup instructions were developed for Linux/Ubuntu.
+The pipeline server runs the ETL data pipeline to generate datasources (typically, daily). These pipeline server setup instructions were developed for Linux/Ubuntu.
 
 1. Configure your server's users, firewall, etc. Sign in as root.
 2. Update system packages.
-      ```
-      sudo apt-get update # updates available package version list
-      sudo apt-get upgrade # update packages
-      sudo apt-get autoremove # remove old packages
-      sudo do-release-upgrade # update os version
-      ```
-4. Install system dependencies.
-      ```
-      export DEBIAN_FRONTEND=noninteractive
-      apt-get update
-      apt-get install --no-install-recommends -y \
-       build-essential \
-       curl \
-       dtach \
-       freetds-bin \
-       freetds-dev \
-       git \
-       jq \
-       libffi-dev \
-       libgeos-dev \
-       libssl-dev \
-       lz4 \
-       lzop \
-       pigz \
-       python3 \
-       python3-dev \
-       python3-levenshtein \
-       python3-lxml \
-       python3-venv \
-       pypy3 \
-       pypy3-dev \
-       unzip \
-       wget \
-       libpq-dev \
-       gfortran \
-       libopenblas-dev \
-       liblapack-dev
-      apt-get clean
-      rm -rf /var/lib/apt/lists/*
-      curl \
-       -o /usr/local/bin/mc \
-       https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2021-11-16T20-37-36Z
-      chmod 755 /usr/local/bin/mc
-      ```
-      (You may not need to install minio depending on your cloud storage choices.)
-6. Clone your fork of the Harmony repo.
-      `git clone <URL of Harmony clone>`
-8. cd into the Harmony source directory and create two Python virtual environments. One is for regular python, one for pypy (which has a faster runtime and may be used for pipelines).
-      ```
-      # First set up the normal python3 venv
-      python3 -m venv venv
-      source venv/bin/activate
-      pip install --upgrade pip setuptools
-      pip install -r requirements.txt
-      pip install -r requirements-pipeline.txt
-      pip install -r requirements-web.txt
-      pip install -r requirements-dev.txt
+   ```
+   sudo apt-get update # updates available package version list
+   sudo apt-get upgrade # update packages
+   sudo apt-get autoremove # remove old packages
+   sudo do-release-upgrade # update os version
+   ```
+3. Install system dependencies.
+   ```
+   export DEBIAN_FRONTEND=noninteractive
+   apt-get update
+   apt-get install --no-install-recommends -y \
+    build-essential \
+    curl \
+    dtach \
+    freetds-bin \
+    freetds-dev \
+    git \
+    jq \
+    libffi-dev \
+    libgeos-dev \
+    libssl-dev \
+    lz4 \
+    lzop \
+    pigz \
+    python3 \
+    python3-dev \
+    python3-levenshtein \
+    python3-lxml \
+    python3-venv \
+    pypy3 \
+    pypy3-dev \
+    unzip \
+    wget \
+    libpq-dev \
+    gfortran \
+    libopenblas-dev \
+    liblapack-dev
+   apt-get clean
+   rm -rf /var/lib/apt/lists/*
+   curl \
+    -o /usr/local/bin/mc \
+    https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2021-11-16T20-37-36Z
+   chmod 755 /usr/local/bin/mc
+   ```
+   (You may not need to install minio depending on your cloud storage choices.)
+4. Clone your fork of the Harmony repo.
+   `git clone <URL of Harmony clone>`
+5. cd into the Harmony source directory and create two Python virtual environments. One is for regular python, one for pypy (which has a faster runtime and may be used for pipelines).
 
-      # Second set up the pypy venv
-      deactivate
-      pypy3 -m venv venv_pypy3
-      source venv_pypy3/bin/activate
-      pip install --upgrade pip setuptools
-      pip install -r requirements.txt
-      pip install -r requirements-pipeline.txt
-      ```
-10. Configure necessary permissions for your cloud storage service. For example, if you're using Minio, you'll need to set up `~/.mc/config` on the server.
-11. Optionally, you may want to configure an automated task runner like GitLab, CircleCI, or Jenkins (to automate pipeline runs).
+   ```
+   # First set up the normal python3 venv
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install --upgrade pip setuptools
+   pip install -r requirements.txt
+   pip install -r requirements-pipeline.txt
+   pip install -r requirements-web.txt
+   pip install -r requirements-dev.txt
 
-## Production Postgres server setup
+   # Second set up the pypy venv
+   deactivate
+   pypy3 -m venv venv_pypy3
+   source venv_pypy3/bin/activate
+   pip install --upgrade pip setuptools
+   pip install -r requirements.txt
+   pip install -r requirements-pipeline.txt
+   ```
 
-### Introduction
+6. Configure necessary permissions for your cloud storage service. For example, if you're using Minio, you'll need to set up `~/.mc/config` on the server.
+7. Optionally, you may want to configure an automated task runner like GitLab, CircleCI, or Jenkins (to automate pipeline runs on a set schedule).
+
+## Production PostgreSQL server setup
 
 You will have to set up a [PostgreSQL](https://www.postgresql.org/) database to host relational data and web application state.
 
-### Getting Started
+### Getting started
 
-If not using a relational database cloud service like Amazon RDS, Postgres can be installed on a server manually or via Docker.
+It is highly recommended to use a relational database cloud service like Amazon RDS for its guarantees related to security, availability, backups, etc. If your project is restricted from using a cloud service, we provide instructions for running postgres in a Docker container.
 
-Regardless of installation approach, the database will require the `power_user` to be created as a **SUPERUSER**.
+#### Docker installation
 
-#### Power User
+Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install Docker on Linux (Ubuntu).
 
-By default the `power_user` account on these databases has access to all databases on the server. We do not share the `power_user` credentials with the instance. It is **recommended** to not store these credentials on your local machine in an insecure fashion. The instance has its own credentials and ability to manage its own database.
+Once Docker is up and running, start the database by running the below script:
 
-#### Direct Installation
-
-Follow the [instructions](https://www.postgresql.org/download/linux/ubuntu/) to install postgres on linux (ubuntu).
-Once the database is up and running, create the `power_user` by running the below script:
-
-> Provide your own, secure password for the `power_user`, **keep it safe!**
-
-```sql
-CREATE USER "power_user" WITH
-  LOGIN
-  SUPERUSER
-  CONNECTION LIMIT -1
-  PASSWORD '[YOUR_PASSWORD]';
-COMMIT;
-```
-
-#### Docker Installation
-
-Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install docker on linux (ubuntu).
-Once docker is up and running, start the database by running the below script:
-
-> The terminal will prompt for the `power_user` password to use, **keep it safe!**
+> The terminal will prompt for the `power_user` password to use. **Keep it safe!**
 
 ```sh
 docker run -d --name postgres \
@@ -255,33 +244,40 @@ docker run -d --name postgres \
     postgres:14
 ```
 
-### Deployment Database
+### Power User creation
 
-Postgres should now be up and running with the `power_user` **SUPERUSER**, now the database instance for the deloyment needs to be created.
+Regardless of installation approach, the postgres server will require the `power_user` to be created as a **SUPERUSER**.
 
-Running the below script, replace `[YOUR_HOSTNAME]` with the hostname/IP of your postgres instance (example: *localhost*) and `[YOUR_DATABASE_NAME]` with the database name you want to use (example: *harmony*).
+By default the `power_user` account has access to all databases on the server. We do not share the `power_user` credentials with the instance. The instance has its own credentials and ability to manage its own database.
+
+> Provide your own, secure password for the `power_user`. **Keep it safe!**
+
+```sql
+CREATE USER "power_user" WITH
+  LOGIN
+  SUPERUSER
+  CONNECTION LIMIT -1
+  PASSWORD '[YOUR_PASSWORD]';
+COMMIT;
+```
+
+### Deployment database
+
+Postgres should now be up and running with the `power_user` **SUPERUSER**. Now the database instance for your deployment needs to be created.
+
+Running the below script, replace `[YOUR_HOSTNAME]` with the hostname/IP of your postgres instance (example: _localhost_) and `[YOUR_DATABASE_NAME]` with the database name you want to use (example: _harmony_). Take note of the deployment database connection string (postgres URI) that is outputted to the console.
 
 ```sh
 ./scripts/create_deployment_database.sh [YOUR_HOSTNAME] [YOUR_DATABASE_NAME] power_user
-# Log output only
-# ZEN_DB_LOG_ONLY=1 ./scripts/create_deployment_database.sh [YOUR_HOSTNAME] [YOUR_DATABASE_NAME] power_user
 ```
 
-> If you cannot connect directly to your postgres instance, you can run the script to log the output only by using the `ZEN_DB_LOG_ONLY=1` environment variable. The output will have all the raw SQL commands for you to run.
+> If you cannot connect directly to your postgres instance, you can run the script to log the output only by prepending the `ZEN_DB_LOG_ONLY=1` environment variable. The output will have all the raw SQL commands for you to run.
 
-The database is now ready and the instance database connection string is outputted to the console.
+Set `DATABASE_URL` as your deployment database connection string in your environment initialization step. Here is an example of what that may look like: `export DATABASE_URL='postgresql://test_admin:test_pwd@my.postgres.host/harmony'`
 
-### Setting Up Your Environment
+### Seeding the database
 
-By default, Flask will look for the SQLite Database to retrieve user information. You can override the database that Flask uses by setting `DATABASE_URL`. It is recommended you do this in your environment initialization step. For example, this is what a sample value for `DATABASE_URL` can look like.
-
-```sh
-export DATABASE_URL='postgresql://test_admin:test_pwd@my.postgres.host/harmony'
-```
-
-### Seeding The Database
-
-Once we've created our application database, we need to initialize it with seed data. This section will deal with upgrading the database schema to ensure that it is consistent with the latest version. By default, our application will not start unless the database schema version matches the latest version in the source tree.
+After we've created our deployment database, we need to initialize it with seed data. This section addresses upgrading the database schema to ensure consistency with the latest version. The web server will not start unless the database schema version matches the latest version in the source tree.
 
 First, make sure `DATABASE_URL` is set
 
@@ -289,12 +285,9 @@ First, make sure `DATABASE_URL` is set
 echo "${DATABASE_URL}"
 ```
 
-We first need to create all the Tables in the Database and set up all constraints, sequences and other details contained in the Database Schema.
-If `DATABASE_URL` is not set, this step will 'upgrade' the hard-coded database.
+We need to create all the database tables and configure all constraints, sequences, and other details contained in the database schema.
 
 Upgrade the database by running the below script:
-
-> `ZEN_ENV` needs to be set with a valid environment configured
 
 ```sh
 scripts/upgrade_database.sh
@@ -302,9 +295,11 @@ scripts/upgrade_database.sh
 # ZEN_ENV=br scripts/upgrade_database.sh
 ```
 
-> If you cannot run the above, the database upgrade is also done on initialization of the web container
+> `ZEN_ENV` needs to be set with a valid environment configured.
 
-Once we've upgraded the database and populated the appropriate seed values, we'll need to create a user account so that we can login via the Web UI.
+> If you cannot run the above, the database upgrade is also done on initialization of the web container.
+
+Once we've upgraded the database and populated the appropriate seed values, we'll need to create a user account so that we can login via the web UI.
 
 ```sh
 scripts/create_user.py -a -f "[YOUR_FIRST_NAME]" -l "[YOUR_LAST_NAME]" -u "[YOUR_EMAIL]"
@@ -316,28 +311,16 @@ scripts/create_user.py -a -f "[YOUR_FIRST_NAME]" -l "[YOUR_LAST_NAME]" -u "[YOUR
 
 ### Before you begin
 
-Harmony uses numerous external servives (some free, some paid) that need to be instantiated or swapped out from the codebase.
-- Ensure you have active accounts for the following
-  - Mapbox access token, see [Generating a Mapbox Access Token](#generating-a-mapbox-access-token)
-  - Mailgun API key, see [Mailgun](https://signup.mailgun.com/new/signup)
-  - AWS EC2, currently use to host the web machine, Druid, and the pipleine maching. See [setup instructions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html). This can be swapped with any VM running Ubuntu 18 LTS & up (docker installed) open ports: 22, 80, 443
-  - AWS S3 for cloud storage, see [setup instructions](https://aws.amazon.com/pm/serv-s3/?trk=fecf68c9-3874-4ae2-a7ed-72b6d19c8034&sc_channel=ps&s_kwcid=AL!4422!3!536456034896!p!!g!!s3%20cloud%20storage&ef_id=CjwKCAiArY2fBhB9EiwAWqHK6uoDGaUc7ThsxZ_W_o5j_WwqSuOTpNzAC71GuUORqMdwIIeC7WaNuBoCmfgQAvD_BwE:G:s&s_kwcid=AL!4422!3!536456034896!p!!g!!s3%20cloud%20storage). This be swapped out with [MinIO](https://min.io/docs/minio/linux/index.html).
-  - Google Domains for DNS management, this is paid. See [setup instructions](https://cloud.google.com/dns/docs/set-up-dns-records-domain-name).
-  - [LogDNA aka Mezmo](https://www.mezmo.com/) for logging (paid), [Grafana](https://grafana.com/) for operational dashboards(has a free tier), [Uptime Robot](https://grafana.com/) for monitoring server status and alerts engineers to outages (free).
+- Ensure you have the following running and accessible:
 
-  - No reply & support email accounts
- 
-- Ensure you have the following running and accessible
   - Postgres database, see [Production Postgres server setup](#production-postgres-server-setup)
   - Druid database, see [Production Druid server setup](#production-druid-server-setup)
-  - Passphrase management, see [Phabricator](https://www.phacility.com/phabricator/). This is a free open source tool.
 
+- We recommend configuring tools for monitoring system status and resource usage as well.
 
-### Getting Started
+### Getting started
 
-Before deploying the web server we need to setup some configuration to ensure everything will connect up, for this you will need:
-
-> Recommedned to **NOT** check this in with source code
+Before deploying the web server, we need to setup some configuration to ensure everything will connect up.
 
 1. Instance Config File
 
@@ -346,6 +329,8 @@ Create the instance config file as `instance_config.json` in the `/deploy` direc
 ```json
 {}
 ```
+
+> Recommended to **NOT** check this in with source code.
 
 2. Global Config
 
@@ -356,14 +341,14 @@ Copy `global_config.py` from the root directory into the `/deploy` directory and
 Create the environment file as `.env` in the `/deploy` directory and copy paste the below, updating all values as needed.
 
 ```properties
-ZEN_WEB_ENV=br
+ZEN_WEB_ENV=<project code>
 ZEN_WEB_REMOTE=ubuntu@localhost
 
 ZEN_WEB_HOST=harmony.yourdomain.com
 ZEN_WEB_EMAIL=harmony@yourdomain.com
 
-POSTGRES_DB_URI="postgresql://harmony-admin:[PASSWORD]@postgres.yourdomain.com:5432/harmony"
-GRAPHQL_DATABASE_URL="postgresql://harmony-admin:[PASSWORD_URL_ENCODED]@postgres.yourdomain.com:5432/harmony"
+POSTGRES_DB_URI="<postgresql://harmony-admin:[PASSWORD]@postgres.yourdomain.com:5432/harmony>"
+GRAPHQL_DATABASE_URL="<postgresql://harmony-admin:[PASSWORD_URL_ENCODED]@postgres.yourdomain.com:5432/harmony>"
 
 OUTPUT_PATH=/data/output
 NGINX_DEFAULT_VHOST_CONFIG=/home/ubuntu/nginx_vhost_default_location
@@ -375,18 +360,19 @@ DOCKER_NAMESPACE=zengineering
 DOCKER_TAG=latest
 ```
 
-### Docker Builds
+### Docker builds
 
-#### Pre Built
+#### Pre-built
 
-There are pre-built Harmony docker images that can be found at [hub.docker.com](https://hub.docker.com/r/zengineering/harmony-web) for:
+There are pre-built Harmony Docker images that can be found at [hub.docker.com](https://hub.docker.com/r/zengineering/harmony-web) for:
+
 - harmony-web-server
 - harmony-web-client
 - harmony-web
 
 #### Custom Builds
 
-In certain cases you would want to make changes to Harmony or setup your own config pre-built in the docker image, for that you can run the below:
+In certain cases you would want to make changes to Harmony or setup your own config pre-built in the Docker image, for that you can run the below:
 
 > Set DOCKER_NAMESPACE & DOCKER_TAG in the `Makefile` found in the root directory
 
@@ -394,9 +380,9 @@ In certain cases you would want to make changes to Harmony or setup your own con
 make all_build all_push
 ```
 
-### Deploying Web
+### Deploying web
 
-You should now we all set up and ready to deploy harmony web.
+You should now be ready to deploy the web server.
 
 > The below commands uses `ZEN_WEB_REMOTE` over ssh with public key authentication. Confirm the IP specified is reachable & [public key authentication](https://kb.iu.edu/d/aews) is enabled before proceeding.
 
@@ -413,31 +399,39 @@ Once deployed you should be able to login at your domain specified in `ZEN_WEB_H
 
 ## Production Druid server setup
 
-Druid database is an OLAP database built to handle large analytical queries. It is:
+[Apache Druid](https://druid.apache.org/docs/latest/design/index.html) is an OLAP database built to handle large analytical queries. It is:
 
-- Column oriented, NoSQL built for analytical workloads
+- Column-oriented, NoSQL built for analytical workloads
 - Distributed and scalable (via Apache Zookeeper)
 - Open source and customizable to many types of hardware
 
-A new Druid collection is created every time the pipeline runs. This ensures that all datasets reflect a single common snapshot in time, and makes it possible to inspect historical records for tampering and other inconsistencies.
+Harmony uses Druid as a datastore for queryable data produced by the ETL pipeline. A new Druid collection is created every time the pipeline runs. This ensures that all datasets reflect a single common snapshot in time and makes it possible to inspect historical records for tampering and other inconsistencies.
 
 ![](https://static.slab.com/prod/uploads/posts/images/h0kkzOZmq9pOgWwhc5n9T93t.png)
 
----
+### Setup overview
 
-### On an (Ubuntu) server dedicated to running Druid, follow these instructions:
+This setup makes use of [docker compose](https://docs.docker.com/compose/) to easily spin up and manage Druid. For cluster configuration, we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file).
 
-This setup makes use of [docker-compose](https://docs.docker.com/compose/) to easlity spin up and manage a druid cluster. For cluster configuration we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file).
+> The instructions describe how to spin up a Druid cluster on a **single** server _or_ on **multiple** servers. Druid recommends having a [clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on multiple servers for production instances.
 
-> The configuration below will spin up a druid cluster on a **single** server. Druid recommends having a [Clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on **multiple** servers for larger production instances.
+Druid resource settings are usually tied to your hardware specifications. The optimized configuration in `environment` works for most Harmony deployments. Allocation can be changed based on your usage requirements. See [Druid Configuration](https://druid.apache.org/docs/latest/tutorials/docker.html#configuration) for more.
 
-#### Custom Setup (Optimised configuration)
+These instructions were written for Ubuntu operating systems.
 
-Druid resources settings are usually tied to the hardware specifications. The Optimised configuration in `environment` works for most Harmony deployments. This can be increased/changed based on your usage requirements - See [Duird Configuration](https://druid.apache.org/docs/latest/tutorials/docker.html#configuration) for more.
+### Instructions
 
-> The below commands uses `*_DOCKER_HOST` (found in `.env`) over ssh with public key authentication. Confirm the IP(s) specified is reachable & [public key authentication](https://kb.iu.edu/d/aews) is enabled before proceeding.
+The first step is to update the appropriate `DOCKER_HOST` in `druid_setup/.env`.
 
-> **Clustered Server**: There are some additional environment variables that will have to be configured for the server to run optinally. Common config can be found in `druid_setup/cluster/environment/common.env`:  `druid_zk_service_host`, `druid_metadata_storage_connector_connectURI` and `druid_cache_hosts`. Coordinator config can be found in `druid_setup/cluster/environment/coordinator.env`: `druid_host`. Historical config can be found in `druid_setup/cluster/environment/historical.env`: `druid_host`.
+- For a single-server cluster, set `SINGLE_SERVER_DOCKER_HOST` to your local Druid host. (This is the default DOCKER ENDPOINT printed when `docker context ls` is run.)
+- For a multiple-server cluster, set the `CLUSTER_*_SERVER_DOCKER_HOST` variables to the machine IPs partitioned for each service ([master, data, and query](https://druid.apache.org/docs/latest/tutorials/cluster.html)).
+  - There are some additional environment variables that have to be configured for a multi-server cluster to run optimally.
+    - Common config is located in `druid_setup/cluster/environment/common.env` (`druid_zk_service_host`, `druid_metadata_storage_connector_connectURI`, and `druid_cache_hosts`)
+    - Coordinator config is located in `druid_setup/cluster/environment/coordinator.env` (`druid_host`)
+    - Historical config is located in `druid_setup/cluster/environment/historical.env` (`druid_host`)
+  - Also, ensure that [public key authentication](https://kb.iu.edu/d/aews) is enabled.
+
+Next, deploy the approriate Druid cluster:
 
 ```sh
 cd druid_setup
@@ -447,25 +441,21 @@ make single_server_up
 make cluster_server_up
 ```
 
-#### Bare Setup (Default configuration)
+Once all containers are running, the Druid router console should be available at http://{SERVER_IP}:8888/.
 
-```
-sudo apt-get install -y docker-compose
-mkdir druid_setup && cd druid_setup
-wget https://raw.githubusercontent.com/apache/druid/0.22.1/distribution/docker/docker-compose.yml
-wget https://raw.githubusercontent.com/apache/druid/0.22.1/distribution/docker/environment
-docker-compose up -d
-```
+### Troubleshooting
 
-You should be able to see the Druid router console at http://{SERVER_IP}:8888/
+- If running Compose V1 (now deprecated), install the [docker-compose-plugin](https://docs.docker.com/compose/install/) package. Otherwise you will need to update all `druid_setup/Makefile` commands to call `docker-compose ...` instead of `docker compose ...`. (Replace the space with a hyphen.)
+
+- If running your `make *_server_up` command causes a `org.freedesktop.secrets` error, run `sudo apt install gnupg2 pass`.
+
+- If certain containers are continuously restarting, their services likely require more memory. Adjust the resource settings in the `druid_setup/*/environment` files or upgrade your machine(s).
 
 ## Writing integrations
 
 This project comes with a built-in ETL pipeline that has been proven to work in a variety of global health contexts.
 
 It provides a general framework for scraping data from any number of data sources or APIs, tools for standardizing this data in a common format (called Zenysis Base Format), and libraries for merging these disparate datasets together in such a way to make them mutually queryable.
-
-![](https://docs.google.com/drawings/u/0/d/s9eL0gIYn0dyR8qhP9lif9w/image?w=624&h=261&rev=2&ac=1&parent=16hZpMQs0FUVEDTEcoXtOPM36sqTqCu8Mvb4vV9PLW1E)
 
 Our data pipeline is based on [Zeus](https://github.com/room77/py77/tree/master/pylib/zeus), an open-source, command-line oriented pipeline runner. Note that Zeus processes files in order of numeric prefix, so given three tasks, `00_fetch_gender`, `00_fetch_sex`, and `03_convert`, Zeus will run 00_fetch_gender and 00_fetch_sex synchronously, then run 03_convert when both are complete.
 
@@ -580,6 +570,7 @@ In addition, users can add dashboard-level filters and aggregations. For example
 ![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/8U7BgpOLDCNwIzjt6Uc34lVL.png)
 
 In the top navigation bar for a dashboard, users can click
+
 - Play - enter a presentation mode with full screen view, where each tile is its own slide
 - Share - export the dashboard as a link, email, or download
 - Add content - add a text box, visualization, iFrame, spacer, or divider to the dashboard
@@ -587,7 +578,6 @@ In the top navigation bar for a dashboard, users can click
 - Settings - modify the following capabilities of the dashboard:
 
 ![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/FUYhGhSa94jAIcN20738bFNh.png)
-
 
 ### Alerts
 
@@ -635,7 +625,6 @@ Data Catalog enables Data Managers to manage their indicators and augment them w
 In Data Catalog, the Analyze hierarchical selector is organized in the form of a directory table that resembles a ‘file system’. This allows us to navigate and organize categories (folders) and indicators (files) in a familiar format. The indicators themselves are the files in the file system. Each file is its own page called the Indicator Details page. This page contains metadata about each indicator and options to edit that metadata.
 
 ![](https://static.slab.com/prod/uploads/rzv7xv5j/posts/images/aWreLFOT62th7O9mV_pznYCF.png)
-
 
 ### Data Digest
 
