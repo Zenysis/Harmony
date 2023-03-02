@@ -97,21 +97,30 @@ In order to run a local web server or run data pipeline steps on the command lin
 
 The instructions found below are for running a local development environment using Docker. It is possible to run a local development environment without Docker on Linux or MacOs, but instructions for doing so are not provided here.
 
-### Druid setup
-​
-Specify druid host in `global_config.py`: `DRUID_HOST = '<public production Druid server IP>'`
 ### Prepare environment
 
 1. Install the latest version of [Docker](https://docs.docker.com/get-docker/). 
 2. Clone the git repository: `git clone https://github.com/Zenysis/Harmony`. (Alternatively, you may want to fork the repo and clone the fork — that way you can use version control for your customization.)
 3. Build your development docker images: `docker compose build` (this will take some time!)
 
+### Configure environment
+You may either
+1. Create a `.env` file in the root directory of the project and add the following lines:
+```
+DRUID_HOST=<druid host goes here>
+ZEN_ENV=<environment>
+```
+2. Add DRUID_HOST and ZEN_ENV to your environment variables
+3. Or set them in your terminal each time before running the docker compose command
+
+All instructions going forward will assume that the environment variables have been set.
+
 ### Prepare Database
 
-1. Prepare the database: `ZEN_ENV=<specify environment> docker compose run web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"` e.g. : `ZEN_ENV=br docker compose run web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"`
+1. Prepare the database: `docker compose run web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"`
 
 ### Run Web Server
-1. Start your development environment: `DRUID_HOST=http://<public production Druid server IP> ZEN_ENV=<specify environment> docker compose up` e.g. : `DRUID_HOST=http://aws-druid.corp.clambda.com ZEN_ENV=br docker compose up`
+1. Start your development environment: `docker compose up`
 2. In a separate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py -u me@mydomain.com -p password --first_name=admin --last_name=istrator -a"`
 3. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 2.
 
