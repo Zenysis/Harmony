@@ -132,8 +132,7 @@ or
 
 ### Run development tools
 
-1. Run mypy: `docker compose exec web /bin/bash -c "source venv/bin/activate && yarn mypy --continuous_scroll"`
-2. Run translations: `docker compose exec web /bin/bash -c "source venv/bin/activate && yarn translations"`
+1. Run translations: `docker compose exec web /bin/bash -c "source venv/bin/activate && yarn translations"`
 
 ### Next steps & useful tips
 
