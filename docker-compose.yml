@@ -37,6 +37,8 @@ services:
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT: 500
       HASURA_GRAPHQL_DATABASE_URL: postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
+      HASURA_GRAPHQL_METADATA_DIR: '/hasura-metadata/latest'
+      HASURA_GRAPHQL_MIGRATIONS_DIR: '/xxx/disabled'
     healthcheck:
       test: "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080'"
       interval: 30s
@@ -46,6 +48,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./graphql/hasura/metadata/versions:/hasura-metadata
+      - ./scripts/db/hasura/dev/container:/zenysis:ro
   web:
     build:
       dockerfile: Dockerfile_dev
