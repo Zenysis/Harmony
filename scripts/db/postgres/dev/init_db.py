@@ -102,10 +102,12 @@ def populate_data_catalog_tables(
     # NOTE(stephen): The indicator db population script relies on deployment specific
     # config and does not receive any command line arguments. We must craft the
     # environment instead.
+    # We don't allow the existing environment variables to be overwritten, so the
+    # order below is very important.
     env = {
-        **os.environ,
         'DATABASE_URL': f'postgresql://postgres:@localhost/{db_name}',
         'ZEN_ENV': deployment_code,
+        **os.environ,
     }
 
     # NOTE(stephen): Swallow all logs since we don't need to parse them. If an error
@@ -132,8 +134,7 @@ def initialize_database(
     # (deployment_code: str, db_name: str, print_log: str -> None) -> None
     initialization_functions: List[Callable[[str, str, Callable[[str], None]], None]],
 ) -> None:
-    '''Run a series of initialization functions over the deployment/database specified.
-    '''
+    '''Run a series of initialization functions over the deployment/database specified.'''
     # Build a printing function that attaches a colored prefix indicating the deployment
     # code to each line printed.
     print_log = partial(print, TermColor.ColorStr(deployment_code, 'YELLOW'), '-')
@@ -146,10 +147,9 @@ def initialize_database(
 
 
 def get_script_runner(
-    script_path: str
+    script_path: str,
 ) -> Callable[[str, str, Callable[[str], None]], None]:
-    '''Returns a runnable script for the inputted script location
-    '''
+    '''Returns a runnable script for the inputted script location'''
 
     def _run_input_script(
         deployment_code: str, db_name: str, print_log: Callable[[str], None]
@@ -184,7 +184,7 @@ def get_script_runner(
 
 
 def build_initialization_functions(
-    downgrade: bool, populate_indicators: bool, additional_scripts: [str]
+    downgrade: bool, populate_indicators: bool, additional_scripts: List[str]
 ) -> List[Callable[[str, str, Callable[[str], None]], None]]:
     '''Build a list of initialization functions to run against a specific database.'''
     output = [run_database_upgrade if not downgrade else run_database_downgrade]
@@ -259,11 +259,6 @@ def main():
             'Only a single database can be downgraded at a time.',
         )
         return 1
-
-    # Ensure the Postgres database is running locally and has received its initial
-    # setup (like creating the postgres db admin user).
-    run_dev_script('start_postgres.sh', True)
-    run_dev_script('create_postgres_admin_user.sh', True)
 
     TermColor.PrintStr('Beginning database initialization', 'PURPLE', False)
 

@@ -74,7 +74,7 @@ def get_indicator_calculation(ind_id):
     ind_type = indicator.get('type')
 
     # If there is no indicator type, then this indicator is either a calculated
-    # indicator or it uses the default "SUM" indicator type.
+    # indicator or it uses the default 'SUM' indicator type.
     if not ind_type:
         formula = calculated_indicators.CALCULATED_INDICATOR_FORMULAS.get(ind_id)
         if formula:
@@ -122,7 +122,7 @@ def build_formula_calculation(field_id, id_to_fields, dimension_id_map):
             )
 
         # NOTE(stephen): We cannot use the calculation we found for this constituent
-        # directly, we still must attempt to build the "final" calculation
+        # directly, we still must attempt to build the 'final' calculation
         # representation. This is because the constituent calculation itself could be
         # `COMPLEX` and require unpacking into its final form. This would not be
         # necessary if the Query Tool mock data generator produced FormulaCalculations

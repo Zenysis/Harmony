@@ -95,193 +95,52 @@ When you run a script or the web server, select a configuration by setting the `
 
 In order to run a local web server or run data pipeline steps on the command line, you'll need to set up a local development environment. This is distinct from setting up production servers (explained in other sections).
 
-Operating systems supported by this documentation:
+The instructions found below are for running a local development environment using Docker. It is possible to run a local development environment without Docker on Linux or MacOs, but instructions for doing so are not provided here.
 
-- Linux (Ubuntu)
-- macOS
+### Prepare environment
 
-### Note: running only the pipeline code locally
+1. Install the latest version of [Docker](https://docs.docker.com/get-docker/). 
+2. Clone the git repository: `git clone https://github.com/Zenysis/Harmony`. (Alternatively, you may want to fork the repo and clone the fork — that way you can use version control for your customization.)
+3. Build your development docker images: `docker compose build` (this will take some time!)
 
-If you are exclusively interested in running the pipeline locally, and not the web server, only the following steps are necessary: [system requirements](#system-requirements), [source code](#source-code), [Python dependencies](#python-dependencies), and [Druid setup](#druid-setup).
+### Configure environment
+You may either
+1. Create a `.env` file in the root directory of the project and add the following lines:
+```
+DRUID_HOST=<druid host goes here>
+ZEN_ENV=<environment>
+```
+2. Add DRUID_HOST and ZEN_ENV to your environment variables
+3. Or set them in your terminal each time before running the docker compose command
 
-### System requirements
+All instructions going forward will assume that the environment variables have been set.
 
-1. Install python (any version 3.8 - 3.10).
-2. Update package managers.
-   1. macOS: install [homebrew](https://brew.sh/)
-   2. Ubuntu:
-      ```
-      sudo apt-get update # updates available package version list
-      sudo apt-get upgrade # update packages
-      sudo apt-get autoremove # remove old packages
-      sudo do-release-upgrade # update os version
-      ```
-3. Install Docker.
+### Prepare Database
 
-   1. macOS: Install [Docker Desktop](https://desktop.docker.com/mac/main/amd64/Docker.dmg?utm_source=docker&utm_medium=webreferral&utm_campaign=dd-smartbutton&utm_location=header) and start it by opening the app.
-   2. Ubuntu: Follow [Setup Instructions](https://docs.docker.com/engine/install/ubuntu/)
+1. Prepare the database: `docker compose run web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"`
 
-4. On macOS, change the freetds version so python wheels will build correctly.
-   ```
-   brew unlink freetds
-   brew install freetds@0.91
-   brew link --force freetds@0.91
-   ```
+### Run Web Server
+1. Start your development environment: `docker compose up`
+2. In a separate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py -u me@mydomain.com -p password --first_name=admin --last_name=istrator -a"`
+3. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 2.
 
-### Source code
+### Run Pipeline
 
-Clone repo: `git clone https://github.com/Zenysis/Harmony`. Alternatively, you may want to fork the repo and clone the fork — that way you can use version control for your customization.
-​
+1. Execute a command on the pipeline container `COMMAND="<your command here> run" docker compose --profile=pipeline up pipeline`
+or
+1. Get a terminal on the pipeline container `docker compose --profile=pipeline run pipeline /bin/bash`
 
-### Dev dependencies
+### Run development tools
 
-1. On macOS:
+1. Run translations: `docker compose exec web /bin/bash -c "source venv/bin/activate && yarn translations"`
 
-   ```
-   brew install wget curl cmake freetds sqlite3 geos yarn jq pigz lz4 minio/stable/mc openconnect watchman postgresql proj php@7.4 lefthook
-   brew link --overwrite --force php@7.4
+### Next steps & useful tips
 
-   brew install coreutils grep
-   echo 'export PATH="/usr/local/opt/coreutils/libexec/gnubin:/usr/local/opt/grep/libexec/gnubin:${PATH}"' >> ~/.zshrc
-   brew install pypy3
-   ```
-
-2. Ubuntu:
-   ```
-   sudo apt-get update
-   sudp apt-get install --no-install-recommends -y \
-   wget \
-   curl \
-   cmake \
-   sqlite3 \
-   geos \
-   yarn \
-   jq \
-   pigz \
-   lz4 \
-   openconnect \
-   watchman \
-   proj \
-   lefthook \
-   coreutils \
-   grep \
-   pypy3 \
-   ```
-
-### Python dependencies
-
-1. Update `PYTHONPATH`. In your bash profile (or z profile, etc.), set the `PYTHONPATH` environment variable to include the path to your clone of Harmony. Run `echo 'export PYTHONPATH="${PYTHONPATH}:<path to repo>"' >> ~/.bash_profile` (or `.bashrc`, `.zshrc`, etc.). Note that anytime you update your bash profile, you either have to restart your terminal or run `source ~/.bash_profile`.
-
-2. Create a python3 virtual environment and a pypy environment. Change into the source directory (ie `~/Harmony`). Run the following:
-
-   ```
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install --upgrade pip setuptools
-   pip install -r requirements.txt
-   pip install -r requirements-pipeline.txt
-   pip install -r requirements-web.txt
-   pip install -r requirements-dev.txt
-   deactivate
-
-   pypy3 -m venv venv_pypy3
-   source venv_pypy3/bin/activate
-   pip install --upgrade pip setuptools
-   pip install -r requirements.txt
-   pip install -r requirements-pipeline.txt
-   deactivate
-   ```
-
-   ​
-   If you see wheel-related errors here, run `pip install wheel` before iterating over the requirements files.
-   ​
-
-3. To enter the virtual environment, run `source venv/bin/activate`.
-   ​
-
-### Javascript dependencies
-
-We use [yarn](https://yarnpkg.com/) as a node.js package manager.
-​
-
-1. Install yarn.
-   ​
-   - macOS: `brew install yarn`
-   - Ubuntu:
-     `curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list sudo apt update && sudo apt install yarn`
-     ​
-2. Install node.
-   ​
-   - macOS: `brew install node@14`
-   - Ubuntu: `sudo apt install nodejs`
-     ​
-3. `yarn install` will install everything in `package.json`.
-   ​
-
-### Druid setup
-
-​
-Specify Druid host in `global_config.py`: `DEFAULT_DRUID_HOST = '<public production Druid server IP>'`
-
-### PostgreSQL
-
-You will have to set up a [PostgreSQL database](https://www.postgresql.org/) to host relational data and web application state.
-
-1.  Install postgres.
-
-    - macOS: `brew install postgresql`
-    - Ubuntu: `sudo apt install postgresql`
-
-2.  Start postgres server: `./scripts/db/postgres/dev/start_postgres.sh`
-
-3.  [Ubuntu only as this is the default setup on macOS]: The postgresql authentication rules will need to change to allow easier access and the server to connect to postgres. This requires editing the `pg_hba.conf` file and restarting postgres. Here is more information about the configuration file and what changes are being made https://www.postgresql.org/docs/current/auth-pg-hba-conf.html.
-
-    Find the configuration file by running `sudo -u postgres psql -c "SHOW hba_file;"`. Edit the first uncommented line of that file to be
-
-    ```
-    local   all             postgres                                trust
-    ```
-
-    Then, add the following lines at the bottom:
-
-    ```
-    # Allow any user on the local system using local loopback TCP/IP connections
-    # to connect to any database with any database user name.
-    host    all             all             127.0.0.1/32            trust
-    # The same over IPv6.
-    host    all             all             ::1/128                 trust
-    ```
-
-    Finally, run `sudo service postgresql restart` for the changes to take effect. ​
-
-4.  Enter psql client to check server success. If it works, then you can exit psql.
-
-    - macOS: `psql postgres`
-    - Ubuntu: `psql -U postgres`
-
-5.  Create and upgrade the local postgres database as well as populate the Data Catalog tables: `./scripts/db/postgres/dev/init_db.py --populate_indicators`
-
-    This command will create a database for each deployment defined in config, you can optionally run the command for just one deployment like `./scripts/db/postgres/dev/init_db.py <ZEN_ENV> --populate_indicators`. Also you can run just `./scripts/db/postgres/dev/init_db.py` to only upgrade the database and not populate Data Catalog.
-
-6.  Create an admin user for your local web app like below.
-
-    ```
-    ./scripts/create_user.py -f <first name> -l <last name> -u <email> -p <password> -a -d postgresql://postgres:@localhost/{ZEN_ENV}-local
-    ```
-
-### Hasura
-
-Start Hasura: `./scripts/db/hasura/dev/start_hasura.sh <ZEN_ENV>-local`
-
-### Run webpack locally
-
-Run command: `node_modules/.bin/webpack-cli serve --config web/webpack.config.js --mode 'development'`
-
-### Run web server locally
-
-The platform is built on [Flask](http://flask.palletsprojects.com/en/1.1.x/). To run a local development server, run:
-
-`ZEN_ENV=<ZEN_ENV> FLASK_ENV=development python ./web/runserver.py`
+- You can do a lot with docker compose that's beyond the scope of this document, but a good starting point is `docker compose --help`
+- Know what containers are running: `docker compose ps`
+- It's useful to have a terminal open on the web instance: `docker compose exec web /bin/bash` ; furthermore running `source venv/bin/activate` will activate the python virtual environment.
+- You can start a container and attach to the shell with: `docker compose run web /bin/bash`
+- Use a `.env` file to set environment variables so you can you can just type `docker compose up` instead of specifying the environment variables every time. (Be aware that host's environment variables will take precedence over those in the `.env` file.)
 
 ## Production pipeline server setup
 
