@@ -572,7 +572,12 @@ The first step is to update the appropriate `DOCKER_HOST` in `druid_setup/.env`.
     - Historical config is located in `druid_setup/cluster/environment/historical.env` (`druid_host`)
   - Also, ensure that [public key authentication](https://kb.iu.edu/d/aews) is enabled.
 
-Next, deploy the approriate Druid cluster:
+Next, create the following directories on the remote server:
+
+- /home/share
+- /data/output
+
+Finally, deploy the approriate Druid cluster:
 
 ```sh
 cd druid_setup
