@@ -56,9 +56,6 @@ services:
       - /app/venv
       - /app/venv_pypy3
       - /app/node_modules
-      # Don't map git - things just get very confused when your host and container both have
-      # different ideas about what's going on!
-      - /app/.git
     environment:
       - ZEN_HOME=/app
       - PYTHONPATH=/app:/usr/bin
