@@ -28,6 +28,8 @@ services:
       timeout: 30s
       start_period: 0s
       retries: 3
+    volumes:
+      - redis-volume:/data
   hasura:
     image: hasura/graphql-engine:v2.11.3.cli-migrations-v2
     ports:
@@ -37,7 +39,6 @@ services:
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT: 500
       HASURA_GRAPHQL_DATABASE_URL: postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
-      HASURA_GRAPHQL_METADATA_DIR: '/hasura-metadata/latest'
     healthcheck:
       test: "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080'"
       interval: 30s
@@ -48,17 +49,18 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./graphql/hasura/metadata/versions:/hasura-metadata
+      - ./graphql/hasura/metadata/versions/latest:/hasura-metadata
   web:
+    image: harmony-dev-web:latest
     build:
       dockerfile: Dockerfile_dev
     volumes:
       # Map source code to host so that we can edit files and see changes immediately.
       - .:/app
       # Don't map venv and node modules to host. We need to use the container version.
-      - /app/venv
-      - /app/venv_pypy3
-      - /app/node_modules
+      - web_venv:/app/venv
+      - web_venv_pypy3:/app/venv_pypy3
+      - web_node_modules:/app/node_modules
     environment:
       - ZEN_HOME=/app
       - PYTHONPATH=/app:/usr/bin
@@ -74,6 +76,7 @@ services:
       postgres:
         condition: service_healthy
   pipeline:
+    image: harmony-dev-web:latest
     profiles:
       - pipeline
     build:
@@ -82,9 +85,9 @@ services:
       # Map source code to host so that we can edit files and see changes immediately.
       - .:/app
       # Don't map venv and node modules to host. We need to use the container version.
-      - /app/venv
-      - /app/venv_pypy3
-      - /app/node_modules
+      - web_venv:/app/venv
+      - web_venv_pypy3:/app/venv_pypy3
+      - web_node_modules:/app/node_modules
     environment:
       - DATABASE_URL=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
       - ZEN_ENV=${ZEN_ENV}
@@ -102,3 +105,7 @@ services:
       ]
 volumes:
   pgdata-volume:
+  redis-volume:
+  web_venv:
+  web_venv_pypy3:
+  web_node_modules:

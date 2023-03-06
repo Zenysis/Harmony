@@ -117,18 +117,18 @@ All instructions going forward will assume that the environment variables have b
 
 ### Prepare Database
 
-1. Prepare the database: `docker compose run web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"`
+1. Prepare the database: `docker compose run --rm web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"`
 
 ### Run Web Server
 1. Start your development environment: `docker compose up`
-2. In a separate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py -u me@mydomain.com -p password --first_name=admin --last_name=istrator -a"`
+2. In a separate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py --username=me@mydomain.com --password=password --first_name=admin --last_name=istrator --site_admin"`
 3. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 2.
 
 ### Run Pipeline
 
 1. Execute a command on the pipeline container `COMMAND="<your command here> run" docker compose --profile=pipeline up pipeline`
 or
-1. Get a terminal on the pipeline container `docker compose --profile=pipeline run pipeline /bin/bash`
+1. Get a terminal on the pipeline container `docker compose --profile=pipeline run --rm pipeline /bin/bash`
 
 ### Run development tools
 
@@ -139,7 +139,7 @@ or
 - You can do a lot with docker compose that's beyond the scope of this document, but a good starting point is `docker compose --help`
 - Know what containers are running: `docker compose ps`
 - It's useful to have a terminal open on the web instance: `docker compose exec web /bin/bash` ; furthermore running `source venv/bin/activate` will activate the python virtual environment.
-- You can start a container and attach to the shell with: `docker compose run web /bin/bash`
+- You can start a container and attach to the shell with: `docker compose run --rm web /bin/bash` (`--rm` is important if you don't intend to re-use the container. `docker compose run` will create a new container every time you run it, so you may run out of disk space very quickly)
 - Use a `.env` file to set environment variables so you can you can just type `docker compose up` instead of specifying the environment variables every time. (Be aware that host's environment variables will take precedence over those in the `.env` file.)
 
 ## Production pipeline server setup
