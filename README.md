@@ -121,7 +121,7 @@ All instructions going forward will assume that the environment variables have b
 
 ### Run Web Server
 1. Start your development environment: `docker compose up`
-2. In a separate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py -u me@mydomain.com --password password --first_name=admin --last_name=istrator --site_admin"`
+2. In a separate terminal, create user account `docker compose exec web /bin/bash -c "source venv/bin/activate && ./scripts/create_user.py --username=me@mydomain.com --password=password --first_name=admin --last_name=istrator --site_admin"`
 3. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 2.
 
 ### Run Pipeline
