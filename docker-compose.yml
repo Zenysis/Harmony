@@ -1,4 +1,14 @@
 name: harmony-dev
+
+networks:
+  harmony_dev_network:
+    name: harmony_dev_network
+    driver: bridge
+  druid_network:
+    name: druid_network
+    driver: bridge
+    external: true
+
 services:
   postgres:
     image: postgres:13.7-alpine
@@ -28,6 +38,8 @@ services:
       timeout: 30s
       start_period: 0s
       retries: 3
+    networks:
+      - harmony_dev_network
     volumes:
       - redis-volume:/data
   hasura:
@@ -50,6 +62,9 @@ services:
         condition: service_healthy
     volumes:
       - ./graphql/hasura/metadata/versions/latest:/hasura-metadata
+    networks:
+      - harmony_dev_network
+      - druid_network
   web:
     image: harmony-dev-web:latest
     build:
@@ -75,6 +90,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - harmony_dev_network
+      - druid_network
   pipeline:
     image: harmony-dev-web:latest
     profiles:
@@ -97,6 +115,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - harmony_dev_network
     command:
       [
         "/bin/bash",

@@ -8,8 +8,8 @@ x-logging:
     max-file: "10"
 
 networks:
-  harmony_network:
-    name: harmony_network
+  harmony_demonstration_network:
+    name: harmony_demonstration_network
     driver: bridge
   druid_network:
     name: druid_network
@@ -46,7 +46,7 @@ services:
     #       cpus: '0.25'
     #       memory: 20M
     networks:
-      - harmony_network
+      - harmony_demonstration_network
   minio:
     # Minio included for ease of testing. The configuration for minio
     # included here is not production ready!
@@ -66,7 +66,7 @@ services:
       - minio-data-volume:/data
     command: [ "server", "/data", "--console-address", ":9090" ]
     networks:
-      - harmony_network
+      - harmony_demonstration_network
   nginx:
     image: nginxproxy/nginx-proxy:alpine
     restart: always
@@ -89,7 +89,7 @@ services:
       - ${NGINX_DEFAULT_VHOST_CONFIG}:/etc/nginx/vhost.d/default:ro
     logging: *default-logging
     networks:
-      - harmony_network
+      - harmony_demonstration_network
 
   nginx-letsencrypt-companion:
     image: nginxproxy/acme-companion:latest
@@ -108,7 +108,7 @@ services:
       - nginx-acme:/etc/acme.sh
     logging: *default-logging
     networks:
-      - harmony_network
+      - harmony_demonstration_network
 
   web_client:
     platform: linux/amd64
@@ -168,7 +168,7 @@ services:
     command: [ "/zenysis/docker/entrypoint_web.sh" ]
     logging: *default-logging
     networks:
-      - harmony_network
+      - harmony_demonstration_network
       - druid_network
 
   pipeline:
@@ -186,7 +186,7 @@ services:
       - /src/zenysis/venv_pypy3
       - /src/zenysis/node_modules
     networks:
-      - harmony_network
+      - harmony_demonstration_network
       - druid_network
 
   worker:
@@ -215,7 +215,7 @@ services:
       ]
     logging: *default-logging
     networks:
-      - harmony_network
+      - harmony_demonstration_network
 
   web-renderer:
     platform: linux/amd64
@@ -229,7 +229,7 @@ services:
       - ALLOW_HTTP=true
       - PORT=9000
     networks:
-      - harmony_network
+      - harmony_demonstration_network
 
   redis:
     image: redis:latest
@@ -238,7 +238,9 @@ services:
     ports:
       - 6379:6379
     networks:
-      - harmony_network
+      - harmony_demonstration_network
+    volumes:
+      - redis-volume:/data
 
   hasura:
     image: hasura/graphql-engine:latest.cli-migrations-v2
@@ -253,7 +255,8 @@ services:
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
     networks:
-      - harmony_network
+      - harmony_demonstration_network
+      - druid_network
 
   utility:
     # Convenience container for debugging. It can be useful to jump
@@ -264,7 +267,7 @@ services:
       context: utility
       dockerfile: Dockerfile
     networks:
-      - harmony_network
+      - harmony_demonstration_network
       - druid_network
     profiles:
       - utility
@@ -301,6 +304,8 @@ volumes:
     #   type: none
     #   o: bind
     #   device: "${MINIO_DATA_VOLUME:-/var/lib/minio/data}"
+
+  redis-volume:
 
   ssl-certs:
     driver: local
