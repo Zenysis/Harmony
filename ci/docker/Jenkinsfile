@@ -30,5 +30,21 @@ pipeline {
                 }
             }
         }
+        // Build all docker pipeline containers
+        stage('Pipeline Build') {
+            steps {
+                sh 'make etl_pipeline_build'
+            }
+        }
+        // Push all docker pipeline containers to https://hub.docker.com/u/zengineering
+        stage('Pipeline Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-io-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
+                    sh 'make etl_pipeline_push'
+                    sh 'docker logout'
+                }
+            }
+        }
     }
 }
