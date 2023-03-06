@@ -2,7 +2,7 @@ import os
 from contextlib import contextmanager
 
 CREDENTIALS = {
-    'SQLALCHEMY_DATABASE_URI': os.getenv('DATABASE_URL', 'postgresql:///zenysis'),
+    'SQLALCHEMY_DATABASE_URI': os.getenv('DATABASE_URL'),
     'MAILGUN_API_KEY': '',
 }
 

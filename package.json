@@ -1,5 +1,5 @@
 {
-  "name": "Zenysis",
+  "name": "zenysis",
   "description": "Zenysis App!",
   "dependencies": {
     "@emotion/react": "^11.4.1",
@@ -127,8 +127,8 @@
     "build": "NODE_ENV=production webpack --config web/webpack.prod.config.js --mode 'production'",
     "build-clean": "yarn run clean && yarn run build",
     "clean": "rm -rf ./web/public/build/",
-    "develop": "./node_modules/.bin/concurrently --kill-others-on-fail -n flow,webpack,translations,mypy 'yarn flow --continuous_scroll' 'yarn webpack' 'yarn cli-translations watch' 'yarn mypy --continuous_scroll'",
-    "flow-check": "echo skipping flow check",
+    "cli-translations": "./scripts/translations/cli_translations.py",
+    "develop": "./node_modules/.bin/concurrently --kill-others-on-fail -n webpack,translations 'yarn webpack' 'yarn cli-translations watch'",
     "init-db": "scripts/db/postgres/dev/init_db.py",
     "postgres": "scripts/db/postgres/dev/connect.py",
     "server": "BUILD_TAG=$(git rev-parse --abbrev-ref HEAD || echo 'dev') FLASK_ENV=development python ./web/runserver.py",

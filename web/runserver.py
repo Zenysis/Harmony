@@ -14,14 +14,6 @@ from web.server.configuration.instance import load_instance_configuration_from_f
 from web.server.configuration.flask import FlaskConfiguration
 
 
-def start_postgres():
-    '''Start postgres server on dev machine if it is not running already.'''
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        port_in_use = s.connect_ex(('localhost', 5432)) == 0
-        if not port_in_use:
-            os.system('scripts/db/postgres/dev/start_postgres.sh')
-
-
 def main():
     Flags.PARSER.add_argument(
         '--db_name',
@@ -83,22 +75,16 @@ def main():
     # NOTE(stephen): Intentionally hardcoding the DB username/password/host since
     # this script is only used in development. Only allow overriding if the user has
     # explicitly stated they have a database URI to connect using.
-    db_uri = Flags.ARGS.db_uri or f'postgresql://postgres:@localhost/{db_name}'
-
-    # Make sure Postgres has been started on the developers machine.
-    if not Flags.ARGS.db_uri:
-        start_postgres()
+    db_uri = os.getenv(
+        'DATABASE_URL',  # First check for `DATABASE_URL` env
+        Flags.ARGS.db_uri,  # Second check for `--db_uri` arg
+    )
 
     # HACK(stephen): It's not very safe to manipulate Python's in-memory environment
     # variables dict, but I wanted to make sure that any downstream modules that
     # rely on the DATABASE_URL environment variable get the correct one.
     os.environ['DATABASE_URL'] = db_uri
     flask_config.SQLALCHEMY_DATABASE_URI = db_uri
-
-    # HACK(stephen): For ease of development, make sure hasura graphql docker services
-    # are running and using the correct DB.
-    os.system(f'scripts/db/hasura/dev/start_hasura.sh {db_name}')
-    print('*** Hasura running on http://localhost:8088')
 
     app = create_app(flask_config, instance_config, environment)
     app.run(host='0.0.0.0', port=Flags.ARGS.port, reloader_type='zenysis_watchdog')

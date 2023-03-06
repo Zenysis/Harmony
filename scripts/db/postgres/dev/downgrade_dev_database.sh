@@ -14,7 +14,7 @@ pushd "${ZEN_SRC_ROOT}" &> /dev/null
 # NOTE(stephen): Using the simplified base app since we don't need to import all
 # the extra crap that is needed to actually start the full flask server. We only
 # need the core.
-export DATABASE_URL="postgresql://postgres:@localhost/${DB_NAME}"
+export DATABASE_URL="postgresql://postgres:zenysis@postgres/${DB_NAME}"
 export FLASK_APP='web.server.app_base'
 export ZEN_ENV="${DEPLOYMENT_CODE}"
 

@@ -20,13 +20,26 @@ version: "2.2"
 
 volumes:
   zen_extensions: {}
+  zookeeper_data: {}
+  zookeeper_datalog: {}
   metadata_data: {}
   middle_var: {}
   historical_var: {}
   broker_var: {}
   coordinator_var: {}
   router_var: {}
-  druid_shared: {}
+  druid_shared:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/share
+  data_output:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/output
 
 
 services:
@@ -63,15 +76,19 @@ services:
     restart: always
     ports:
       - "2181:2181"
+    volumes:
+      - zookeeper_data:/data
+      - zookeeper_datalog:/datalog
     environment:
       - ZOO_MY_ID=1
 
   coordinator:
+    platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
     container_name: coordinator
     restart: always
     volumes:
-      - druid_shared:/opt/shared
+      - druid_shared:/home/share
       - coordinator_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -87,6 +104,7 @@ services:
       - environment/coordinator.env
 
   broker:
+    platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
     container_name: broker
     restart: always
@@ -108,11 +126,13 @@ services:
       - environment/broker.env
 
   historical:
+    platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
     container_name: historical
     restart: always
     volumes:
-      - druid_shared:/opt/shared
+      - druid_shared:/home/share
+      - data_output:/data/output
       - historical_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -130,11 +150,13 @@ services:
       - environment/historical.env
 
   middlemanager:
+    platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
     container_name: middlemanager
     restart: always
     volumes:
-      - druid_shared:/opt/shared
+      - druid_shared:/home/share
+      - data_output:/data/output
       - middle_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -152,6 +174,7 @@ services:
       - environment/middlemanager.env
 
   router:
+    platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
     container_name: router
     restart: always

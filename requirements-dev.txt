@@ -58,3 +58,6 @@ python-jenkins==1.7.0
 testfixtures==6.17.1
 alchemy-mock==0.4.3
 factory-boy==3.2.0
+
+# pywatchman gives us watchman-wait which we use for watching translations.
+pywatchman==1.4.1
