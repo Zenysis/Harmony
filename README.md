@@ -64,7 +64,7 @@ We are working on making this customization easier (and configurable from a fron
 
 ### Requisite access tokens
 
-Harmony has several optional external services that, for it to function as expected needs to be instantiated or swapped out from the codebase. Ensure you have active accounts for the following:
+To ensure that Harmony operates as intended, several external services are available as optional features. These services must be instantiated or swapped out from the codebase as needed. It is essential to have active accounts for the following services:
 
 - Mailgun API key; see [Instructions](https://signup.mailgun.com/new/signup)
 
