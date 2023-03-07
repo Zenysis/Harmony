@@ -64,10 +64,15 @@ We are working on making this customization easier (and configurable from a fron
 
 ### Requisite access tokens
 
-Harmony depends on several external servives that need to be instantiated or swapped out from the codebase. Ensure you have active accounts for the following:
+Harmony has several optional external servives that, for it to function as expected needs to be instantiated or swapped out from the codebase. Ensure you have active accounts for the following:
 
 - Mailgun API key; see [Instructions](https://signup.mailgun.com/new/signup)
+
+> Mailgun is not a core dependency. Harmony’s core data integration platform (used for pipeline orchestration and integrating data into Druid) runs without the mailing service. In addition, there are [capabilities in the backend](https://github.com/Zenysis/Harmony#seeding-the-database) to manage user registrations to Harmony’s analytics product such that a mailing service is not required. Mailgun can be switched out for an alternative in Harmony with limited code changes. This means an implementer of Harmony can choose to forgo the use of Mailgun if they wanted to use an alternative. Users can substitute the Mailgun API call for a call to another client, such as [Postal](https://github.com/postalserver/postal) (an open source email client). To do this, the API calls to the new client would need to switch to the new client’s API and input structure, the email class would need to be updated with the new client’s initialization, and the configuration files would need to include the new client’s credentials. Given the source code is open source, we leave that decision to the Harmony user.
+
 - Mapbox access token; see [Generating a Mapbox Access Token](#generating-a-mapbox-access-token) below
+
+> Mapbox is not a mandatory dependency. If a Harmony user were to not provide a Mapbox API token, then Harmony analytics would still function as expected but map layers would be disabled. In addition, a Harmony user can easily sign up to Mapbox and leverage the free tier for up to 50k monthly map loads. In our experience so far, no Harmony user has surpassed this number of monthly loads.
 
 #### Generating a Mapbox Access Token
 
@@ -99,7 +104,7 @@ The instructions found below are for running a local development environment usi
 
 ### Prepare environment
 
-1. Install the latest version of [Docker](https://docs.docker.com/get-docker/). 
+1. Install the latest version of [Docker](https://docs.docker.com/get-docker/).
 2. Clone the git repository: `git clone https://github.com/Zenysis/Harmony`. (Alternatively, you may want to fork the repo and clone the fork — that way you can use version control for your customization.)
 3. Build your development docker images: `docker compose build` (this will take some time!)
 
