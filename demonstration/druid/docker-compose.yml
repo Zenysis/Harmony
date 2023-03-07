@@ -32,6 +32,9 @@ volumes:
   coordinator_var: {}
   router_var: {}
   druid_shared: {}
+  zookeeper_volume_data: {}
+  zookeeper_volume_datalog: {}
+  zookeeper_volume_logs: {}
 
 services:
   extension_loader:
@@ -75,6 +78,10 @@ services:
       - ZOO_MY_ID=1
     networks:
       - druid_network
+    volumes:
+      - zookeeper_volume_data:/data
+      - zookeeper_volume_datalog:/datalog
+      - zookeeper_volume_logs:/logs
 
   coordinator:
     platform: linux/amd64
