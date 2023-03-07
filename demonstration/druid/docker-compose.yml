@@ -31,10 +31,22 @@ volumes:
   broker_var: {}
   coordinator_var: {}
   router_var: {}
-  druid_shared: {}
-  zookeeper_volume_data: {}
-  zookeeper_volume_datalog: {}
-  zookeeper_volume_logs: {}
+  druid_shared:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/druid_shared
+  data_output:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/druid_output
+  zookeeper_data: {}
+  zookeeper_datalog: {}
+  zookeeper_logs: {}
+  # historical_data_output_druid: {}
 
 services:
   extension_loader:
@@ -74,14 +86,14 @@ services:
     restart: always
     ports:
       - "2181:2181"
+    volumes:
+      - zookeeper_data:/data
+      - zookeeper_datalog:/datalog
+      - zookeeper_logs:/logs
     environment:
       - ZOO_MY_ID=1
     networks:
       - druid_network
-    volumes:
-      - zookeeper_volume_data:/data
-      - zookeeper_volume_datalog:/datalog
-      - zookeeper_volume_logs:/logs
 
   coordinator:
     platform: linux/amd64
@@ -89,7 +101,7 @@ services:
     container_name: coordinator
     restart: always
     volumes:
-      - druid_shared:/opt/shared
+      - druid_shared:/home/share
       - coordinator_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -136,7 +148,8 @@ services:
     container_name: historical
     restart: always
     volumes:
-      - druid_shared:/opt/shared
+      - druid_shared:/home/share
+      - data_output:/data/output
       - historical_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -161,7 +174,8 @@ services:
     container_name: middlemanager
     restart: always
     volumes:
-      - druid_shared:/opt/shared
+      - druid_shared:/home/share
+      - data_output:/data/output
       - middle_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
