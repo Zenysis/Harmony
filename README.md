@@ -62,7 +62,7 @@ After you have written your first data integration (see [writing integrations](#
 
 We are working on making this customization easier (and configurable from a frontend) in future releases.
 
-### Requisite access tokens
+### Providing access tokens
 
 To ensure that Harmony operates as intended, several external services are available as optional features. These services must be instantiated or swapped out from the codebase as needed. It is essential to have active accounts for the following services:
 
