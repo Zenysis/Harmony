@@ -217,20 +217,6 @@ services:
     networks:
       - harmony_demonstration_network
 
-  web-renderer:
-    platform: linux/amd64
-    image: zengineering/url-to-pdf-api:latest
-    restart: always
-    pull_policy: always
-    ports:
-      # minio uses 9000, so we bumped it to 9001
-      - 9001:9000
-    environment:
-      - ALLOW_HTTP=true
-      - PORT=9000
-    networks:
-      - harmony_demonstration_network
-
   redis:
     image: redis:latest
     restart: always
@@ -249,9 +235,10 @@ services:
     ports:
       - 8080:8080
     environment:
-      - HASURA_GRAPHQL_ENABLE_TELEMETRY=false
-      - HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT=500
-      - HASURA_GRAPHQL_DATABASE_URL=${GRAPHQL_DATABASE_URL}
+      HASURA_GRAPHQL_ENABLE_TELEMETRY: "false"
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT: 500
+      HASURA_GRAPHQL_DATABASE_URL: ${GRAPHQL_DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
     networks:
