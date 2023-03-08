@@ -115,7 +115,7 @@ services:
     image: ${DOCKER_NAMESPACE}/harmony-web-client:${DOCKER_TAG}
     build:
       dockerfile: docker/web/Dockerfile_web-client
-      context: ../
+      context: ../../
       args:
         NAMESPACE: zengineering
         TAG: latest
@@ -124,7 +124,7 @@ services:
     image: ${DOCKER_NAMESPACE}/harmony-web-server:${DOCKER_TAG}
     build:
       dockerfile: docker/web/Dockerfile_web-server
-      context: ../
+      context: ../../
       args:
         NAMESPACE: zengineering
         TAG: latest
@@ -137,7 +137,7 @@ services:
     build:
       # We build from scratch, to be sure that our local image matches the codebase.
       dockerfile: docker/web/Dockerfile_web
-      context: ../
+      context: ../../
       args:
         NAMESPACE: zengineering
         TAG: latest
@@ -241,6 +241,7 @@ services:
       HASURA_GRAPHQL_DATABASE_URL: ${GRAPHQL_DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
+      - ../../graphql/hasura/metadata/versions/latest:/hasura-metadata
     networks:
       - harmony_demonstration_network
       - druid_network
