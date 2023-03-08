@@ -1,0 +1,19 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+pushd "${PIPELINE_TMP_DIR}" &> /dev/null
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/scripts/process_csv.py" \
+    --date 'date' \
+    --prefix 'rhap_training_' \
+    --sourcename 'rhap_training' \
+    --input="${PIPELINE_FEED_DIR}/us_covid_data.csv" \
+    --output_locations="${PIPELINE_TMP_DIR}/locations.csv" \
+    --output_fields="${PIPELINE_TMP_DIR}/fields.csv" \
+    --output_non_hierarchical="${PIPELINE_TMP_DIR}/non_hierarchical.csv" \
+    --output_rows="${PIPELINE_TMP_DIR}/processed_data.json.lz4"
+
+
+popd &> /dev/null

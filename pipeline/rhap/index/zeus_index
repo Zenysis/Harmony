@@ -1,0 +1,28 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# The data indexing pipeline uploads the published data from the 'process'
+# pipeline into the datastores (like druid and postgres) used by the frontend
+# for querying and data display.
+
+export ZEN_ENV='SITECODE'
+
+SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
+ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
+
+ZEUS_ID='SAMPLE/index'
+ZEUS_OUT_DIRS='feed,out,tmp'
+ZEUS_ROOT_DIR="${SCRIPT_DIR}/run"
+ZEUS_BIN_DIR="${SCRIPT_DIR}/../bin"
+ZEUS_UTILS_DIR="${ZEN_SRC_ROOT}/util/pipeline"
+
+ZEUS_CMD="\
+zeus \
+  --id=${ZEUS_ID} \
+  --root=${ZEUS_ROOT_DIR} \
+  --bin_root=${ZEUS_BIN_DIR} \
+  --utils_root=${ZEUS_UTILS_DIR} \
+  --out_dirs=${ZEUS_OUT_DIRS} \
+"
+
+${ZEUS_CMD} $@

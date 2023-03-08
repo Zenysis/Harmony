@@ -1,0 +1,14 @@
+#!/bin/bash -eu
+set -o pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
+ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
+
+pushd "${SCRIPT_DIR}" &> /dev/null
+
+# Run the full data indexing pipeline.
+./zeus_index \
+  run \
+    run/...
+
+popd &> /dev/null

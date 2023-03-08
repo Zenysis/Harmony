@@ -122,7 +122,7 @@ All instructions going forward will assume that the environment variables have b
 
 ### Prepare Database
 
-1. Prepare the database: `docker compose run --rm web /bin/bash -c "source venv/bin/activate && yarn init-db --populate_indicators"`
+1. Prepare the database: `docker compose run --rm web /bin/bash -c "source venv/bin/activate && yarn init-db rhap --populate_indicators"`
 
 ### Run Web Server
 1. Start your development environment: `docker compose up`

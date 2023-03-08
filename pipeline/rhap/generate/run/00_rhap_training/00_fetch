@@ -1,0 +1,6 @@
+#!/bin/bash -eu
+set -o pipefail
+
+
+"${PIPELINE_BIN_DIR}/training/fetch_us_covid_data.py" \
+  --output_director="${PIPELINE_FEED_DIR}"

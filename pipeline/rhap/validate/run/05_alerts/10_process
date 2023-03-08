@@ -1,0 +1,12 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# Pass in which databases to generate alerts for
+SOURCES=( 'SAMPLE' )
+
+for source in "${SOURCES[@]}"; do
+    echo "[info] Running 10_process for ${source}"
+    "${PIPELINE_SRC_ROOT}/data/alerts/check_for_alerts.py" \
+        --deployment_name="${source}"
+    echo "[info] Finished running 10_process for ${source}"
+done

@@ -1,0 +1,14 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+pushd "${PIPELINE_FEED_DIR}" &> /dev/null
+
+rm -f *.csv
+
+cp "${PIPELINE_SRC_ROOT}"/pipeline/out/zen/generate/out/rhap_training/"${PIPELINE_DATE}"/*.csv .
+
+cat *.csv > us_covid_data.csv
+
+popd &> /dev/null

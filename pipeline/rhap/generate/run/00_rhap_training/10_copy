@@ -1,0 +1,8 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+pushd "${PIPELINE_FEED_DIR}" &> /dev/null
+
+cp *.csv "${PIPELINE_OUT_DIR}"
