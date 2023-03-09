@@ -12,11 +12,13 @@ import sys
 # Initialize the set of valid config modules to be the subdirectories of the
 # config/ directory.
 VALID_MODULES = sorted(
-    set(
+    {
         os.path.basename(os.path.dirname(path))
-        for path in glob.glob(os.path.join(os.path.dirname(__file__), '*/general.py'))
+        for path in glob.glob(
+            os.path.join(os.path.dirname(__file__), '*/general.py')
+        )
         if '/template/general.py' not in path
-    )
+    }
 )
 
 
@@ -27,22 +29,13 @@ class ConfigImporter:
 
     def __init__(self, site_module):
         site_module = site_module.lower()
-        assert site_module in VALID_MODULES, 'Invalid ZEN_ENV %s not in %s' % (
-            site_module,
-            VALID_MODULES,
-        )
+        assert (
+            site_module in VALID_MODULES
+        ), f'Invalid ZEN_ENV {site_module} not in {VALID_MODULES}'
 
         # Store a list of config modules we never want to handle importing for
-        self._module_whitelist = set(
-            [
-                'druid_base',
-                'system',
-                'instance',
-                'locales',
-                'loader',
-                'settings',
-            ]
-        ).union(VALID_MODULES)
+        self._module_whitelist = {'druid_base', 'system', 'instance', 'locales', 'loader',
+                                  'settings'}.union(VALID_MODULES)
 
         self._new_config_module = site_module
 
@@ -65,7 +58,7 @@ class ConfigImporter:
         if module_name in sys.modules:
             return sys.modules[module_name]
 
-        new_module_name = 'config.%s.%s' % (self._new_config_module, module_name[7:])
+        new_module_name = f'config.{self._new_config_module}.{module_name[7:]}'
         # Use the absolute import for this module if it has already been
         # imported
         module = sys.modules.get(

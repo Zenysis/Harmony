@@ -6,17 +6,17 @@ set -o pipefail
 # pipeline. Dimension value matching and unification across sources (like
 # location hierarchy) will happen in this pipeline.
 
-export ZEN_ENV='SITECODE'
+export ZEN_ENV='rhap'
 
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
 ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
 
-ZEUS_ID='SAMPLE/process'
+ZEUS_ID='rhap/process'
 ZEUS_OUT_DIRS='feed,out,tmp'
 ZEUS_ROOT_DIR="${SCRIPT_DIR}/run"
 ZEUS_BIN_DIR="${SCRIPT_DIR}/../bin"
 ZEUS_UTILS_DIR="${ZEN_SRC_ROOT}/util/pipeline"
-ZEUS_PUBLISH_DIR="/home/share/data/SAMPLE"
+ZEUS_PUBLISH_DIR="/home/share/data/rhap"
 
 ZEUS_CMD="\
 zeus \

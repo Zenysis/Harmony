@@ -7,6 +7,8 @@ from pylib.base.flags import Flags
 
 import requests
 
+from log import LOG
+
 
 def write_state_data_to_csv(state_data, path):
     with open(path, "w") as csv_file:
@@ -58,6 +60,7 @@ def main():
 
     for code in state_codes:
         states_endpoint = f"https://api.covidtracking.com/v2/states/{code.lower()}/daily/simple.json"
+        LOG.info(f"Fetching from {states_endpoint} url")
         state_data = requests.get(states_endpoint).json()
         write_state_data_to_csv(state_data['data'], f"{out_dir}/{code}.csv")
 

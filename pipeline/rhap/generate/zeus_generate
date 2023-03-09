@@ -9,12 +9,12 @@ set -o pipefail
 # excel workbook that is rarely updated and only needs to be cleaned once) that
 # make them unsuitable for running in the other pipelines.
 
-export ZEN_ENV='SITECODE'
+export ZEN_ENV='rhap'
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" ; pwd -P)
 ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
 
-ZEUS_ID='SAMPLE/generate'
+ZEUS_ID='rhap/generate'
 ZEUS_OUT_DIRS='feed,out,tmp'
 ZEUS_ROOT_DIR="${SCRIPT_DIR}/run"
 ZEUS_BIN_DIR="${SCRIPT_DIR}/../bin"
