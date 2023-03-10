@@ -22,6 +22,18 @@ volumes:
   zen_extensions: {}
   middle_var: {}
   historical_var: {}
+  druid_shared:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/share
+  data_output:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/output
 
 
 services:
@@ -38,7 +50,8 @@ services:
     container_name: historical
     restart: always
     volumes:
-      - /mnt/druid_shared/shared:/opt/shared
+      - druid_shared:/home/share
+      - data_output:/data/output
       - historical_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -50,13 +63,17 @@ services:
     env_file:
       - environment/common.env
       - environment/historical.env
+    environment:
+      - druid_host=${DRUID_DATA_HOST}
+      - druid_zk_service_host=${DRUID_ZOOKEEPER_HOST}
 
   middlemanager:
     image: apache/druid:${DRUID_VERSION}
     container_name: middlemanager
     restart: always
     volumes:
-      - /mnt/druid_shared/shared:/opt/shared
+      - druid_shared:/home/share
+      - data_output:/data/output
       - middle_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -69,3 +86,5 @@ services:
     env_file:
       - environment/common.env
       - environment/middlemanager.env
+    environment:
+      - druid_zk_service_host=${DRUID_ZOOKEEPER_HOST}

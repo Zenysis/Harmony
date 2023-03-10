@@ -22,6 +22,24 @@ volumes:
   zen_extensions: {}
   metadata_data: {}
   coordinator_var: {}
+  zookeeper_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/output/zookeeper/data
+  zookeeper_datalog:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/output/zookeeper/datalog
+  druid_shared:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/share
 
 
 services:
@@ -42,9 +60,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=FoolishPassword
-      - POSTGRES_USER=druid
-      - POSTGRES_DB=druid
+      - POSTGRES_PASSWORD=${DRUID_POSTGRES_PASSWORD}
+      - POSTGRES_USER=${DRUID_POSTGRES_USER}
+      - POSTGRES_DB=${DRUID_POSTGRES_DB}
 
   memcache:
     container_name: memcache
@@ -60,6 +78,9 @@ services:
     restart: always
     ports:
       - "2181:2181"
+    volumes:
+      - zookeeper_data:/data
+      - zookeeper_datalog:/datalog
     environment:
       - ZOO_MY_ID=1
 
@@ -68,7 +89,7 @@ services:
     container_name: coordinator
     restart: always
     volumes:
-      - /mnt/druid_shared/shared:/opt/shared
+      - druid_shared:/home/share
       - coordinator_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -82,3 +103,9 @@ services:
     env_file:
       - environment/common.env
       - environment/coordinator.env
+    environment:
+      - druid_host=${DRUID_MASTER_HOST}
+      - druid_zk_service_host=${DRUID_ZOOKEEPER_HOST}
+      - druid_metadata_storage_connector_connectURI=jdbc:postgresql://${DRUID_POSTGRES_HOST}:5432/${DRUID_POSTGRES_DB}
+      - druid_metadata_storage_connector_user=${DRUID_POSTGRES_USER}
+      - druid_metadata_storage_connector_password=${DRUID_POSTGRES_PASSWORD}
