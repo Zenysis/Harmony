@@ -22,6 +22,12 @@ volumes:
   zen_extensions: {}
   broker_var: {}
   router_var: {}
+  druid_shared:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/share
 
 
 services:
@@ -49,6 +55,8 @@ services:
     env_file:
       - environment/common.env
       - environment/broker.env
+    environment:
+      - druid_zk_service_host=${DRUID_ZOOKEEPER_HOST}
 
   router:
     image: apache/druid:${DRUID_VERSION}
@@ -65,3 +73,5 @@ services:
       - router
     env_file:
       - environment/common.env
+    environment:
+      - druid_zk_service_host=${DRUID_ZOOKEEPER_HOST}

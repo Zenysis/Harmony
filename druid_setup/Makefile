@@ -22,31 +22,31 @@ cluster_server_up:
 		DOCKER_HOST=$(CLUSTER_MASTER_SERVER_DOCKER_HOST) \
 		docker compose --project-name $(PROJECT_NAME) \
 		-f docker-compose-master.yml \
-		--env-file environment/common.env up -d
+		--env-file cluster.env up -d
 	@cd cluster && \
 		DOCKER_HOST=$(CLUSTER_DATA_SERVER_DOCKER_HOST) \
 		docker compose --project-name $(PROJECT_NAME) \
 		-f docker-compose-data.yml \
-		--env-file environment/common.env up -d
+		--env-file cluster.env up -d
 	@cd cluster && \
 		DOCKER_HOST=$(CLUSTER_QUERY_SERVER_DOCKER_HOST) \
 		docker compose --project-name $(PROJECT_NAME) \
 		-f docker-compose-query.yml \
-		--env-file environment/common.env up -d
+		--env-file cluster.env up -d
 
 cluster_server_down:
 	@cd cluster && \
 		DOCKER_HOST=$(CLUSTER_MASTER_SERVER_DOCKER_HOST) \
 		docker compose --project-name $(PROJECT_NAME) \
 		-f docker-compose-master.yml \
-		--env-file environment/common.env down
+		--env-file cluster.env down
 	@cd cluster && \
 		DOCKER_HOST=$(CLUSTER_DATA_SERVER_DOCKER_HOST) \
 		docker compose --project-name $(PROJECT_NAME) \
 		-f docker-compose-data.yml \
-		--env-file environment/common.env down
+		--env-file cluster.env down
 	@cd cluster && \
 		DOCKER_HOST=$(CLUSTER_QUERY_SERVER_DOCKER_HOST) \
 		docker compose --project-name $(PROJECT_NAME) \
 		-f docker-compose-query.yml \
-		--env-file environment/common.env down
+		--env-file cluster.env down
