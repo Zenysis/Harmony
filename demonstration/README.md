@@ -19,7 +19,7 @@ docker compose up
 ```
 
 ## Harmony
-Optional - build Harmony images (images should build automatically when doing docker compose up.
+Optional - build Harmony images (images should build automatically when doing docker compose up).
 ```
 cd demonstration/harmony
 docker compose build web_client
