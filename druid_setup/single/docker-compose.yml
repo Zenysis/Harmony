@@ -16,7 +16,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+name: druid_single
+
 version: "2.2"
+
+networks:
+  druid_network:
+    name: druid_network
+    driver: bridge
 
 volumes:
   zen_extensions: {}
@@ -28,19 +35,12 @@ volumes:
   broker_var: {}
   coordinator_var: {}
   router_var: {}
-  druid_shared:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/share
   data_output:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: /data/output
-
 
 services:
   extension_loader:
@@ -50,6 +50,8 @@ services:
       - zen_extensions:/druid/extensions
     environment:
       - ZEN_DRUID_VERSION=${DRUID_VERSION}
+    networks:
+      - druid_network
 
   postgres:
     container_name: postgres
@@ -61,6 +63,8 @@ services:
       - POSTGRES_PASSWORD=FoolishPassword
       - POSTGRES_USER=druid
       - POSTGRES_DB=druid
+    networks:
+      - druid_network
 
   memcache:
     container_name: memcache
@@ -68,6 +72,8 @@ services:
     restart: always
     ports:
       - "11211:11211"
+    networks:
+      - druid_network
 
   # Need 3.5 or later for container nodes
   zookeeper:
@@ -81,6 +87,8 @@ services:
       - zookeeper_datalog:/datalog
     environment:
       - ZOO_MY_ID=1
+    networks:
+      - druid_network
 
   coordinator:
     platform: linux/amd64
@@ -88,7 +96,7 @@ services:
     container_name: coordinator
     restart: always
     volumes:
-      - druid_shared:/home/share
+      - /home/share:/home/share
       - coordinator_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -102,6 +110,8 @@ services:
     env_file:
       - environment/common.env
       - environment/coordinator.env
+    networks:
+      - druid_network
 
   broker:
     platform: linux/amd64
@@ -109,6 +119,7 @@ services:
     container_name: broker
     restart: always
     volumes:
+      - /home/share:/home/share
       - broker_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -124,6 +135,8 @@ services:
     env_file:
       - environment/common.env
       - environment/broker.env
+    networks:
+      - druid_network
 
   historical:
     platform: linux/amd64
@@ -131,7 +144,7 @@ services:
     container_name: historical
     restart: always
     volumes:
-      - druid_shared:/home/share
+      - /home/share:/home/share
       - data_output:/data/output
       - historical_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
@@ -148,6 +161,8 @@ services:
     env_file:
       - environment/common.env
       - environment/historical.env
+    networks:
+      - druid_network
 
   middlemanager:
     platform: linux/amd64
@@ -155,7 +170,7 @@ services:
     container_name: middlemanager
     restart: always
     volumes:
-      - druid_shared:/home/share
+      - /home/share:/home/share
       - data_output:/data/output
       - middle_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
@@ -172,6 +187,8 @@ services:
     env_file:
       - environment/common.env
       - environment/middlemanager.env
+    networks:
+      - druid_network
 
   router:
     platform: linux/amd64
@@ -179,6 +196,7 @@ services:
     container_name: router
     restart: always
     volumes:
+      - /home/share:/home/share
       - router_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -192,3 +210,5 @@ services:
       - router
     env_file:
       - environment/common.env
+    networks:
+      - druid_network

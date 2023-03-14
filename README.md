@@ -149,80 +149,32 @@ or
 
 ## Production pipeline server setup
 
-The pipeline server runs the ETL data pipeline to generate datasources (typically, daily). These pipeline server setup instructions were developed for Linux/Ubuntu.
+The pipeline server runs the ETL data pipeline to generate datasources (typically, daily). These pipeline server setup instructions were developed for Ubuntu. Currently, the instructions are also written with the assumption that Druid is running on the same machine. 
 
-1. Configure your server's users, firewall, etc. Sign in as root.
-2. Update system packages.
-   ```
-   sudo apt-get update # updates available package version list
-   sudo apt-get upgrade # update packages
-   sudo apt-get autoremove # remove old packages
-   sudo do-release-upgrade # update os version
-   ```
-3. Install system dependencies.
-   ```
-   export DEBIAN_FRONTEND=noninteractive
-   apt-get update
-   apt-get install --no-install-recommends -y \
-    build-essential \
-    curl \
-    dtach \
-    freetds-bin \
-    freetds-dev \
-    git \
-    jq \
-    libffi-dev \
-    libgeos-dev \
-    libssl-dev \
-    lz4 \
-    lzop \
-    pigz \
-    python3 \
-    python3-dev \
-    python3-levenshtein \
-    python3-lxml \
-    python3-venv \
-    pypy3 \
-    pypy3-dev \
-    unzip \
-    wget \
-    libpq-dev \
-    gfortran \
-    libopenblas-dev \
-    liblapack-dev
-   apt-get clean
-   rm -rf /var/lib/apt/lists/*
-   curl \
-    -o /usr/local/bin/mc \
-    https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2021-11-16T20-37-36Z
-   chmod 755 /usr/local/bin/mc
-   ```
-   (You may not need to install minio depending on your cloud storage choices.)
-4. Clone your fork of the Harmony repo.
-   `git clone <URL of Harmony clone>`
-5. cd into the Harmony source directory and create two Python virtual environments. One is for regular python, one for pypy (which has a faster runtime and may be used for pipelines).
-
-   ```
-   # First set up the normal python3 venv
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install --upgrade pip setuptools
-   pip install -r requirements.txt
-   pip install -r requirements-pipeline.txt
-   pip install -r requirements-web.txt
-   pip install -r requirements-dev.txt
-
-   # Second set up the pypy venv
-   deactivate
-   pypy3 -m venv venv_pypy3
-   source venv_pypy3/bin/activate
-   pip install --upgrade pip setuptools
-   pip install -r requirements.txt
-   pip install -r requirements-pipeline.txt
-   ```
-
-6. Configure necessary permissions for your cloud storage service. For example, if you're using Minio, you'll need to set up `~/.mc/config` on the server.
-7. Optionally, you may want to configure an automated task runner like GitLab, CircleCI, or Jenkins (to automate pipeline runs on a set schedule).
+1. Configure your server's users, firewall, etc. Sign in.
+2. Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install Docker on Linux (Ubuntu).
+3. Set the requisite environment variables in `Harmony-Brazil/.env`: `$ZEN_ENV`, `$DRUID_HOST`, `$DRUID_SHARED`, `PIPELINE_USER`, and `$PIPELINE_GROUP`. 
+4. Create directories for Docker volumes.
+```
+sudo mkdir /home/share
+sudo mkdir /data/output
+```
+5. Switch volume directories to non-root ownership. (On machines without an "ubuntu" user, other default, non-root users can be swapped in here.)
+```
+sudo chown ubuntu:ubuntu /home
+sudo chown ubuntu:ubuntu /home/share
+sudo chown ubuntu:ubuntu /data
+sudo chown ubuntu:ubuntu /data/output
+```
+6. Start and enter pipeline container.
+```
+docker compose --profile=pipeline run --rm pipeline /bin/bash
+```
+7. Inside the pipeline container, activate the virtual environment. After this step, it will be possible to execute pipeline commands using Zeus. 
+```
+source venv/bin/activate
+```
+8. Optionally, you may want to configure an automated task runner like GitLab, CircleCI, or Jenkins (to automate pipeline runs on a set schedule).
 
 ## Production PostgreSQL server setup
 
@@ -253,7 +205,7 @@ docker run -d --name postgres \
 
 Regardless of installation approach, the postgres server will require the `power_user` to be created as a **SUPERUSER**.
 
-By default the `power_user` account has access to all databases on the server. We do not share the `power_user` credentials with the instance. The instance has its own credentials and ability to manage its own database.
+By default the `power_user` account has access to all databases on the server. We do not share the `power_user` credentials with the instance. The instance has its own credentials and ability to manage its own database.
 
 > Provide your own, secure password for the `power_user`. **Keep it safe!**
 
@@ -416,7 +368,7 @@ Harmony uses Druid as a datastore for queryable data produced by the ETL pipelin
 
 ### Setup overview
 
-This setup makes use of [docker compose](https://docs.docker.com/compose/) to easily spin up and manage Druid. For cluster configuration, we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file).
+This setup makes use of [docker compose](https://docs.docker.com/compose/) to easily spin up and manage Druid. For cluster configuration, we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file). Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install Docker on Linux (Ubuntu).
 
 > The instructions describe how to spin up a Druid cluster on a **single** server _or_ on **multiple** servers. Druid recommends having a [clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on multiple servers for production instances.
 
@@ -469,13 +421,13 @@ It provides a general framework for scraping data from any number of data source
 
 Our data pipeline is based on [Zeus](https://github.com/room77/py77/tree/master/pylib/zeus), an open-source, command-line oriented pipeline runner. Note that Zeus processes files in order of numeric prefix, so given three tasks, `00_fetch_gender`, `00_fetch_sex`, and `03_convert`, Zeus will run 00_fetch_gender and 00_fetch_sex synchronously, then run 03_convert when both are complete.
 
-On a technical level, a "data pipeline" is comprised by three stateless sub-pipelines: Generate → Process → Index.
+On a technical level, a "data pipeline" is comprised by three stateless sub-pipelines: Generate → Process → Index.
 
 **Generate**
 
 In short: this pipeline runs queries and collects data from an external source.
 
-The data generation pipeline is used for providing data sets to the process and validate pipelines in a stateless manner. Tasks in the data generation pipeline tend have specific requirements around network access (like running within a specific intranet), task duration (like long running machine learning jobs), or complex source data transformations (like a convoluted excel workbook that is rarely updated and only needs to be cleaned once) that make them unsuitable for running in the other pipelines.
+The data generation pipeline is used for providing data sets to the process and validate pipelines in a stateless manner. Tasks in the data generation pipeline tend have specific requirements around network access (like running within a specific intranet), task duration (like long running machine learning jobs), or complex source data transformations (like a convoluted excel workbook that is rarely updated and only needs to be cleaned once) that make them unsuitable for running in the other pipelines.
 
 Tasks within the data generation pipeline must handle data persistence themselves by uploading to object storage such as AWS S3 or Minio.
 
@@ -487,7 +439,7 @@ This is where the majority of a deployment's data integration work happens. The 
 
 **Index**
 
-The data indexing pipeline uploads the published data from the process pipeline into the datastores (like Druid and Postgres) used by the frontend for querying and data display.
+The data indexing pipeline uploads the published data from the process pipeline into the datastores (like Druid and Postgres) used by the frontend for querying and data display.
 
 ### Formatting data for ingestion
 
@@ -614,7 +566,7 @@ The Admin App is used by administrators of the platform to manage user access an
 
 The Admin option is only available to users with administrative permissions, which can only be granted by another platform administrator.
 
-To access the Admin App, click on the menu button at the top right corner of your screen and then click on ‘Admin.’ This will take you to the Admin page where you will notice four tabs:
+To access the Admin App, click on the menu button at the top right corner of your screen and then click on ‘Admin.’ This will take you to the Admin page where you will notice four tabs:
 
 - Users: view and manage platform users or invite new users
 - Groups: view and manage platform groups or create new ones
