@@ -58,7 +58,6 @@ services:
       - ZEN_DRUID_VERSION=${DRUID_VERSION}
 
   postgres:
-    container_name: postgres
     image: postgres:latest
     restart: always
     volumes:
@@ -71,7 +70,6 @@ services:
       - druid_network
 
   memcache:
-    container_name: memcache
     image: memcached
     restart: always
     ports:
@@ -81,7 +79,6 @@ services:
 
   # Need 3.5 or later for container nodes
   zookeeper:
-    container_name: zookeeper
     image: zookeeper:${ZOOKEEPER_VERSION}
     restart: always
     ports:
@@ -98,7 +95,6 @@ services:
   coordinator:
     platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
-    container_name: coordinator
     restart: always
     volumes:
       - druid_shared:/home/share
@@ -121,7 +117,6 @@ services:
   broker:
     platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
-    container_name: broker
     restart: always
     volumes:
       - broker_var:/opt/druid/var
@@ -145,7 +140,6 @@ services:
   historical:
     platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
-    container_name: historical
     restart: always
     volumes:
       - druid_shared:/home/share
@@ -171,7 +165,6 @@ services:
   middlemanager:
     platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
-    container_name: middlemanager
     restart: always
     volumes:
       - druid_shared:/home/share
@@ -197,7 +190,6 @@ services:
   router:
     platform: linux/amd64
     image: apache/druid:${DRUID_VERSION}
-    container_name: router
     restart: always
     volumes:
       - router_var:/opt/druid/var
