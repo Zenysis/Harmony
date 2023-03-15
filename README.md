@@ -156,15 +156,13 @@ The pipeline server runs the ETL data pipeline to generate datasources (typicall
 3. Set the requisite environment variables in `Harmony-Brazil/.env`: `$ZEN_ENV`, `$DRUID_HOST`, `$DRUID_SHARED`, `PIPELINE_USER`, and `$PIPELINE_GROUP`. 
 4. Create directories for Docker volumes.
 ```
-sudo mkdir /home/share
-sudo mkdir /data/output
+sudo mkdir -p /home/share
+sudo mkdir -p /data/output
 ```
 5. Switch volume directories to non-root ownership. (On machines without an "ubuntu" user, other default, non-root users can be swapped in here.)
 ```
-sudo chown ubuntu:ubuntu /home
-sudo chown ubuntu:ubuntu /home/share
-sudo chown ubuntu:ubuntu /data
-sudo chown ubuntu:ubuntu /data/output
+sudo chown -R ubuntu:ubuntu /home/share
+sudo chown -R ubuntu:ubuntu /data/output
 ```
 6. Start and enter pipeline container.
 ```
