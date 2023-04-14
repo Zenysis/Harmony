@@ -248,11 +248,11 @@ TBD: explain how to get to the logs
 
 ### Power User creation
 
-Regardless of installation approach, the postgres server will require the `postgres` to be created as a **SUPERUSER**. (if you used the docker installation instructions, this was already done for you)
+Regardless of installation approach, the postgres server will require the `postgres` to be created as a **SUPERUSER**. (if you used the Docker installation instructions above, this was already done for you)
 
 By default the `postgres` account has access to all databases on the server. We do not share the `postgres` credentials with the instance. The instance has its own credentials and ability to manage its own database.
 
-> Provide your own, secure password for the `postgres`. **Keep it safe!**
+> Provide your own, secure password for the `postgres` user. **Keep it safe!**
 
 ```sql
 CREATE USER "postgres" WITH
