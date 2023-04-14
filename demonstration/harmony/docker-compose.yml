@@ -181,6 +181,7 @@ services:
     volumes:
       - ./mc.config.json:/root/.mc/config.json
       - ../..:/src/zenysis
+      - druid_shared:/home/share
       # exclude these folders:
       - /src/zenysis/venv
       - /src/zenysis/venv_pypy3
@@ -301,3 +302,10 @@ volumes:
       type: none
       o: bind
       device: "${SSL_CERTS:-/etc/ssl/certs}"
+
+  druid_shared:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../druid/volumes/druid_shared

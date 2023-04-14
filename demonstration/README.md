@@ -19,7 +19,7 @@ docker compose up
 ```
 
 ## Harmony
-Optional - build Harmony images (images should build automatically when doing docker compose up).
+- Optional - build Harmony images:
 ```
 cd demonstration/harmony
 docker compose build web_client
@@ -27,6 +27,8 @@ docker compose build web_server
 docker compose build web
 docker compose build pipeline
 ```
+
+- Alternative - download pre-built images.
 
 Start harmony:
 ```
@@ -52,5 +54,5 @@ source venv/bin/activate
 - For convenience, mc.config.json is set up with user and password matching .env.example
 
 ## M1 Specific Notes
-- Enable "Use Rosetta for x86/amd64 emulation on Apple Silicon" in Docker Settings under "Features in development"
-- Provide sufficient memory to Docker (12GB) other
+- Enabling "Use Rosetta for x86/amd64 emulation on Apple Silicon" in Docker Settings under "Features in development" is supposed to speed up emulation, but has also been found to cause issues with building Harmony images.
+- Provide sufficient memory to Docker (12GB), otherwise building web images will fail.
