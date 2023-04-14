@@ -236,29 +236,26 @@ It is highly recommended to use a relational database cloud service like Amazon 
 
 Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install Docker on Linux (Ubuntu).
 
-Once Docker is up and running, start the database by running the below script:
+Once Docker is up and running, start the database by running the below script (specify a password for the postgres user, **keep the password safe!**):
 
-> The terminal will prompt for the `power_user` password to use. **Keep it safe!**
-
-```sh
-docker run -d --name postgres \
-    --restart always \
-    -e POSTGRES_USER=power_user \
-    -e POSTGRES_PASSWORD=$(read -s;echo $REPLY) \
-    -p 1994:5432 \
-    postgres:14
+```bash
+POSTGRES_PASSWORD=<YOUR PASSWORD GOES HERE> docker compose -f postgres/docker-compose.yml up --detach
 ```
+
+TBD: explain that this creates the `postgres` super use for you
+TBD: explain what this does
+TBD: explain how to get to the logs
 
 ### Power User creation
 
-Regardless of installation approach, the postgres server will require the `power_user` to be created as a **SUPERUSER**.
+Regardless of installation approach, the postgres server will require the `postgres` to be created as a **SUPERUSER**. (if you used the docker installation instructions, this was already done for you)
 
-By default the `power_user` account has access to all databases on the server. We do not share the `power_user` credentials with the instance. The instance has its own credentials and ability to manage its own database.
+By default the `postgres` account has access to all databases on the server. We do not share the `postgres` credentials with the instance. The instance has its own credentials and ability to manage its own database.
 
-> Provide your own, secure password for the `power_user`. **Keep it safe!**
+> Provide your own, secure password for the `postgres`. **Keep it safe!**
 
 ```sql
-CREATE USER "power_user" WITH
+CREATE USER "postgres" WITH
   LOGIN
   SUPERUSER
   CONNECTION LIMIT -1
@@ -268,7 +265,7 @@ COMMIT;
 
 ### Deployment database
 
-Postgres should now be up and running with the `power_user` **SUPERUSER**. Now the database instance for your deployment needs to be created.
+Postgres should now be up and running with the `postgres` **SUPERUSER**. Now the database instance for your deployment needs to be created.
 
 Running the below script, replace `[YOUR_HOSTNAME]` with the hostname/IP of your postgres instance (example: _localhost_) and `[YOUR_DATABASE_NAME]` with the database name you want to use (example: _harmony_). Take note of the deployment database connection string (postgres URI) that is outputted to the console.
 
