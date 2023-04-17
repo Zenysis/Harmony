@@ -51,7 +51,6 @@ services:
       - ZEN_DRUID_VERSION=${DRUID_VERSION}
 
   postgres:
-    container_name: postgres
     image: postgres:latest
     restart: always
     volumes:
