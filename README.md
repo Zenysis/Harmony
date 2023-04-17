@@ -260,7 +260,7 @@ Refer to postgres/docker-compose.yml for further configuration options.
 
 ### Power User creation
 
-Regardless of installation approach, the postgres server will require the `postgres` user to be created as a **SUPERUSER**. (if you used the Docker installation instructions above, this was already done for you)
+Regardless of installation approach, the postgres server will require the `postgres` user to be created as a **SUPERUSER**. (if you used the Docker installation instructions above, this was already done for you, and you can skip this step.)
 
 By default the `postgres` account has access to all databases on the server. We do not share the `postgres` credentials with the instance. The instance has its own credentials and ability to manage its own database.
 

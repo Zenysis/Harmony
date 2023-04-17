@@ -1,4 +1,8 @@
 name: harmony-postgres
+networks:
+  harmony_postgres_network:
+    name: harmony_postgres_network
+    driver: bridge
 services:
   postgres:
     image: postgres:14
@@ -11,3 +15,5 @@ services:
       - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - ${POSTGRES_HOST_MOUNT-./postgresql/data}:/var/lib/postgresql/data
+    networks:
+      - harmony_postgres_network

@@ -41,7 +41,6 @@ volumes:
       o: bind
       device: /data/output
 
-
 services:
   extension_loader:
     build:
