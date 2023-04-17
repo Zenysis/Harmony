@@ -242,13 +242,25 @@ Once Docker is up and running, start the database by running the below script (s
 POSTGRES_PASSWORD=<YOUR PASSWORD GOES HERE> docker compose -f postgres/docker-compose.yml up --detach
 ```
 
-TBD: explain that this creates the `postgres` super use for you
-TBD: explain what this does
-TBD: explain how to get to the logs
+On the first run, the database will be initialized and the `postgres` "super user" will be created with the specified password.
+
+Postgres will run in "detached" mode, meaning it will run in the background. If you wish to see the logs you can run:
+
+```bash
+docker compose -f postgres/docker-compose.yml logs --follow
+```
+
+If you wish to stop the postgres database you can run:
+
+```bash
+docker compose -f postgres/docker-compose.yml down
+```
+
+Refer to postgres/docker-compose.yml for further configuration options.
 
 ### Power User creation
 
-Regardless of installation approach, the postgres server will require the `postgres` to be created as a **SUPERUSER**. (if you used the Docker installation instructions above, this was already done for you)
+Regardless of installation approach, the postgres server will require the `postgres` user to be created as a **SUPERUSER**. (if you used the Docker installation instructions above, this was already done for you)
 
 By default the `postgres` account has access to all databases on the server. We do not share the `postgres` credentials with the instance. The instance has its own credentials and ability to manage its own database.
 
