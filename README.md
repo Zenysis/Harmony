@@ -293,18 +293,39 @@ Postgres should now be up and running with a **SUPERUSER**. Now the database ins
 
 Running the below script, replace `<YOUR_HOSTNAME>` with the hostname/IP of your postgres instance (example: _localhost_) and `<YOUR_DATABASE_NAME>` with the database name you want to use (example: _harmony_). Take note of the deployment database connection string (postgres URI) that is outputted to the console.
 
+TODO: remove this
 ```sh
 ./scripts/create_deployment_database.sh <YOUR_HOSTNAME> <YOUR_DATABASE_NAME> <YOUR POSTGRES SUPER USER>
 ```
+now use this:
+```bash
+cd deploy
+make create_deployment_database
+```
+EVEN BETTER:
+```bash
+cd deploy
+make generate_connection_string
+```
+TODO: explain about grabbing the connection string from the output
 
+TODO: change the wording here - we'll just use make generate_connection_string standard
 > If you cannot connect directly to your postgres instance, you can run the script to log the output only by prepending the `ZEN_DB_LOG_ONLY=1` environment variable. The output will have all the raw SQL commands for you to run.
 
+TODO: update this to include .env file
 Set `DATABASE_URL` as your deployment database connection string in your environment initialization step. Here is an example of what that may look like: `export DATABASE_URL='postgresql://test_admin:test_pwd@my.postgres.host/harmony'`
+
+TODO: explain how to run sql directly on database
+```bash
+cd deploy
+make connect_postgres
+```
 
 ### Seeding the database
 
 After we've created our deployment database, we need to initialize it with seed data. This section addresses upgrading the database schema to ensure consistency with the latest version. The web server will not start unless the database schema version matches the latest version in the source tree.
 
+TODO: this is now redundant, it's all in the .env file
 First, make sure `DATABASE_URL` is set
 
 ```sh
