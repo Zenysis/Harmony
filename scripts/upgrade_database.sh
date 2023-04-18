@@ -13,7 +13,7 @@ if [ -z "${ZEN_ENV:-}" ] ; then
   exit 1
 fi
 
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
+ZEN_SRC_ROOT=$(dirname $(dirname $(readlink -f "$0")))
 
 pushd "${ZEN_SRC_ROOT}" &> /dev/null
 
