@@ -34,7 +34,11 @@ create_deployment_database:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml --profile postgres_util stop postgres_util
 
 upgrade_database:
-	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml run web /bin/bash
+	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml run --rm web /bin/bash -c "./scripts/upgrade_database.sh"
+#	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml run web /bin/bash
+
+run_web:
+	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml run --rm web /bin/bash
 
 web_deploy:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml up -d --force-recreate

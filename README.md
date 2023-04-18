@@ -336,20 +336,27 @@ We need to create all the database tables and configure all constraints, sequenc
 
 Upgrade the database by running the below script:
 
-```sh
-scripts/upgrade_database.sh
-# Example
-# ZEN_ENV=br scripts/upgrade_database.sh
+```bash
+cd deploy
+make upgrade_database
+```
+OR
+```bash
+cd deploy
+make run_web
+./scripts/upgrade_database.sh
 ```
 
-> `ZEN_ENV` needs to be set with a valid environment configured.
+> TODO: explain .env file, replace: `ZEN_ENV` needs to be set with a valid environment configured.
 
 > If you cannot run the above, the database upgrade is also done on initialization of the web container.
 
 Once we've upgraded the database and populated the appropriate seed values, we'll need to create a user account so that we can login via the web UI.
 
 ```sh
-scripts/create_user.py -a -f "[YOUR_FIRST_NAME]" -l "[YOUR_LAST_NAME]" -u "[YOUR_EMAIL]"
+cd deploy
+make run_web
+./scripts/create_user.py -a -f "<YOUR_FIRST_NAME>" -l "<YOUR_LAST_NAME>" -u "<YOUR_EMAIL>"
 # Example
 # scripts/create_user.py -a -f "Test" -l "User" -u "test@test.com"
 ```
@@ -370,6 +377,8 @@ scripts/create_user.py -a -f "[YOUR_FIRST_NAME]" -l "[YOUR_LAST_NAME]" -u "[YOUR
 Before deploying the web server, we need to setup some configuration to ensure everything will connect up.
 
 1. Instance Config File
+
+TODO: move this (or database stuff) to a different place - we need to have this in place before we can set up the database.
 
 Create the instance config file as `instance_config.json` in the `/deploy` directory and copy paste the below.
 
@@ -431,6 +440,7 @@ make all_build all_push
 
 You should now be ready to deploy the web server.
 
+# TODO: update this, to just have DOCKER_REMOTE be ssh://whatever instead
 > The below commands uses `ZEN_WEB_REMOTE` over ssh with public key authentication. Confirm the IP specified is reachable & [public key authentication](https://kb.iu.edu/d/aews) is enabled before proceeding.
 
 ```sh

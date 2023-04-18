@@ -67,19 +67,21 @@ services:
     environment:
       - ZEN_ENV=${ZEN_WEB_ENV}
       - DONT_SYNC_SOURCEMAPS=true
-      - DATABASE_URL=${POSTGRES_DB_URI}
+      - DATABASE_URL=${DATABASE_URL}
       - HSTS=off
       - SSL_POLICY=Mozilla-Modern
       - VIRTUAL_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_EMAIL=${ZEN_WEB_EMAIL}
       - VIRTUAL_ENV=/usr/local
+      - ZEN_HOME=/zenysis
     volumes:
       - ${OUTPUT_PATH:-./pipeline/out}:/data/output
       - ${OUTPUT_PATH}/logs:/logs
       - ${INSTANCE_CONFIG:-./instance_config.json}:/zenysis/instance_config.json
       - ${GLOBAL_CONFIG:-./global_config.py}:/zenysis/global_config.py
       - ${UPLOADS_DIR:-./uploads}:/zenysis/uploads
+      - /Users/sstrauss/Workspace/Harmony/web/server/migrations/env.py:/zenysis/web/server/migrations/env.py
     command: [ "/zenysis/docker/entrypoint_web.sh" ]
     logging: *default-logging
     networks:
@@ -96,6 +98,7 @@ services:
       - ZEN_ENV=${ZEN_WEB_ENV}
       - ZEN_LOG_CFG=/zenysis/log/log.prod-stackdriver.cfg
       - BROKER_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
       - ${INSTANCE_CONFIG:-./instance_config.json}:/zenysis/instance_config.json
@@ -137,15 +140,15 @@ services:
       - harmony_network
 
   hasura:
-    image: hasura/graphql-engine:latest.cli-migrations-v2
+    image: hasura/graphql-engine:v2.11.3.cli-migrations-v2
     restart: always
     pull_policy: always
     ports:
       - 8080:8080
     environment:
-      - HASURA_GRAPHQL_ENABLE_TELEMETRY=false
-      - HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT=500
-      - HASURA_GRAPHQL_DATABASE_URL=${GRAPHQL_DATABASE_URL}
+      - HASURA_GRAPHQL_ENABLE_TELEMETRY: 'false'
+      - HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT: 500
+      - HASURA_GRAPHQL_DATABASE_URL: ${GRAPHQL_DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
     networks:
@@ -168,6 +171,7 @@ services:
       - postgres
 
   postgres_util:
+    # NOTE: this is gross - going to delete this
     image: postgres:14
     networks:
       - harmony_network
