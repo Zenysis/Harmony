@@ -1,5 +1,12 @@
 version: "3.7"
 
+name: harmony
+
+networks:
+  harmony_network:
+    name: harmony_network
+    driver: bridge
+
 x-logging:
   &default-logging
   driver: "json-file"
@@ -27,8 +34,10 @@ services:
       # Include Zenysis static assets and serve them directly from nginx.
       - ${OUTPUT_PATH}/zenysis_static:/usr/share/nginx/html/zenysis_static:ro
       # Set a custom vhost default configuration that includes compression and caching.
-      - ${NGINX_DEFAULT_VHOST_CONFIG}:/etc/nginx/vhost.d/default:ro
+      - ${NGINX_DEFAULT_VHOST_CONFIG:-./deploy/nginx/nginx_vhost_default_location}:/etc/nginx/vhost.d/default:ro
     logging: *default-logging
+    networks:
+      - harmony_network
 
   nginx-letsencrypt-companion:
     image: nginxproxy/acme-companion:latest
@@ -46,6 +55,8 @@ services:
       - nginx_html:/usr/share/nginx/html
       - nginx-acme:/etc/acme.sh
     logging: *default-logging
+    networks:
+      - harmony_network
 
   web:
     image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
@@ -63,13 +74,16 @@ services:
       - LETSENCRYPT_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_EMAIL=${ZEN_WEB_EMAIL}
     volumes:
-      - ${OUTPUT_PATH}:/data/output
+      - ${OUTPUT_PATH:-./pipeline/out}:/data/output
       - ${OUTPUT_PATH}/logs:/logs
-      - ${INSTANCE_CONFIG}:/zenysis/instance_config.json
-      - ${GLOBAL_CONFIG}:/zenysis/global_config.py
-      - ${UPLOADS_DIR}:/zenysis/uploads
-    command: ["/zenysis/docker/entrypoint_web.sh"]
+      - ${INSTANCE_CONFIG:-./instance_config.json}:/zenysis/instance_config.json
+      - ${GLOBAL_CONFIG:-./global_config.py}:/zenysis/global_config.py
+      - ${UPLOADS_DIR:-./uploads}:/zenysis/uploads
+    command: [ "/zenysis/docker/entrypoint_web.sh" ]
     logging: *default-logging
+    networks:
+      - harmony_network
+    platform: linux/amd64
 
   worker:
     image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
@@ -83,17 +97,21 @@ services:
       - BROKER_URL=redis://redis:6379/0
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
-      - ${INSTANCE_CONFIG}:/zenysis/instance_config.json
-      - ${GLOBAL_CONFIG}:/zenysis/global_config.py
-    command: [
-      "celery",
-      "-A",
-      "web.background_worker.celery",
-      "worker",
-      "--beat",
-      "--loglevel=INFO"
-    ]
+      - ${INSTANCE_CONFIG:-./instance_config.json}:/zenysis/instance_config.json
+      - ${GLOBAL_CONFIG:-./global_config.py}:/zenysis/global_config.py
+    command:
+      [
+        "celery",
+        "-A",
+        "web.background_worker.celery",
+        "worker",
+        "--beat",
+        "--loglevel=INFO"
+      ]
     logging: *default-logging
+    networks:
+      - harmony_network
+    platform: linux/amd64
 
   web-renderer:
     image: zengineering/url-to-pdf-api:latest
@@ -104,6 +122,9 @@ services:
     environment:
       - ALLOW_HTTP=true
       - PORT=9000
+    networks:
+      - harmony_network
+    platform: linux/amd64
 
   redis:
     image: redis:latest
@@ -111,6 +132,8 @@ services:
     pull_policy: always
     ports:
       - 6379:6379
+    networks:
+      - harmony_network
 
   hasura:
     image: hasura/graphql-engine:latest.cli-migrations-v2
@@ -124,15 +147,44 @@ services:
       - HASURA_GRAPHQL_DATABASE_URL=${GRAPHQL_DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
+    networks:
+      - harmony_network
+
+  postgres:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - ${PG_DATA:-/usr/local/pgsql/data}:/var/lib/postgresql/data
+    networks:
+      - harmony_network
+    profiles:
+      - postgres
+
+  postgres_util:
+    image: postgres:14
+    networks:
+      - harmony_network
+    # We override the entrypoint to run a command that will keep the container
+    # running. We don't actually need postgres to be running for this container
+    # we're only using it to get at the postgres client.
+    command: tail -f /dev/null
+    profiles:
+      - postgres_util
 
 volumes:
   # Let's Encrypt container needs to configure the vhosts during
   # cert issuing.
-  nginx_vhost:
-  # This html directory is only used to write let's encrypt challenge
+  nginx_vhost: # This html directory is only used to write let's encrypt challenge
+
   # files during the cert issuing process.
-  nginx_html:
-  # The acme.sh diretory stores the generated certificate state
+  nginx_html: # The acme.sh diretory stores the generated certificate state
+
   # This prevents re-issuing of the certificate if the container is restarted/re-created
   # It should only issue if there is no certificate or it is close to expiry.
   # Read more here: https://github.com/nginx-proxy/acme-companion/issues/510
