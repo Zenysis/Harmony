@@ -1,9 +1,7 @@
 #!/bin/bash -eu
 set -o pipefail
 
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
-
-pushd "${ZEN_SRC_ROOT}" &> /dev/null
+pushd "${ZEN_HOME}" &> /dev/null
 
 DESTINATION='graphql/schema.graphql'
 
