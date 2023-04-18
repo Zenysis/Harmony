@@ -3,9 +3,8 @@ set -o pipefail
 
 DEPLOYMENT_CODE="$1"
 DB_NAME="$2"
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
 
-pushd "${ZEN_SRC_ROOT}" &> /dev/null
+pushd "${ZEN_HOME}" &> /dev/null
 
 # Run the Flask-Migrate command to downgrade the database tables to the latest
 # version.

@@ -8,13 +8,12 @@ set -o pipefail
 export ZEN_ENV='SITECODE'
 
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
 
 ZEUS_ID='SAMPLE/index'
 ZEUS_OUT_DIRS='feed,out,tmp'
 ZEUS_ROOT_DIR="${SCRIPT_DIR}/run"
 ZEUS_BIN_DIR="${SCRIPT_DIR}/../bin"
-ZEUS_UTILS_DIR="${ZEN_SRC_ROOT}/util/pipeline"
+ZEUS_UTILS_DIR="${ZEN_HOME}/util/pipeline"
 
 ZEUS_CMD="\
 zeus \

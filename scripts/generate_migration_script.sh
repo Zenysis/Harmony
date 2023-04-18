@@ -15,9 +15,7 @@ if [ -z "${ZEN_ENV:-}" ] ; then
   exit 1
 fi
 
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
-
-pushd "${ZEN_SRC_ROOT}" &> /dev/null
+pushd "${ZEN_HOME}" &> /dev/null
 
 # NOTE(stephen): If someone didn't use `init-db` to run this script, we
 # hardcode the local DB name to use (building migrations can only ever be run in

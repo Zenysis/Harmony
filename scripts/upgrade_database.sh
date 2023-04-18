@@ -13,9 +13,7 @@ if [ -z "${ZEN_ENV:-}" ] ; then
   exit 1
 fi
 
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
-
-pushd "${ZEN_SRC_ROOT}" &> /dev/null
+pushd "${ZEN_HOME}" &> /dev/null
 
 FLASK_APP='web.server.app' ZEN_OFFLINE='1' flask db upgrade
 

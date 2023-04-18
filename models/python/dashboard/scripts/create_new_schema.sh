@@ -1,8 +1,6 @@
 #!/bin/bash -eu
 set -o pipefail
 
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
-
 CURRENT_VERSION=$(python -c '
 from models.python.dashboard.version import LATEST_VERSION
 print(LATEST_VERSION)
@@ -41,7 +39,7 @@ def _downgrade_${NEW_VERSION_UNDERSCORE}_specification(specification):
 echo "Current version: ${CURRENT_VERSION}"
 echo "New version: ${NEW_VERSION}"
 
-pushd "${ZEN_SRC_ROOT}/models/python/dashboard" &> /dev/null
+pushd "${ZEN_HOME}/models/python/dashboard" &> /dev/null
 
 echo '(1/10) Storing latest schema in versioned directory'
 # Check if the schema directory already exists. This should only happen if
@@ -107,7 +105,7 @@ perl \
 
 popd &> /dev/null
 
-pushd "${ZEN_SRC_ROOT}" &> /dev/null
+pushd "${ZEN_HOME}" &> /dev/null
 
 echo '(7/10) Updating EXPECTED_VERSION in the frontend DashboardSpecification.'
 
@@ -147,8 +145,8 @@ echo -e "\n${TEST_UPGRADE_DOWNGRADE}" >> models/python/dashboard/tests/test_sche
     
 echo '(9/10) Adding all new files to git'
 git add \
-  "${ZEN_SRC_ROOT}/models/python/dashboard/${SCHEMA_DIR_NAME}" \
-  "${ZEN_SRC_ROOT}/models/python/dashboard/version.py" \
+  "${ZEN_HOME}/models/python/dashboard/${SCHEMA_DIR_NAME}" \
+  "${ZEN_HOME}/models/python/dashboard/version.py" \
   models/python/dashboard/tests/test_schema_upgrade_downgrade.py \
   web/client/models/core/Dashboard/DashboardSpecification/index.js
 

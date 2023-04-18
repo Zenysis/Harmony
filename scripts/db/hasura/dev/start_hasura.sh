@@ -3,9 +3,8 @@ set -o pipefail
 
 DB_NAME="$1"
 CONTAINER_NAME='hasura'
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
-HASURA_METADATA_DIR="${ZEN_SRC_ROOT}/graphql/hasura/metadata/versions"
-HASURA_CONTAINER_SCRIPTS_DIR="${ZEN_SRC_ROOT}/scripts/db/hasura/dev/container"
+HASURA_METADATA_DIR="${ZEN_HOME}/graphql/hasura/metadata/versions"
+HASURA_CONTAINER_SCRIPTS_DIR="${ZEN_HOME}/scripts/db/hasura/dev/container"
 
 # Check to see if hasura is running.
 CONTAINER_COUNT=$(docker ps -q --filter "name=^${CONTAINER_NAME}\$" | wc -l)
