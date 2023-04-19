@@ -18,6 +18,14 @@
 #
 version: "2.2"
 
+networks:
+  druid_network:
+    name: druid_network
+    driver: bridge
+  # druid_ingress_network:
+  #   name: druid_ingress_network
+  #   driver: bridge
+
 volumes:
   zen_extensions: {}
   zookeeper_data: {}
@@ -33,13 +41,13 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/share
+      device: ${DRUID_SHARED_FOLDER:-/home/share}
   data_output:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /data/output
+      device: ${DATA_OUTPUT_FOLDER:-/data/output}
 
 services:
   extension_loader:
@@ -59,6 +67,8 @@ services:
       - POSTGRES_PASSWORD=FoolishPassword
       - POSTGRES_USER=druid
       - POSTGRES_DB=druid
+    networks:
+      - druid_network
 
   memcache:
     container_name: memcache
@@ -66,6 +76,8 @@ services:
     restart: always
     ports:
       - "11211:11211"
+    networks:
+      - druid_network
 
   # Need 3.5 or later for container nodes
   zookeeper:
@@ -79,6 +91,8 @@ services:
       - zookeeper_datalog:/datalog
     environment:
       - ZOO_MY_ID=1
+    networks:
+      - druid_network
 
   coordinator:
     platform: linux/amd64
@@ -100,6 +114,8 @@ services:
     env_file:
       - environment/common.env
       - environment/coordinator.env
+    networks:
+      - druid_network
 
   broker:
     platform: linux/amd64
@@ -122,6 +138,8 @@ services:
     env_file:
       - environment/common.env
       - environment/broker.env
+    networks:
+      - druid_network
 
   historical:
     platform: linux/amd64
@@ -146,6 +164,8 @@ services:
     env_file:
       - environment/common.env
       - environment/historical.env
+    networks:
+      - druid_network
 
   middlemanager:
     platform: linux/amd64
@@ -170,6 +190,8 @@ services:
     env_file:
       - environment/common.env
       - environment/middlemanager.env
+    networks:
+      - druid_network
 
   router:
     platform: linux/amd64
@@ -190,3 +212,18 @@ services:
       - router
     env_file:
       - environment/common.env
+    networks:
+      - druid_network
+  # ingress:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "8082:8082"
+  #     - "8081:8081"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/nginx.conf
+  #   networks:
+  #     - druid_ingress_network
+  #     - druid_network
+  #   depends_on:
+  #     - coordinator
+  #     - broker

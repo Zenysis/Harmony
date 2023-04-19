@@ -6,6 +6,13 @@ networks:
   harmony_network:
     name: harmony_network
     driver: bridge
+  druid_network:
+    # When running a single server with both the web and druid services (not
+    # recommended for production!), we need this route to the druid network.
+    # NOTE: Ideon mentioned a way to route to the host network??
+    name: druid_network
+    driver: bridge
+    external: true
 
 x-logging:
   &default-logging
@@ -75,18 +82,21 @@ services:
       - LETSENCRYPT_EMAIL=${ZEN_WEB_EMAIL}
       - VIRTUAL_ENV=/usr/local
       - ZEN_HOME=/zenysis
+      - DRUID_HOST=${DRUID_HOST}
     volumes:
       - ${OUTPUT_PATH:-./pipeline/out}:/data/output
       - ${OUTPUT_PATH}/logs:/logs
       - ${INSTANCE_CONFIG:-./instance_config.json}:/zenysis/instance_config.json
       - ${GLOBAL_CONFIG:-./global_config.py}:/zenysis/global_config.py
       - ${UPLOADS_DIR:-./uploads}:/zenysis/uploads
-      - /Users/sstrauss/Workspace/Harmony/web/server/migrations/env.py:/zenysis/web/server/migrations/env.py
-      - /Users/sstrauss/Workspace/Harmony/scripts/create_deployment_database.sh:/zenysis/scripts/create_deployment_database.sh
+      # TODO: remove these temporary volumes - was just waiting for things to get merged to master and have images built.
+      # - /Users/sstrauss/Workspace/Harmony/web/server/migrations/env.py:/zenysis/web/server/migrations/env.py
+      # - /Users/sstrauss/Workspace/Harmony/scripts/create_deployment_database.sh:/zenysis/scripts/create_deployment_database.sh
     command: [ "/zenysis/docker/entrypoint_web.sh" ]
     logging: *default-logging
     networks:
       - harmony_network
+      - druid_network
     platform: linux/amd64
 
   worker:
@@ -170,6 +180,22 @@ services:
       - harmony_network
     profiles:
       - postgres
+
+  druid:
+    # If druid is running on the same machine as the web server (NOT
+    # RECCOMENDED), then route the druid traffic through the nginx
+    # to the druid network.
+    image: nginx:alpine
+    ports:
+      - target: 8082
+      - target: 8081
+    volumes:
+      - ./druid_nginx.conf:/etc/nginx/conf.d/nginx.conf
+    networks:
+      - druid_network
+      - harmony_network
+    profiles:
+      - druid
 
   postgres_util:
     # NOTE: this is gross - going to delete this
