@@ -22,9 +22,6 @@ networks:
   druid_network:
     name: druid_network
     driver: bridge
-  # druid_ingress_network:
-  #   name: druid_ingress_network
-  #   driver: bridge
 
 volumes:
   zen_extensions: {}
