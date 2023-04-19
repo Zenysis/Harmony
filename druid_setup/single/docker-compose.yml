@@ -211,16 +211,3 @@ services:
       - environment/common.env
     networks:
       - druid_network
-  # ingress:
-  #   image: nginx:alpine
-  #   ports:
-  #     - "8082:8082"
-  #     - "8081:8081"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/conf.d/nginx.conf
-  #   networks:
-  #     - druid_ingress_network
-  #     - druid_network
-  #   depends_on:
-  #     - coordinator
-  #     - broker
