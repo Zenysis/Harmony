@@ -56,20 +56,24 @@ services:
     environment:
       - ZEN_ENV=${ZEN_WEB_ENV}
       - DONT_SYNC_SOURCEMAPS=true
-      - DATABASE_URL=${POSTGRES_DB_URI}
+      - DATABASE_URL=${DATABASE_URL}
       - HSTS=off
       - SSL_POLICY=Mozilla-Modern
       - VIRTUAL_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_EMAIL=${ZEN_WEB_EMAIL}
+      - VIRTUAL_ENV=/usr/local
+      - ZEN_HOME=/zenysis
+      - DRUID_HOST=${DRUID_HOST}
     volumes:
       - ${OUTPUT_PATH}:/data/output
       - ${OUTPUT_PATH}/logs:/logs
       - ${INSTANCE_CONFIG}:/zenysis/instance_config.json
       - ${GLOBAL_CONFIG}:/zenysis/global_config.py
       - ${UPLOADS_DIR}:/zenysis/uploads
-    command: ["/zenysis/docker/entrypoint_web.sh"]
+    command: [ "/zenysis/docker/entrypoint_web.sh" ]
     logging: *default-logging
+    platform: linux/amd64
 
   worker:
     image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
@@ -81,19 +85,22 @@ services:
       - ZEN_ENV=${ZEN_WEB_ENV}
       - ZEN_LOG_CFG=/zenysis/log/log.prod-stackdriver.cfg
       - BROKER_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
       - ${INSTANCE_CONFIG}:/zenysis/instance_config.json
       - ${GLOBAL_CONFIG}:/zenysis/global_config.py
-    command: [
-      "celery",
-      "-A",
-      "web.background_worker.celery",
-      "worker",
-      "--beat",
-      "--loglevel=INFO"
-    ]
+    command:
+      [
+        "celery",
+        "-A",
+        "web.background_worker.celery",
+        "worker",
+        "--beat",
+        "--loglevel=INFO"
+      ]
     logging: *default-logging
+    platform: linux/amd64
 
   web-renderer:
     image: zengineering/url-to-pdf-api:latest
@@ -104,6 +111,7 @@ services:
     environment:
       - ALLOW_HTTP=true
       - PORT=9000
+    platform: linux/amd64
 
   redis:
     image: redis:latest
@@ -113,7 +121,7 @@ services:
       - 6379:6379
 
   hasura:
-    image: hasura/graphql-engine:latest.cli-migrations-v2
+    image: hasura/graphql-engine:v2.11.3.cli-migrations-v2
     restart: always
     pull_policy: always
     ports:
@@ -121,17 +129,35 @@ services:
     environment:
       - HASURA_GRAPHQL_ENABLE_TELEMETRY=false
       - HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT=500
-      - HASURA_GRAPHQL_DATABASE_URL=${GRAPHQL_DATABASE_URL}
+      - HASURA_GRAPHQL_DATABASE_URL=${DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
+
+  postgres:
+    # It's not recommended to run postgres on the same host as the web
+    # this configuration is included as a convenience when it can't be avoided.
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - ${PG_DATA:-/usr/local/pgsql/data}:/var/lib/postgresql/data
+    profiles:
+      - postgres
 
 volumes:
   # Let's Encrypt container needs to configure the vhosts during
   # cert issuing.
   nginx_vhost:
+
   # This html directory is only used to write let's encrypt challenge
   # files during the cert issuing process.
   nginx_html:
+
   # The acme.sh diretory stores the generated certificate state
   # This prevents re-issuing of the certificate if the container is restarted/re-created
   # It should only issue if there is no certificate or it is close to expiry.
