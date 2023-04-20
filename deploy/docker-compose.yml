@@ -29,7 +29,7 @@ services:
       # Include Zenysis static assets and serve them directly from nginx.
       - ${OUTPUT_PATH}/zenysis_static:/usr/share/nginx/html/zenysis_static:ro
       # Set a custom vhost default configuration that includes compression and caching.
-      - ${NGINX_DEFAULT_VHOST_CONFIG:-./deploy/nginx/nginx_vhost_default_location}:/etc/nginx/vhost.d/default:ro
+      - ${NGINX_DEFAULT_VHOST_CONFIG}:/etc/nginx/vhost.d/default:ro
     logging: *default-logging
 
   nginx-letsencrypt-companion:
@@ -64,6 +64,9 @@ services:
       - VIRTUAL_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_EMAIL=${ZEN_WEB_EMAIL}
+      # We have several scripts that check if VIRTUAL_ENV has been set,
+      # this isn't required in our production build, since we know we have
+      # all the required pre-requisites installed, and no vevn is required.
       - VIRTUAL_ENV=/usr/local
       - ZEN_HOME=/zenysis
       - DRUID_HOST=${DRUID_HOST}
@@ -73,9 +76,6 @@ services:
       - ${INSTANCE_CONFIG}:/zenysis/instance_config.json
       - ${GLOBAL_CONFIG}:/zenysis/global_config.py
       - ${UPLOADS_DIR}:/zenysis/uploads
-      # TODO: remove these temporary volumes - was just waiting for things to get merged to master and have images built.
-      # - /Users/sstrauss/Workspace/Harmony/web/server/migrations/env.py:/zenysis/web/server/migrations/env.py
-      # - /Users/sstrauss/Workspace/Harmony/scripts/create_deployment_database.sh:/zenysis/scripts/create_deployment_database.sh
     command: [ "/zenysis/docker/entrypoint_web.sh" ]
     logging: *default-logging
     platform: linux/amd64
@@ -124,8 +124,6 @@ services:
     pull_policy: always
     ports:
       - 6379:6379
-    networks:
-      - harmony_network
 
   hasura:
     image: hasura/graphql-engine:v2.11.3.cli-migrations-v2
@@ -139,8 +137,6 @@ services:
       - HASURA_GRAPHQL_DATABASE_URL=${GRAPHQL_DATABASE_URL}
     volumes:
       - ${OUTPUT_PATH}/logs:/logs
-    networks:
-      - harmony_network
 
   postgres:
     # It's not recommended to run postgres on the same host as the web
