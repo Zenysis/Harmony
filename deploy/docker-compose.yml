@@ -2,18 +2,6 @@ version: "3.7"
 
 name: harmony
 
-networks:
-  harmony_network:
-    name: harmony_network
-    driver: bridge
-  druid_network:
-    # When running a single server with both the web and druid services (not
-    # recommended for production!), we need this route to the druid network.
-    # NOTE: Ideon mentioned a way to route to the host network??
-    name: druid_network
-    driver: bridge
-    external: true
-
 x-logging:
   &default-logging
   driver: "json-file"
@@ -43,8 +31,6 @@ services:
       # Set a custom vhost default configuration that includes compression and caching.
       - ${NGINX_DEFAULT_VHOST_CONFIG:-./deploy/nginx/nginx_vhost_default_location}:/etc/nginx/vhost.d/default:ro
     logging: *default-logging
-    networks:
-      - harmony_network
 
   nginx-letsencrypt-companion:
     image: nginxproxy/acme-companion:latest
@@ -62,8 +48,6 @@ services:
       - nginx_html:/usr/share/nginx/html
       - nginx-acme:/etc/acme.sh
     logging: *default-logging
-    networks:
-      - harmony_network
 
   web:
     image: ${DOCKER_NAMESPACE}/harmony-web:${DOCKER_TAG}
@@ -94,9 +78,6 @@ services:
       # - /Users/sstrauss/Workspace/Harmony/scripts/create_deployment_database.sh:/zenysis/scripts/create_deployment_database.sh
     command: [ "/zenysis/docker/entrypoint_web.sh" ]
     logging: *default-logging
-    networks:
-      - harmony_network
-      - druid_network
     platform: linux/amd64
 
   worker:
@@ -124,8 +105,6 @@ services:
         "--loglevel=INFO"
       ]
     logging: *default-logging
-    networks:
-      - harmony_network
     platform: linux/amd64
 
   web-renderer:
@@ -137,8 +116,6 @@ services:
     environment:
       - ALLOW_HTTP=true
       - PORT=9000
-    networks:
-      - harmony_network
     platform: linux/amd64
 
   redis:
@@ -166,6 +143,8 @@ services:
       - harmony_network
 
   postgres:
+    # It's not recommended to run postgres on the same host as the web
+    # this configuration is included as a convenience when it can't be avoided.
     image: postgres:14
     restart: always
     environment:
@@ -176,38 +155,8 @@ services:
       - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - ${PG_DATA:-/usr/local/pgsql/data}:/var/lib/postgresql/data
-    networks:
-      - harmony_network
     profiles:
       - postgres
-
-  druid:
-    # If druid is running on the same machine as the web server (NOT
-    # RECCOMENDED), then route the druid traffic through the nginx
-    # to the druid network.
-    image: nginx:alpine
-    ports:
-      - target: 8082
-      - target: 8081
-    volumes:
-      - ./druid_nginx.conf:/etc/nginx/conf.d/nginx.conf
-    networks:
-      - druid_network
-      - harmony_network
-    profiles:
-      - druid
-
-  postgres_util:
-    # NOTE: this is gross - going to delete this
-    image: postgres:14
-    networks:
-      - harmony_network
-    # We override the entrypoint to run a command that will keep the container
-    # running. We don't actually need postgres to be running for this container
-    # we're only using it to get at the postgres client.
-    command: tail -f /dev/null
-    profiles:
-      - postgres_util
 
 volumes:
   # Let's Encrypt container needs to configure the vhosts during
