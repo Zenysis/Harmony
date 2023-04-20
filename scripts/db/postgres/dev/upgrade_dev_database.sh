@@ -5,7 +5,6 @@ DEPLOYMENT_CODE="$1"
 DB_NAME="$2"
 SCRIPT_DIR=$(cd "$(dirname "$0")" ; pwd -P)
 POSTGRES_SYSTEM_USER="postgres"
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
 
 
 # Test to see if the destination database already exists.
@@ -16,7 +15,7 @@ if [[ "${DB_EXISTS_TEST}" == '' ]] ; then
   psql -h ${DATABASE_HOST:-postgres} -U postgres postgres -tAc "CREATE DATABASE \"${DB_NAME}\""
 fi
 
-pushd "${ZEN_SRC_ROOT}" &> /dev/null
+pushd "${ZEN_HOME}" &> /dev/null
 
 # Run the Flask-Migrate command to upgrade the database tables to the latest
 # version.

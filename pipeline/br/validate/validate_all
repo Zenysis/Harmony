@@ -2,7 +2,6 @@
 set -o pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
 
 # Get the date in case the date changes before all the steps are complete.
 DATE=$(date +%Y%m%d)

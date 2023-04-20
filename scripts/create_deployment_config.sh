@@ -1,7 +1,6 @@
 #!/bin/bash -eu
 set -o pipefail
 
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
 
 if [ $# -ne 2 ] ; then
   echo 'Usage: ./create_deployment_config.sh DEPLOYMENT_CODE PRETTY_NAME'
@@ -15,7 +14,7 @@ fi
 
 DEPLOYMENT_CODE="$1"
 PRETTY_NAME="$2"
-CONFIG_DIR="${ZEN_SRC_ROOT}/config/${DEPLOYMENT_CODE}"
+CONFIG_DIR="${ZEN_HOME}/config/${DEPLOYMENT_CODE}"
 
 echo "Deployment code: ${DEPLOYMENT_CODE}"
 echo "Pretty deployment name: ${PRETTY_NAME}"
@@ -26,7 +25,7 @@ if [ -d "${CONFIG_DIR}" ] ; then
   exit 1
 fi
 
-pushd "${ZEN_SRC_ROOT}" &> /dev/null
+pushd "${ZEN_HOME}" &> /dev/null
 
 echo "Copying config template to ${CONFIG_DIR}"
 cp -r config/template "${CONFIG_DIR}"

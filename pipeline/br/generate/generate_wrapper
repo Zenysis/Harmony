@@ -8,7 +8,6 @@ set -o pipefail
 # provided automatically.
 
 SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
 
 # Grab the steps to run
 TASKS="${@:1}"

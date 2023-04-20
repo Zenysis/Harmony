@@ -2,8 +2,7 @@
 set -o pipefail
 
 CONTAINER_NAME='hasura'
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
-HASURA_METADATA_DIR="${ZEN_SRC_ROOT}/graphql/hasura/metadata/versions"
+HASURA_METADATA_DIR="${ZEN_HOME}/graphql/hasura/metadata/versions"
 
 pushd "${HASURA_METADATA_DIR}" &> /dev/null
 

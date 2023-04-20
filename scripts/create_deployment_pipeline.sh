@@ -15,7 +15,6 @@ fi
 # config.general. Update this script to match that naming convention.
 DEPLOYMENT_NAME="$1"
 DEPLOYMENT_CODE="$2"
-ZEN_SRC_ROOT=$(git rev-parse --show-toplevel)
 DEPLOYMENT_NAME_PATTERN='^[a-z_]+$'
 
 echo "Building deployment pipeline with name: ${DEPLOYMENT_NAME} \
@@ -26,17 +25,17 @@ if ! [[ "${DEPLOYMENT_NAME}" =~ ${DEPLOYMENT_NAME_PATTERN} ]] ; then
   exit 1
 fi
 
-if ! [ -d "${ZEN_SRC_ROOT}/config/${DEPLOYMENT_CODE}" ] ; then
+if ! [ -d "${ZEN_HOME}/config/${DEPLOYMENT_CODE}" ] ; then
   echo 'Config must be defined before a deployment pipeline can be created'
   exit 1
 fi
 
-if [ -d "${ZEN_SRC_ROOT}/pipeline/${DEPLOYMENT_NAME}" ] ; then
+if [ -d "${ZEN_HOME}/pipeline/${DEPLOYMENT_NAME}" ] ; then
   echo "Pipeline for deployment '${DEPLOYMENT_NAME}' already exists. Quitting"
   exit 1
 fi
 
-pushd "${ZEN_SRC_ROOT}/pipeline" &> /dev/null
+pushd "${ZEN_HOME}/pipeline" &> /dev/null
 
 # Copy the template pipeline as the base pipeline for this new deployment
 cp -r template "${DEPLOYMENT_NAME}"
