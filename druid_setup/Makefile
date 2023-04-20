@@ -1,7 +1,7 @@
 ENV_FILE=.env
 ENV_COMMON=environment/common.env
 
-PROJECT_NAME=harmony
+PROJECT_NAME=harmony-druid
 
 include $(ENV_FILE)
 
@@ -16,6 +16,12 @@ single_server_down:
 		DOCKER_HOST=$(SINGLE_SERVER_DOCKER_HOST) \
 		docker compose --project-name $(PROJECT_NAME) \
 		--env-file environment/common.env down
+
+single_server_logs:
+	@cd single && \
+		DOCKER_HOST=$(SINGLE_SERVER_DOCKER_HOST) \
+		docker compose --project-name $(PROJECT_NAME) \
+		--env-file environment/common.env logs -f
 
 cluster_server_up:
 	@cd cluster && \
