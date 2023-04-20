@@ -11,20 +11,20 @@ configure:
 	@scp instance_config.json $(ZEN_WEB_REMOTE):${INSTANCE_CONFIG}
 	@scp global_config.py $(ZEN_WEB_REMOTE):${GLOBAL_CONFIG}
 
+prune:
+	@DOCKER_HOST=$(DOCKER_REMOTE) docker system prune -af
+
 up:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml up -d --force-recreate
-	@DOCKER_HOST=$(DOCKER_REMOTE) docker system prune -af
 
 down:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml down
-	@DOCKER_HOST=$(DOCKER_REMOTE) docker system prune -af
 
 logs:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml logs -f
 
 web_up:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml up -d --force-recreate web
-	@DOCKER_HOST=$(DOCKER_REMOTE) docker system prune -af
 
 web_logs:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml logs web -f

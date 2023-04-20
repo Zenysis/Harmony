@@ -22,6 +22,7 @@ volumes:
   zen_extensions: {}
   zookeeper_data: {}
   zookeeper_datalog: {}
+  zookeeper_logs: {}
   metadata_data: {}
   middle_var: {}
   historical_var: {}
@@ -81,6 +82,7 @@ services:
     volumes:
       - zookeeper_data:/data
       - zookeeper_datalog:/datalog
+      - zookeeper_logs:/logs
     environment:
       - ZOO_MY_ID=1
 

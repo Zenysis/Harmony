@@ -404,7 +404,6 @@ ZEN_WEB_HOST=harmony.yourdomain.com
 ZEN_WEB_EMAIL=harmony@yourdomain.com
 
 POSTGRES_DB_URI="<postgresql://harmony-admin:[PASSWORD]@postgres.yourdomain.com:5432/harmony>"
-GRAPHQL_DATABASE_URL="<postgresql://harmony-admin:[PASSWORD_URL_ENCODED]@postgres.yourdomain.com:5432/harmony>"
 
 OUTPUT_PATH=/data/output
 NGINX_DEFAULT_VHOST_CONFIG=/home/ubuntu/nginx_vhost_default_location
