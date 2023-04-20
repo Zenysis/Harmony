@@ -1,8 +1,9 @@
 ENV_FILE=.env
 include $(ENV_FILE)
 
-DOCKER_REMOTE=${DOCKER_REMOTE-:ssh://$(ZEN_WEB_REMOTE)}
-PROJECT_NAME=harmony
+# TODO: change DOCKER_REMOTE to DOCKER_HOST - and get rid of ZEN_WEB_REMOTE
+DOCKER_REMOTE ?= ssh://$(ZEN_WEB_REMOTE)
+PROJECT_NAME ?= harmony-web
 
 web_configure:
 	@scp nginx/nginx_vhost_default_location $(ZEN_WEB_REMOTE):${NGINX_DEFAULT_VHOST_CONFIG}
@@ -37,12 +38,16 @@ upgrade_database:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml run --rm web /bin/bash -c "./scripts/upgrade_database.sh"
 #	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml run web /bin/bash
 
-run_web:
+web_run:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml run --rm web /bin/bash
 
 web_deploy:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml up -d --force-recreate
-# 	@DOCKER_HOST=$(DOCKER_REMOTE) docker system prune -af
+	@DOCKER_HOST=$(DOCKER_REMOTE) docker system prune -af
+
+web_only_deploy:
+	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml up -d --force-recreate web
+	@DOCKER_HOST=$(DOCKER_REMOTE) docker system prune -af
 
 web_stop:
 	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml down
@@ -50,3 +55,15 @@ web_stop:
 
 web_ssh:
 	ssh $(ZEN_WEB_REMOTE)
+
+web_logs:
+	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml logs -f
+
+web_only_logs:
+	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml logs web -f
+
+hasura_logs:
+	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml logs hasura -f
+
+druid:
+	@DOCKER_HOST=$(DOCKER_REMOTE) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml up druid

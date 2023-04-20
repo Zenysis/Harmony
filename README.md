@@ -355,7 +355,7 @@ Once we've upgraded the database and populated the appropriate seed values, we'l
 
 ```sh
 cd deploy
-make run_web
+make web_run
 ./scripts/create_user.py -a -f "<YOUR_FIRST_NAME>" -l "<YOUR_LAST_NAME>" -u "<YOUR_EMAIL>"
 # Example
 # scripts/create_user.py -a -f "Test" -l "User" -u "test@test.com"
@@ -495,10 +495,18 @@ Next, create the following directories on the remote server:
 
 Finally, deploy the approriate Druid cluster:
 
-```sh
+> Single server setup:
+
+```bash
 cd druid_setup
 # Deploy single server mode
 make single_server_up
+```
+
+> Cluster server setup:
+
+```bash
+cd druid_setup
 # Deploy cluster server mode
 make cluster_server_up
 ```
