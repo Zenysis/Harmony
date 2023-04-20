@@ -1,7 +1,5 @@
 version: "3.7"
 
-name: harmony
-
 x-logging:
   &default-logging
   driver: "json-file"
@@ -64,9 +62,6 @@ services:
       - VIRTUAL_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_EMAIL=${ZEN_WEB_EMAIL}
-      # We have several scripts that check if VIRTUAL_ENV has been set,
-      # this isn't required in our production build, since we know we have
-      # all the required pre-requisites installed, and no vevn is required.
       - VIRTUAL_ENV=/usr/local
       - ZEN_HOME=/zenysis
       - DRUID_HOST=${DRUID_HOST}
