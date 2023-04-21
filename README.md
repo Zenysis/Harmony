@@ -228,42 +228,44 @@ The pipeline server runs the ETL data pipeline to generate datasources (typicall
 
 You will have to set up a [PostgreSQL](https://www.postgresql.org/) database to host relational data and web application state.
 
-### Getting started
+### Production PostgreSQL : getting started
 
 It is highly recommended to use a relational database cloud service like Amazon RDS for its guarantees related to security, availability, backups, etc. If your project is restricted from using a cloud service, we provide instructions for running postgres in a Docker container.
 
 #### Docker installation
 
-Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install Docker on Linux (Ubuntu).
+1. Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install Docker on Linux (Ubuntu).
 
-Once Docker is up and running, start the database by running the below script (specify a password for the postgres user, **keep the password safe!**):
+2. Follow the [instructions](#production-web-server-setup-:-getting-started) to configure the web server. (If you're running postgres in docker, it will run alongside the web server, and as such shares many of the same configuration settings.)
 
-TODO: need comments about env files
+3. Edit the `.env` file created in step 2 above, adding the following entries:
+
+```plaintext
+POSTGRES_USER=<postgres super user>
+POSTGRES_PASSWORD=<postgres super user password>
+COMPOSE_PROFILES=postgres
+```
+
+Once Docker is up and running, and environment variables have been configured,
+start the database by running the below script (specify a username and password for the postgres **SUPERUSER**, **keep the credentials safe!**):
+
 ```bash
 cd deploy
-make up_postgres
+make postgres_up
 ```
-
-TODO: remove this:
-```bash
-POSTGRES_USER=<YOUR POSTGRES SUPER USER GOES HERE> POSTGRES_PASSWORD=<YOUR PASSWORD GOES HERE> docker compose --file deploy/docker-compose.yml --profile postgres up postgres --detach
-```
-
-TODO: Maybe makes more sense to move this to a place where you've already set up the .env file???
-*NOTE: Some warning about warnings - but really - makes more sense to defer this until web setup is complete*
 
 On the first run, the database will be initialized and the a "super user" will be created with the specified username and password.
 
 Postgres will run in "detached" mode, meaning it will run in the background. If you wish to see the logs you can run:
 
 ```bash
-docker compose -f deploy/docker-compose.yml --profile postgres logs --follow
+make postgres_logs
 ```
 
 If you wish to stop the postgres database you can run:
 
 ```bash
-docker compose -f deploy/docker-compose.yml --profile postgres down
+make postgres_stop
 ```
 
 Refer to "postgres" section of deploy/docker-compose.yml for further configuration options.
@@ -287,54 +289,33 @@ COMMIT;
 
 ### Deployment database
 
-TODO: MOVE THIS SECTION TO A DIFFERENT PLACE - WE NEED TO HAVE THE WEB SERVER IN PLACE FOR THIS TO WORK!
-
 Postgres should now be up and running with a **SUPERUSER**. Now the database instance for your deployment needs to be created.
 
-Running the below script, replace `<YOUR_HOSTNAME>` with the hostname/IP of your postgres instance (example: _localhost_) and `<YOUR_DATABASE_NAME>` with the database name you want to use (example: _harmony_). Take note of the deployment database connection string (postgres URI) that is outputted to the console.
+Running the below script, replace `<POSTGRES_HOST>` with the hostname/IP of your postgres instance (example: _localhost_) and `<INSTANCE_DB_NAME>` with the database name you want to use (example: _harmony_).
 
-TODO: remove this
-```sh
-./scripts/create_deployment_database.sh <YOUR_HOSTNAME> <YOUR_DATABASE_NAME> <YOUR POSTGRES SUPER USER>
-```
-now use this:
 ```bash
 cd deploy
-make create_deployment_database
+make create_db_setup_script POSTGRES_HOST=<POSTGRES_HOST> INSTANCE_DB_NAME=<INSTANCE_DB_NAME> POSTGRES_USER=<YOUR POSTGRES SUPER USER>
 ```
-EVEN BETTER:
+
+Take note of the sql commands that are output. You will need to run them on your postgres instance to create the database.
+
+If you are using the Docker installation instructions above, to run postgres locally, you can run the below script to connect to the postgres instance and run the sql commands:
+
 ```bash
-cd deploy
-make generate_connection_string
+make postgres_psql
 ```
-TODO: explain about grabbing the connection string from the output
 
-TODO: change the wording here - we'll just use make generate_connection_string standard
-> If you cannot connect directly to your postgres instance, you can run the script to log the output only by prepending the `ZEN_DB_LOG_ONLY=1` environment variable. The output will have all the raw SQL commands for you to run.
-
-TODO: update this to include .env file
 Set `DATABASE_URL` as your deployment database connection string in your environment initialization step. Here is an example of what that may look like: `export DATABASE_URL='postgresql://test_admin:test_pwd@my.postgres.host/harmony'`
-
-TODO: explain how to run sql directly on database
-```bash
-cd deploy
-make connect_postgres
-```
 
 ### Seeding the database
 
 After we've created our deployment database, we need to initialize it with seed data. This section addresses upgrading the database schema to ensure consistency with the latest version. The web server will not start unless the database schema version matches the latest version in the source tree.
 
-TODO: this is now redundant, it's all in the .env file
-First, make sure `DATABASE_URL` is set
-
-```sh
-echo "${DATABASE_URL}"
-```
-
 We need to create all the database tables and configure all constraints, sequences, and other details contained in the database schema.
 
-Upgrade the database by running the below script:
+1. If you have not already done so, follow the [instructions](#production-web-server-setup-:-getting-started) to configure the web server.
+2. Upgrade the database by running the below script:
 
 ```bash
 cd deploy
@@ -347,15 +328,13 @@ make run_web
 ./scripts/upgrade_database.sh
 ```
 
-> TODO: explain .env file, replace: `ZEN_ENV` needs to be set with a valid environment configured.
-
 > If you cannot run the above, the database upgrade is also done on initialization of the web container.
 
 Once we've upgraded the database and populated the appropriate seed values, we'll need to create a user account so that we can login via the web UI.
 
 ```sh
 cd deploy
-make web_run
+make web_bash
 ./scripts/create_user.py -a -f "<YOUR_FIRST_NAME>" -l "<YOUR_LAST_NAME>" -u "<YOUR_EMAIL>"
 # Example
 # scripts/create_user.py -a -f "Test" -l "User" -u "test@test.com"
@@ -372,18 +351,17 @@ make web_run
 
 - We recommend configuring tools for monitoring system status and resource usage as well.
 
-### Getting started
+### Production web server setup : getting started
 
 Before deploying the web server, we need to setup some configuration to ensure everything will connect up.
 
 1. Instance Config File
 
-TODO: move this (or database stuff) to a different place - we need to have this in place before we can set up the database.
+Create the instance config file as `instance_config.json` in the `/deploy` directory, that contains the json text `{}`.
 
-Create the instance config file as `instance_config.json` in the `/deploy` directory and copy paste the below.
-
-```json
-{}
+```bash
+cd deploy
+echo '{}' > instance_config.json
 ```
 
 > Recommended to **NOT** check this in with source code.
@@ -392,18 +370,23 @@ Create the instance config file as `instance_config.json` in the `/deploy` direc
 
 Copy `global_config.py` from the root directory into the `/deploy` directory and update all values as needed.
 
+```bash
+cd deploy
+cp ../global_config.py .
+```
+
 3. Environment File
 
 Create the environment file as `.env` in the `/deploy` directory and copy paste the below, updating all values as needed.
 
 ```properties
+DOCKER_HOST=unix:///var/run/docker.sock
 ZEN_WEB_ENV=<project code>
-ZEN_WEB_REMOTE=ubuntu@localhost
 
 ZEN_WEB_HOST=harmony.yourdomain.com
 ZEN_WEB_EMAIL=harmony@yourdomain.com
 
-POSTGRES_DB_URI="<postgresql://harmony-admin:[PASSWORD]@postgres.yourdomain.com:5432/harmony>"
+DATABASE_URL="<postgresql://harmony-admin:[PASSWORD]@postgres.yourdomain.com:5432/harmony>"
 
 OUTPUT_PATH=/data/output
 NGINX_DEFAULT_VHOST_CONFIG=/home/ubuntu/nginx_vhost_default_location
@@ -413,7 +396,11 @@ UPLOADS_DIR=/home/ubuntu/uploads
 
 DOCKER_NAMESPACE=zengineering
 DOCKER_TAG=latest
+
+DRUID_HOST=<http://your.druid.instance>
 ```
+
+> DOCKER_HOST can be configured to use a remote Docker host, see [Docker Remote API](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-socket-option)
 
 ### Docker builds
 
@@ -437,18 +424,19 @@ make all_build all_push
 
 ### Deploying web
 
-You should now be ready to deploy the web server.
+If you have [druid configured](#production-druid-server-setup), you should now be ready to deploy the web server.
 
-# TODO: update this, to just have DOCKER_REMOTE be ssh://whatever instead
-> The below commands uses `ZEN_WEB_REMOTE` over ssh with public key authentication. Confirm the IP specified is reachable & [public key authentication](https://kb.iu.edu/d/aews) is enabled before proceeding.
+> `make configure` uses `ZEN_WEB_REMOTE` over ssh with public key authentication. Confirm the IP specified is reachable & [public key authentication](https://kb.iu.edu/d/aews) is enabled before proceeding.
+
+> `make up` uses `DOCKER_HOST`, Refer to [Docker Remote API](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-socket-option) for configuration.
 
 ```sh
 # Navigate to the deploy directory
 cd deploy
 # Initial setup for the web server
-make web_configure
+make configure
 # Deploy to remote server
-make web_deploy
+make up
 ```
 
 Once deployed you should be able to login at your domain specified in `ZEN_WEB_HOST`, logging in with the credentials created in [Seeding The Database](#seeding-the-database).
