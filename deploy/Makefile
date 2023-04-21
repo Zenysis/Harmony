@@ -14,9 +14,11 @@ prune:
 
 up:
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml up -d --force-recreate
+	@DOCKER_HOST=$(DOCKER_HOST) docker system prune --all --force --filter "until=24h"
 
 down:
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml down
+	@DOCKER_HOST=$(DOCKER_HOST) docker system prune --all --force --filter "until=24h"
 
 logs:
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml logs -f
@@ -42,7 +44,7 @@ postgres_up:
 postgres_psql:
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml --profile postgres exec postgres psql -h localhost -U ${POSTGRES_USER}
 
-generate_connection_string:
+create_db_setup_script:
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml run web /bin/bash -c "ZEN_DB_LOG_ONLY=1 ./scripts/create_deployment_database.sh ${POSTGRES_DB_HOST} ${HARMONY_INSTANCE_DB_NAME} ${POSTGRES_USER}"
 
 upgrade_database:
