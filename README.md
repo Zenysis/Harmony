@@ -250,7 +250,9 @@ Once Docker is up and running, and environment variables have been configured,
 start the database by running the below script (specify a username and password for the postgres **SUPERUSER**, **keep the credentials safe!**):
 
 ```bash
+# Navigate to the deploy directory.
 cd deploy
+# Start the postgres server in a docker container.
 make postgres_up
 ```
 
@@ -259,12 +261,14 @@ On the first run, the database will be initialized and the a "super user" will b
 Postgres will run in "detached" mode, meaning it will run in the background. If you wish to see the logs you can run:
 
 ```bash
+# Fetch logs from the postgres container.
 make postgres_logs
 ```
 
 If you wish to stop the postgres database you can run:
 
 ```bash
+# Stop the postgres container.
 make postgres_stop
 ```
 
@@ -291,11 +295,13 @@ COMMIT;
 
 Postgres should now be up and running with a **SUPERUSER**. Now the database instance for your deployment needs to be created.
 
-Running the below script, replace `<POSTGRES_HOST>` with the hostname/IP of your postgres instance (example: _localhost_) and `<INSTANCE_DB_NAME>` with the database name you want to use (example: _harmony_).
+Running the below script, replace `<POSTGRES_HOST>` with the hostname/IP of your postgres instance (example: _localhost_) and `<INSTANCE_DB_NAME>` with the database name you want to use (example: _harmony_) and `<POSTGRES_SUPER_USER>` with the **SUPERUSER** username you created.
 
 ```bash
+# Navigate to the deploy directory
 cd deploy
-make create_db_setup_script POSTGRES_HOST=<POSTGRES_HOST> INSTANCE_DB_NAME=<INSTANCE_DB_NAME> POSTGRES_USER=<YOUR POSTGRES SUPER USER>
+# Run script in the web container that will generate the sql commands to create the database.
+make create_db_setup_script POSTGRES_HOST=<POSTGRES_HOST> INSTANCE_DB_NAME=<INSTANCE_DB_NAME> POSTGRES_USER=<POSTGRES_SUPER_USER>
 ```
 
 Take note of the sql commands that are output. You will need to run them on your postgres instance to create the database.
@@ -303,6 +309,9 @@ Take note of the sql commands that are output. You will need to run them on your
 If you are using the Docker installation instructions above, to run postgres locally, you can run the below script to connect to the postgres instance and run the sql commands:
 
 ```bash
+# Navigate to the deploy directory
+cd deploy
+# Connect to the postgres container and run the psql program interactively.
 make postgres_psql
 ```
 
@@ -318,14 +327,10 @@ We need to create all the database tables and configure all constraints, sequenc
 2. Upgrade the database by running the below script:
 
 ```bash
+# Navigate to the deploy directory.
 cd deploy
+# Run the upgrade script inside the web container.
 make upgrade_database
-```
-OR
-```bash
-cd deploy
-make run_web
-./scripts/upgrade_database.sh
 ```
 
 > If you cannot run the above, the database upgrade is also done on initialization of the web container.
@@ -333,10 +338,13 @@ make run_web
 Once we've upgraded the database and populated the appropriate seed values, we'll need to create a user account so that we can login via the web UI.
 
 ```sh
+# Navigate to the deploy directory
 cd deploy
+# Connect to the web container and bash interactively.
 make web_bash
+# Execute the create_user.py script to create a user account.
 ./scripts/create_user.py -a -f "<YOUR_FIRST_NAME>" -l "<YOUR_LAST_NAME>" -u "<YOUR_EMAIL>"
-# Example
+# Example:
 # scripts/create_user.py -a -f "Test" -l "User" -u "test@test.com"
 ```
 
@@ -360,7 +368,9 @@ Before deploying the web server, we need to setup some configuration to ensure e
 Create the instance config file as `instance_config.json` in the `/deploy` directory, that contains the json text `{}`.
 
 ```bash
+# Navigate to the deploy directory.
 cd deploy
+# Create an instance_config.json file that contains the json text '{}'.
 echo '{}' > instance_config.json
 ```
 
@@ -371,7 +381,9 @@ echo '{}' > instance_config.json
 Copy `global_config.py` from the root directory into the `/deploy` directory and update all values as needed.
 
 ```bash
+# Navigate to the deploy directory.
 cd deploy
+# Copy the global_config.py file into the deploy directory.
 cp ../global_config.py .
 ```
 
