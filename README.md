@@ -76,7 +76,7 @@ To ensure that Harmony operates as intended, several external services are avail
 
 #### Generating a Mapbox Access Token
 
-Harmony currently uses [mapbox](https://www.mapbox.com/) for all Map UI visiualisations. In order to use our map visiualisations, you need to have your own `Mapbox Access Token`.
+Harmony currently uses [mapbox](https://www.mapbox.com/) for all Map UI visualisations. In order to use our map visualisations, you need to have your own `Mapbox Access Token`.
 
 > You can read more about access tokens [here](https://docs.mapbox.com/help/getting-started/access-tokens/#how-access-tokens-work).
 
@@ -492,7 +492,7 @@ Next, create the following directories on the remote server:
 - /home/share
 - /data/output
 
-Finally, deploy the approriate Druid cluster:
+Finally, deploy the appropriate Druid cluster:
 
 > Single server setup:
 
