@@ -62,7 +62,6 @@ services:
       - VIRTUAL_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_HOST=${ZEN_WEB_HOST}
       - LETSENCRYPT_EMAIL=${ZEN_WEB_EMAIL}
-      - VIRTUAL_ENV=/usr/local
       - ZEN_HOME=/zenysis
       - DRUID_HOST=${DRUID_HOST}
     volumes:
