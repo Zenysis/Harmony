@@ -424,13 +424,13 @@ make all_build all_push
 
 ### Deploying web
 
-If you have [druid configured](#production-druid-server-setup), you should now be ready to deploy the web server.
+If you have [druid configured](#production-druid-server-setup), and have successfully create a druid datasource, you should now be ready to deploy the web server.
 
 > `make configure` uses `ZEN_WEB_REMOTE` over ssh with public key authentication. Confirm the IP specified is reachable & [public key authentication](https://kb.iu.edu/d/aews) is enabled before proceeding.
 
 > `make up` uses `DOCKER_HOST`, Refer to [Docker Remote API](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-socket-option) for configuration.
 
-```sh
+```bash
 # Navigate to the deploy directory
 cd deploy
 # Initial setup for the web server
