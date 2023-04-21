@@ -22,6 +22,7 @@ volumes:
   zen_extensions: {}
   zookeeper_data: {}
   zookeeper_datalog: {}
+  zookeeper_logs: {}
   metadata_data: {}
   middle_var: {}
   historical_var: {}
@@ -33,14 +34,13 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/share
+      device: ${DRUID_SHARED_FOLDER:-/home/share}
   data_output:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /data/output
-
+      device: ${DATA_OUTPUT_FOLDER:-/data/output}
 
 services:
   extension_loader:
@@ -52,9 +52,12 @@ services:
       - ZEN_DRUID_VERSION=${DRUID_VERSION}
 
   postgres:
-    container_name: postgres
     image: postgres:latest
     restart: always
+    ports:
+      # expose postgres port to host on a non standard port, to avoid 
+      # possible conflicts with other postgres instances.
+      - "5431:5432"
     volumes:
       - metadata_data:/var/lib/postgresql/data
     environment:
@@ -79,6 +82,7 @@ services:
     volumes:
       - zookeeper_data:/data
       - zookeeper_datalog:/datalog
+      - zookeeper_logs:/logs
     environment:
       - ZOO_MY_ID=1
 

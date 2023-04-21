@@ -28,7 +28,7 @@ else
   echo "Logging only enabled..."
 fi
 
-DB_ADMIN_PASSWORD=$(openssl rand -base64 32)
+DB_ADMIN_PASSWORD=$(cat /dev/urandom | tr -dc 'A-Za-z0-9!' | head -c 13 ; echo ` `)
 
 SQL_CREATE_USER="$(cat <<-EOM
 
