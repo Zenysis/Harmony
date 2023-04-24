@@ -256,7 +256,7 @@ cd deploy
 make postgres_up
 ```
 
-On the first run, the database will be initialized and the a "super user" will be created with the specified username and password.
+On the first run, the database will be initialized and a "super user" will be created with the specified username and password.
 
 Postgres will run in "detached" mode, meaning it will run in the background. If you wish to see the logs you can run:
 
