@@ -18,6 +18,8 @@
 #
 version: "2.2"
 
+name: harmony-druid
+
 volumes:
   zen_extensions: {}
   zookeeper_data: {}
