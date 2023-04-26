@@ -402,7 +402,7 @@ DOCKER_TAG=latest
 DRUID_HOST=<http://your.druid.instance>
 ```
 
-> Ensure that all the file references (NGINX_DEFAULT_VHOST_CONFIG, INSTANCE_CONFIG, GLOBAL_CONFIG et.c) are correct.
+> Ensure that all the file references (NGINX_DEFAULT_VHOST_CONFIG, INSTANCE_CONFIG, GLOBAL_CONFIG etc.) are correct.
 
 > DOCKER_HOST can be configured to use a remote Docker host, see [Docker Remote API](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-socket-option)
 
