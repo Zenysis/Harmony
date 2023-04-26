@@ -376,18 +376,8 @@ echo '{}' > instance_config.json
 
 > Recommended to **NOT** check this in with source code.
 
-2. Global Config
 
-Copy `global_config.py` from the root directory into the `/deploy` directory and update all values as needed.
-
-```bash
-# Navigate to the deploy directory.
-cd deploy
-# Copy the global_config.py file into the deploy directory.
-cp ../global_config.py .
-```
-
-3. Environment File
+2. Environment File
 
 Create the environment file as `.env` in the `/deploy` directory and copy paste the below, updating all values as needed.
 
@@ -398,7 +388,7 @@ ZEN_WEB_ENV=<project code>
 ZEN_WEB_HOST=harmony.yourdomain.com
 ZEN_WEB_EMAIL=harmony@yourdomain.com
 
-DATABASE_URL="<postgresql://harmony-admin:[PASSWORD]@postgres.yourdomain.com:5432/harmony>"
+DATABASE_URL="postgresql://<INSTANCE USER>:<INSTANCE PASSWORD>@<POSTGRES HOST>:5432/<INSTANCE DATABASE>"
 
 OUTPUT_PATH=/data/output
 NGINX_DEFAULT_VHOST_CONFIG=/home/ubuntu/nginx_vhost_default_location
@@ -411,6 +401,8 @@ DOCKER_TAG=latest
 
 DRUID_HOST=<http://your.druid.instance>
 ```
+
+> Ensure that all the file references (NGINX_DEFAULT_VHOST_CONFIG, INSTANCE_CONFIG, GLOBAL_CONFIG et.c) are correct.
 
 > DOCKER_HOST can be configured to use a remote Docker host, see [Docker Remote API](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-socket-option)
 
