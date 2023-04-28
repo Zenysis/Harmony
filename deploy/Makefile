@@ -14,11 +14,9 @@ prune:
 
 up:
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml up -d --force-recreate
-	@DOCKER_HOST=$(DOCKER_HOST) docker system prune --all --force --filter "until=24h"
 
 down:
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml down
-	@DOCKER_HOST=$(DOCKER_HOST) docker system prune --all --force --filter "until=24h"
 
 logs:
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml logs -f
