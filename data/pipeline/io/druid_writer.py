@@ -84,7 +84,14 @@ class ErrorHandler:
             input_dimensions,
             input_row_str,
         )
-        key = frozenset(list(input_dimensions.items()))
+        # NOTE(abby): Multi value dimensions are lists, which cannot be hashed.
+        # Convert them to a sorted tuple as the list order doesn't matter.
+        key = frozenset(
+            [
+                (k, v if not isinstance(v, list) else tuple(sorted(v)))
+                for k, v in input_dimensions.items()
+            ]
+        )
         self.failed_matches[key] += 1
 
     def print_stats(self):
@@ -352,9 +359,11 @@ def serialize_dimension_mapping(mapping):
             )
             builder.append(float.__repr__(value))
         else:
-            LOG.error(
-                'Unexpected dimension value found. Key: %s, Value: %s', key, value
-            )
+            # Multi value dimensions are type lists so avoid printing error logs
+            if not isinstance(value, list):
+                LOG.error(
+                    'Unexpected dimension value found. Key: %s, Value: %s', key, value
+                )
             builder.append(json.dumps(value))
     return builder.build()
 
