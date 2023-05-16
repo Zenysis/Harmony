@@ -36,7 +36,7 @@ DATA_UPLOAD_DEFAULT_NOTIFY = ['foo@hostname.com', 'bar@hostname.com']
 GOOGLE_SERVICE_SECRET_CREDENTIAL = ''
 
 # Postgres stores all users, dashboards, etc.
-POSTGRES_DB_URI = 'postgresql://username:password@hostname/db-name'
+POSTGRES_DB_URI = os.getenv('DATABASE_URL')
 
 # in-memory key-value store (used by web to persist things like
 # access keys across worker threads)
