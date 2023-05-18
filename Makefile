@@ -1,6 +1,9 @@
 DOCKER_NAMESPACE=zengineering
 DOCKER_TAG=latest
 
+default:
+	@echo "Please specify a target to make"
+
 web_client_build:
 	@docker build -t $(DOCKER_NAMESPACE)/harmony-web-client:$(DOCKER_TAG) \
 		-f docker/web/Dockerfile_web-client .

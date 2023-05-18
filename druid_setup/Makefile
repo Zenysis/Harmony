@@ -5,6 +5,9 @@ PROJECT_NAME=harmony-druid
 
 include $(ENV_FILE)
 
+default:
+	@echo "Please specify a target to make"
+
 single_server_up:
 	@cd single && \
 		DOCKER_HOST=$(SINGLE_SERVER_DOCKER_HOST) \
