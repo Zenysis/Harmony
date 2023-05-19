@@ -1,3 +1,4 @@
+import os
 import hashlib
 import sys
 import traceback
@@ -16,8 +17,14 @@ from web.server.util.util import generic_error
 ENABLE_ROLLBAR = IS_PRODUCTION and not IS_TEST
 
 if ENABLE_ROLLBAR:
-    rollbar_opts = {'capture_ip': True, 'capture_email': True, 'capture_username': True}
-    rollbar.init('857fa045f2e34f8d823c14aea53429a3', 'production', **rollbar_opts)
+    ROLLBAR_TOKEN = os.getenv('ROLLBAR_TOKEN', None)
+    if ROLLBAR_TOKEN:
+        rollbar_opts = {
+            'capture_ip': True,
+            'capture_email': True,
+            'capture_username': True,
+        }
+        rollbar.init(ROLLBAR_TOKEN, 'production', **rollbar_opts)
 
 
 def get_error_fingerprint(err_str):
