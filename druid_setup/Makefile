@@ -1,7 +1,7 @@
 ENV_FILE=.env
 ENV_COMMON=environment/common.env
 
-PROJECT_NAME=harmony-druid
+PROJECT_NAME=druid
 
 include $(ENV_FILE)
 
