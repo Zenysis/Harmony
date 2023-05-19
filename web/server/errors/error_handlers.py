@@ -10,21 +10,14 @@ import rollbar
 from flask import g, jsonify, request, current_app
 from flask_user import current_user
 
+from config import settings
 from log import LOG
-from web.server.environment import IS_PRODUCTION, IS_TEST
 from web.server.util.util import generic_error
 
-ROLLBAR_TOKEN = (
-    os.getenv('ROLLBAR_TOKEN', None) if IS_PRODUCTION and not IS_TEST else None
-)
 
-if ROLLBAR_TOKEN:
-    rollbar_opts = {
-        'capture_ip': True,
-        'capture_email': True,
-        'capture_username': True,
-    }
-    rollbar.init(ROLLBAR_TOKEN, 'production', **rollbar_opts)
+if settings.ROLLBAR_ACCESS_TOKEN:
+    rollbar_opts = {'capture_ip': True, 'capture_email': True, 'capture_username': True}
+    rollbar.init(settings.ROLLBAR_ACCESS_TOKEN, 'production', **rollbar_opts)
 
 
 def get_error_fingerprint(err_str):
