@@ -4,6 +4,9 @@ include $(ENV_FILE)
 DOCKER_HOST ?= ssh://$(ZEN_WEB_REMOTE)
 PROJECT_NAME ?= harmony-web
 
+default:
+	@echo "Please specify a target to make"
+
 configure:
 	@scp nginx/nginx_vhost_default_location $(ZEN_WEB_REMOTE):${NGINX_DEFAULT_VHOST_CONFIG}
 	@scp instance_config.json $(ZEN_WEB_REMOTE):${INSTANCE_CONFIG}
