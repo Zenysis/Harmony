@@ -14,17 +14,17 @@ from log import LOG
 from web.server.environment import IS_PRODUCTION, IS_TEST
 from web.server.util.util import generic_error
 
-ENABLE_ROLLBAR = IS_PRODUCTION and not IS_TEST
+ROLLBAR_TOKEN = (
+    os.getenv('ROLLBAR_TOKEN', None) if IS_PRODUCTION and not IS_TEST else None
+)
 
-if ENABLE_ROLLBAR:
-    ROLLBAR_TOKEN = os.getenv('ROLLBAR_TOKEN', None)
-    if ROLLBAR_TOKEN:
-        rollbar_opts = {
-            'capture_ip': True,
-            'capture_email': True,
-            'capture_username': True,
-        }
-        rollbar.init(ROLLBAR_TOKEN, 'production', **rollbar_opts)
+if ROLLBAR_TOKEN:
+    rollbar_opts = {
+        'capture_ip': True,
+        'capture_email': True,
+        'capture_username': True,
+    }
+    rollbar.init(ROLLBAR_TOKEN, 'production', **rollbar_opts)
 
 
 def get_error_fingerprint(err_str):
