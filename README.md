@@ -149,80 +149,32 @@ or
 
 ## Production pipeline server setup
 
-The pipeline server runs the ETL data pipeline to generate datasources (typically, daily). These pipeline server setup instructions were developed for Linux/Ubuntu.
+The pipeline server runs the ETL data pipeline to generate datasources (typically, daily). These pipeline server setup instructions were developed for Ubuntu. Currently, the instructions are also written with the assumption that Druid is running on the same machine. 
 
-1. Configure your server's users, firewall, etc. Sign in as root.
-2. Update system packages.
-   ```
-   sudo apt-get update # updates available package version list
-   sudo apt-get upgrade # update packages
-   sudo apt-get autoremove # remove old packages
-   sudo do-release-upgrade # update os version
-   ```
-3. Install system dependencies.
-   ```
-   export DEBIAN_FRONTEND=noninteractive
-   apt-get update
-   apt-get install --no-install-recommends -y \
-    build-essential \
-    curl \
-    dtach \
-    freetds-bin \
-    freetds-dev \
-    git \
-    jq \
-    libffi-dev \
-    libgeos-dev \
-    libssl-dev \
-    lz4 \
-    lzop \
-    pigz \
-    python3 \
-    python3-dev \
-    python3-levenshtein \
-    python3-lxml \
-    python3-venv \
-    pypy3 \
-    pypy3-dev \
-    unzip \
-    wget \
-    libpq-dev \
-    gfortran \
-    libopenblas-dev \
-    liblapack-dev
-   apt-get clean
-   rm -rf /var/lib/apt/lists/*
-   curl \
-    -o /usr/local/bin/mc \
-    https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2021-11-16T20-37-36Z
-   chmod 755 /usr/local/bin/mc
-   ```
-   (You may not need to install minio depending on your cloud storage choices.)
-4. Clone your fork of the Harmony repo.
-   `git clone <URL of Harmony clone>`
-5. cd into the Harmony source directory and create two Python virtual environments. One is for regular python, one for pypy (which has a faster runtime and may be used for pipelines).
-
-   ```
-   # First set up the normal python3 venv
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install --upgrade pip setuptools
-   pip install -r requirements.txt
-   pip install -r requirements-pipeline.txt
-   pip install -r requirements-web.txt
-   pip install -r requirements-dev.txt
-
-   # Second set up the pypy venv
-   deactivate
-   pypy3 -m venv venv_pypy3
-   source venv_pypy3/bin/activate
-   pip install --upgrade pip setuptools
-   pip install -r requirements.txt
-   pip install -r requirements-pipeline.txt
-   ```
-
-6. Configure necessary permissions for your cloud storage service. For example, if you're using Minio, you'll need to set up `~/.mc/config` on the server.
-7. Optionally, you may want to configure an automated task runner like GitLab, CircleCI, or Jenkins (to automate pipeline runs on a set schedule).
+1. Configure your server's users, firewall, etc. Sign in.
+2. Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install Docker on Linux (Ubuntu).
+3. Set the requisite environment variables in `Harmony-Brazil/deploy/.env`: `$ZEN_ENV`, `$PIPELINE_ENV` `$DRUID_HOST`, `$DRUID_SHARED_FOLDER`, `$PIPELINE_USER`, and `$PIPELINE_GROUP`. 
+> Running `id` on the host machine will show you your user and group IDs.
+4. Create directories for Docker volumes.
+```
+sudo mkdir /home/share
+sudo mkdir /data/output
+```
+5. Switch volume directories to non-root ownership. (On machines without an "ubuntu" user, other default, non-root users can be swapped in here.)
+```
+sudo chown ubuntu:ubuntu /home/share
+sudo chown ubuntu:ubuntu /data/output
+```
+6. Start and enter pipeline container.
+```bash
+cd deploy
+make pipeline_bash
+```
+7. Inside the pipeline container, activate the virtual environment. After this step, it will be possible to execute pipeline commands using Zeus. 
+```bash
+source venv/bin/activate
+```
+8. Optionally, you may want to configure an automated task runner like GitLab, CircleCI, or Jenkins (to automate pipeline runs on a set schedule).
 
 ## Production PostgreSQL server setup
 

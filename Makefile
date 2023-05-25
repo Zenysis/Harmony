@@ -28,8 +28,8 @@ web_push:
 	@docker push $(DOCKER_NAMESPACE)/harmony-web:$(DOCKER_TAG)
 
 etl_pipeline_build:
-	@DOCKER_BUILDKIT=1 docker build -t $(DOCKER_NAMESPACE)/harmony-etl-pipeline:$(DOCKER_TAG) \
-		-f Dockerfile_dev  .
+	@docker build -t $(DOCKER_NAMESPACE)/harmony-etl-pipeline:$(DOCKER_TAG) \
+		-f docker/pipeline/Dockerfile  .
 
 etl_pipeline_push:
 	@docker push $(DOCKER_NAMESPACE)/harmony-etl-pipeline:$(DOCKER_TAG)
