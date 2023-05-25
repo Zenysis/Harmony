@@ -2,6 +2,7 @@ ENV_FILE=.env
 ENV_COMMON=environment/common.env
 
 PROJECT_NAME=druid
+LOGS_ARGS ?= -f -n 1000
 
 include $(ENV_FILE)
 
@@ -24,7 +25,7 @@ single_server_logs:
 	@cd single && \
 		DOCKER_HOST=$(SINGLE_SERVER_DOCKER_HOST) \
 		docker compose --project-name $(PROJECT_NAME) \
-		--env-file environment/common.env logs -f
+		--env-file environment/common.env logs $(LOGS_ARGS)
 
 cluster_server_up:
 	@cd cluster && \
