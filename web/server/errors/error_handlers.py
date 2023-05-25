@@ -15,7 +15,7 @@ from log import LOG
 from web.server.util.util import generic_error
 
 
-if settings.ROLLBAR_ACCESS_TOKEN:
+if settings.ENABLE_ROLLBAR and settings.ROLLBAR_ACCESS_TOKEN:
     rollbar_opts = {'capture_ip': True, 'capture_email': True, 'capture_username': True}
     rollbar.init(settings.ROLLBAR_ACCESS_TOKEN, 'production', **rollbar_opts)
 
@@ -35,7 +35,7 @@ def log_error(error):
         error,
     )
 
-    if ENABLE_ROLLBAR:
+    if settings.ENABLE_ROLLBAR:
         extra_data = {'deployment_name': current_app.zen_config.general.DEPLOYMENT_NAME}
         request.rollbar_person = (
             {
