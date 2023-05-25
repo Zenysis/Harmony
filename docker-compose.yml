@@ -76,7 +76,7 @@ services:
       postgres:
         condition: service_healthy
   pipeline:
-    image: zengineering/harmony-etl-pipeline:latest
+    image: harmony-dev-web:latest
     profiles:
       - pipeline
     build:
