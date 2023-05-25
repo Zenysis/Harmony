@@ -335,7 +335,8 @@ Create the environment file as `.env` in the `/deploy` directory and copy paste 
 
 ```properties
 DOCKER_HOST=unix:///var/run/docker.sock
-ZEN_WEB_ENV=<project code>
+ZEN_ENV=<project code>
+ZEN_HOME=<project root folder>
 
 ZEN_WEB_HOST=harmony.yourdomain.com
 ZEN_WEB_EMAIL=harmony@yourdomain.com
