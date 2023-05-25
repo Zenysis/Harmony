@@ -196,3 +196,4 @@ services:
       - router
     env_file:
       - environment/common.env
+      - environment/router.env
