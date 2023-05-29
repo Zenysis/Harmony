@@ -153,7 +153,7 @@ The pipeline server runs the ETL data pipeline to generate datasources (typicall
 
 1. Configure your server's users, firewall, etc. Sign in.
 2. Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install Docker on Linux (Ubuntu).
-3. Set the requisite environment variables in `Harmony-Brazil/deploy/.env`: `$ZEN_ENV`, `$PIPELINE_ENV` `$DRUID_HOST`, `$DRUID_SHARED_FOLDER`, `$PIPELINE_USER`, and `$PIPELINE_GROUP`. 
+3. Set the requisite environment variables in `./deploy/.env`: `$ZEN_ENV`, `$PIPELINE_ENV` `$DRUID_HOST`, `$DRUID_SHARED_FOLDER`, `$PIPELINE_USER`, and `$PIPELINE_GROUP`. 
 > Running `id` on the host machine will show you your user and group IDs.
 4. Create directories for Docker volumes.
 ```
