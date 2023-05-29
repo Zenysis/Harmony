@@ -88,6 +88,7 @@ services:
       - web_venv:/app/venv
       - web_venv_pypy3:/app/venv_pypy3
       - web_node_modules:/app/node_modules
+      - druid_shared:/home/share
     environment:
       - DATABASE_URL=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
       - ZEN_ENV=${ZEN_ENV}
@@ -97,6 +98,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    user: ${PIPELINE_USER:-1000}:${PIPELINE_GROUP:-1000}
     command:
       [
         "/bin/bash",
@@ -109,3 +111,9 @@ volumes:
   web_venv:
   web_venv_pypy3:
   web_node_modules:
+  druid_shared:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DRUID_SHARED_FOLDER:-/home/share}

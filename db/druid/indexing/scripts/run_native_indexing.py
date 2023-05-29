@@ -250,10 +250,10 @@ def main():
     files_to_index = build_files_to_index(Flags.ARGS.data_files)
 
     (cur_datasource, cur_version) = get_current_datasource_for_site(DEPLOYMENT_NAME)
-    cur_version = build_datasource_version(cur_version)
     if not Flags.ARGS.force and not task_contains_new_data(
         cur_datasource, cur_version, files_to_index, task_hash_dir
     ):
+        cur_version = build_datasource_version(cur_version)
         LOG.info(
             '##### Skipping indexing since existing datasource '
             'contains the same data specified in this task. #####'
@@ -261,6 +261,12 @@ def main():
         LOG.info('##### Current datasource: %s #####', cur_datasource)
         LOG.info('##### Current version: %s #####', cur_version)
         return 0
+
+    if Flags.ARGS.concurrent_subtasks <= 0:
+        raise ValueError('Native Indexing must have at least one concurrent subtask')
+
+    if len(files_to_index) == 0:
+        raise ValueError('Native Indexing must index at least one file')
 
     indexing_task = {
         'spec': {
