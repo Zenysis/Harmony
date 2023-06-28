@@ -55,10 +55,10 @@ postgres_logs:
 postgres_psql:
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml --file docker-compose.override.yml --profile postgres exec postgres psql -h localhost -U ${POSTGRES_USER} postgres
 
-create_db_setup_script:
+create_db_setup_script:  # NOTE: This script assumes we have an existing instance to setup the DB, maybe we can rather just let this run locally?
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml --file docker-compose.override.yml run web /bin/bash -c "ZEN_DB_LOG_ONLY=1 ./scripts/create_deployment_database.sh ${POSTGRES_HOST} ${INSTANCE_DB_NAME} ${POSTGRES_USER}"
 
-upgrade_database:
+upgrade_database:  # Similar to above
 	@DOCKER_HOST=$(DOCKER_HOST) docker compose --project-name ${PROJECT_NAME} --env-file $(ENV_FILE) --file docker-compose.yml --file docker-compose.override.yml run --rm web /bin/bash -c "./scripts/upgrade_database.sh"
 
 populate_data_models:
