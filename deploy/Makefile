@@ -9,9 +9,9 @@ default:
 	@echo "Please specify a target to make"
 
 configure:
-	@scp nginx/nginx_vhost_default_location $(ZEN_WEB_REMOTE):${NGINX_DEFAULT_VHOST_CONFIG}
-	@scp instance_config.json $(ZEN_WEB_REMOTE):${INSTANCE_CONFIG}
-	@scp global_config.py $(ZEN_WEB_REMOTE):${GLOBAL_CONFIG}
+	@scp $(PWD)/nginx/nginx_vhost_default_location $(ZEN_WEB_REMOTE):${NGINX_DEFAULT_VHOST_CONFIG}
+	@scp $(PWD)/instance_config.json $(ZEN_WEB_REMOTE):${INSTANCE_CONFIG}
+	@scp $(PWD)/global_config.py $(ZEN_WEB_REMOTE):${GLOBAL_CONFIG}
 
 prune:
 	@DOCKER_HOST=$(DOCKER_HOST) docker system prune -af

@@ -1,2 +1,4 @@
 # fork specific overrides
 services:
+  web:
+    pull_policy: always
