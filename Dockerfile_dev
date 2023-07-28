@@ -76,6 +76,7 @@ RUN wget https://download.osgeo.org/proj/proj-9.2.1.tar.gz -O /tmp/proj-9.2.1.ta
     && cmake --build .
 
 FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update \
     && apt-get -y upgrade \
