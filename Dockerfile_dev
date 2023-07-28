@@ -13,6 +13,20 @@ RUN apt-get update \
     wget \
     unzip \
     bzip2 \
+    # build-essential: is needed for building proj.
+    build-essential \
+    # cmake: is needed for building proj.
+    cmake \
+    # sqlite3: required for building proj.
+    sqlite3 \
+    # libsqlite3-dev: required for building proj.
+    libsqlite3-dev \
+    # libtiff-dev: is needed for building proj.
+    libtiff-dev \
+    # libcurl4-openssl-dev: is needed for building proj.
+    libcurl4-openssl-dev \
+    # python3: is needed for building proj.
+    python3 \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,24 +52,36 @@ RUN case $(uname -m) in \
     cd /tmp && unzip flow.zip && mv flow/flow /usr/local/bin/flow && rm -rf flow*;
 
 # Download pypy
-RUN case $(uname -m) in \
-    "x86_64")\
-    wget https://downloads.python.org/pypy/pypy3.9-v7.3.11-linux64.tar.bz2 -O /tmp/pypy3.9-v7.3.11-linux64.tar.bz2;\
-    cd /tmp && tar -xf pypy3.9-v7.3.11-linux64.tar.bz2;\
-    mv /tmp/pypy3.9-v7.3.11-linux64 /opt/pypy3.9-v7.3.11;\
-    ;;\
-    "aarch64")\
-    wget https://downloads.python.org/pypy/pypy3.9-v7.3.11-aarch64.tar.bz2 -O /tmp/pypy3.9-v7.3.11-aarch64.tar.bz2;\
-    cd /tmp && tar -xf pypy3.9-v7.3.11-aarch64.tar.bz2;\
-    mv /tmp/pypy3.9-v7.3.11-aarch64 /opt/pypy3.9-v7.3.11;\
-    ;;\
-    esac; \
-    rm /tmp/pypy3.9*;
+# RUN case $(uname -m) in \
+#     "x86_64")\
+#     wget https://downloads.python.org/pypy/pypy3.9-v7.3.11-linux64.tar.bz2 -O /tmp/pypy3.9-v7.3.11-linux64.tar.bz2;\
+#     cd /tmp && tar -xf pypy3.9-v7.3.11-linux64.tar.bz2;\
+#     mv /tmp/pypy3.9-v7.3.11-linux64 /opt/pypy3.9-v7.3.11;\
+#     ;;\
+#     "aarch64")\
+#     wget https://downloads.python.org/pypy/pypy3.9-v7.3.11-aarch64.tar.bz2 -O /tmp/pypy3.9-v7.3.11-aarch64.tar.bz2;\
+#     cd /tmp && tar -xf pypy3.9-v7.3.11-aarch64.tar.bz2;\
+#     mv /tmp/pypy3.9-v7.3.11-aarch64 /opt/pypy3.9-v7.3.11;\
+#     ;;\
+#     esac; \
+#     rm /tmp/pypy3.9*;
+
+# Download and build proj. (Ubuntu 22.04 has an old version of proj, numpy needs a more recent version)
+RUN wget https://download.osgeo.org/proj/proj-9.2.1.tar.gz -O /tmp/proj-9.2.1.tar.gz \
+    && tar -xzf /tmp/proj-9.2.1.tar.gz -C /tmp/ \
+    && rm /tmp/proj-9.2.1.tar.gz \
+    && mkdir /tmp/proj-9.2.1/build \
+    && cd /tmp/proj-9.2.1/build \
+    && cmake .. \
+    && cmake --build .
 
 FROM ubuntu:22.04
 
 RUN apt-get update \
     && apt-get -y upgrade \
+    && apt-get -y install --no-install-recommends software-properties-common gpg gpg-agent \
+    && add-apt-repository 'ppa:deadsnakes/ppa' \
+    && apt-get update \
     && apt-get -y install --no-install-recommends \
     build-essential \
     git \
@@ -78,8 +104,6 @@ RUN apt-get update \
     ca-certificates \
     postgresql-client \
     lz4 \
-    proj-bin \
-    libproj-dev \
     libyaml-dev \
     # dtach: emulates the detach feature of screen, not sure where it's used.
     dtach \
@@ -98,6 +122,19 @@ RUN apt-get update \
     # watchman warns not to use Ubuntu supplied version, but the current version
     # doesn't build on arm64, and they don't provide and arm64 .deb package.
     # watchman is used by translations to watch files.
+    # pypy3: is needed for installing the pypy3 venv, used by the pipeline.
+    pypy3 \
+    # pypy3-dev: is needed for installing some dependencies.
+    pypy3-dev \
+    # pypy3-venv: is needed for installing venv
+    pypy3-venv \
+    # python3: is needed for installing the cpython venv, used by the pipeline.
+    # python3-dev: is needed for installing some dependencies.
+    python3.9-dev \
+    # python3-pip: is needed for installing dependencies.
+    python3-pip \
+    # python3-venv: is needed for installing the cpython venv, used by the pipeline.
+    python3.9-venv \
     watchman \
     vim \
     && update-ca-certificates \
@@ -108,23 +145,24 @@ RUN apt-get update \
 RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
     && apt-get install -y nodejs
 
-# Bring in the exact version of CPython we currently use:
-ADD https://www.python.org/ftp/python/3.9.16/Python-3.9.16.tgz /tmp/Python-3.9.16.tgz
-RUN cd /tmp && tar -xvf Python-3.9.16.tgz && cd Python-3.9.16 \
-    && ./configure --prefix=/opt/python/3.9.16/ --enable-optimizations --with-lto --with-computed-gotos --with-system-ffi \
-    && make -j "$(nproc)" \
-    && make altinstall \
-    && rm -rf /tmp/Python-3.9.16*
-
 # Install minio client
 COPY --chmod=755 --from=downloader /usr/local/bin/mc /usr/local/bin/mc
 
 WORKDIR /app
 
+# Numpy needs: proj, but the version of proj ubuntu gives us is too old, so we
+# compile a newer one.
+# We grab the build from a previous step - it's just nice having a long running
+# build cached.
+COPY --from=downloader /tmp/proj-9.2.1 /tmp/proj-9.2.1
+RUN cd /tmp/proj-9.2.1/build \    
+    && cmake --build . --target install \
+    && rm -rf /tmp/proj-9.2.1
+
 # CPython
 # Update setup and create venv
-RUN /opt/python/3.9.16/bin/python3.9 -m pip install --upgrade pip setuptools \
-    && /opt/python/3.9.16/bin/python3.9 -m venv venv \
+RUN python3.9 -m pip install --upgrade pip setuptools \
+    && python3.9 -m venv venv \
     && . venv/bin/activate && python -m pip install --upgrade pip setuptools
 # Install dependencies
 COPY requirements.txt requirements-web.txt requirements-dev.txt requirements-pipeline.txt ./
@@ -135,17 +173,15 @@ RUN . venv/bin/activate \
     && python -m pip install -r requirements-pipeline.txt
 
 # PyPy
-# Install pypy
-COPY --from=downloader /opt/pypy3.9-v7.3.11 /opt/pypy3.9-v7.3.11
-# Update setup and create venv
-RUN /opt/pypy3.9-v7.3.11/bin/pypy3 -m ensurepip \
-    && /opt/pypy3.9-v7.3.11/bin/pypy3 -m pip install --upgrade pip setuptools \
-    && /opt/pypy3.9-v7.3.11/bin/pypy3 -m venv venv_pypy3
-# Install pypy dependencies
-RUN . venv_pypy3/bin/activate \
+RUN pypy3 -m pip install --upgrade pip setuptools \
+    && pypy3 -m venv venv_pypy3 \
+    && . venv_pypy3/bin/activate \
     && pypy3 -m pip install --upgrade pip setuptools \
-    && pypy3 -m pip install -r requirements.txt \
-    && pypy3 -m pip install -r requirements-pipeline.txt
+    && pypy3 -m pip install -r requirements.txt
+# TODO: Currently skipping requirements-pipeline.txt due to pyproj not installing correctly
+# on arm processors with pypy. This will be resolved in the future when the python verions and
+# dependencies are updated.
+#     && pypy3 -m pip install -r requirements-pipeline.txt
 
 # Install flow.
 COPY --from=downloader /usr/local/bin/flow /usr/local/bin/flow
