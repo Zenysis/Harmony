@@ -1,0 +1,13 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+pushd "${PIPELINE_FEED_DIR}" &> /dev/null
+
+rm -rf "${PIPELINE_FEED_DIR}"/*
+
+latest_dir=$(GetLatestDirectory 's3/zenysis-SITECODE/foo' '*.csv')
+FetchFiles "${latest_dir}/*.csv" .
+
+popd &> /dev/null

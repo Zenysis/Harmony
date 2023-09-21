@@ -1,0 +1,5 @@
+{
+  "name": "eslint-plugin-zen",
+  "description": "Lint rules for Zenysis",
+  "version": "0.1.0"
+}

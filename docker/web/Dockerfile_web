@@ -1,0 +1,46 @@
+ARG NAMESPACE
+ARG IMAGE_PREFIX
+ARG TAG
+
+FROM ${NAMESPACE}/${IMAGE_PREFIX}-web-client:${TAG} AS client-build
+FROM ${NAMESPACE}/${IMAGE_PREFIX}-web-server:${TAG} AS server-build
+
+# Ideally we would use a slim distro here, but just what we need from server-build
+# won't always work for us, depending on what platform you're building and what
+# dependencies are needed.
+FROM server-build
+
+# Redeclare the TAG arg since ARGs before FROM are outside ofa build stage and
+# can't be reused after FROM.
+# https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
+ARG TAG
+
+ENV INSTALL_PATH /zenysis
+ENV ZEN_HOME ${INSTALL_PATH}
+ENV R77_SRC_ROOT ${INSTALL_PATH}
+ENV ZENYSIS_SRC_ROOT ${INSTALL_PATH}
+ENV PYTHONPATH "${ZENYSIS_SRC_ROOT}:${PYTHONPATH}"
+ENV PYTHONUNBUFFERED 1
+ENV BUILD_TAG ${TAG}
+
+ENV ZEN_PROD 1
+
+# Build the parent directories needed in the install location.
+RUN mkdir -p ${INSTALL_PATH}/web/public
+RUN mkdir -p /data/output
+WORKDIR ${INSTALL_PATH}
+
+# Copy the built client files.
+COPY --from=client-build /client/ web/public/
+
+# Copy over various utilities.
+COPY docker/entrypoint_web.sh docker/entrypoint_web.sh
+COPY scripts scripts
+
+# Copy all utilities used by the docker web container to the source root.
+COPY docker/web/scripts/* ./
+
+# Web server runs on port 5000.
+EXPOSE 5000
+
+CMD ./docker/entrypoint_web.sh

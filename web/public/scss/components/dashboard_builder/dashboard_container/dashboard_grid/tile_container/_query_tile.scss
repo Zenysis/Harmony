@@ -1,0 +1,22 @@
+// The height of a Query Result container in the Grid Dashboard
+// relative to the height of its parent element.
+.gd-dashboard-query-tile {
+  height: 100%;
+  z-index: 0;
+
+  &__query-result-view {
+    background-color: $white;
+    height: 100%;
+    @media (max-width: 940px) {
+      padding-top: 60px;
+    }
+  }
+
+  .graph-title-block__subtitle {
+    font-size: 12px;
+  }
+
+  .legend-container {
+    padding: 0px !important;
+  }
+}

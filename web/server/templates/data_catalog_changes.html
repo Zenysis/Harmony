@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Self Serve Changes Summary</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <style>
+        .centered-tabs {
+            justify-content: left;
+            margin: 25px 0 0 20px;
+        }
+        h3 {
+          padding: 25px 0 0 25px;
+        }
+    </style>
+  </head>
+
+  <body>
+    <h3>{{ data_catalog_import_file }}</h3>
+    <ul class="nav nav-tabs centered-tabs">
+        {% for table_name in table_names %}
+            <li class="nav-item">
+                {% if loop.first %}
+                    <a class="nav-link active" data-toggle="tab" href="#{{ table_name }}"># {{ table_name }}</a>
+                {% else %}
+                    <a class="nav-link" data-toggle="tab" href="#{{ table_name }}"># {{ table_name }}</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <div class="tab-content">
+        {% for table_changes in data_catalog_changes %}
+            {% if loop.first %}
+                <div class="tab-pane fade show active" id="{{ table_changes.table_name }}">
+            {% else %}
+                <div class="tab-pane fade show" id="{{ table_changes.table_name }}">
+            {% endif %}
+
+                <div class="card-body">
+                    {% if table_changes.new_records|length > 0 %}
+                        <h5 class="text-success">New Records</h5>
+                        <table class="table table-sm table-bordered" style="margin-bottom: 24px;">
+                            <thead>
+                                <tr scope="col">
+                                    {% for header in table_changes.new_records.headers %}
+                                        <th class="text-success">{{ header }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in table_changes.new_records.rows %}
+                                    <tr>
+                                        {% for val in row %}
+                                            <td>{{ val }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <hr>
+                    {% endif %}
+
+                    {% if table_changes.deleted_records|length > 0 %}
+                        <h5 class="text-danger">Deleted Records</h5>
+                        <table class="table table-sm table-bordered" style="margin-bottom: 24px;">
+                            <thead>
+                                <tr scope="col">
+                                    {% for header in table_changes.deleted_records.headers %}
+                                        <th class="text-danger">{{ header }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in table_changes.deleted_records.rows %}
+                                    <tr>
+                                        {% for val in row %}
+                                            <td>{{ val }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <hr>
+                    {% endif %}
+                    
+                    {% if table_changes.modified_records| length > 0 %}
+                        <h5>Modified Records</h5>
+                        {% for row_grouping in table_changes.modified_records %}
+                            <table class="table table-sm table-bordered" style="margin-bottom: 24px;">
+                                <thead>
+                                    <tr scope="col">
+                                        {% for header in row_grouping.headers %}
+                                            <th>{{ header }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in row_grouping.rows %}
+                                        <tr>
+                                            {% for value in row %}
+                                                <td>{{ value|safe }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+  </body>
+</html>

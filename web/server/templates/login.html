@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<section id="widget-grid">
+    <!-- React app -->
+    <div id="app"></div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+  {% include 'query_app_vendor_scripts.html' %}
+  <script src="{{ bundle_resource_url('loginPage.bundle.js') }}"></script>
+{% endblock %}
+
+{% block script_name %}{% endblock %}

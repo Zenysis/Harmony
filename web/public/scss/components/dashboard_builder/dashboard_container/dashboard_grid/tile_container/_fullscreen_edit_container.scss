@@ -1,0 +1,38 @@
+$gd-edit-navbar-bg-color: #001841;
+$gd-edit-navbar-title-hover-color: #0d2a5c;
+
+.gd-fullscreen-edit-container {
+  // Override base modal CSS
+  border: initial !important;
+
+  &__navbar {
+    align-items: center;
+    background-color: $gd-edit-navbar-bg-color;
+    color: $white;
+    display: flex;
+    height: var(--navbar-height);
+    justify-content: space-between;
+    padding-left: $space-m-px;
+    padding-right: $space-l-px;
+  }
+
+  &__title-container {
+    align-items: center;
+    display: flex;
+    height: 100%;
+
+    &:hover {
+      background-color: $gd-edit-navbar-title-hover-color;
+    }
+  }
+
+  &__title {
+    color: $white;
+  }
+
+  .zen-modal__body {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+}

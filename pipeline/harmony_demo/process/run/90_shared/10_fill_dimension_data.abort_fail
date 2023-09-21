@@ -1,0 +1,60 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# Load the utilities file to use the 'SetupEnvForPyPy', 'TagLines', and 'WaitMultipleThreads'
+# commands.
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+# Enters the pypy virtual environment for better performance.
+SetupEnvForPyPy
+
+# Use the 'generate_pipeline_sources.py' script to get a list of all sources
+# that go through this fill_dimension_data step.
+STEP='fill_dimension_data'
+SOURCES=($("${PIPELINE_SRC_ROOT}/data/pipeline/scripts/generate_pipeline_sources.py" ${STEP}))
+
+# Track background process IDs so that we can reliably capture exit code.
+pids=()
+
+STATIC_DATA="${PIPELINE_BIN_DIR}/../static_data"
+
+# Loop through all sources that go through this step.
+for cur_source in "${SOURCES[@]}" ; do
+  # For each source, the data will be read from the tmp directory and written
+  # to the out directory.
+  source_tmp_dir="${PIPELINE_OUT_ROOT}/tmp/${cur_source}/${PIPELINE_DATE}"
+  source_out_dir="${PIPELINE_OUT_ROOT}/out/${cur_source}/${PIPELINE_DATE}"
+
+  # Clear past processed data if step is run multiple times.
+  rm -f "${source_out_dir}"/processed_rows.*.json.gz
+
+  # The fill_dimension_data script reads in the data outputted by process_csv,
+  # fills in the mapped locations, adds the metadata dimensions, and formats
+  # the data for Druid. To explain each input parameter:
+  #   location_mapping_file: The file mapping from input location to canonical
+  #     locations.
+  #   metadata_file: The file containing the ID, Latitude, and Longitude
+  #     dimensions for each of the locations.
+  #   input_file: Use the same file that was outputted by process_csv.
+  #   output_file_pattern: The file pattern for output files. The data is
+  #     sharded so the # wildcard will be replaces with the file number.
+  #   shard_size: Write no more that 3 million lines per file.
+  #   metadata_digest_file: The output file for a summary of all fields.
+  #
+  # All sources runs in parallel. The TagLines utility will preface any logs
+  # generated with the source id. The pids array will track the processes
+  # spawned.
+  "${PIPELINE_SRC_ROOT}/data/pipeline/scripts/fill_dimension_data.py" \
+      --location_mapping_file="${STATIC_DATA}/mapped_locations.csv" \
+      --metadata_file="${STATIC_DATA}/metadata_mapped.csv" \
+      --input_file="${source_tmp_dir}/processed_data.json.lz4" \
+      --output_file_pattern="${source_out_dir}/processed_rows.#.json.gz" \
+      --shard_size=3000000 \
+      --metadata_digest_file="${source_out_dir}/metadata_digest_file.csv" \
+    | TagLines "${cur_source}" &
+  pids+=("$!")
+done
+
+# Wait on each background process individually so that non-zero exit codes
+# will be raised.
+WaitMultipleThreads "${pids[@]}"

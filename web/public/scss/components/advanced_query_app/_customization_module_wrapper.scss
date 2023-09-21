@@ -1,0 +1,35 @@
+.aqt-customization-module-wrapper {
+  @include zen-elevation-4;
+  background: white;
+  border-radius: 5px;
+  width: $aqt-customization-module-width;
+  z-index: 100;
+
+  .zen-label-wrapper {
+    padding-top: 1em;
+
+    &:first-child {
+      padding-top: 0;
+    }
+
+    &__wrapped-content {
+      padding-top: 0.4em;
+    }
+  }
+
+  &__contents {
+    padding: $space-m-px;
+  }
+
+  &__close-row {
+    display: flex;
+    justify-content: flex-end;
+    padding-bottom: $space-m-px;
+    padding-right: $space-m-px;
+  }
+
+  &__apply-btn {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+  }
+}

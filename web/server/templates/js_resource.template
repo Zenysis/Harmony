@@ -1,0 +1,3 @@
+{%- macro js_resource_url(resource) -%}
+{{config.VENDOR_SCRIPT_PATH}}{{resource}}
+{%- endmacro -%}

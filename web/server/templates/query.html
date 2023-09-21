@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+
+{% block css %}
+{% endblock %}
+
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+{% endblock %}
+
+{% block scripts %}
+  {% include 'query_app_vendor_scripts.html' %}
+
+  <script src="{{ bundle_resource_url('query.bundle.js') }}"></script>
+  <!-- {{js_version}}-->
+{% endblock %}

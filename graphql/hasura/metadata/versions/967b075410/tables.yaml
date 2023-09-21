@@ -1,0 +1,1230 @@
+- table:
+    schema: public
+    name: alert_definitions
+  object_relationships:
+  - name: resource
+    using:
+      foreign_key_constraint_on: authorization_resource_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+  array_relationships:
+  - name: alert_notifications
+    using:
+      foreign_key_constraint_on:
+        column: alert_definition_id
+        table:
+          schema: public
+          name: alert_notifications
+- table:
+    schema: public
+    name: alert_notifications
+  object_relationships:
+  - name: alert_definition
+    using:
+      foreign_key_constraint_on: alert_definition_id
+  - name: case
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: case
+        column_mapping:
+          id: alert_notification_id
+- table:
+    schema: public
+    name: canonical_locations
+  object_relationships:
+  - name: canonical_location
+    using:
+      foreign_key_constraint_on: parent_id
+  - name: location_type
+    using:
+      foreign_key_constraint_on: type_id
+  array_relationships:
+  - name: canonical_locations
+    using:
+      foreign_key_constraint_on:
+        column: parent_id
+        table:
+          schema: public
+          name: canonical_locations
+  - name: mapped_locations
+    using:
+      foreign_key_constraint_on:
+        column: canonical_id
+        table:
+          schema: public
+          name: mapped_locations
+  - name: suggested_matches
+    using:
+      foreign_key_constraint_on:
+        column: canonical_id
+        table:
+          schema: public
+          name: suggested_matches
+  - name: unmatched_locations
+    using:
+      foreign_key_constraint_on:
+        column: parent_id
+        table:
+          schema: public
+          name: unmatched_locations
+  - name: user_matches
+    using:
+      foreign_key_constraint_on:
+        column: canonical_id
+        table:
+          schema: public
+          name: user_matches
+- table:
+    schema: public
+    name: canonical_pipeline_entity
+  object_relationships:
+  - name: pipeline_entity_type
+    using:
+      foreign_key_constraint_on: entity_type_id
+  array_relationships:
+  - name: pipeline_entity_matches
+    using:
+      foreign_key_constraint_on:
+        column: canonical_entity_id
+        table:
+          schema: public
+          name: pipeline_entity_match
+- table:
+    schema: public
+    name: case
+  object_relationships:
+  - name: alert_notification
+    using:
+      foreign_key_constraint_on: alert_notification_id
+  - name: case_status_type
+    using:
+      foreign_key_constraint_on: case_status_type_id
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+  array_relationships:
+  - name: case_events
+    using:
+      foreign_key_constraint_on:
+        column: case_id
+        table:
+          schema: public
+          name: case_event
+  - name: case_metadata
+    using:
+      foreign_key_constraint_on:
+        column: case_id
+        table:
+          schema: public
+          name: case_metadata
+- table:
+    schema: public
+    name: case_event
+  object_relationships:
+  - name: case
+    using:
+      foreign_key_constraint_on: case_id
+  array_relationships:
+  - name: case_type_default_events
+    using:
+      foreign_key_constraint_on:
+        column: case_event_id
+        table:
+          schema: public
+          name: case_type_default_event
+- table:
+    schema: public
+    name: case_metadata
+  object_relationships:
+  - name: case
+    using:
+      foreign_key_constraint_on: case_id
+  - name: case_metadata_type
+    using:
+      foreign_key_constraint_on: case_metadata_type_id
+- table:
+    schema: public
+    name: case_metadata_type
+  object_relationships:
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+  array_relationships:
+  - name: case_metadata
+    using:
+      foreign_key_constraint_on:
+        column: case_metadata_type_id
+        table:
+          schema: public
+          name: case_metadata
+- table:
+    schema: public
+    name: case_status_type
+  array_relationships:
+  - name: case_type_default_statuses
+    using:
+      foreign_key_constraint_on:
+        column: case_status_type_id
+        table:
+          schema: public
+          name: case_type_default_status
+  - name: case_types
+    using:
+      foreign_key_constraint_on:
+        column: default_case_status_type_id
+        table:
+          schema: public
+          name: case_type
+  - name: cases
+    using:
+      foreign_key_constraint_on:
+        column: case_status_type_id
+        table:
+          schema: public
+          name: case
+- table:
+    schema: public
+    name: case_type
+  object_relationships:
+  - name: caseTypeMetadataFromDruidDimensionByNamingDruidDimensionId
+    using:
+      foreign_key_constraint_on: naming_druid_dimension_id
+  - name: case_status_type
+    using:
+      foreign_key_constraint_on: default_case_status_type_id
+  - name: case_type_metadata_from_druid_dimension
+    using:
+      foreign_key_constraint_on: primary_druid_dimension_id
+  array_relationships:
+  - name: case_metadata_types
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_metadata_type
+  - name: case_type_default_events
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_type_default_event
+  - name: case_type_default_fields
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_type_default_field
+  - name: case_type_default_statuses
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_type_default_status
+  - name: case_type_metadata_from_druid_dimensions
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_type_metadata_from_druid_dimension
+  - name: case_type_metadata_from_druid_fields
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case_type_metadata_from_druid_field
+  - name: cases
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: case
+  - name: external_alert_types
+    using:
+      foreign_key_constraint_on:
+        column: case_type_id
+        table:
+          schema: public
+          name: external_alert_type
+- table:
+    schema: public
+    name: case_type_default_event
+  object_relationships:
+  - name: case_event
+    using:
+      foreign_key_constraint_on: case_event_id
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+- table:
+    schema: public
+    name: case_type_default_field
+  object_relationships:
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+- table:
+    schema: public
+    name: case_type_default_status
+  object_relationships:
+  - name: case_status_type
+    using:
+      foreign_key_constraint_on: case_status_type_id
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+- table:
+    schema: public
+    name: case_type_metadata_from_druid_dimension
+  object_relationships:
+  - name: caseTypeById
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: case_type
+        column_mapping:
+          id: primary_druid_dimension_id
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+  array_relationships:
+  - name: case_types
+    using:
+      foreign_key_constraint_on:
+        column: naming_druid_dimension_id
+        table:
+          schema: public
+          name: case_type
+- table:
+    schema: public
+    name: case_type_metadata_from_druid_field
+  object_relationships:
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+- table:
+    schema: public
+    name: category
+  array_relationships:
+  - name: categoryToCategoryMappingsByParentCategoryId
+    using:
+      foreign_key_constraint_on:
+        column: parent_category_id
+        table:
+          schema: public
+          name: category_to_category_mapping
+  - name: category_to_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: category_id
+        table:
+          schema: public
+          name: category_to_category_mapping
+  - name: dimension_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: category_id
+        table:
+          schema: public
+          name: dimension_category_mapping
+  - name: field_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: category_id
+        table:
+          schema: public
+          name: field_category_mapping
+- table:
+    schema: public
+    name: category_to_category_mapping
+  object_relationships:
+  - name: category
+    using:
+      foreign_key_constraint_on: parent_category_id
+  - name: categoryByCategoryId
+    using:
+      foreign_key_constraint_on: category_id
+- table:
+    schema: public
+    name: configuration
+- table:
+    schema: public
+    name: crontab_schedule
+  array_relationships:
+  - name: scheduler_entries
+    using:
+      foreign_key_constraint_on:
+        column: crontab_id
+        table:
+          schema: public
+          name: scheduler_entry
+- table:
+    schema: public
+    name: dashboard
+  object_relationships:
+  - name: resource
+    using:
+      foreign_key_constraint_on: resource_id
+  - name: user
+    using:
+      foreign_key_constraint_on: author_id
+  array_relationships:
+  - name: dashboard_report_schedules
+    using:
+      foreign_key_constraint_on:
+        column: dashboard_id
+        table:
+          schema: public
+          name: dashboard_report_schedule
+  - name: dashboard_user_metadata
+    using:
+      foreign_key_constraint_on:
+        column: dashboard_id
+        table:
+          schema: public
+          name: dashboard_user_metadata
+- table:
+    schema: public
+    name: dashboard_report_schedule
+  object_relationships:
+  - name: dashboard
+    using:
+      foreign_key_constraint_on: dashboard_id
+  - name: scheduler_entry
+    using:
+      foreign_key_constraint_on: scheduler_entry_id
+  - name: user
+    using:
+      foreign_key_constraint_on: owner_id
+- table:
+    schema: public
+    name: dashboard_user_metadata
+  object_relationships:
+  - name: dashboard
+    using:
+      foreign_key_constraint_on: dashboard_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+- table:
+    schema: public
+    name: dimension
+  array_relationships:
+  - name: dimension_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: dimension_id
+        table:
+          schema: public
+          name: dimension_category_mapping
+  - name: field_dimension_mappings
+    using:
+      foreign_key_constraint_on:
+        column: dimension_id
+        table:
+          schema: public
+          name: field_dimension_mapping
+- table:
+    schema: public
+    name: dimension_category_mapping
+  object_relationships:
+  - name: category
+    using:
+      foreign_key_constraint_on: category_id
+  - name: dimension
+    using:
+      foreign_key_constraint_on: dimension_id
+- table:
+    schema: public
+    name: external_alert_activity_to_ignore
+  object_relationships:
+  - name: external_alert_type
+    using:
+      foreign_key_constraint_on: external_alert_type_id
+- table:
+    schema: public
+    name: external_alert_type
+  object_relationships:
+  - name: case_type
+    using:
+      foreign_key_constraint_on: case_type_id
+  array_relationships:
+  - name: external_alert_activity_to_ignores
+    using:
+      foreign_key_constraint_on:
+        column: external_alert_type_id
+        table:
+          schema: public
+          name: external_alert_activity_to_ignore
+- table:
+    schema: public
+    name: feed_update
+  object_relationships:
+  - name: feed_update_type
+    using:
+      foreign_key_constraint_on: feed_update_type_id
+- table:
+    schema: public
+    name: feed_update_type
+  array_relationships:
+  - name: feed_updates
+    using:
+      foreign_key_constraint_on:
+        column: feed_update_type_id
+        table:
+          schema: public
+          name: feed_update
+- table:
+    schema: public
+    name: field
+  array_relationships:
+  - name: field_category_mappings
+    using:
+      foreign_key_constraint_on:
+        column: field_id
+        table:
+          schema: public
+          name: field_category_mapping
+  - name: field_dimension_mappings
+    using:
+      foreign_key_constraint_on:
+        column: field_id
+        table:
+          schema: public
+          name: field_dimension_mapping
+  - name: field_pipeline_datasource_mappings
+    using:
+      foreign_key_constraint_on:
+        column: field_id
+        table:
+          schema: public
+          name: field_pipeline_datasource_mapping
+- table:
+    schema: public
+    name: field_category_mapping
+  object_relationships:
+  - name: category
+    using:
+      foreign_key_constraint_on: category_id
+  - name: field
+    using:
+      foreign_key_constraint_on: field_id
+- table:
+    schema: public
+    name: field_dimension_mapping
+  object_relationships:
+  - name: dimension
+    using:
+      foreign_key_constraint_on: dimension_id
+  - name: field
+    using:
+      foreign_key_constraint_on: field_id
+- table:
+    schema: public
+    name: field_pipeline_datasource_mapping
+  object_relationships:
+  - name: field
+    using:
+      foreign_key_constraint_on: field_id
+  - name: pipeline_datasource
+    using:
+      foreign_key_constraint_on: pipeline_datasource_id
+- table:
+    schema: public
+    name: flagged_locations
+  object_relationships:
+  - name: unmatched_location
+    using:
+      foreign_key_constraint_on: unmatched_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+- table:
+    schema: public
+    name: history_records
+  object_relationships:
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+- table:
+    schema: public
+    name: indicator_constituents
+  object_relationships:
+  - name: indicator
+    using:
+      foreign_key_constraint_on: indicator_id
+  - name: indicatorByCalculatedIndicatorId
+    using:
+      foreign_key_constraint_on: calculated_indicator_id
+- table:
+    schema: public
+    name: indicator_groups
+  array_relationships:
+  - name: indicators
+    using:
+      foreign_key_constraint_on:
+        column: group_id
+        table:
+          schema: public
+          name: indicators
+- table:
+    schema: public
+    name: indicators
+  object_relationships:
+  - name: indicator_group
+    using:
+      foreign_key_constraint_on: group_id
+  array_relationships:
+  - name: indicatorConstituentsByIndicatorId
+    using:
+      foreign_key_constraint_on:
+        column: indicator_id
+        table:
+          schema: public
+          name: indicator_constituents
+  - name: indicator_constituents
+    using:
+      foreign_key_constraint_on:
+        column: calculated_indicator_id
+        table:
+          schema: public
+          name: indicator_constituents
+- table:
+    schema: public
+    name: location_types
+  array_relationships:
+  - name: canonical_locations
+    using:
+      foreign_key_constraint_on:
+        column: type_id
+        table:
+          schema: public
+          name: canonical_locations
+  - name: unmatched_locations
+    using:
+      foreign_key_constraint_on:
+        column: type_id
+        table:
+          schema: public
+          name: unmatched_locations
+- table:
+    schema: public
+    name: mapped_locations
+  object_relationships:
+  - name: canonical_location
+    using:
+      foreign_key_constraint_on: canonical_id
+  - name: unmatched_location
+    using:
+      foreign_key_constraint_on: unmatched_id
+- table:
+    schema: public
+    name: permission
+  object_relationships:
+  - name: resource_type
+    using:
+      foreign_key_constraint_on: resource_type_id
+  array_relationships:
+  - name: resource_role_permissions
+    using:
+      foreign_key_constraint_on:
+        column: permission_id
+        table:
+          schema: public
+          name: resource_role_permission
+  - name: role_permissions
+    using:
+      foreign_key_constraint_on:
+        column: permission_id
+        table:
+          schema: public
+          name: role_permissions
+- table:
+    schema: public
+    name: pipeline_datasource
+  array_relationships:
+  - name: field_pipeline_datasource_mappings
+    using:
+      foreign_key_constraint_on:
+        column: pipeline_datasource_id
+        table:
+          schema: public
+          name: field_pipeline_datasource_mapping
+- table:
+    schema: public
+    name: pipeline_entity_match
+  object_relationships:
+  - name: canonical_pipeline_entity
+    using:
+      foreign_key_constraint_on: canonical_entity_id
+  - name: raw_pipeline_entity
+    using:
+      foreign_key_constraint_on: raw_entity_id
+- table:
+    schema: public
+    name: pipeline_entity_type
+  array_relationships:
+  - name: canonical_pipeline_entities
+    using:
+      foreign_key_constraint_on:
+        column: entity_type_id
+        table:
+          schema: public
+          name: canonical_pipeline_entity
+  - name: raw_pipeline_entities
+    using:
+      foreign_key_constraint_on:
+        column: entity_type_id
+        table:
+          schema: public
+          name: raw_pipeline_entity
+- table:
+    schema: public
+    name: query_policy
+  object_relationships:
+  - name: query_policy_type
+    using:
+      foreign_key_constraint_on: query_policy_type_id
+  array_relationships:
+  - name: query_policy_roles
+    using:
+      foreign_key_constraint_on:
+        column: query_policy_id
+        table:
+          schema: public
+          name: query_policy_role
+- table:
+    schema: public
+    name: query_policy_role
+  object_relationships:
+  - name: query_policy
+    using:
+      foreign_key_constraint_on: query_policy_id
+  - name: role
+    using:
+      foreign_key_constraint_on: role_id
+- table:
+    schema: public
+    name: query_policy_type
+  array_relationships:
+  - name: query_policies
+    using:
+      foreign_key_constraint_on:
+        column: query_policy_type_id
+        table:
+          schema: public
+          name: query_policy
+- table:
+    schema: public
+    name: raw_pipeline_entity
+  object_relationships:
+  - name: pipeline_entity_match
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: pipeline_entity_match
+        column_mapping:
+          id: raw_entity_id
+  - name: pipeline_entity_type
+    using:
+      foreign_key_constraint_on: entity_type_id
+- table:
+    schema: public
+    name: resource
+  object_relationships:
+  - name: alert_definition
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: alert_definitions
+        column_mapping:
+          id: authorization_resource_id
+  - name: dashboard
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: dashboard
+        column_mapping:
+          id: resource_id
+  - name: resource_type
+    using:
+      foreign_key_constraint_on: resource_type_id
+  - name: sitewide_resource_acl
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: sitewide_resource_acl
+        column_mapping:
+          id: resource_id
+  array_relationships:
+  - name: security_group_acls
+    using:
+      foreign_key_constraint_on:
+        column: resource_id
+        table:
+          schema: public
+          name: security_group_acl
+  - name: user_acls
+    using:
+      foreign_key_constraint_on:
+        column: resource_id
+        table:
+          schema: public
+          name: user_acl
+- table:
+    schema: public
+    name: resource_role
+  object_relationships:
+  - name: resource_type
+    using:
+      foreign_key_constraint_on: resource_type_id
+  array_relationships:
+  - name: resource_role_permissions
+    using:
+      foreign_key_constraint_on:
+        column: resource_role_id
+        table:
+          schema: public
+          name: resource_role_permission
+  - name: roles
+    using:
+      foreign_key_constraint_on:
+        column: alert_resource_role_id
+        table:
+          schema: public
+          name: role
+  - name: rolesByDashboardResourceRoleId
+    using:
+      foreign_key_constraint_on:
+        column: dashboard_resource_role_id
+        table:
+          schema: public
+          name: role
+  - name: security_group_acls
+    using:
+      foreign_key_constraint_on:
+        column: resource_role_id
+        table:
+          schema: public
+          name: security_group_acl
+  - name: sitewideResourceAclsByUnregisteredResourceRoleId
+    using:
+      foreign_key_constraint_on:
+        column: unregistered_resource_role_id
+        table:
+          schema: public
+          name: sitewide_resource_acl
+  - name: sitewide_resource_acls
+    using:
+      foreign_key_constraint_on:
+        column: registered_resource_role_id
+        table:
+          schema: public
+          name: sitewide_resource_acl
+  - name: user_acls
+    using:
+      foreign_key_constraint_on:
+        column: resource_role_id
+        table:
+          schema: public
+          name: user_acl
+- table:
+    schema: public
+    name: resource_role_permission
+  object_relationships:
+  - name: permission
+    using:
+      foreign_key_constraint_on: permission_id
+  - name: resource_role
+    using:
+      foreign_key_constraint_on: resource_role_id
+- table:
+    schema: public
+    name: resource_type
+  array_relationships:
+  - name: permissions
+    using:
+      foreign_key_constraint_on:
+        column: resource_type_id
+        table:
+          schema: public
+          name: permission
+  - name: resource_roles
+    using:
+      foreign_key_constraint_on:
+        column: resource_type_id
+        table:
+          schema: public
+          name: resource_role
+  - name: resources
+    using:
+      foreign_key_constraint_on:
+        column: resource_type_id
+        table:
+          schema: public
+          name: resource
+- table:
+    schema: public
+    name: role
+  object_relationships:
+  - name: resourceRoleByAlertResourceRoleId
+    using:
+      foreign_key_constraint_on: alert_resource_role_id
+  - name: resource_role
+    using:
+      foreign_key_constraint_on: dashboard_resource_role_id
+  array_relationships:
+  - name: query_policy_roles
+    using:
+      foreign_key_constraint_on:
+        column: role_id
+        table:
+          schema: public
+          name: query_policy_role
+  - name: role_permissions
+    using:
+      foreign_key_constraint_on:
+        column: role_id
+        table:
+          schema: public
+          name: role_permissions
+  - name: security_group_roles
+    using:
+      foreign_key_constraint_on:
+        column: role_id
+        table:
+          schema: public
+          name: security_group_roles
+  - name: user_roles
+    using:
+      foreign_key_constraint_on:
+        column: role_id
+        table:
+          schema: public
+          name: user_roles
+- table:
+    schema: public
+    name: role_permissions
+  object_relationships:
+  - name: permission
+    using:
+      foreign_key_constraint_on: permission_id
+  - name: role
+    using:
+      foreign_key_constraint_on: role_id
+- table:
+    schema: public
+    name: scheduler_entry
+  object_relationships:
+  - name: crontab_schedule
+    using:
+      foreign_key_constraint_on: crontab_id
+  array_relationships:
+  - name: dashboard_report_schedules
+    using:
+      foreign_key_constraint_on:
+        column: scheduler_entry_id
+        table:
+          schema: public
+          name: dashboard_report_schedule
+- table:
+    schema: public
+    name: security_group
+  array_relationships:
+  - name: security_group_acls
+    using:
+      foreign_key_constraint_on:
+        column: group_id
+        table:
+          schema: public
+          name: security_group_acl
+  - name: security_group_roles
+    using:
+      foreign_key_constraint_on:
+        column: group_id
+        table:
+          schema: public
+          name: security_group_roles
+  - name: security_group_users
+    using:
+      foreign_key_constraint_on:
+        column: group_id
+        table:
+          schema: public
+          name: security_group_users
+- table:
+    schema: public
+    name: security_group_acl
+  object_relationships:
+  - name: resource
+    using:
+      foreign_key_constraint_on: resource_id
+  - name: resource_role
+    using:
+      foreign_key_constraint_on: resource_role_id
+  - name: security_group
+    using:
+      foreign_key_constraint_on: group_id
+- table:
+    schema: public
+    name: security_group_roles
+  object_relationships:
+  - name: role
+    using:
+      foreign_key_constraint_on: role_id
+  - name: security_group
+    using:
+      foreign_key_constraint_on: group_id
+- table:
+    schema: public
+    name: security_group_users
+  object_relationships:
+  - name: security_group
+    using:
+      foreign_key_constraint_on: group_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+- table:
+    schema: public
+    name: sitewide_resource_acl
+  object_relationships:
+  - name: resource
+    using:
+      foreign_key_constraint_on: resource_id
+  - name: resourceRoleByRegisteredResourceRoleId
+    using:
+      foreign_key_constraint_on: registered_resource_role_id
+  - name: resource_role
+    using:
+      foreign_key_constraint_on: unregistered_resource_role_id
+- table:
+    schema: public
+    name: sources
+  array_relationships:
+  - name: unmatched_locations
+    using:
+      foreign_key_constraint_on:
+        column: source_id
+        table:
+          schema: public
+          name: unmatched_locations
+- table:
+    schema: public
+    name: suggested_matches
+  object_relationships:
+  - name: canonical_location
+    using:
+      foreign_key_constraint_on: canonical_id
+  - name: unmatched_location
+    using:
+      foreign_key_constraint_on: unmatched_id
+- table:
+    schema: public
+    name: unmatched_locations
+  object_relationships:
+  - name: canonical_location
+    using:
+      foreign_key_constraint_on: parent_id
+  - name: location_type
+    using:
+      foreign_key_constraint_on: type_id
+  - name: source
+    using:
+      foreign_key_constraint_on: source_id
+  array_relationships:
+  - name: flagged_locations
+    using:
+      foreign_key_constraint_on:
+        column: unmatched_id
+        table:
+          schema: public
+          name: flagged_locations
+  - name: mapped_locations
+    using:
+      foreign_key_constraint_on:
+        column: unmatched_id
+        table:
+          schema: public
+          name: mapped_locations
+  - name: suggested_matches
+    using:
+      foreign_key_constraint_on:
+        column: unmatched_id
+        table:
+          schema: public
+          name: suggested_matches
+  - name: user_matches
+    using:
+      foreign_key_constraint_on:
+        column: unmatched_id
+        table:
+          schema: public
+          name: user_matches
+- table:
+    schema: public
+    name: user
+  object_relationships:
+  - name: user_status
+    using:
+      foreign_key_constraint_on: status_id
+  array_relationships:
+  - name: alert_definitions
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: alert_definitions
+  - name: dashboard_report_schedules
+    using:
+      foreign_key_constraint_on:
+        column: owner_id
+        table:
+          schema: public
+          name: dashboard_report_schedule
+  - name: dashboard_user_metadata
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: dashboard_user_metadata
+  - name: dashboards
+    using:
+      foreign_key_constraint_on:
+        column: author_id
+        table:
+          schema: public
+          name: dashboard
+  - name: flagged_locations
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: flagged_locations
+  - name: history_records
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: history_records
+  - name: security_group_users
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: security_group_users
+  - name: user_acls
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: user_acl
+  - name: user_matches
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: user_matches
+  - name: user_preferences
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: user_preferences
+  - name: user_query_sessions
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: user_query_session
+  - name: user_roles
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          schema: public
+          name: user_roles
+- table:
+    schema: public
+    name: user_acl
+  object_relationships:
+  - name: resource
+    using:
+      foreign_key_constraint_on: resource_id
+  - name: resource_role
+    using:
+      foreign_key_constraint_on: resource_role_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+- table:
+    schema: public
+    name: user_matches
+  object_relationships:
+  - name: canonical_location
+    using:
+      foreign_key_constraint_on: canonical_id
+  - name: unmatched_location
+    using:
+      foreign_key_constraint_on: unmatched_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+- table:
+    schema: public
+    name: user_preferences
+  object_relationships:
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+- table:
+    schema: public
+    name: user_query_session
+  object_relationships:
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+- table:
+    schema: public
+    name: user_roles
+  object_relationships:
+  - name: role
+    using:
+      foreign_key_constraint_on: role_id
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+- table:
+    schema: public
+    name: user_status
+  array_relationships:
+  - name: users
+    using:
+      foreign_key_constraint_on:
+        column: status_id
+        table:
+          schema: public
+          name: user

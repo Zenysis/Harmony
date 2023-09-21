@@ -1,0 +1,10 @@
+styleguide.*.js
+node_modules/
+venv/
+web/lib/
+web/public/
+web/public/js/vendor/
+web/public/build/
+web/public/facilities-map/
+web/public/places-map/
+__generated__/*

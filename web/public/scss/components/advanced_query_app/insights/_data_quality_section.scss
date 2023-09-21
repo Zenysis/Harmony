@@ -1,0 +1,37 @@
+.data-quality-section {
+  border: 1px solid $gray;
+  border-radius: 7px;
+  padding-bottom: $spacing-s;
+
+  &__insight-score-summary {
+    display: flex;
+    justify-content: center;
+    padding-bottom: $spacing-s;
+  }
+
+  &__insight-score-summary-container {
+    display: none;
+  }
+
+  &__insight-score {
+    font-weight: bold;
+    padding-left: $spacing-xs;
+  }
+
+  &__overall-score-subsection {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__no-score-summary {
+    max-width: 275px;
+    padding-left: 15px;
+  }
+
+  &__overall-score-card {
+    &--no-data {
+      height: 100px;
+      width: 100%;
+    }
+  }
+}

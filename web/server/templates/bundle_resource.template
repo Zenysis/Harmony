@@ -1,0 +1,5 @@
+{%- macro bundle_resource_url(resource) -%}
+{%- set path = '' if config.IS_PRODUCTION else '/build/' %}
+{%- set resource_with_checksum = sourcemap.get(resource, resource) if config.IS_PRODUCTION else resource -%}
+{{path}}{{resource_with_checksum}}
+{%- endmacro -%}

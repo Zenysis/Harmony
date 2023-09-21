@@ -1,0 +1,22 @@
+#!/bin/bash -eu
+set -o pipefail
+
+# Wrapper script for running specific data generation pipeline steps. This is
+# similar to the {index,process,validate}_all wrapper scripts, however the
+# tasks to run *must* be specified. Since the data generation pipeline can
+# have requirements on which machines run specific steps, they cannot be
+# provided automatically.
+
+SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
+
+# Grab the steps to run
+TASKS="${@:1}"
+
+pushd "${SCRIPT_DIR}" &> /dev/null
+
+# Run the data generation pipeline over the specified steps.
+./zeus_generate \
+  run \
+    "${TASKS}"
+
+popd &> /dev/null

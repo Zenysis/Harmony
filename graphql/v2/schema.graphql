@@ -1,0 +1,275 @@
+input AddBannedMatchesInput {
+  bannedMatches: [AddBannedMatchType]
+  clientMutationId: String
+}
+
+type AddBannedMatchesPayload {
+  bannedRawPipelineEntityMatches: [BannedRawPipelineEntityMatchNode]
+  clientMutationId: String
+}
+
+input AddBannedMatchType {
+  dateChanged: String
+  userId: Int
+  rawEntityIdA: Int
+  rawEntityIdB: Int
+}
+
+type BannedEntityMatch {
+  id: String!
+  rawEntityIdA: Int!
+  rawEntityIdB: Int!
+}
+
+type BannedRawPipelineEntityMatchNode implements Node {
+  # The ID of the object.
+  id: ID!
+  rawEntityIdA: Int!
+  rawEntityIdB: Int!
+  userId: Int
+  dateChanged: DateTime!
+  user: UserNode
+}
+
+type BannedRawPipelineEntityMatchNodeConnection {
+  # Pagination data for this connection.
+  pageInfo: PageInfo!
+
+  # Contains the nodes in this connection.
+  edges: [BannedRawPipelineEntityMatchNodeEdge]!
+}
+
+# A Relay edge containing a `BannedRawPipelineEntityMatchNode` and its cursor.
+type BannedRawPipelineEntityMatchNodeEdge {
+  # The item at the end of the edge
+  node: BannedRawPipelineEntityMatchNode
+
+  # A cursor for use in pagination
+  cursor: String!
+}
+
+# An enumeration.
+enum BannedRawPipelineEntityMatchNodeSortEnum {
+  ID_ASC
+  ID_DESC
+  RAW_ENTITY_ID_A_ASC
+  RAW_ENTITY_ID_A_DESC
+  RAW_ENTITY_ID_B_ASC
+  RAW_ENTITY_ID_B_DESC
+  USER_ID_ASC
+  USER_ID_DESC
+  DATE_CHANGED_ASC
+  DATE_CHANGED_DESC
+}
+
+type CanonicalEntity {
+  id: String!
+  canonicalId: String!
+  entityMetadata: JSONString!
+  matches: [EntityMatch!]!
+}
+
+type CanonicalEntityConnection {
+  # Pagination data for this connection.
+  pageInfo: PageInfo!
+  edges: [CanonicalEntityEdge!]!
+  totalCount: Int
+}
+
+type CanonicalEntityEdge {
+  cursor: String!
+  node: CanonicalEntity!
+}
+
+input ChangeUserStatusInput {
+  pipelineEntityMatchId: Int
+  userId: Int
+  validatedStatus: String
+  dateChanged: String
+  clientMutationId: String
+}
+
+type ChangeUserStatusPayload {
+  dateChanged: String!
+  validatedStatus: String!
+  entityMatchId: String!
+  clientMutationId: String
+}
+
+# The `Date` scalar type represents a Date
+# value as specified by
+# [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+scalar Date
+
+# The `DateTime` scalar type represents a DateTime
+# value as specified by
+# [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+scalar DateTime
+
+type DistinctMetadataMap {
+  metadataName: String!
+  distinctValues: [String!]!
+}
+
+type EntityMatch {
+  id: String!
+  validatedStatus: String!
+  user: UserNode
+  selfMatch: Boolean!
+  dateChanged: Date!
+  rawEntity: RawEntity!
+}
+
+# Allows use of a JSON String for input / output from the GraphQL schema.
+#
+# Use of this type is *not recommended* as you lose the benefits of having a defined, static
+# schema (one of the key benefits of GraphQL).
+scalar JSONString
+
+type MatchStatistic {
+  matchedEntityCount: Int!
+  validatedMatchCount: Int!
+}
+
+type MetadataColumnNode implements Node {
+  # The ID of the object.
+  id: ID!
+  name: String!
+  sortable: Boolean!
+  filterable: Boolean!
+  pipelineEntityTypeMappings(before: String, after: String, first: Int, last: Int): MetaDataPipelineEntityTypeMappingNodeConnection
+}
+
+type MetaDataPipelineEntityTypeMappingNode implements Node {
+  # The ID of the object.
+  id: ID!
+  metadataColumnId: Int!
+  pipelineEntityTypeId: Int!
+  metadataColumn: MetadataColumnNode!
+  pipelineEntityType: PipelineEntityTypeNode
+}
+
+type MetaDataPipelineEntityTypeMappingNodeConnection {
+  # Pagination data for this connection.
+  pageInfo: PageInfo!
+
+  # Contains the nodes in this connection.
+  edges: [MetaDataPipelineEntityTypeMappingNodeEdge]!
+}
+
+# A Relay edge containing a `MetaDataPipelineEntityTypeMappingNode` and its cursor.
+type MetaDataPipelineEntityTypeMappingNodeEdge {
+  # The item at the end of the edge
+  node: MetaDataPipelineEntityTypeMappingNode
+
+  # A cursor for use in pagination
+  cursor: String!
+}
+
+type Mutation {
+  changeUserStatus(input: ChangeUserStatusInput!): ChangeUserStatusPayload!
+  addBannedMatches(input: AddBannedMatchesInput!): AddBannedMatchesPayload
+}
+
+# An object with an ID
+interface Node {
+  # The ID of the object.
+  id: ID!
+}
+
+# The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
+type PageInfo {
+  # When paginating forwards, are there more items?
+  hasNextPage: Boolean!
+
+  # When paginating backwards, are there more items?
+  hasPreviousPage: Boolean!
+
+  # When paginating backwards, the cursor to continue.
+  startCursor: String
+
+  # When paginating forwards, the cursor to continue.
+  endCursor: String
+}
+
+type PipelineEntityTypeNode implements Node {
+  # The ID of the object.
+  id: ID!
+  name: String!
+  description: String
+  metadataColumnMappings: [MetaDataPipelineEntityTypeMappingNode!]!
+}
+
+type PipelineEntityTypeNodeConnection {
+  # Pagination data for this connection.
+  pageInfo: PageInfo!
+
+  # Contains the nodes in this connection.
+  edges: [PipelineEntityTypeNodeEdge]!
+}
+
+# A Relay edge containing a `PipelineEntityTypeNode` and its cursor.
+type PipelineEntityTypeNodeEdge {
+  # The item at the end of the edge
+  node: PipelineEntityTypeNode
+
+  # A cursor for use in pagination
+  cursor: String!
+}
+
+# An enumeration.
+enum PipelineEntityTypeNodeSortEnum {
+  ID_ASC
+  ID_DESC
+  NAME_ASC
+  NAME_DESC
+  DESCRIPTION_ASC
+  DESCRIPTION_DESC
+}
+
+type Query {
+  node(
+    # The ID of the object
+    id: ID!
+  ): Node
+  bannedRawPipelineEntityMatch(
+    # The ID of the object
+    id: ID!
+  ): BannedRawPipelineEntityMatchNode!
+  pipelineEntityType(
+    # The ID of the object
+    id: ID!
+  ): PipelineEntityTypeNode!
+  bannedRawPipelineEntityMatches(where: WhereField, page: Int, perPage: Int, sort: [BannedRawPipelineEntityMatchNodeSortEnum], before: String, after: String, first: Int, last: Int): BannedRawPipelineEntityMatchNodeConnection!
+  pipelineEntityTypes(where: WhereField, page: Int, perPage: Int, sort: [PipelineEntityTypeNodeSortEnum], before: String, after: String, first: Int, last: Int): PipelineEntityTypeNodeConnection!
+  validationCount(entityTypeId: Int, filters: JSONString, searchTerm: String): Int!
+  matchedStatistics(entityTypeId: Int): MatchStatistic!
+  queuedCount(entityTypeId: Int): Int!
+  rawEntityCount(entityTypeId: Int): Int!
+  distinctMetadata(entityTypeId: Int): [DistinctMetadataMap!]!
+  distinctDatasources(entityTypeId: Int): [String!]!
+  searchMetadata(entityTypeId: Int, metadataName: String, term: String): [String]
+  canonicalEntityCount(entityTypeId: Int): Int!
+  canonicalPipelineEntities(first: Int!, entityTypeId: Int!, filters: JSONString!, includeSelfMatches: Boolean!, searchTerm: String!, before: String, after: String, last: Int): CanonicalEntityConnection!
+}
+
+type RawEntity {
+  rawEntityId: Int!
+  bannedRawPipelineEntityMatchesIdA: [BannedEntityMatch!]!
+  bannedRawPipelineEntityMatchesIdB: [BannedEntityMatch!]!
+  rawMetadata: JSONString!
+  rawEntitySource: String!
+}
+
+type UserNode {
+  username: String!
+  firstName: String!
+  lastName: String!
+  phoneNumber: String!
+  statusId: Int!
+  created: DateTime
+}
+
+# Where Scalar Description
+scalar WhereField
+

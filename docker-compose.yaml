@@ -1,0 +1,195 @@
+##################################################################################
+# How this works
+##################################################################################
+# nginx: runs the nginx proxy (will return 503 unless web is running)
+# nginx-letsencrypt-companion: get certificates from letsencrypt
+# redis: worker and web need redis.
+# hasura: graphql stuff worker and web need hasura.
+# worker: runs the celery worker
+# web: runs the flask web service
+##################################################################################
+
+version: '3.9'
+
+name: ${PROJECT_NAME:-harmony-web}
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: 10m
+    max-file: "10"
+
+volumes:
+  nginx-acme:
+  nginx-certs:
+  nginx_vhost:
+  nginx_html:
+  redis-volume:
+
+
+services:
+  nginx:
+    image: nginxproxy/nginx-proxy:alpine
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      # Bind the SSL certificate path from the host system to the
+      # directory the nginx container uses for all certs.
+      - nginx-certs:/etc/nginx/certs:ro
+      # Let's Encrypt container needs to configure the vhosts during
+      # cert issuing.
+      - nginx_vhost:/etc/nginx/vhost.d
+      # This html directory is only used to write let's encrypt challenge
+      # files during the cert issuing process.
+      - nginx_html:/usr/share/nginx/html
+      # environment:
+      # TODO: Establish if TRUST_DOWNSTREAM_PROXY needs to be set to true
+      # - TRUST_DOWNSTREAM_PROXY=false
+      # healthcheck:
+      #   # TODO: Healthcheck causes problems with initial cert generation,
+      #   # Further investigation required.
+      #   test: netstat -ltn | grep -c 443 || exit 1
+      #   interval: 30s
+      #   timeout: 30s
+      #   start_period: 5s
+      #   retries: 3
+    logging: *default-logging
+  nginx-letsencrypt-companion:
+    image: nginxproxy/acme-companion
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+        # NOTE: These are the same volumes used by the nginx image.
+        # This is on purpose since the letsencrypt companion container works
+        # with the nginx container collaboratively to generate SSL certs.
+      - nginx-certs:/etc/nginx/certs:rw
+        # NOTE: The acme.sh directory stores the generated certificate state
+        # This prevents re-issuing of the certificate if the container is restarted/re-created
+        # It should only issue if there is no certificate or it is close to expiry.
+        # Read more here: https://github.com/nginx-proxy/acme-companion/issues/510
+      - nginx-acme:/etc/acme.sh
+      - nginx_vhost:/etc/nginx/vhost.d
+      - nginx_html:/usr/share/nginx/html
+    environment:
+      - DHPARAM_BITS=4096
+      # Workarond if you want healtchecks for nginx (not guaranteed to work)
+      # - ACME_PRE_HOOK=sleep 30; ping -c 1 -t 1 nginx || exit 1
+    logging: *default-logging
+  # see: https://docs.docker.com/storage/volumes/#back-up-restore-or-migrate-data-volumes
+  # 'flags_extra': {'volumes-from': 'nginx'},
+  redis:
+    image: redis:alpine
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 30s
+      timeout: 30s
+      start_period: 0s
+      retries: 3
+    volumes:
+      - redis-volume:/data
+    logging: *default-logging
+  hasura:
+    image: hasura/graphql-engine:v2.11.3.cli-migrations-v2
+    ports:
+      - 8088:8080
+    environment:
+      HASURA_GRAPHQL_ENABLE_TELEMETRY: 'false'
+      HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT: 500
+      HASURA_GRAPHQL_DATABASE_URL: ${DATABASE_URL}
+    healthcheck:
+      test: "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080'"
+      interval: 30s
+      timeout: 30s
+      start_period: 0s
+      retries: 3
+    logging: *default-logging
+  web:
+    platform: linux/amd64
+    pull_policy: always
+    image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/${DOCKER_IMAGE_PREFIX:-harmony}-web:${DOCKER_TAG:-latest}
+    ports:
+      - 5000:5000
+    environment:
+      - ZEN_ENV=${ZEN_ENV}
+      - HSTS=off
+      - SSL_POLICY=Mozilla-Modern
+      - HTTPS_METHOD=redirect
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - MAILGUN_SMTP_ACCOUNT_ID=${MAILGUN_SMTP_ACCOUNT_ID:-}
+      - EMAIL_TAG_HEADER_NAME=${EMAIL_TAG_HEADER_NAME:-X-Mailgun-Tag}
+      - EMAIL_USE_ENCRYPTION=${EMAIL_USE_ENCRYPTION:-tls}
+      - DEFAULT_SECRET_KEY=${DEFAULT_SECRET_KEY:-changeme}
+      - DRUID_HOST=${DRUID_HOST}
+      - MAPBOX_ACCESS_TOKEN=${MAPBOX_ACCESS_TOKEN}
+      - REDIS_HOST=redis
+      - HASURA_HOST=http://hasura:8080
+      - SQLALCHEMY_DATABASE_URI=${DATABASE_URL}
+      - VIRTUAL_HOST=${WEB_VIRTUAL_HOST}
+      - URLBOX_API_KEY=${URLBOX_API_KEY:-}
+      - RENDERBOT_EMAIL=${RENDERBOT_EMAIL:-}
+      - OBJECT_STORAGE_ALIAS=${OBJECT_STORAGE_ALIAS}
+      - ZEN_GUNICORN_WORKER_THREADS=${ZEN_GUNICORN_WORKER_THREADS:-4}
+    volumes:
+      # Map minio config folder
+      - ${MC_CONFIG_PATH}:/root/.mc
+    healthcheck:
+      test: "timeout 10s bash -c ':> /dev/tcp/127.0.0.1/5000'"
+      interval: 30s
+      timeout: 30s
+      # Takes about 1m30 seconds to start on local with zen
+      start_period: 90s
+      retries: 6
+    logging: *default-logging
+  worker:
+    platform: linux/amd64
+    image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/${DOCKER_IMAGE_PREFIX:-harmony}-web:${DOCKER_TAG:-latest}
+    # Assign some random ports for worker service to work
+    ports:
+      - 61234:61234
+    environment:
+      - ZEN_ENV=${ZEN_ENV}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - MAILGUN_SMTP_ACCOUNT_ID=${MAILGUN_SMTP_ACCOUNT_ID:-}
+      - EMAIL_TAG_HEADER_NAME=${EMAIL_TAG_HEADER_NAME:-X-Mailgun-Tag}
+      - EMAIL_USE_ENCRYPTION=${EMAIL_USE_ENCRYPTION:-tls}
+      - DEFAULT_SECRET_KEY=${DEFAULT_SECRET_KEY:-changeme}
+      - BROKER_URL=redis://redis:6379/0
+      - SQLALCHEMY_DATABASE_URI=${DATABASE_URL}
+      - HASURA_HOST=http://hasura:8080
+      - DRUID_HOST=${DRUID_HOST}
+      - MAPBOX_ACCESS_TOKEN=${MAPBOX_ACCESS_TOKEN}
+      - URLBOX_API_KEY=${URLBOX_API_KEY:-}
+      - RENDERBOT_EMAIL=${RENDERBOT_EMAIL:-}
+      - OBJECT_STORAGE_ALIAS=${OBJECT_STORAGE_ALIAS}
+    command:
+      [
+        "celery",
+        "-A",
+        "web.background_worker.celery",
+        "worker",
+        "--beat",
+        "--loglevel=INFO"
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "celery",
+          "-A",
+          "web.background_worker.celery",
+          "status"
+        ]
+      interval: 60s
+      timeout: 30s
+      start_period: 5s
+      retries: 3
+    logging: *default-logging

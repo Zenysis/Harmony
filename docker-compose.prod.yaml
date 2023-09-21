@@ -1,0 +1,32 @@
+# NOTE: Run with base docker-compose.yaml
+
+version: '3.9'
+
+services:
+  nginx:
+    volumes:
+      # Include Zenysis static assets and serve them directly from nginx.
+      - ${DATA_PATH}/output/zenysis_static:/usr/share/nginx/html/zenysis_static:ro
+      # Set a custom vhost default configuration that includes compression
+      # and caching.
+      - ${NGINX_VHOST}:/etc/nginx/vhost.d/default:ro
+  hasura:
+    volumes:
+      - ${DATA_PATH}/output/logs:/logs
+  web:
+    environment:
+      - VIRTUAL_HOST=${WEB_VIRTUAL_HOST}
+      - LETSENCRYPT_HOST=${WEB_LETSENCRYPT_HOST}
+      - LETSENCRYPT_EMAIL=${WEB_LETSENCRYPT_EMAIL}
+    # We can use this to allow docker to handle loadbalancing (default nginx round-robin)
+    # labels:
+    #   com.github.nginx-proxy.nginx-proxy.loadbalance: "server web:5000;"
+    volumes:
+      - ${DATA_PATH}/output:/data/output
+      - ${DATA_PATH}/output/logs:/logs
+      - ${DATA_PATH}/ubuntu/uploads:/zenysis/uploads
+  worker:
+    volumes:
+      - ${DATA_PATH}/output:/data/output
+      - ${DATA_PATH}/output/logs:/logs
+      - ${DATA_PATH}/ubuntu/.mc/config.json:/root/.mc/config.json

@@ -1,0 +1,10 @@
+.analytical-insight-action-card {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(232, 240, 255, 0.65),
+    white 90%
+  );
+  border: 1px solid $gray;
+  border-radius: 7px;
+  padding: $space-m-px;
+}

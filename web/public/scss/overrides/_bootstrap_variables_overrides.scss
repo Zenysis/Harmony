@@ -1,0 +1,59 @@
+$black: #000;
+$gray-darkest: lighten($black, 5.5%); // #111
+$gray-mid-light: lighten($black, 75%); // #ccc
+$gray-lightest: lighten($black, 95.5%); // #fafafa
+$nav-open-link-hover-color: #fff;
+
+$brand-primary: #3276b1;
+$brand-success: #739e73;
+$brand-info: #57889c;
+$brand-warning: #c79121;
+$brand-danger: #a90329;
+$link-hover-decoration: none;
+$font-family-sans-serif: Lato, Arial, Helvetica, sans-serif;
+
+$font-size-base: 13px;
+$font-size-large: ceil(($font-size-base * 1.24)); // ~16px
+$font-size-small: ceil(($font-size-base * 0.85)); // ~11px
+$font-size-h1: floor(($font-size-base * 1.85)); // ~24px
+$font-size-h2: floor(($font-size-base * 1.7)); // ~22px
+$font-size-h3: ceil(($font-size-base * 1.385)); // ~18px
+$font-size-h4: ceil(($font-size-base * 1.32)); // ~17px
+$font-size-h5: ceil(($font-size-base * 1.24)); // ~16px
+$font-size-h6: ceil(($font-size-base * 1.08)); // ~14px
+$line-height-computed: floor(($font-size-base * $line-height-base)); // ~20px
+$headings-font-family: $font-family-base;
+$headings-font-weight: 700;
+$icon-font-path: '../fonts/bootstrap/';
+$border-radius-small: 1px;
+$border-radius-base: 2px;
+$border-radius-large: 3px;
+$table-bg-hover: #ecf3f8;
+$input-border-radius: 3px;
+$input-color-placeholder: $gray-light;
+$dropdown-link-hover-color: #fff;
+$dropdown-link-hover-bg: $component-active-bg;
+$dropdown-link-active-color: #fff;
+$zindex-popover: 1010;
+$zindex-tooltip: 1030;
+$grid-gutter-width: 26px;
+
+$navbar-default-brand-hover-color: darken($navbar-default-link-color, 10%);
+$navbar-default-toggle-icon-bar-bg: #ccc;
+$navbar-inverse-color: $gray-light;
+$navbar-inverse-link-color: $gray-light;
+$nav-link-padding: 9px 10px 10px;
+$state-success-text: #468847;
+$state-success-border: #468847;
+$state-info-text: #346597;
+$state-info-bg: #d6dde7;
+$state-info-border: darken(adjust-hue($state-info-bg, -10), 18%);
+$state-warning-text: #c09853;
+$state-warning-border: #dbab57;
+$state-danger-text: #b94a48;
+$state-danger-border: #b94a48;
+$popover-arrow-color: #fff;
+$popover-arrow-outer-color: rgba(0, 0, 0, 0.25);
+$popover-arrow-outer-fallback-color: #999;
+$modal-inner-padding: 20px;
+$dropdown-border: 1px solid rgba(0, 0, 0, 0.15);

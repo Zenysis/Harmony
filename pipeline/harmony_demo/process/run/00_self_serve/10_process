@@ -1,0 +1,47 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+SetupEnvForPyPy
+
+SOURCES=($(cat "${PIPELINE_FEED_DIR}/active_sources.txt"))
+
+# This step needs to output files (even if there are no self serve sources)
+# for the shared steps to run properly. If there aren't any sources, then just run
+# process_csv on an empty file.
+if [ ${#SOURCES[@]} -eq 0 ]; then
+    echo "No sources to process"
+
+    "${PIPELINE_SRC_ROOT}/data/pipeline/scripts/process_csv.py" \
+      --sourcename '' \
+      --prefix '' \
+      --input '/dev/null' \
+      --output_locations="${PIPELINE_TMP_DIR}/locations.csv" \
+      --output_fields="${PIPELINE_TMP_DIR}/fields.csv" \
+      --output_rows="${PIPELINE_TMP_DIR}/processed_data.json.lz4"
+else
+    # Track background process IDs so that we can reliably capture exit code
+    pids=()
+
+    echo "Sources to process: ${SOURCES[@]}"
+    for cur_source in "${SOURCES[@]}" ; do
+      "${PIPELINE_SRC_ROOT}/data/pipeline/self_serve/scripts/process_csv_wrapper.py" \
+          --input_dir="${PIPELINE_FEED_DIR}/${cur_source}" \
+          --output_locations="${PIPELINE_TMP_DIR}/locations_${cur_source}.csv" \
+          --output_fields="${PIPELINE_TMP_DIR}/fields_${cur_source}.csv" \
+          --output_rows="${PIPELINE_TMP_DIR}/processed_data_${cur_source}.json.lz4" \
+        | TagLines "${cur_source}" &
+      pids+=("$!")
+    done
+
+    # Wait on each background process individually so that non-zero exit codes
+    # will be raised
+    WaitMultipleThreads "${pids[@]}"
+
+    # Combine each file's processed output.
+    # NOTE(abby): This is here rather than a 15_merge step since if there are no sources,
+    # there is nothing to merge.
+    MergeDimensionsAndFields "${PIPELINE_TMP_DIR}"
+    cat "${PIPELINE_TMP_DIR}"/processed_data_*.json.lz4 > "${PIPELINE_TMP_DIR}/processed_data.json.lz4"
+fi

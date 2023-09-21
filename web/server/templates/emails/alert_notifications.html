@@ -1,0 +1,108 @@
+{% extends 'web/server/templates/emails/base_email.html' %}
+
+{% block email_body %}
+<tr>
+	<td class="content-message" style="font-family:'Open Sans Light',Calibri, Arial, sans-serif; color: #595959;">
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px; line-height:26px;">
+	   {{email_header}}
+	  </p>
+  
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px; line-height:26px;">
+		{{intro}}
+	  </p>
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:18px; line-height:10px;">
+		&nbsp;
+	  </p>
+	  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		<tbody><tr>
+		  <td width="250" style="border-radius: 5px;" height="50" bgcolor="#5b92e5" style="text-align:center;">
+			<a href="{{alerts_link}}" align="center" 
+			style="font-family:'Open Sans',Calibri, Arial, sans-serif;; font-size:15px; color:#ffffff; text-align: center; line-height:50px; display:block; text-decoration:none;border-radius:100%; ">{{btn_text}}</a>
+		  </td>
+		  <td>&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>
+                <table style="border-spacing: 50px;"  border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td style="font-size:15px; font-weight:bold; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;">
+                            {{title_td}}
+                        </td>
+                        <td style="font-size:15px; font-weight:bold; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;" >
+                            {{geography_td}}
+                        </td>
+                    </tr>
+                {% for entry in new_notifications %}
+                    <tr>
+                    {% for var in ['title', 'dimensions'] %}
+                        <td style="font-size:15px; font-weight:normal; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;">
+                            {{entry[var]}}
+                        </td>
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% if existing_notifications %}
+        <tr>
+            <td>
+                <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px;">{{previous_alert_txt}}</p>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <table style="border-spacing: 50px;" border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td style="font-size:15px; font-weight:bold; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;" >
+                            {{title_td}}
+                        </td>
+                        <td style="font-size:15px; font-weight:bold; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;">
+                            {{geography_td}}
+                        </td>
+                    </tr>
+                {% for entry in existing_notifications %}
+                    <tr>
+                    {% for var in ['title', 'dimensions'] %}
+                        <td style="font-size:15px; font-weight:normal; font-family: 'OpenSans', helvetica, sans-serif; color: #414141;">
+                            {{entry[var]}}
+                        </td>
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+                </table>
+            </td>
+        </tr>   
+    {% else %}
+        <tr>
+            <td>
+                <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px; line-height:26px;">
+                    {{no_alert_txt}}
+                </p>
+            </td>
+        </tr>
+    {% endif %}
+      </tbody>
+    </table>
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px; line-height:0px;">
+		{{signoff_text}}
+	  </p>
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:15px; line-height:16px;">
+		{{signoff_team}}
+	  </p>
+	  <p style="font-family: 'Open Sans','Helvetica Neue', 'Helvetica',Calibri, Arial, sans-serif; font-size:18px; line-height:10px;">
+		&nbsp;
+	  </p>
+	</td>
+  </tr>
+{% endblock email_body %}
+
+{% block email_footer %}
+<tr>
+	<td style="font-size:10px; font-weight:normal; font-family: 'OpenSans', helvetica, sans-serif; color: #414141; text-align:center;" align="center">
+	   <a href="%tag_unsubscribe_url%" target="_blank"  style="text-decoration:none;font-size:12px; font-weight:normal; font-family: 'OpenSans', helvetica, sans-serif; color: #315694;">Unsubscribe</a>
+   </td>
+</tr>
+{% endblock %}

@@ -1,0 +1,3 @@
+#!/bin/bash -eu
+set -o pipefail
+${PIPELINE_SRC_ROOT}/data/pipeline/scripts/clean_pipeline_out

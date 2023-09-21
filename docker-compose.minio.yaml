@@ -1,0 +1,19 @@
+services:
+  minio:
+    image: minio/minio:latest
+    restart: always
+    ports:
+      - 9000:9000
+      - 9090:9090
+    volumes:
+      - ${MINIO_DATA_FOLDER:-/localdisk/data}:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    command:
+      [
+        "server",
+        "/data",
+        "--console-address",
+        ":9090"
+      ]

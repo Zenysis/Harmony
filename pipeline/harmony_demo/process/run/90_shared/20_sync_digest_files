@@ -1,0 +1,20 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+STEP='sync_digest_files'
+SOURCES=($("${PIPELINE_SRC_ROOT}/data/pipeline/scripts/generate_pipeline_sources.py" ${STEP}))
+
+REMOTE_DESTINATION='s3/zenysis-harmony-demo/digest'
+
+for cur_source in "${SOURCES[@]}" ; do
+  source_out_dir="${PIPELINE_OUT_ROOT}/out/${cur_source}/${PIPELINE_DATE}"
+  source_digest_dir="${PIPELINE_FEED_DIR}/${cur_source}/${PIPELINE_DATE}"
+  mkdir -p "${source_digest_dir}"
+  rm -f "${source_digest_dir}"/*.csv
+
+  cp "${source_out_dir}"/metadata_digest_file.csv "${source_digest_dir}"
+
+  UploadDirectory "${source_digest_dir}" "${REMOTE_DESTINATION}/${cur_source}"
+done

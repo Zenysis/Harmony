@@ -1,0 +1,4 @@
+This folder contains the models and functionality to power the Query Tool (
+previously known as the Advanced Query Tool). This folder was originally
+named 'wip', indicating that this file structure is not final, and may still
+change in the future.

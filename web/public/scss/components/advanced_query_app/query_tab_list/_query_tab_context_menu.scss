@@ -1,0 +1,31 @@
+.query-tab-context-menu {
+  @include zen-elevation-5();
+  background-color: $white;
+  bottom: 100%;
+  font-size: 14px;
+  font-weight: normal;
+  left: -1px;
+  letter-spacing: 0.2px;
+  min-width: 150px;
+  z-index: 1;
+
+  &__item {
+    color: $aqt-base-font-color;
+    line-height: 20px;
+    padding: 6px 15px;
+    user-select: none;
+
+    &:hover {
+      background-color: $aqt-query-tab-list-bg-color;
+    }
+
+    &--disabled {
+      color: $aqt-gray-2;
+      cursor: initial;
+
+      &:hover {
+        background-color: initial;
+      }
+    }
+  }
+}

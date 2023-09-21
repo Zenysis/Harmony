@@ -1,0 +1,205 @@
+.hierarchical-selector {
+  @include zen-elevation-4;
+  background-color: $hierarchical-selector-bg-color;
+  border-radius: 5px;
+  white-space: nowrap;
+
+  &__column-area-container {
+    display: block;
+    &--padded {
+      display: inline-block;
+      vertical-align: bottom;
+    }
+  }
+
+  &__padding-column {
+    display: inline-block;
+  }
+
+  &__title-row {
+    font-size: 14px;
+    margin-bottom: -4px;
+    overflow: hidden;
+  }
+
+  &__column-title {
+    display: inline-block;
+    font-weight: bold;
+    overflow: hidden;
+    padding: 10px 15px;
+  }
+
+  &__scrollable-container {
+    overflow-x: auto;
+    position: relative;
+  }
+
+  &__column-transition-wrapper {
+    border-left: none;
+    border-top: 1px solid $hierarchical-selector-base-border-color;
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: top;
+
+    /* Match all siblings after the first, so that way the first column
+     doesn't have a border-left, but all others do */
+    ~ .hierarchical-selector__column-transition-wrapper {
+      border-left: 1px solid $hierarchical-selector-base-border-color;
+    }
+  }
+
+  &__column-wrapper {
+    width: 100%;
+  }
+
+  &__toggle-switch-container {
+    display: flex;
+    float: right;
+    font-weight: normal;
+  }
+}
+
+.hierarchy-column-item {
+  align-items: center;
+  clear: both;
+  cursor: pointer;
+  display: flex;
+  min-height: $hierarchy-column-item-min-height;
+  padding: 0 15px;
+  transition: $hierarchical-selector-base-transition-hover-color;
+
+  &:hover {
+    background-color: $hierarchical-selector-item-hover;
+  }
+
+  &--active {
+    background-color: $hierarchical-selector-item-active-color;
+    &:hover {
+      background-color: $hierarchical-selector-item-active-hover;
+    }
+  }
+
+  &--unselectable {
+    color: $gray;
+    cursor: default;
+
+    &:hover {
+      background-color: $white;
+    }
+  }
+
+  &__label {
+    float: left;
+    font-size: $hierarchy-column-item-label-font-size;
+    line-height: $hierarchy-column-item-label-font-size;
+    overflow: hidden;
+    padding-bottom: $hierarchy-column-item-label-vertical-padding;
+    padding-right: 5px;
+    padding-top: $hierarchy-column-item-label-vertical-padding;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: calc(100% - 20px);
+
+    &--leaf {
+      $leaf-line-height: 17px;
+      // Need to use a different vertical padding value here to ensure spacing
+      // is consistent between leaves and non-leaves since leaf line height is
+      // larger to allow for multiple lines of text.
+      $leaf-vertical-padding: #{$hierarchy-column-item-label-vertical-padding -
+        ($leaf-line-height - $hierarchy-column-item-label-font-size) / 2};
+
+      line-height: $leaf-line-height;
+      padding-bottom: $leaf-vertical-padding;
+      padding-top: $leaf-vertical-padding;
+      text-overflow: initial;
+      white-space: pre-wrap;
+    }
+  }
+
+  &__angle-icon {
+    float: right;
+    font-size: 15px;
+    line-height: $hierarchy-column-item-min-height;
+    position: relative;
+    top: 0px;
+  }
+}
+
+.hierarchical-search-bar {
+  border-bottom: 1px solid $hierarchical-selector-base-border-color;
+  overflow: auto;
+  padding: 10px 10px;
+
+  &__input-container {
+    position: relative;
+  }
+
+  &__search-path {
+    left: 0;
+    padding: 5px 0;
+    padding-left: 10px;
+    position: absolute;
+  }
+}
+
+.hierarchical-search-path {
+  display: inline-block;
+  &__breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+}
+
+.hierarchical-search-no-results {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.hierarchical-search-result-group {
+  margin-top: 10px;
+
+  &:last-child {
+    margin-bottom: 10px;
+  }
+
+  &__breadcrumb-row {
+    align-items: center;
+    display: flex;
+    padding-left: 34px;
+    padding-right: 25px;
+  }
+
+  &__caret {
+    margin-left: -22px;
+    padding-right: 9px;
+    &:hover {
+      font-weight: bold;
+    }
+  }
+
+  &__items-container {
+    padding-top: 4px;
+  }
+
+  &__item {
+    cursor: pointer;
+    padding-bottom: 4px;
+    padding-left: 34px;
+    padding-right: 25px;
+    padding-top: 4px;
+    transition: $hierarchical-selector-base-transition-hover-color;
+
+    &:hover {
+      background-color: $hierarchical-selector-item-hover;
+    }
+  }
+}
+
+.hierarchical-selector__empty-mru-text {
+  font-style: italic;
+  padding: 10px;
+}

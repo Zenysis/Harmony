@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+{% set body_class="condensed-navbar admin-app-body"%}
+
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+{% endblock %}
+
+{% block scripts %}
+  {% include 'query_app_vendor_scripts.html' %}
+
+  <script src="{{ bundle_resource_url('admin.bundle.js') }}"></script>
+{% endblock %}

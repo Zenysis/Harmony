@@ -1,0 +1,286 @@
+// height and width breakpoints before the page starts scrolling.
+$min-page-height: 600px;
+$min-page-width: 780px;
+// any item within the query view (aqt-query-form-panel, live-results-view) will
+// need a minimum height to correctly fill the page when we hit our breakpoints
+// and start scrolling. In order to do that, we need to account for the height
+// of the nav bar and the query tab list.
+$query-view-items-min-height: $min-page-height - $navbar-height -
+  $aqt-query-tab-list-height;
+$query-view-items-min-height-without-tabs: $min-page-height - $navbar-height;
+
+$aqt-query-form-panel-width: 300px;
+// NOTE: We define a seperate class from advanced-query-app because we
+// want to introduce horizontal and vertical breakpoints specifically to the
+// AQT. In order to do that, we need to define a class at the body level
+// (which is above advanced-query-app) with those breakpoints that we can then
+// pass into the AQT template.
+.advanced-query-app-body {
+  min-height: $min-page-height;
+  min-width: $min-page-width;
+  overflow-x: auto;
+}
+
+.advanced-query-app {
+  background-color: $site-background;
+  color: $aqt-base-font-color;
+  display: flex;
+  flex-direction: column;
+
+  // NOTE: Setting position: relative to allow query tool popovers to use
+  // the root app as a parent element. The current use case for this is for
+  // rendering them in the dashboard query edit view, which is a modal itself.
+  position: relative;
+  width: 100%;
+
+  &__main-column {
+    /* stylelint-disable-next-line max-line-length */
+    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.25),
+      -10px 10px 20px 0 rgba(30, 30, 30, 0.05);
+    display: inline-block;
+    height: $aqt-query-form-panel-height;
+    min-height: $query-view-items-min-height;
+    vertical-align: top;
+
+    &--disabled-tabs {
+      height: $aqt-query-form-panel-height-without-tabs;
+      min-height: $query-view-items-min-height-without-tabs;
+    }
+  }
+
+  &__query-view {
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+  }
+}
+
+.live-results-view {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.aqt-query-form-panel {
+  background-color: $white;
+  flex: 0 0 $aqt-query-form-panel-width;
+  overflow: hidden auto;
+  padding: 10px 30px 0px 30px;
+  z-index: $aqt-query-form-z-index;
+
+  &__insights-pane {
+    flex: 0 0 320px;
+    padding: 10px 20px 0px 20px;
+  }
+
+  &__title {
+    color: $slate;
+    padding-top: 15px;
+  }
+
+  &__share-query {
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  &__insights-count-badge {
+    $badge-size: 20px;
+
+    align-items: center;
+    background-color: $warning-color;
+    background-image: $warning-color-gradient;
+    border: 2px solid $white;
+    border-radius: 50%;
+    color: $white;
+    display: flex;
+    flex-direction: column;
+    font-size: $font-s;
+    height: $badge-size;
+    position: absolute;
+    right: -#{$badge-size + 2px};
+    width: $badge-size;
+
+    @include zen-elevation-4();
+  }
+
+  &__tab-header-popover {
+    font-size: $font-m;
+  }
+
+  // zen tabs customization in order to display
+  // one tab left aligned and one right aligned
+  .zen-tabs__header-row {
+    position: relative;
+  }
+
+  .zen-tab-header__outer-container:first-child {
+    flex: 1;
+  }
+}
+
+.query-part-selector {
+  background-color: $query-part-selector-bg-color;
+  border: 1px solid $aqt-base-border-color;
+  border-radius: 5px;
+
+  &__add-btn {
+    cursor: pointer;
+    padding: 3px;
+    width: 100%;
+    &:hover {
+      background-color: $query-part-selector-add-btn-hover;
+    }
+  }
+
+  &__add-btn-contents {
+    display: table;
+    margin: 0 auto;
+  }
+
+  &__btn-icon {
+    font-size: 12px;
+    margin-left: 3px;
+  }
+}
+
+.selection-block {
+  margin-bottom: 40px;
+
+  &:first-child {
+    margin-top: 40px;
+  }
+
+  &__title-block {
+    align-items: center;
+    color: $slate;
+    display: flex;
+    font-size: 16px;
+    font-stretch: normal;
+    font-style: normal;
+    font-weight: 500;
+    justify-content: space-between;
+    letter-spacing: normal;
+    line-height: normal;
+    margin-bottom: 5px;
+  }
+}
+
+.series-element {
+  display: inline-block;
+
+  &__order {
+    display: inline-block;
+    margin-right: 15px;
+  }
+
+  &__visibility {
+    display: inline-block;
+    margin-right: 15px;
+  }
+
+  &__input-text {
+    display: inline-block;
+    // TODO: rethink how we define this width
+    width: 75%;
+  }
+  &__icon {
+    display: inline-block;
+    float: right;
+    margin-top: 5px;
+  }
+}
+
+.compact-title-block {
+  padding: 10px 10px 20px 10px;
+
+  // TODO: might need to reconsider widths
+
+  &__font-size-title-label {
+    line-height: 18px !important;
+    margin-top: 10px !important;
+    width: 50%;
+  }
+
+  &__font-size-subtitle-label {
+    line-height: 18px !important;
+    margin-top: 10px !important;
+    width: 45%;
+  }
+
+  &__title-control {
+    margin-top: 10px !important;
+  }
+
+  &__subtitle-control {
+    margin-top: 10px !important;
+  }
+}
+
+.aqt-query-result-container {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  grid-row: 2;
+  justify-content: center;
+  overflow: hidden;
+  padding: $aqt-query-result-container-spacing;
+
+  &__scaled-container {
+    align-items: center;
+    border-radius: $aqt-query-result-border-radius;
+
+    // shadow intentionally added twice according to design spec
+    box-shadow: 0 5px 20px 0 rgba(35, 36, 37, 0.15),
+      0 5px 20px 0 rgba(35, 36, 37, 0.15);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center;
+    position: relative;
+
+    .visualization-container {
+      border-bottom-left-radius: $spacing-xs;
+      border-bottom-right-radius: $spacing-xs;
+
+      .title-extra-fields {
+        font-style: italic;
+      }
+    }
+  }
+
+  &__query-result {
+    background-color: $white;
+    height: calc(100% - #{$visualization-picker-control-bar-height});
+    position: relative;
+    width: 100%;
+    // Ensure the query result is below the viz picker when stacking.
+    z-index: 0;
+    // NOTE: We don't want the padding of this container to change at
+    // any screen resolution, so we add this to offset the padding-top property
+    // in 'mobile mode', as the query result in AQT uses both those this class
+    // and the class that is built into the QueryResult component.
+    // Unfortunately, we also have to add the !important identifier because
+    // this class is applied first, so it's padding-top value will be overriden
+    // otherwise. In the future, I think we should get rid of these features
+    // for 'mobile mode' altogether the more we refine our scaling treatment.
+    // We should also not use screen width to solely determine mobile mode.
+    @media (max-width: 940px) {
+      padding-top: 15px !important;
+    }
+  }
+}
+
+.query-result__aqt-action-buttons {
+  background-color: #f9f9f9;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  padding: 6px 10px 3px 10px;
+}
+
+.aqt-sharing-modal__copy-to-clipboard-interaction {
+  padding: 10px;
+  text-align: center;
+}

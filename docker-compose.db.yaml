@@ -1,0 +1,44 @@
+##################################################################################
+# How this works
+##################################################################################
+# postgres: Postgres database
+##################################################################################
+# Running
+# export POSTGRES_PASSWORD=<password>
+# docker-compose -p zen -f docker-compose.db.yaml up -d
+##################################################################################
+
+version: '3.9'
+
+name: ${PROJECT_NAME:-harmony-web}
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: 10m
+    max-file: "10"
+
+volumes:
+  pgdata-volume:
+
+
+services:
+  postgres:
+    image: postgres:15.2-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - ${POSTGRES_HOST_PORT:-5432}:5432
+    volumes:
+      # If you don't want to use a volume, then use: /usr/local/pgsql/data
+      - ${PG_DATA:-pgdata-volume}:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      start_period: 0s
+      interval: 10s
+      timeout: 30s
+      retries: 3
+    logging: *default-logging

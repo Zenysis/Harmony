@@ -1,0 +1,190 @@
+{
+  "parser": "babel-eslint",
+  "root": true,
+  "env": {
+    "browser": true,
+    "jest": true,
+  },
+  "globals": {
+    "$": true,
+    "L": true,
+    "Interpreter": true,
+    "Plotly": true,
+    "__DEV__": true,
+    "acorn": true,
+    "analytics": true,
+    "crypto": true,
+    "d3": true,
+    "nv": true,
+    "toastr": true,
+    "expect": true,
+    "sinon": true,
+    "t": true,
+    "html2canvas": true,
+    "LC": true,
+    "jsPDF": true,
+    "htmlDocx": true,
+    "saveAs": true,
+    "PptxGenJS": true,
+    "window": true,
+    "document": true,
+    "localStorage": true,
+    "FormData": true,
+    "Image": true,
+    "zipcelx": true,
+    "graphql": true
+  },
+  "extends": [
+    "airbnb",
+    "plugin:flowtype/recommended",
+    "prettier",
+    "prettier/flowtype",
+    "prettier/react",
+    "plugin:relay/recommended"
+  ],
+  "plugins": [
+    "react-hooks",
+    "relay",
+    "sort-destructure-keys",
+    "sort-keys-shorthand",
+    "flowtype",
+    "zen"
+  ],
+  "settings": {
+    "import/resolver": {
+      "webpack": {
+        "config": "web/webpack.config.js"
+      },
+      "node": {
+        // NOTE: Need to explicitly include `.js.flow` in case someone
+        // imports a type from a file in node_modules with that extension.
+        "extensions": [".js", ".jsx", ".js.flow"],
+        "moduleDirectory": [
+          "node_modules",
+          "web/client"
+        ]
+      }
+    }
+  },
+  "rules": {
+    "class-methods-use-this": "off", // Zen allowable
+    "no-underscore-dangle": "off",  // Zen allowable
+    "no-plusplus": "off",           // Zen allowable
+    "no-console": ["warn", { allow: ["error"] }], // allow console.error
+    "no-continue": "off", // Zen allowable
+    "no-undef": "off", // Handled by flow
+
+    "import/prefer-default-export": "off", // Zen allowable
+    "import/no-extraneous-dependencies": "off", // Handled by flow
+
+    "react/forbid-prop-types": [ "error", { "forbid": ["any"] } ], // Zen allowable
+
+    // Allow UNSAFE_ prefixed methods to pass name validation. We also don't
+    // want to enforce the conventions for imports since relay will autogenerate
+    // the type names and we don't want to always have to rename them on import.
+    "camelcase": [
+      "error",
+      {
+        "allow": ["^UNSAFE_", "\\$(data|key)$"],
+        "ignoreImports": true,
+        "properties": "never"
+      }
+    ],
+
+    // Disabling PropTypes validation for now since PropDefs are unlintable
+    "react/prop-types": [2, {"skipUndeclared": true}],
+
+    // this is actually perfectly safe: https://twitter.com/dan_abramov/status/968939189709533184
+    "react/no-did-update-set-state": "off",
+
+    // Disabling defaultProps validation because it is incompatible with Flow.
+    "react/default-props-match-prop-types": "off",
+
+    // Deviate from Airbnb's ordering by locating the "everything-else"
+    // after React lifecycle methods. Add maybeRender* before render*
+    "react/sort-comp": ["error",
+      {
+        "order": [
+          "static-variables",
+          "static-methods",
+          "state",
+          "type-annotations",
+          "instance-variables",
+          "lifecycle",
+          "everything-else",
+          "/^on.+$/",
+          "/^maybeRender.+$/",
+          "/^render.+$/",
+          "render"
+        ]
+      }
+    ],
+
+    "react/destructuring-assignment": "off",
+    "react/require-default-props": "off",
+    "react/state-in-constructor": "off",
+    "react/static-property-placement": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+    "max-len": "off", // handled by prettier
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/interactive-supports-focus": "off",
+    "jsx-a11y/label-has-for": "off",
+    "jsx-a11y/mouse-events-have-key-events": "off",
+
+    // Replace the no-unused-expressions rule with the flowtype version that
+    // allows bare type casts.
+    "no-unused-expressions": "off",
+    "flowtype/no-unused-expressions": ["error", {
+      "allowShortCircuit": false,
+      "allowTernary": false,
+      "allowTaggedTemplates": false
+    }],
+
+    "flowtype/define-flow-type": 1,
+
+    // Zenysis custom rules
+    "zen/zenmodel-require-return-type": "error",
+
+    // Import ordering
+    // NOTE: We disable the original import/order since we have
+    // customized it.
+    "import/order": "off",
+    "zen/zen-import-order": ["error", {
+      "groups": [
+        ["external"],
+        // NOTE: Sometimes eslint-plugin-import detects our files as
+        // node builtins (like util).
+        ["builtin", "internal", "unknown", "parent", "sibling", "index"],
+      ],
+      "newlines-between": "always",
+    }],
+
+    // TODO: Enable these rules when the existing violations
+    // have been cleaned up. Only disabling it right now because we want to
+    // upgrade the eslint dependencies.
+    "react/jsx-props-no-spreading": "off",
+    "react/jsx-fragments": "off",
+
+    // Prop Ordering
+    "react/jsx-sort-props":"error",
+
+    // Sort Object Keys and destructuring
+    "sort-keys": 0,
+    "sort-keys-shorthand/sort-keys-shorthand": [
+      "error",
+      "asc",
+      {
+        "caseSensitive": true,
+        "natural": false,
+        "minKeys": 2,
+        "shorthand": "first"
+      }
+    ],
+    "sort-destructure-keys/sort-destructure-keys": 2,
+
+    // Flow Type ordering 
+    "flowtype/sort-keys": "error"
+  }
+}

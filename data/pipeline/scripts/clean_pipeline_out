@@ -1,0 +1,25 @@
+#!/bin/bash -eux
+set -o pipefail
+
+PIPELINE_DIR="pipeline/out/$ZEN_ENV"
+# Default value for DAYS_TO_KEEP
+DAYS_TO_KEEP=3
+
+# Parse command line arguments
+for i in "$@"
+do
+case $i in
+    --days-to-keep=*)
+    DAYS_TO_KEEP="${i#*=}"
+    shift
+    ;;
+    *)
+    # unknown option
+    ;;
+esac
+done
+
+((DAYS_TO_KEEP--))
+
+find $PIPELINE_OUT_ROOT/.. -type f -mtime +$DAYS_TO_KEEP -print -delete
+find $PIPELINE_OUT_ROOT/.. -type d -empty -mtime +$DAYS_TO_KEEP -print -delete

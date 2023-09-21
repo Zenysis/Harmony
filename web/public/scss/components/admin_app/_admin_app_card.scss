@@ -1,0 +1,92 @@
+.admin-app-card {
+  border: 1px solid $gray-light;
+  border-radius: 5px;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.302),
+    0 1px 3px 1px rgba(60, 64, 67, 0.149);
+  transition: transform 300ms;
+  width: 100%;
+
+  .zen-card__heading {
+    @extend .u-heading-medium;
+    border-bottom: none;
+    padding: $space-s-px $space-l-px;
+  }
+
+  &.action-card {
+    &:hover {
+      @include zen-elevation-5();
+      box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.302),
+        0 4px 8px 3px rgba(60, 64, 67, 0.149);
+    }
+  }
+
+  &__menu {
+    color: $gray;
+    margin-left: auto;
+
+    &:hover {
+      color: #333;
+    }
+  }
+
+  &__admin-icon {
+    fill: $blue-primary;
+  }
+
+  .zen-card__heading--offwhite {
+    background-color: $gray-light;
+    font-size: $font-xl;
+  }
+
+  .zen-card__body {
+    padding: $space-m-px $space-l-px $space-l-px $space-l-px;
+  }
+
+  &__tooltip {
+    background-color: #3a3a3a;
+    color: $white;
+    font-size: 12px;
+    letter-spacing: normal;
+    line-height: 13px;
+    text-transform: none;
+  }
+}
+
+.admin-app-card-menu {
+  cursor: pointer;
+  .admin-app-card-menu__button {
+    background-color: transparent;
+  }
+
+  &__option {
+    line-height: 3;
+    width: 100%;
+
+    &:hover {
+      background-color: $white-hover;
+    }
+  }
+
+  &__button {
+    border: none;
+    padding: 0 $space-s-px 0 $space-s-px;
+  }
+}
+
+.admin-app-card-shared {
+  &__header {
+    font-size: 16px;
+  }
+
+  &__group {
+    color: $slate;
+    font-size: $font-m;
+  }
+
+  &__dot {
+    background-color: $gray;
+    border-radius: 100px;
+    height: 10px;
+    width: 10px;
+  }
+}

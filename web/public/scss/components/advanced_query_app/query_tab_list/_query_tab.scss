@@ -1,0 +1,89 @@
+.query-tab {
+  align-items: center;
+  align-self: flex-start;
+  color: $slate;
+  display: flex;
+  flex-direction: row;
+  font-size: 15px;
+  font-stretch: normal;
+  font-style: normal;
+  font-weight: 500;
+  height: 100%;
+  letter-spacing: normal;
+  line-height: normal;
+  margin-right: -1px;
+  padding: 8px 9px 11px 9px;
+  position: relative;
+
+  &__context-button {
+    margin-left: 5px;
+    margin-right: 0;
+    padding: 3px 5px;
+  }
+
+  $tab-top-border-px: 3px;
+
+  &__content {
+    margin-top: $tab-top-border-px;
+    white-space: nowrap;
+  }
+
+  &__popover {
+    padding: 0;
+  }
+
+  &--active {
+    background-color: $white;
+    border-color: $white;
+    border-top: $tab-top-border-px solid $blue-primary;
+    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.5);
+    color: $slate;
+    height: 100%;
+    padding: 6px 12.5px 11px 24.5px;
+    position: relative;
+
+    .query-tab__context-button {
+      &:hover {
+        background-color: transparentize($blue-primary, 0.8);
+      }
+    }
+  }
+
+  &--inactive {
+    border-top: $tab-top-border-px solid transparent;
+    color: $slate;
+
+    &:hover {
+      border-top: $tab-top-border-px solid $slate;
+    }
+  }
+
+  &--active + &--inactive {
+    padding-left: 20px;
+  }
+
+  &--editing {
+    border-color: $white;
+  }
+
+  &__title-input {
+    display: inline;
+    padding: 3px;
+  }
+}
+
+.editable-tag-name {
+  letter-spacing: 0.4px;
+
+  &--active {
+    border: 2px solid #66afe9;
+    border-radius: 2px;
+    color: $aqt-blueblack-1;
+
+    // Keep contents aligned with inactive state by subtracting out the
+    // horizontal padding offset and the border width.
+    margin-left: -3px + -2px;
+    margin-right: -3px + -2px;
+    padding: 3px;
+  }
+}

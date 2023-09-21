@@ -1,0 +1,28 @@
+.gd-dashboard-tile-drag-button {
+  background: $blue-selected-tile-btn;
+  border-radius: 3px 0px 0px 3px;
+  color: $white;
+  cursor: move;
+  height: 32px;
+  left: 0;
+  padding: $space-xs-px $space-xxxs-px;
+  position: absolute;
+  top: 0;
+  transform: translate(-20px, -1px);
+  width: 20px;
+
+  .zen-icon {
+    height: 16px;
+    width: 16px;
+  }
+
+  &__legacy {
+    background: none;
+    color: $black;
+    transform: none;
+    .zen-icon {
+      height: 24px;
+      width: 24px;
+    }
+  }
+}

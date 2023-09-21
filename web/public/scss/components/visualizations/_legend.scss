@@ -1,0 +1,32 @@
+.legend-container {
+  margin-top: 5px;
+  padding-top: 0;
+  text-align: center;
+  @media (min-width: 800px) {
+    padding: 20px;
+  }
+  @media (max-width: 800px) {
+    padding: 0px;
+  }
+}
+
+.legend-row {
+  display: inline-block;
+  margin-right: $space-xs-px;
+  margin-top: $space-xxs-px;
+
+  &__text {
+    cursor: pointer;
+    display: inline;
+    line-height: 26px;
+  }
+
+  &__color-block {
+    display: inline-block;
+    padding-right: $space-xxs-px;
+  }
+
+  &--disabled {
+    opacity: 0.2;
+  }
+}

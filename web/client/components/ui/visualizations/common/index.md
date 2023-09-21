@@ -1,0 +1,1 @@
+This section contains common visualization components that can be used as building blocks to create new visualizations.

@@ -1,0 +1,24 @@
+.field-formula-section {
+  margin-top: $space-xxl-px;
+
+  &__formula-block {
+    background: $white;
+    border: 1px solid $gray;
+    border-radius: 5px;
+    display: flex;
+    margin-top: $space-s-px;
+  }
+
+  &__formula-text {
+    background-color: $white-hover;
+    margin: $space-l-px;
+  }
+
+  &__heading {
+    display: flex;
+  }
+
+  &__edit-button {
+    margin-left: auto;
+  }
+}

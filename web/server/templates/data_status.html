@@ -1,0 +1,56 @@
+{% extends 'layout.html' %} {% block content %}
+<div class="row">
+  <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+    <div class="panel panel-default">
+      <header class="panel-heading">
+        <span class="ds-hdd-icon">
+          <i class="glyphicon glyphicon-hdd"></i>
+        </span>
+        <h4 class="panel-header">Data Status</h4>
+      </header>
+      <div class="data-status-body" data-testid="data-status-app">
+        <div class="alert alert-info" role="alert">
+          Last data refresh: {{last_data_update}}
+        </div>
+        <table class="table table-striped table-hover">
+          <thead>
+            <th>Database</th>
+            <th>Integration Status</th>
+            <th>Validation Status</th>
+            <th>Granularity</th>
+            <th>Time range of data</th>
+            <th>Notes</th>
+          </thead>
+          <tbody>
+            {% for item in source_status %}
+            <tr>
+              <td>{{item.source}}</td>
+              <td class="{{item.color}}">{{item.status_text}}</td>
+              <td class="{{item.validation_color}}">
+                {{item.validation_text}} {% if item.validation_url %} &nbsp;<a
+                  href="{{item.validation_url}}"
+                  download
+                  >(report)</a
+                >
+                {% endif %}
+              </td>
+              <td>{{item.granularity}}</td>
+              <td>{{item.date_range}}</td>
+              <td>{{item.notes | safe}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p>
+          <span class="alert-success">⠀⠀</span> Integration or validation
+          pipeline is functional
+        </p>
+        <p><span class="alert-warning">⠀⠀</span> Incomplete or partial data</p>
+        <p><span class="alert-danger">⠀⠀</span> Attention required</p>
+      </div>
+    </div>
+  </article>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ bundle_resource_url('navbar.bundle.js') }}"></script>
+{% endblock %}

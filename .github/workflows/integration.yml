@@ -1,0 +1,170 @@
+name: Integration
+
+on:
+  # Trigger on all pull requests.
+  pull_request:
+
+jobs:
+  lint-python:
+    name: Python - Lint
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: [3.8]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: List changed files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Changed files:"
+          gh pr view ${{ github.head_ref }} --json files -q '.files[].path'
+      - name: Setup Python ${{ matrix.python-version }} (api)
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        id: cache-venv
+        with:
+          path: venv
+          key: ${{ runner.os }}-python-${{ steps.setup-python.outputs.python-version }}-${{ matrix.python-version }}-venv-all-requirements-${{ hashFiles('requirements.txt', 'requirements-web.txt', 'requirements-dev.txt', 'requirements-pipeline.txt') }}
+      - name: Install dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install -r requirements-web.txt
+          pip install -r requirements-dev.txt
+          pip install -r requirements-pipeline.txt
+      - name: Cache dependencies
+        uses: actions/cache/save@v3
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        with:
+          path: venv
+          key: ${{ steps.cache-venv.outputs.cache-primary-key }}
+      - name: Black
+        # We're only interested in python files that have changed in this PR. The entire project isn't compliant.
+        # Explanation of how we get the changed files:
+        # $(gh pr view ${{ github.head_ref }} --json files -q '.files[].path' | grep -E "(.py$)" | xargs -I{} sh -c '[ -e "{}" ] && echo "{}"') || true
+        #
+        # gh pr view ${{ github.head_ref }} ... : using github cli get details of the file paths that changed on this pr, in json format
+        #
+        # grep -E "(.py$)") : find all files that end in .py
+        #
+        # xargs -I{} sh -c '[ -e "{}" ] && echo "{}"') : print the names of the files that exist
+        # run a shell script (sh) using xargs and checks if each argument passed to xargs exists as a file ([ -e "{}" ]) and if so,
+        # echoes the name of the file (echo "{}"). The {} is a placeholder for the argument passed to xargs.
+        #
+        # || true : if no files are found, return true so the script doesn't fail (grep return 1 by default if nothing found)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          changed_files=$(gh pr view ${{ github.head_ref }} --json files -q '.files[].path' | grep -E "(.py$)" | xargs -I{} sh -c '[ -e "{}" ] && echo "{}"') || true
+          if [[ $changed_files ]]; then
+            echo "black evaluating: $changed_files"
+            source venv/bin/activate
+            black --skip-string-normalization -t py39 --check $changed_files
+          else
+            echo "no python files found for black to evaluate"
+          fi
+      - name: Pylint
+        # We're only interested in python files that have changed in this PR. The entire project isn't compliant.
+        # Run it even if black fails, so we can see all the errors at once.
+        if: '!cancelled()'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          changed_files=$(gh pr view ${{ github.head_ref }} --json files -q '.files[].path' | grep -E "(.py$)" | xargs -I{} sh -c '[ -e "{}" ] && echo "{}"') || true
+          if [[ $changed_files ]]; then
+            echo "pylint evaluating: $changed_files"
+            source venv/bin/activate
+            pylint_report=$(pylint --reports=no $changed_files -f json) || true
+            # Map "refactor" and "convention" to "notice".
+            pylint_report=$(echo $pylint_report | jq -r 'map(.type |= if (. == "refactor") or (. == "convention") then "notice" else . end)')
+            # Create github annotations.
+            echo $pylint_report | jq -r '.[] | "::" + .type + " file=" + .path + ",line=" + (.line|tostring) + ",col=" + (.column|tostring) + ",title=" + .symbol + " / " + ."message-id" + "::" + .message' | sed 's/.*/"&"/' | xargs -L1 echo
+            # Count errors, failing if there's more than one.
+            errors=$(echo $pylint_report | jq '[.[] | select(.type == "error")] | length')
+            if [ $errors -gt 0 ]; then
+              echo pylint encountered $errors errors
+              echo $pylint_report
+              exit 1
+            fi
+          else
+            echo "no python files found for pylint to evaluate"
+          fi
+      - name: MyPy
+        # Run it even if black/pylint fails, so we can see all the errors at once.
+        if: '!cancelled()'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source venv/bin/activate
+          result=$(mypy --show-column-numbers --no-color-output --config-file mypy.ini) || true
+          echo "$result" | xargs -L1 python scripts/mypy_parse.py
+          
+  lint-js:
+    name: JS - Lint
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        id: cache-node_modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-node_modules-${{ hashFiles('package.json', 'yarn.lock') }}
+      - name: Install dependencies
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
+        run: |
+          yarn install
+      - name: Cache dependencies
+        uses: actions/cache/save@v3
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
+        with:
+          path: node_modules
+          key: ${{ steps.cache-node_modules.outputs.cache-primary-key }}
+      - name: Lint (.js, .jsx)
+        # We're only interested in js and jsx files that have changed in this PR. The entire project isn't compliant.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # eslint may have messages when there aren't warnings/errors - so we have to be very explict in for warnings/errors.
+        run: |
+          changed_files=$(gh pr view ${{ github.head_ref }} --json files -q '.files[].path' | grep -E "(.js$|.jsx$)" | grep -v "web/public/*" | xargs -I{} sh -c '[ -e "{}" ] && echo "{}"') || true
+          if [[ $changed_files ]]; then 
+            echo "eslint evaluating: $changed_files"
+            eslint_report=$(./node_modules/.bin/eslint $changed_files -f json) || true
+            echo $eslint_report | jq -r '.[] | "::warning file=" + .filePath + (.messages | .[] | ",line=" + (.line|tostring) + ",col=" + (.column|tostring) + ",title=" + .ruleId + "::" + .message)' | sed 's/.*/"&"/' | xargs -L1 echo
+            fail=$(echo $eslint_report | jq -r '[.[] | select(.warningCount > 0 or .errorCount > 0)] | length > 0')
+            if [ "$fail" = "true" ]; then
+              echo $eslint_report
+              exit 1
+            fi
+          else
+            echo "no .js or .jsx files found for eslint to evaluate"
+          fi
+      - name: Lint (.scss)
+        # We're only interested in scss files that have changed in this PR. The entire project isn't compliant.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          changed_files=$(gh pr view ${{ github.head_ref }} --json files -q '.files[].path' | grep -E "(.scss$)" | xargs -I{} sh -c '[ -e "{}" ] && echo "{}"') || true
+          if [[ $changed_files ]]; then
+            echo "stylelint evaluating: $changed_files"
+            ./node_modules/stylelint/bin/stylelint.js $changed_files
+          else
+            echo "no .scss files found for stylelint to evaluate"
+          fi

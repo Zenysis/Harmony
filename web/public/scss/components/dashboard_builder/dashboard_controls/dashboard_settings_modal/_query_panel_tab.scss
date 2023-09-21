@@ -1,0 +1,94 @@
+.gd-query-panel-tab-config-item {
+  border-bottom: 1px solid $gray;
+
+  &__detail {
+    display: flex;
+  }
+
+  &__description {
+    flex-grow: 1;
+  }
+
+  &__grouping {
+    margin-top: $space-l-px;
+  }
+
+  &__list {
+    margin-left: $space-xl-px;
+
+    &--item-group_by {
+      border-bottom: 1px solid $gray;
+      padding-bottom: 9px;
+    }
+
+    &--item {
+      padding-bottom: 12px;
+    }
+  }
+
+  &__control, &__control-btn {
+    align-items: center;
+    display: flex;
+  }
+
+  &__control-btn {
+    align-items: center;
+    background-color: #ffffff;
+    background-image: linear-gradient(to right, #ffffff, #ffffff);
+    border: 1px solid #bfc2c9;
+    border-radius: 5px;
+    color: #313234;
+    padding: 7px 10px;
+
+    .gd-dashboard-control-button__icon{
+      margin-left: 8px;
+      margin-right: 0px;
+    }
+  }
+
+  &__control{
+    .selection-block:first-child{
+      margin-top: 0;
+    }
+    .selection-block{
+      margin-bottom: 0;
+      margin-top: 0;
+
+      &__horizontal{
+        display: flex;
+        gap: 15px;
+
+        .query-part-selector{
+          border: none;
+
+          &__btn-wrapper{
+            align-items: center;
+            display: flex;
+
+            .zen-info-tooltip{
+              font-size: 0px;
+            }
+          }
+        }
+
+        .ui-draggable-item-list{
+          display: flex;
+          gap: 15px;
+        }
+      }
+    }
+  }
+
+  .zen-dropdown__menu {
+    margin-left: 16px;
+  }
+
+  &__info-text {
+    color: #757578;
+    font-size: 14px;
+  }
+
+  &.last-index{
+    border-bottom: none;
+  }
+}

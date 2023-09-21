@@ -1,0 +1,50 @@
+[ignore]
+
+# Exclude minified vendor files.
+<PROJECT_ROOT>/web/public/js/vendor/min/.*
+
+
+# Exclude non web/ and node_modules/ paths.
+# NOTE: This is kind a hack. We keep the .flowconfig in our src root
+# but we have a lot of non-js files in our source tree, so we want to flexibly
+# exclude those folders without having to specifically blacklist them all here.
+<PROJECT_ROOT>/\(w[^e][^b]\|n[^o][^d][^e]\|[^wn]\).*
+
+# Declarations allow us to use the types of the external interfaces of
+# third-party packages without type-checking the contents.
+[declarations]
+<PROJECT_ROOT>/node_modules/.*
+<PROJECT_ROOT>/.*/__generated__/.*
+
+[include]
+web/client/
+web/public/js/
+
+[libs]
+web/public/js/vendor/flow-typed/
+web/client/types/globals.js
+
+[lints]
+# unclear-type=warn
+
+[options]
+exact_by_default=true
+include_warnings=true
+module.system.node.resolve_dirname=node_modules
+module.system.node.allow_root_relative=true
+module.system.node.root_relative_dirname=web/client
+
+# use to suppress a bug when ZenModels are default props in React components
+suppress_type=$AllowZenModelDefaultProp
+
+# use when there is actually no other way to annotate something
+suppress_type=$AllowAny
+
+# use when casting
+suppress_type=$Cast
+
+# use when you don't know the type annotation (e.g. its from a 3rd party
+# library) and you will fill it in later
+suppress_type=$FlowTODO
+
+[strict]

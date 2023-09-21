@@ -1,0 +1,123 @@
+html,
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 0;
+  width: 100%;
+}
+
+h1 {
+  font-size: $font-size-h1;
+  font-weight: $headings-font-weight;
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
+h2 {
+  font-size: $font-size-h2;
+}
+
+h3 {
+  font-size: $font-size-h3;
+}
+
+h4 {
+  font-size: $font-size-h4;
+}
+
+h5 {
+  font-size: $font-size-h5;
+}
+
+h6 {
+  font-size: $font-size-h6;
+}
+
+.jarviswidget > div {
+  padding: $jarvis-padding $jarvis-padding 0;
+}
+
+.widget-body {
+  padding-bottom: $jarvis-padding;
+}
+
+nav ul li.active > a:before {
+  top: 25%;
+}
+
+#main {
+  margin-left: 0;
+  min-height: calc(100% - 95px);
+  padding: 0;
+  position: relative;
+}
+
+.ranked-card-container {
+  min-width: initial;
+}
+
+.btn-default {
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+@media (max-width: 767px) {
+  /* padding adjustment */
+  #content,
+  #ribbon {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+}
+
+@media only screen and (min-width: 320px) and (max-width: 479px) {
+  /* padding adjustment */
+  #content,
+  #ribbon {
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+}
+
+// Add box shadows back to form controls
+.form-control-box-shadow {
+  @include box-shadow(inset 0 1px 1px rgba(0, 0, 0, 0.075) !important);
+}
+
+.form-control {
+  @extend .form-control-box-shadow;
+  color: #333;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+textarea:focus,
+select:focus,
+input[type='text']:focus,
+input[type='password']:focus,
+input[type='datetime']:focus,
+input[type='datetime-local']:focus,
+input[type='date']:focus,
+input[type='month']:focus,
+input[type='time']:focus,
+input[type='week']:focus,
+input[type='number']:focus,
+input[type='email']:focus,
+input[type='url']:focus,
+input[type='search']:focus,
+input[type='tel']:focus,
+input[type='color']:focus,
+.uneditable-input:focus {
+  @extend .form-control-box-shadow;
+}
+
+.query-result.well {
+  background: white;
+}
+
+.bootstrap-select.btn-group .dropdown-toggle .caret {
+  margin-top: 0;
+  position: relative;
+  right: 0;
+  top: 0;
+}

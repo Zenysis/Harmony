@@ -1,0 +1,66 @@
+.role-card {
+  &__label-wrapper {
+    display: flex;
+  }
+
+  &__label {
+    padding-right: 10px;
+  }
+
+  &__dot {
+    background-color: $gray;
+    border-radius: 100px;
+    height: 10px;
+    width: 10px;
+  }
+
+  &__color-blocks {
+    background-color: $gray-light;
+    border-radius: 100px;
+    height: 8px;
+    width: 50px;
+
+    &--filled {
+      @extend .role-card__color-blocks;
+      background-color: $gray;
+    }
+  }
+
+  &__group {
+    color: $slate;
+    font-size: $font-m;
+  }
+
+  &__no-tools-text {
+    color: $gray;
+    font-size: $font-m;
+    font-style: italic;
+    // Hardcoding this spacing value because it needs to match cards with tool
+    // pills.
+    padding-bottom: 13px;
+  }
+
+  &__sitewide-access-descriptor {
+    color: $gray;
+    font-size: $font-m;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  &__tool-section-label {
+    margin-bottom: $space-xs-px;
+  }
+
+  &__pill {
+    margin-top: 4px;
+  }
+
+  &__tool-section-content {
+    flex-wrap: wrap;
+    max-width: 350px;
+  }
+
+  &__header {
+    font-size: 16px;
+  }
+}

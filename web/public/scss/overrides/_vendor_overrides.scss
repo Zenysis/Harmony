@@ -1,0 +1,18 @@
+// Overrides modals.scss
+.ReactModal__Overlay {
+  .ReactModal__Content {
+    .modal-body {
+      padding: $spacing-m !important;
+    }
+  }
+}
+
+// TODO: Remove this when we finally replace all usages of toastr with
+// our own Toaster component.
+#toast-container {
+  left: 12px;
+}
+
+#toast-container .toast {
+  border-radius: 2px;
+}

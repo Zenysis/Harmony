@@ -1,0 +1,17 @@
+Flask-Admin==1.5.3
+graphene-sqlalchemy==2.3.0
+Flask-GraphQL==2.0.1
+flask-jwt-extended==3.25.1
+blinker==1.4
+flask-caching==2.0.1
+flask-login==0.4.1
+gunicorn[gevent]==20.0.4
+isodate>=0.5.4
+redis==3.2.1
+scipy>=1.2.1
+twilio==6.24.1
+PyJWT==1.7.1
+typing_extensions==4.1.1
+
+alembic>=1.7.1
+segment-analytics-python==2.2.3

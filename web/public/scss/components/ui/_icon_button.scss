@@ -1,0 +1,42 @@
+.zen-icon-button {
+  align-items: center;
+  border-radius: 50%;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  margin: 0 $space-xxs-px;
+  width: 32px;
+
+  @mixin interaction-button($fill-color, $hover-color, $active-color) {
+    color: $fill-color;
+    fill: $fill-color;
+
+    &:hover {
+      background-color: $hover-color;
+    }
+
+    &:active {
+      background-color: $active-color;
+    }
+  }
+
+  &--primary {
+    @include interaction-button($slate, $gray-hover, $gray-active);
+  }
+
+  &--success {
+    @include interaction-button(
+      $success-color,
+      rgba($success-color-hover, 0.1),
+      rgba($success-color-hover, 0.2)
+    );
+  }
+
+  &--danger {
+    @include interaction-button(
+      $error-color,
+      rgba($error-color-hover, 0.1),
+      rgba($error-color-hover, 0.2)
+    );
+  }
+}

@@ -1,0 +1,13 @@
+.no-results-screen {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+
+  &__icon-small-mode {
+    height: 48px;
+    margin-bottom: $space-xxs-px;
+    margin-right: 0px;
+    width: 48px;
+  }
+}

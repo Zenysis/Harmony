@@ -1,0 +1,22 @@
+.notfound-page {
+  &__main-container {
+    font-size: 18px;
+    margin-left: 1em;
+    margin-top: 1em;
+  }
+
+  &__content-title {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  &__hints {
+    box-sizing: border-box;
+    left: 50%;
+    position: absolute;
+    top: 40%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+  }
+}

@@ -1,0 +1,49 @@
+FROM python:3.8
+
+ENV INSTALL_PATH /zenysis
+
+RUN mkdir -p ${INSTALL_PATH}
+WORKDIR ${INSTALL_PATH}
+
+RUN \
+  export DEBIAN_FRONTEND=noninteractive && \
+  apt-get update && \
+  apt-get install --no-install-recommends -y lz4 && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt requirements.txt
+COPY requirements-web.txt requirements-web.txt
+
+# Install third-party dependencies. Ensure any dependencies installed with the
+# -e flag will be installed to a common directory instead of the current working
+# directory.
+RUN \
+  pip install \
+  --cache-dir /pip.cache \
+  --src /usr/local/src \
+  -r requirements.txt && \
+  pip install \
+  --cache-dir /pip.cache \
+  --src /usr/local/src \
+  -r requirements-web.txt
+
+# Remove testing directories that are inexplicably *always installed* by pip.
+# There appears to be no way to prevent that from happening. Also remove pyc
+# files since they should be generated inside the container. This saves almost
+# 100MB (30%) of the third-party dependency size..
+RUN \
+  rm -rf /usr/local/lib/python3.8/site-packages/*/tests && \
+  rm -rf /usr/local/lib/python3.8/site-packages/*/*/tests && \
+  find /usr/local/lib/python3.8/site-packages -name '*.pyc' -delete
+
+# Copy over python code.
+COPY config config
+COPY data data
+COPY db db
+COPY log log
+COPY models models
+COPY graphql graphql
+COPY util util
+COPY web/*.py web/
+COPY web/server web/server

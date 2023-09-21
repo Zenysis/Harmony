@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+
+import json
+import os
+import re
+import time
+
+from pylib.base.flags import Flags
+
+from util.pipeline.tools.pview.pipeline_files import search_pipeline_files
+
+# Allow the user to override the pager (like `less`) to use.
+PAGER = os.getenv('PAGER', 'less')
+
+def result_ranker(result):
+    if result['size'] < 2:
+        return 0
+
+    elapsed = time.time() - result['modified']
+    num_days_ago = 3.0 / int((elapsed / (60 * 60 * 24)) + 1)
+
+    return num_days_ago + result['size'] / 1e9
+
+def get_cmd(result):
+    path = result['fullpath']
+    if path.endswith('.lz4'):
+        return f'lz4 -dc {path} 2>/dev/null | {PAGER}'
+    if path.endswith('.gz'):
+        return f'gunzip -c {path} | {PAGER}'
+    return f'{PAGER} {path}'
+
+def run(filters, paths_only=False, debug=False, n=1):
+    compiled_re = [re.compile(f, re.IGNORECASE) for f in filters]
+    results = []
+    for fullpath in search_pipeline_files(filters):
+        # TODO: Weigh matches that are later in the string. The files returned are
+        # guaranteed to match at least one of the filters provided.
+
+        # Build result
+        file_stats = os.stat(fullpath)
+        result = {
+            'fullpath': fullpath,
+            'modified': file_stats.st_mtime,
+            'size': file_stats.st_size,
+        }
+        result['score'] = result_ranker(result)
+        results.append(result)
+
+    results = sorted(results, key=lambda x: x['score'], reverse=True)
+
+    if debug:
+        print(json.dumps(results[:n], indent=2))
+        if len(results):
+            print('Would run command: %s' % get_cmd(results[0]))
+    elif paths_only:
+        print('\n'.join([result['fullpath'] for result in results[:n]]))
+    elif not len(results):
+        print('No results found')
+    else:
+        print('Opening %s' % results[0]['fullpath'])
+        os.system(get_cmd(results[0]))
+
+if __name__ == '__main__':
+    Flags.PARSER.add_argument(
+        '--debug',
+        default=False,
+        action='store_true',
+        help='If true, output JSON results',
+    )
+    Flags.PARSER.add_argument(
+        '--paths_only',
+        '-p',
+        default=False,
+        action='store_true',
+        help='If true, output file paths',
+    )
+    Flags.PARSER.add_argument(
+        '-n',
+        default=1,
+        type=int,
+        help='Number of results to show in debug and paths mode',
+    )
+    Flags.PARSER.add_argument(
+        'filters',
+        nargs='*',
+        help='Regex filters to match against all file paths',
+    )
+    Flags.InitArgs()
+
+    run(Flags.ARGS.filters, Flags.ARGS.paths_only, Flags.ARGS.debug, Flags.ARGS.n)

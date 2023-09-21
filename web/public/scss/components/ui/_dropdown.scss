@@ -1,0 +1,232 @@
+$dropdown-item-horizontal-padding: 20px;
+
+.zen-dropdown {
+  display: inline-block;
+  max-width: 100%;
+  position: relative;
+
+  &__search-bar {
+    padding: 7px 8px 3px;
+    width: 100%;
+  }
+
+  &__menu {
+    background-clip: padding-box;
+    background-color: $white;
+    border-radius: 5px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+    color: $slate;
+    display: block;
+    font-size: 15px;
+
+    /* For screens taller than 1000px */
+    max-height: 365px;
+    overflow-y: auto;
+    text-align: left;
+
+    @media screen and (max-height: 1000px) {
+      /* For screens shorter than 1000px*/
+      max-height: 265px;
+    }
+
+    &--wrap-words {
+      .zen-dropdown-item-wrapper__content {
+        white-space: normal;
+      }
+    }
+  }
+
+  &__option-list {
+    height: 100%;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
+  &__select-all-option {
+    font-weight: bold;
+  }
+}
+
+.zen-dropdown-item-wrapper {
+  cursor: pointer;
+  line-height: 2;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: $white-hover;
+  }
+
+  &--selected {
+    background-color: $white-active;
+
+    &:hover {
+      background-color: $white-active;
+    }
+  }
+
+  &__content {
+    // this vertical padding is specifically chosen to ensure a min item height
+    // of 40px at the default font-sizes
+    padding: 5px $dropdown-item-horizontal-padding;
+  }
+
+  &--unselectable {
+    color: $gray;
+    &:hover {
+      background-color: initial;
+    }
+
+    // Prevent the content from using a pointer cursor for unselectable values.
+    .zen-dropdown-item-wrapper__content {
+      cursor: auto;
+    }
+  }
+
+  // Multiselect selected options use a checkbox instead of a background color
+  // to indicate they are selected.
+  &--multiselect-selected {
+    .zen-dropdown-item-wrapper__content {
+      align-items: center;
+      display: flex;
+    }
+  }
+
+  &__checkbox {
+    // Negate the parent left side padding and center the checkbox inside it.
+    // Ensure the checkbox takes up the same space so the dropdown text is
+    // aligned properly.
+    flex: 0 0 $dropdown-item-horizontal-padding;
+    font-size: $font-s;
+    margin-left: -$dropdown-item-horizontal-padding;
+    text-align: center;
+  }
+}
+
+.zen-dropdown-options-group-wrapper {
+  &__label {
+    display: inline-block;
+  }
+}
+
+.zen-dropdown-button {
+  display: inline-block;
+  width: 100%;
+
+  &__main-btn {
+    align-items: center;
+    border-radius: 5px;
+    display: flex;
+    font-size: 15px;
+    height: 35px;
+    padding: 0 0.667em;
+    width: 100%;
+
+    &[disabled] {
+      cursor: not-allowed;
+    }
+
+    &--plain {
+      background-color: inherit;
+      border: none;
+      color: $slate;
+    }
+
+    &--default {
+      background-color: $white;
+      border: 1px solid $gray-light-active;
+      color: $slate;
+
+      &:hover {
+        background-color: $white-hover;
+        border: 1px solid $gray;
+      }
+
+      &:active {
+        background-color: $white-active;
+        border: 1px solid $gray;
+      }
+    }
+
+    @mixin dropdown-button($base-color, $hover-color, $active-color) {
+      background-color: $base-color;
+      border: 1px solid $active-color;
+      color: $white;
+
+      &:hover {
+        background-color: $hover-color;
+        border-color: $base-color;
+      }
+
+      &:active {
+        background-color: $active-color;
+      }
+    }
+
+    &--primary {
+      @include dropdown-button(
+        $blue-primary,
+        $blue-primary-hover,
+        $blue-primary-active
+      );
+    }
+
+    &--success {
+      @include dropdown-button(
+        $success-color,
+        $success-color-hover,
+        $success-color-active
+      );
+    }
+
+    &--danger {
+      @include dropdown-button(
+        $error-color,
+        $error-color-hover,
+        $error-color-active
+      );
+    }
+
+    &--info {
+      @include dropdown-button(
+        $info-color,
+        $info-color-hover,
+        $info-color-active
+      );
+    }
+
+    &--warning {
+      @include dropdown-button(
+        $warning-color,
+        $warning-color-hover,
+        $warning-color-active
+      );
+    }
+  }
+
+  &__button-content {
+    display: inline-block;
+    flex: 1;
+    margin-right: 0.4em;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    // if there is no caret, then this is the only child in the button, so
+    // we remove the margin-right
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+
+  &__caret {
+    align-items: center;
+    display: flex;
+
+    &.zen-caret {
+      margin-right: 0;
+    }
+  }
+}

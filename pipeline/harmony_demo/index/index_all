@@ -1,0 +1,13 @@
+#!/bin/bash -eu
+set -o pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
+
+pushd "${SCRIPT_DIR}" &> /dev/null
+
+# Run the full data indexing pipeline.
+./zeus_index \
+  run \
+    run/...
+
+popd &> /dev/null

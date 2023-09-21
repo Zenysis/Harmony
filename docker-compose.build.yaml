@@ -1,0 +1,51 @@
+version: '3.9'
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: 10m
+    max-file: "10"
+
+volumes:
+  nginx-acme:
+  nginx-certs:
+  nginx_vhost:
+  nginx_html:
+
+
+services:
+  web-client:
+    pull_policy: build
+    image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/harmony-web-client:${DOCKER_TAG:-latest}
+    build:
+      dockerfile: docker/web/Dockerfile_web-client
+  web-server:
+    pull_policy: build
+    image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/harmony-web-server:${DOCKER_TAG:-latest}
+    build:
+      dockerfile: docker/web/Dockerfile_web-server
+  web:
+    pull_policy: build
+    image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/harmony-web:${DOCKER_TAG:-latest}
+    depends_on:
+      - web-client
+      - web-server
+    build:
+      dockerfile: docker/web/Dockerfile_web
+      args:
+        NAMESPACE: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}
+        IMAGE_PREFIX: ${DOCKER_IMAGE_PREFIX:-harmony}
+        TAG: ${DOCKER_TAG:-latest}
+  etl-pipeline:
+    # Currently the pipeline only builds on linux/amd64, arm is not supported.
+    platform: linux/amd64
+    pull_policy: build
+    image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/harmony-etl-pipeline:${DOCKER_TAG:-latest}
+    build:
+      dockerfile: docker/pipeline/Dockerfile
+  dev:
+    # Currently dev only supports builds on linux/amd64, arm is not supported.
+    platform: linux/amd64
+    image: harmony-dev-web:latest
+    build:
+      dockerfile: docker/dev/Dockerfile

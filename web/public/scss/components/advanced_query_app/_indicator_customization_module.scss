@@ -1,0 +1,225 @@
+.indicator-customization-module {
+  // NOTE: The aqt-customization-module-wrapper has a padding of 1em.
+  // We set the margin so that we can override that padding.
+  margin: -1em;
+
+  &__block {
+    margin: $space-m-px 20px 0 20px;
+  }
+
+  &__block-title {
+    align-items: center;
+    display: flex;
+
+    .zen-tooltip {
+      display: flex;
+    }
+  }
+
+  // NOTE: Overriding the default padding applied by the tabs container
+  // since it is HUGE and doesn't work well for our small module.
+  &__tab-content {
+    padding-bottom: 0;
+    padding-top: 0;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+
+    .zen-breadcrumb-item {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .zen-breadcrumb-item-wrapper {
+      background-color: $gray-light-active;
+      color: #b3bcbd;
+      cursor: default;
+
+      &:after {
+        border-left: ($breadcrumb-item-height / 3) solid $gray-light-active;
+        max-width: 10ch;
+      }
+    }
+  }
+
+  &__copy-button {
+    border-radius: 5px;
+    position: absolute;
+    right: 12px;
+    top: 8px;
+    z-index: 1; // ensure absolute positioned button shows up
+
+    &:hover {
+      background-color: rgba($slate-hover, 0.2);
+
+      .zen-icon {
+        color: $slate;
+      }
+    }
+
+    &:active {
+      background-color: rgba($slate-hover, 0.4);
+    }
+
+    .zen-info-tooltip {
+      align-items: center;
+      display: flex;
+      height: 30px;
+      justify-content: center;
+      margin-left: 0;
+      width: 30px;
+    }
+
+    .zen-icon {
+      height: 20px;
+      width: 20px;
+    }
+  }
+
+  &__filter-block {
+    .selection-block {
+      margin: 0;
+      padding: 0;
+
+      &__title-block {
+        color: $slate-hover;
+        font-size: 14px;
+        margin-bottom: $space-xxs-px;
+      }
+    }
+  }
+
+  .zen-label-wrapper {
+    margin-bottom: 20px;
+    padding-top: 0px;
+
+    &__wrapped-content {
+      padding-top: 0px;
+    }
+  }
+
+  .zen-tab-header__heading {
+    font-weight: normal;
+    // added to heading element instead of header-row in order to line up
+    // the blue "active" underline with the edge of the shading
+    padding: 0px 0px 12px 0px;
+    // Override capitalization for headers.
+    text-transform: none;
+  }
+
+  .zen-tabs__contents-container {
+    margin-bottom: $space-l-px;
+  }
+
+  .zen-tabs__header-row {
+    background-color: #f9f9f9; // matches the tabbed modal header
+    border-radius: 5px;
+    padding: 12px 20px 0px 20px;
+  }
+}
+
+.indicator-section-row {
+  margin-bottom: $space-l-px;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+
+  &__title {
+    color: $slate-hover;
+    font-size: 14px;
+    margin-bottom: $space-xxs-px;
+  }
+
+  &__value {
+    display: flex;
+    font-size: 16px;
+  }
+
+}
+
+.indicator-details-section__link{
+  border-bottom: 1px dashed $gray;
+}
+
+.indicator-general-settings-panel {
+  &__add-constituents-btn {
+    border-radius: 5px;
+    width: 100%;
+
+    .glyphicon-plus {
+      color: $dark-gray-3;
+      margin-left: $spacing-xs;
+    }
+  }
+
+  &__constituents-block {
+    @extend .indicator-customization-module__filter-block;
+  }
+
+  &__no-data-checkbox {
+    .zen-label-wrapper {
+      align-items: center;
+      display: flex;
+      margin-bottom: 0;
+
+      &__label {
+        color: $slate-hover;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+.indicator-details-section {
+  margin-top: $space-l-px;
+
+  &__category-name {
+    border-bottom: 1px dashed $gray;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__category-tooltip {
+    background-color: white;
+    color: $slate;
+    font-size: 14px;
+    max-width: 470px;
+  }
+}
+
+.label-with-tooltip {
+  &__label {
+    border-bottom: 1px dashed $gray;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__popover {
+    background-color: white;
+    color: $slate;
+    font-size: 14px;
+    max-width: 470px;
+  }
+}
+
+.indicator-about-panel {
+  &__formula-section {
+    margin-top: $space-xl-px;
+  }
+
+  &__formula-label {
+    margin-top: $space-m-px;
+  }
+
+  &__formula-tooltip {
+    & > * {
+      background-color: $white-hover;
+    }
+  }
+}

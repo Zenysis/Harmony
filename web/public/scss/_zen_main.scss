@@ -1,0 +1,107 @@
+* {
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// This is carried over from smartadmin
+// Makes our site hard to use for keyboard/screen reader users
+*:focus {
+  outline: none;
+}
+
+[role='button'],
+[role='tab'] {
+  cursor: pointer;
+}
+
+label {
+  display: inline-block;
+  // Force IE8 to wrap long content (see
+  // https://github.com/twbs/bootstrap/issues/13141)
+  max-width: 100%;
+}
+
+.zen-style {
+  overflow-x: hidden;
+
+  // NOTE: HORRIBLE HORRIBLE HACK. There are way too many dependencies
+  // between navbar, main, and various other heights used in the app. This is
+  // a pain to work with because when the navbar has responsive styles, those
+  // heights need to be *replicated* everywhere the navbar height needs to be
+  // known. This makes adding a condensed navbar (that never changes height)
+  // really difficult to do without this awful code. Using a CSS variable at
+  // the root level so that responsive styles can be understood without needing
+  // to be hardcoded. BUT the condensed navbar is controlled with a prop, so
+  // we have to move outside the react system and into our template renderer to
+  // apply a style that has no business being at that level.
+  // TODO: Stop using position absolute and fixed
+  // for navbar and #main and use flexbox so things are derived.
+  @media (min-width: $navbar-transition-width) {
+    --navbar-height: #{$navbar-height};
+  }
+  @media (max-width: $navbar-transition-width) {
+    --navbar-height: #{$navbar-height};
+  }
+
+  &.condensed-navbar {
+    --navbar-height: #{$navbar-height};
+  }
+}
+
+// Apply font styles that we know we'll need so that the browser downloads
+// them on page load instead of deferring it and causing a stutter in the
+// critical rendering path.
+body:after {
+  content: ' ';
+  font-weight: 300;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: $site-background;
+  color: $slate;
+  font-family: $base-font-family;
+  font-size: 14px;
+  font-weight: 400;
+  position: relative;
+}
+
+.min-full-page-height {
+  min-height: var(--main-height);
+}
+
+#main {
+  --main-height: calc(100vh - var(--navbar-height));
+  min-height: var(--main-height);
+  top: var(--navbar-height);
+}
+
+.screenshot-page {
+  .hide-in-screenshot {
+    display: none;
+  }
+
+  .hide-on-export {
+    visibility: hidden;
+  }
+
+  #main {
+    top: 0;
+  }
+}
+
+.embedded-page {
+
+  #main{
+    top: 0;
+  }
+
+  .hide-in-embedded-app {
+    display: none;
+  }
+
+}

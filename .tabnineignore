@@ -1,0 +1,7 @@
+/bin/
+/config/*/calculated_indicator_defs
+/config/*/indicator_groups
+/pipeline/out
+/web/public/fonts/
+/web/public/images/
+*.pdf

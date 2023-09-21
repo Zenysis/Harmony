@@ -1,0 +1,28 @@
+.insights-fields-selector {
+  margin-top: 20px;
+  padding-bottom: 10px;
+
+  &__label {
+    font-size: $font-l;
+    margin-bottom: $spacing-xs;
+  }
+
+  &__dropdown {
+    // override zen-dropdown formatting to display dropdown at 100% width
+    .zen-dropdown,
+    .zen-dropdown-button {
+      display: block;
+    }
+  }
+  // copied from dq-dropdown
+  &__button {
+    border: 1px solid $gray;
+    border-radius: 5px;
+    box-shadow: -1px 2px 2px rgba(0, 0, 0, 0.2);
+    font-size: $font-m;
+  }
+
+  &__option {
+    font-size: $font-m;
+  }
+}

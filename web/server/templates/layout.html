@@ -1,0 +1,75 @@
+{%- from 'bundle_resource.template' import bundle_resource_url with context -%}
+{%- from 'js_resource.template' import js_resource_url with context -%}
+{%- from 'js_base_resource.template' import js_base_resource_url with context -%}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>{{ full_platform_name }}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="{{ favicon_path }}" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="{{ home_icon_path }}" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="{{ bundle_resource_url('bundle.css') }}">
+    {% block css %}{% endblock %}
+  </head>
+
+  <body class="zen-style {{body_class}} {% if is_screenshot_request %}screenshot-page{% endif %} {% if is_iframe_request %}embedded-page{% endif %}">
+    <div id="header"></div>
+
+    <!-- MAIN PANEL -->
+    <div id="main" role="main">
+      <!-- MAIN CONTENT -->
+      {% block content %}{% endblock %}
+      <!-- END MAIN CONTENT -->
+    </div>
+    <!-- END MAIN PANEL -->
+
+    {% if pass_to_js %}
+    <script>
+      window.__JSON_FROM_BACKEND = {{ pass_to_js|safe }};
+    </script>
+    {% endif %}
+
+    <script src="{{ js_resource_url('jquery-3.6.0.js') }}"></script>
+    <script src="{{ js_resource_url('bootstrap-5.2.0.js') }}"></script>
+    <script>
+      window.addEventListener('error', function(e) {
+        var errlog = {
+          msg: e.message,
+          location: e.filename + ': ' + e.lineno
+        };
+      });
+      window.testing = {};
+    </script>
+
+    <script src="{{ bundle_resource_url('vendor.bundle.js') }}"></script>
+    <script src="{{ bundle_resource_url('commons.bundle.js') }}"></script>
+
+    <script src="{{ js_resource_url('toastr-2.1.2.js') }}"></script>
+    {% block flash_messages %}
+      {%- with messages = get_flashed_messages(with_categories=true) -%}
+        {% if messages %}
+          {% for category, message in messages %}
+            {% if category=='success' %}
+              {% if message != 'You have signed in successfully.' %}
+              <script>window.toastr.success("{{ message|safe }}");</script>
+              {% endif %}
+            {% elif category=='error' %}
+              <script>window.toastr.error("{{ message|safe }}");</script>
+            {% else %}
+              <script>window.toastr.info("{{ message|safe }}");</script>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {%- endwith %}
+    {% endblock %}
+
+    {% set user=user %}
+    {% block tracking_event %}{% endblock %}
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

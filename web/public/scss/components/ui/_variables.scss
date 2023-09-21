@@ -1,0 +1,16 @@
+// Hierarchical Selector variables
+$hierarchical-selector-base-border-color: $light-gray-3;
+$hierarchical-selector-bg-color: $white;
+$hierarchical-selector-item-hover: $light-gray-4;
+$hierarchical-selector-item-active-color: $light-gray-2;
+$hierarchical-selector-item-active-hover: $light-gray-1;
+$hierarchical-selector-base-transition-hover-color: background-color 270ms
+  cubic-bezier(0, 0, 0.2, 1);
+$hierarchy-column-item-label-font-size: 13px;
+$hierarchy-column-item-label-vertical-padding: 11px;
+// Choose a minimum column height that will allow us to set a consistent padding
+// between rows that have a single line of text and rows with multiple lines of
+// text.
+$hierarchy-column-item-min-height: #{2 *
+  $hierarchy-column-item-label-vertical-padding +
+  $hierarchy-column-item-label-font-size};

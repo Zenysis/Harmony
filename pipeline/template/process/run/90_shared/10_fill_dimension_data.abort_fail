@@ -1,0 +1,34 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+SetupEnvForPyPy
+
+STEP='fill_dimension_data'
+SOURCES=($("${PIPELINE_SRC_ROOT}/data/pipeline/scripts/generate_pipeline_sources.py" ${STEP}))
+
+# Track background process IDs so that we can reliably capture exit code
+pids=()
+
+for cur_source in "${SOURCES[@]}" ; do
+  source_tmp_dir="${PIPELINE_OUT_ROOT}/tmp/${cur_source}/${PIPELINE_DATE}"
+  source_out_dir="${PIPELINE_OUT_ROOT}/out/${cur_source}/${PIPELINE_DATE}"
+
+  # Clear past processed data if step is run multiple times.
+  rm -f "${source_out_dir}"/processed_rows.*.json.gz
+
+  "${PIPELINE_SRC_ROOT}/data/pipeline/scripts/fill_dimension_data.py" \
+      --location_mapping_file="${STATIC_DATA}/mapped_locations.csv" \
+      --metadata_file="${STATIC_DATA}/metadata_mapped.csv" \
+      --input_file="${source_tmp_dir}/processed_data.json.lz4" \
+      --output_file_pattern="${source_out_dir}/processed_rows.#.json.gz" \
+      --shard_size=3000000 \
+      --metadata_digest_file="${source_out_dir}/metadata_digest_file.csv" \
+    | TagLines "${cur_source}" &
+  pids+=("$!")
+done
+
+# Wait on each background process individually so that non-zero exit codes
+# will be raised
+WaitMultipleThreads "${pids[@]}"

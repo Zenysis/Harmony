@@ -1,0 +1,112 @@
+services:
+  nginx:
+    profiles:
+      - donotstart
+  nginx-letsencrypt-companion:
+    profiles:
+      - donotstart
+  hasura:
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
+    volumes:
+      - ./graphql/hasura/metadata/versions/latest:/hasura-metadata
+  postgres:
+    image: postgres:15.2-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: zenysis
+      POSTGRES_DB: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      start_period: 0s
+      interval: 10s
+      timeout: 30s
+      retries: 3
+  web:
+    # Currently dev only supports builds on linux/amd64, arm is not supported.
+    platform: linux/amd64
+    image: harmony-dev-web:latest
+    build:
+      dockerfile: docker/dev/Dockerfile
+    volumes:
+      # Map source code to host so that we can edit files and see changes immediately.
+      - .:/app
+      # Don't map venv and node modules to host. We need to use the container version.
+      - web_venv:/app/venv
+      - web_venv_pypy3:/app/venv_pypy3
+      - web_node_modules:/app/node_modules
+      # Map minio config folder
+      - ${MC_CONFIG_PATH}:/root/.mc
+    environment:
+      ZEN_HOME: /app
+      PYTHONPATH: /app:/usr/bin
+      DATABASE_URL: postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
+      ZEN_ENV: ${ZEN_ENV}
+      DRUID_HOST: ${DRUID_HOST}
+      HASURA_HOST: http://hasura:8080
+      FLASK_APP: web.server.app_base
+      FLASK_ENV: development
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: zenysis
+      POSTGRES_HOST: postgres
+      SQLALCHEMY_DATABASE_URI: postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
+      OBJECT_STORAGE_ALIAS: ${OBJECT_STORAGE_ALIAS}
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  pipeline:
+    # Currently dev only supports builds on linux/amd64, arm is not supported.
+    platform: linux/amd64
+    image: harmony-dev-web:latest
+    build:
+      dockerfile: docker/dev/Dockerfile
+    volumes:
+      # Map source code to host so that we can edit files and see changes immediately.
+      - .:/app
+      # Don't map venv and node modules to host. We need to use the container version.
+      - web_venv:/app/venv
+      - web_venv_pypy3:/app/venv_pypy3
+      - web_node_modules:/app/node_modules
+      - ./druid_shared:/home/share
+      # Map minio config folder
+      # When pipeline runs, mc should pick up $USER and point to this:
+      - ${MC_CONFIG_PATH:-/home/zenysis/.mc}:/home/zenysis/.mc
+      # When you bash into the pipeline, mc should point to this:
+      - ${MC_CONFIG_PATH:-/home/zenysis/.mc}:/.mc
+    environment:
+      - DATABASE_URL=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
+      - ZEN_ENV=${ZEN_ENV}
+      - DRUID_HOST=${DRUID_HOST}
+      - COMMAND=${COMMAND-echo Specify a pipeline command, e.g. "./pipeline/harmony_demo/generate/zeus_generate run"}
+      - PYTHONPATH=/app
+      - DEFAULT_SECRET_KEY=${DEFAULT_SECRET_KEY:-changeme}
+      - HASURA_HOST=http://hasura:8080
+      - SQLALCHEMY_DATABASE_URI=postgresql://postgres:zenysis@postgres:5432/${ZEN_ENV}-local
+      - MAPBOX_ACCESS_TOKEN=${MAPBOX_ACCESS_TOKEN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    user: ${PIPELINE_USER:-1000}:${PIPELINE_GROUP:-1000}
+    command:
+      [
+        "/bin/bash",
+        "-c",
+        "./docker/dev/scripts/start_pipeline.sh"
+      ]
+
+volumes:
+  pgdata-volume:
+  redis-volume:
+  web_venv:
+  web_venv_pypy3:
+  web_node_modules:

@@ -1,0 +1,46 @@
+.heattile-inner {
+  font-size: 14px;
+  text-align: right;
+  width: 145px;
+  z-index: 2;
+}
+
+.heattile-outer {
+  margin-left: 15px;
+  margin-top: 15px;
+  position: absolute;
+  z-index: 2;
+}
+
+.heattile-textbox {
+  display: inline-block;
+  line-height: normal;
+  vertical-align: middle;
+}
+
+.heattile-legend {
+  margin-top: 110px;
+  position: absolute;
+  right: 100px;
+  z-index: 2;
+}
+
+.heattile-legend-color {
+  background: linear-gradient(#001f3f, #3d9970);
+  border: 1px solid black;
+  display: inline-block;
+  height: 530px;
+  width: 30px;
+}
+
+.heattile-legend-textbox {
+  display: inline-block;
+  height: 250px;
+  width: 30px;
+}
+
+.heattile-legend-textbox-buffer {
+  display: inline-block;
+  height: 25px;
+  width: 30px;
+}

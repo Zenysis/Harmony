@@ -1,0 +1,73 @@
+.zen-input-text {
+  background-color: $white;
+  border: 1px solid #e9e9e9;
+  border-radius: 5px;
+  box-shadow: inset 0 0 1px 0 rgba(0, 0, 0, 0.5);
+  color: $slate;
+  font-size: 15px;
+  font-weight: 400;
+  height: 35px;
+  padding: 7px 11px 8px 11px;
+  transition: border-color 0.15s ease-in-out;
+
+  // NOTE: the width is intentionally set to 100% so that the input
+  // stretches to fill the entire width of its container. Please do not change
+  // this. If this causes your InputText to not be on the same line as your
+  // label, consider setting a custom className and set `width: auto` for the
+  // input, or use our <LabelWrapper> component with the `inline` prop.
+  width: 100%;
+
+  &:hover {
+    border: 1px solid $gray;
+  }
+
+  &:focus {
+    border: 1px solid #00b8d6;
+  }
+
+  &::placeholder {
+    color: $gray;
+    font-size: 14px;
+  }
+
+  &:invalid,
+  &--invalid {
+    border: 1px solid #d60000 !important;
+  }
+
+  &[disabled] {
+    background-color: rgba(233, 233, 233, 0.5);
+    color: $gray;
+    cursor: not-allowed;
+  }
+
+  &--has-icon {
+    padding-left: 34px;
+  }
+}
+
+.zen-input-text-wrapper {
+  display: inline-block;
+  position: relative;
+  width: 100%;
+
+  &--show-invalid-msg {
+    // make space for the error message underneath the input
+    margin-bottom: 17px;
+  }
+
+  &__icon {
+    color: $slate;
+    font-size: 15px;
+    margin-left: 11px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  &__invalid-msg {
+    color: $error-color;
+    font-size: 12px;
+    position: absolute;
+  }
+}

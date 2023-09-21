@@ -1,0 +1,4 @@
+services:
+  nginx-letsencrypt-companion:
+    profiles:
+      - donotstart

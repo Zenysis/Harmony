@@ -1,0 +1,165 @@
+.zen-tag {
+  $tag-border-radius: 5px;
+  border-radius: $tag-border-radius;
+  color: $white;
+  display: inline-block;
+  margin-right: 0.4em;
+  padding: 7px 10px;
+  position: relative;
+
+  @mixin solid-tag($base-color, $hover-color, $active-color) {
+    background-color: $base-color;
+
+    &.zen-tag--clickable {
+      &:hover {
+        background-color: $hover-color;
+      }
+      &:active {
+        background-color: $active-color;
+      }
+    }
+  }
+
+  @mixin gradient-tag($base-color, $gradient, $overlay-modifier-percent) {
+    background-color: $base-color;
+    background-image: $gradient;
+    position: relative;
+
+    &.zen-tag--clickable {
+      // add an overlay to lighten/darken based on hover or active state
+      &::after {
+        border-radius: $tag-border-radius;
+        content: '\A';
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+      }
+
+      &:hover::after {
+        background-color: rgba(255, 255, 255, $overlay-modifier-percent);
+      }
+
+      &:active::after {
+        background-color: rgba(0, 0, 0, $overlay-modifier-percent);
+      }
+    }
+  }
+
+  &--primary-gradient {
+    @include gradient-tag($blue-primary, $blue-primary-gradient, 0.15);
+  }
+
+  &--danger-gradient {
+    @include gradient-tag($error-color, $error-color-gradient, 0.15);
+  }
+
+  &--success-gradient {
+    @include gradient-tag($success-color, $success-color-gradient, 0.15);
+  }
+
+  &--warning-gradient {
+    @include gradient-tag($warning-color, $warning-color-gradient, 0.15);
+  }
+
+  &--info-gradient {
+    @include gradient-tag($info-color, $info-color-gradient, 0.15);
+  }
+
+  &--primary-solid {
+    @include solid-tag(
+      $blue-primary,
+      $blue-primary-hover,
+      $blue-primary-active
+    );
+  }
+
+  &--danger-solid {
+    @include solid-tag($error-color, $error-color-hover, $error-color-active);
+  }
+
+  &--success-solid {
+    @include solid-tag(
+      $success-color,
+      $success-color-hover,
+      $success-color-active
+    );
+  }
+
+  &--warning-solid {
+    @include solid-tag(
+      $warning-color,
+      $warning-color-hover,
+      $warning-color-active
+    );
+  }
+
+  &--info-solid {
+    @include solid-tag($info-color, $info-color-hover, $info-color-active);
+  }
+
+  &--large {
+    font-size: 15px;
+  }
+
+  &--medium {
+    font-size: 14px;
+  }
+
+  &--small {
+    font-size: 13px;
+  }
+
+  &--bold {
+    font-weight: 700;
+  }
+
+  &--clickable {
+    touch-action: none;
+    user-select: none;
+  }
+
+  &__content-container {
+    align-items: center;
+    display: flex;
+    position: relative;
+
+    // need to give the inner contents a z-index so it can show *above* the
+    // &::after overlay, so that our gradient lightening/darkening effect
+    // doesn't affect the button contents.
+    z-index: 1;
+  }
+
+  &__content {
+    flex: 1;
+  }
+
+  &--has-icons .zen-tag__content,
+  &__primary-action-btn {
+    margin-right: 0.5em;
+  }
+
+  &__remove-btn,
+  &__primary-action-btn {
+    font-size: 11px;
+    transition: text-shadow 200ms ease;
+
+    &:hover {
+      text-shadow: 0 0 1px #ffffff;
+    }
+  }
+
+  &__remove-btn {
+    height: 20px;
+    width: 20px;
+  }
+
+  &__remove-btn-wrapper {
+    display: flex;
+  }
+
+  .zen-icon:last-child {
+    margin-right: 0;
+  }
+}

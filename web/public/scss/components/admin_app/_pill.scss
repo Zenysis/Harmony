@@ -1,0 +1,43 @@
+.admin-app-static-pill {
+  background-color: $white;
+  background-image: none;
+  border: 1px solid $gray;
+  border-radius: 100px;
+  color: $slate;
+  display: flex;
+  font-size: 14px;
+  margin-right: 0px;
+  padding: $space-xxs-px $space-m-px;
+  width: fit-content;
+}
+
+.admin-app-interactive-pill {
+  background-color: $white;
+  background-image: none;
+  border: 1px solid $gray;
+  color: $slate;
+  display: flex;
+  font-size: 14px;
+  margin-right: 0px;
+  padding: $space-xxs-px $space-xs-px;
+  width: fit-content;
+
+  &:hover {
+    background-color: $gray-light-active;
+  }
+
+  &--clicked {
+    background-color: $gray-hover;
+  }
+
+  .zen-tag__content {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__wrapper {
+    width: fit-content;
+  }
+}

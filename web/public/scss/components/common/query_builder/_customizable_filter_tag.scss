@@ -1,0 +1,7 @@
+.customizable-filter-tag {
+  &--date-unapplied {
+    background-color: $gray-light-active;
+    background-image: none;
+    color: $slate;
+  }
+}

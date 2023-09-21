@@ -1,0 +1,14 @@
+.dc-directory-table-header {
+  align-items: center;
+  border-radius: 5px 5px 0 0 !important;
+  border-top: 1px solid $gray;
+  font-weight: bold;
+
+  // The header checkbox is hidden if there is no selection. When the user
+  // hovers over the table, the unchecked checkbox will be made visible. If
+  // the checkbox is in a checked or indeterminate state, it will always be
+  // visible.
+  &__checkbox--unchecked {
+    visibility: hidden;
+  }
+}

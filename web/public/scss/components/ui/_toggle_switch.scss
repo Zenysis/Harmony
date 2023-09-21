@@ -1,0 +1,51 @@
+.zen-toggle {
+  $toggle-height: 20px;
+  $circle-diameter: 16px;
+
+  background-color: $gray;
+  border-radius: $toggle-height / 2;
+  display: flex;
+  height: $toggle-height;
+  padding: ($toggle-height - $circle-diameter) / 2;
+  width: 35px;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &--highlight {
+    background-color: $blue-primary-active;
+  }
+
+  &--deactivated {
+    &:hover {
+      cursor: not-allowed;
+    }
+    .zen-toggle__circle {
+      background-color: $gray-light-active;
+    }
+  }
+
+  &__label--deactivated {
+    color: $gray;
+  }
+
+  &--disabled {
+    justify-content: flex-start;
+  }
+
+  &--enabled {
+    justify-content: flex-end;
+  }
+
+  &__circle {
+    background-color: $white;
+    border-radius: $circle-diameter / 2;
+    height: $circle-diameter;
+    width: $circle-diameter;
+  }
+}
+
+.zen-toggle-container {
+  display: flex;
+}

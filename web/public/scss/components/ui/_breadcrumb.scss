@@ -1,0 +1,89 @@
+// If the breadcrumb items wrap to a second row, apply this extra margin.
+$breadcrumb-wrap-margin: 1px;
+$breadcrumb-item-height: 2em;
+$breadcrumb-item-hover: background-color 270ms cubic-bezier(0, 0, 0.2, 1),
+  border-left-color 270ms cubic-bezier(0, 0, 0.2, 1);
+
+.zen-breadcrumb {
+  // Offset the wrapping margin on the parent container so the last row (which
+  // is unknown) has the margin negated.
+  margin-bottom: -$breadcrumb-wrap-margin;
+}
+
+.zen-breadcrumb-item {
+  &__collapse {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__popover {
+    background-color: #3a3a3a !important;
+    color: $white;
+    font-size: 12px !important;
+    line-height: 13px;
+    max-width: 200px;
+    text-transform: none;
+  }
+}
+
+.zen-breadcrumb-item-wrapper {
+  $breadcrumb-item-height: 2em;
+
+  background-color: $blue-primary;
+  color: white;
+  display: inline-block;
+  height: $breadcrumb-item-height;
+  line-height: $breadcrumb-item-height;
+  padding: 0 0.5em;
+  position: relative;
+  transition: $breadcrumb-item-hover;
+
+  &:after {
+    border-bottom: ($breadcrumb-item-height / 2) solid transparent;
+    border-left: ($breadcrumb-item-height / 3) solid $blue-primary;
+    border-top: ($breadcrumb-item-height / 2) solid transparent;
+    content: ' ';
+    height: 0;
+    left: 100%;
+    margin-left: -1px;
+    margin-top: -($breadcrumb-item-height / 2);
+    position: absolute;
+    top: 50%;
+    transition: $breadcrumb-item-hover;
+    width: 0;
+    z-index: 2;
+  }
+
+  &:not(:first-of-type):before {
+    border-bottom: ($breadcrumb-item-height / 2) solid transparent;
+    border-left: ($breadcrumb-item-height / 3) solid white;
+    border-top: ($breadcrumb-item-height / 2) solid transparent;
+    content: ' ';
+    height: 0;
+    left: 0;
+    margin-top: -($breadcrumb-item-height / 2);
+    position: absolute;
+    top: 50%;
+    width: 0;
+    z-index: 1;
+  }
+
+  &:first-child {
+    border-bottom-left-radius: 4px;
+    border-top-left-radius: 4px;
+    margin-bottom: $breadcrumb-wrap-margin;
+  }
+
+  &:not(:first-child) {
+    margin-bottom: $breadcrumb-wrap-margin;
+    padding-left: 1.3em;
+  }
+
+  &:hover {
+    background-color: $blue-primary-hover;
+    &:after {
+      border-left-color: $blue-primary-hover;
+    }
+  }
+}

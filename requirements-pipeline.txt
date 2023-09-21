@@ -1,0 +1,36 @@
+xlrd>=1.0.0
+pyshp
+# shapely 2.0 requires numpy 1.19, which is higher than our pinned pypy version.
+shapely==1.8
+pyproj==3.4.1
+contextlib2
+lxml ; platform_python_implementation != 'PyPy'
+savReaderWriter ; platform_python_implementation != 'PyPy'
+oauthlib
+requests_oauthlib
+fuzzywuzzy
+jellyfish==0.7.2
+isoweek
+unidecode==1.1.1
+zeep==3.4.0 ; platform_python_implementation != 'PyPy'
+scikit-learn>=0.21.3 ; platform_python_implementation != 'PyPy'
+scipy>=1.2.1 ; platform_python_implementation != 'PyPy'
+typing_extensions==4.1.1
+netCDF4 ; platform_python_implementation != 'PyPy'
+dataclasses
+editdistance
+
+# NOTE: Temporarily disabling pystan and fbprophet pipeline
+# dependencies until they are actually used since they slow down the build and
+# are very large.
+# pystan>=2.19.1.1 ; platform_python_implementation != 'PyPy'
+# fbprophet>=0.6 ; platform_python_implementation != 'PyPy'
+
+# NOTE: Pymssql is *discontinued*. This is how we used to install the
+# dependency. No new projects should use pymssql, and Alliance India is the only
+# one that currently does. This is disabled for now since it does not support
+# Python 3.8 and is difficult to install.
+# -e git+https://github.com/pymssql/pymssql.git@fda5fd38f30eaeeb40a911235692144493d69864#egg=pymssql
+croniter==1.3.7
+dask==2022.2.0 ; platform_python_implementation != 'PyPy'
+lz4==4.3.2 ; platform_python_implementation != 'PyPy'

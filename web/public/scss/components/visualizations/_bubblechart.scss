@@ -1,0 +1,24 @@
+.bubblechart-modal {
+  max-width: 70rem;
+  min-height: 10rem;
+  min-width: 18rem;
+}
+
+.bubblechart-axes-option-label {
+  margin-left: 5px;
+}
+
+.bubblechart-legend {
+  bottom: 100px;
+  position: relative;
+  right: 50px;
+  z-index: 1;
+}
+
+.bubblechart-viz {
+  // NOTE: The plotly viz in the scatterplot uses auto sizing instead
+  // of settings its height/width directly. Need to specify a height for the
+  // element so plotly correctly calculates the height.
+  height: 100%;
+  width: 100%;
+}

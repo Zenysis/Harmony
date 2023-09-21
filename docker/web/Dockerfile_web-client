@@ -1,0 +1,67 @@
+FROM node:18
+
+# Separate directories for storing build files so that the post-build results
+# can be easily copied out.
+ENV BUILD_PATH /build
+ENV INSTALL_PATH /client
+ENV NODE_ENV 'production'
+
+# Build the parent directories needed in the build and install locations.
+RUN mkdir -p ${BUILD_PATH}/web/public
+RUN mkdir -p ${INSTALL_PATH}/js/vendor/min
+
+WORKDIR ${BUILD_PATH}
+
+COPY package.json package.json
+COPY yarn.lock yarn.lock
+
+RUN \
+  yarn install \
+  --cache-folder /yarn.cache \
+  --frozen-lockfile \
+  --pure-lockfile \
+  --production=false
+
+# Copy in files that affect the webpack build.
+# NOTE: Images is only needed for a small subset of files that are
+# referenced by scss. Maybe we should move them into a specific subdirectory to
+# make copying and diffing easier.
+COPY web/webpack.prod.config.js web/webpack.prod.config.js
+COPY web/public/fonts web/public/fonts
+COPY web/public/images web/public/images
+COPY web/public/scss web/public/scss
+COPY web/public/js web/public/js
+COPY web/client web/client
+
+# Build the compiled JS files with webpack and store the current epoch timestamp
+# as a version number to make logging easier.
+# TODO: It might be nice to have the commit sha that triggered this
+# rebuild. It's a little harder to test though.
+RUN \
+  GENERATE_SOURCEMAP=false yarn run build && \
+  echo $(date +%s) > web/public/build/version.txt
+
+# Copy build results inside the container into the install directory.
+# NOTE: Issuing a RUN command here since we are copying *within* the
+# image, not from the host system.
+RUN \
+  cp -r web/public/build ${INSTALL_PATH} && \
+  cp -r web/public/images ${INSTALL_PATH}
+
+# Copy files that are not part of the webpack build.
+COPY web/public/robots.txt ${INSTALL_PATH}/robots.txt
+COPY web/public/js/*.js ${INSTALL_PATH}/js/
+COPY web/public/js/vendor/min/*.js ${INSTALL_PATH}/js/vendor/min/
+
+# Copy in some useful dev files so that we can use this container to run
+# dev-only services
+COPY web/webpack.config.js web/webpack.config.js
+
+WORKDIR ${INSTALL_PATH}
+
+# TODO: Copy files into an nginx build maybe? Then it won't need to be
+# part of the entrypoint and we can deploy web-client separately from
+# web-server.
+
+# Expose the styleguide port.
+EXPOSE 6060

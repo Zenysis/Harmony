@@ -1,0 +1,53 @@
+// TODO: this file contains legacy variables from before our
+// design refresh from July/August 2019. We should move the variables from
+// here that we intend to keep into _zen_variables.scss, and then delete
+// this file.
+
+// This file includes variables used only by us, not other libraries.
+// As opposed to _bootstrap_variables_overrides.scss, or
+// _smartadmin_overrides.scss this file is not intended to override existing
+// bootstrap or other third-party variables.
+
+$white: rgb(255, 255, 255);
+
+// Grays from http://blueprintjs.com/docs/#core/colors
+$dark-gray-1: #182026;
+$dark-gray-2: #202b33;
+$dark-gray-3: #293742;
+$dark-gray-4: #30404d;
+$dark-gray-5: #394b59;
+$gray-1: #5c7080;
+$gray-2: #738694;
+$gray-3: #8a9ba8;
+$gray-4: #a7b6c2;
+$gray-5: #bfccd6;
+$light-gray-1: #ced9e0;
+$light-gray-2: #d8e1e8;
+$light-gray-3: #e1e8ed;
+$light-gray-4: #ebf1f5;
+$light-gray-5: #f5f8fa;
+$light-gray-6: #f6fafc;
+
+$offwhite-card-header: #f1f1f1;
+
+// Navbar variables
+$small-page-navbar-height: 130px;
+// matches TRANSITION_WIDTH in Navbar/index.jsx
+$navbar-transition-width: 1250px;
+
+// spacing
+$spacing-xs: 4px;
+$spacing-s: 8px;
+$spacing-m: 16px;
+$spacing-l: 32px;
+$spacing-xl: 64px;
+
+// fonts
+$font-s: 11px;
+$font-m: 13px;
+$font-l: 15px;
+$font-xl: 17px;
+$font-xxl: 19px;
+$font-xxxl: 21px;
+
+$bold: 700;

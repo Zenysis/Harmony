@@ -1,0 +1,122 @@
+.code-block {
+  background-color: $gray-light-active;
+  border-radius: 5px;
+  padding: $space-xs-px;
+}
+
+.data-digest {
+  padding-left: 8em;
+  padding-right: 8em;
+  padding-top: 30px;
+
+  .zen-table__cell {
+    padding-bottom: $space-xs-px !important;
+    padding-top: $space-xs-px !important;
+  }
+}
+
+.dd-big-number {
+  &__value {
+    font-size: 64px;
+  }
+}
+
+.dd-no-datapoints-alert {
+  font-weight: $bold;
+}
+
+.dd-table-container {
+  @include zen-elevation-1;
+  background: $white;
+
+  &__table {
+    padding: 10px;
+  }
+}
+
+.mapping-info-button {
+  color: $blue-primary;
+  text-decoration: underline;
+}
+
+.data-digest-upload {
+  &__label-wrapper {
+    align-items: center;
+    display: flex;
+  }
+
+  &__success-box {
+    background-color: #a7f0ba;
+    border: 1px solid $success-color-active;
+    border-radius: 5px;
+    padding: $space-m-px;
+  }
+
+  &__success-box-check {
+    color: #0e6027;
+    font-size: 21px;
+    font-weight: bold;
+  }
+
+  &__success-box-button {
+    &:hover {
+      background-color: rgba(#091e42, 0.06);
+    }
+
+    &:active {
+      background-color: rgba(#091e42, 0.12);
+    }
+  }
+
+  &__success-box-text {
+    height: 17px;
+  }
+
+  &__validated-icon {
+    color: $success-color-active;
+    display: block;
+    height: 20px;
+    width: 20px;
+  }
+
+  &__validated-label {
+    color: $slate-hover;
+  }
+
+  &__source-toggle {
+    color: $slate;
+  }
+
+  &__source-dropdown {
+    min-width: 50%;
+  }
+
+  &__info-icon {
+    height: $space-m-px;
+  }
+
+  &__success-text {
+    color: $success-color;
+  }
+
+  &__error-text {
+    color: $error-color;
+  }
+}
+
+.data-digest-validation {
+  background: #ffebe6;
+  border: 1px dashed $error-color;
+  border-radius: 5px;
+  margin-bottom: $space-l-px;
+
+  &__error-icon {
+    color: $error-color;
+    height: 32px;
+    width: 32px;
+  }
+
+  &__subheader {
+    font-size: 16px;
+  }
+}

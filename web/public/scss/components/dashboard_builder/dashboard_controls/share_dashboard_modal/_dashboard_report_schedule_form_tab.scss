@@ -1,0 +1,15 @@
+.gd-schedule-report-form-tab-block {
+  &__timezone {
+    color: $gray;
+    font-size: 12px;
+  }
+
+  &__label {
+    margin-bottom: $spacing-m;
+    margin-top: 0;
+  }
+
+  &__back {
+    float: right;
+  }
+}

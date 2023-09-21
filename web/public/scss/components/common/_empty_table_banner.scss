@@ -1,0 +1,18 @@
+.empty-table-banner {
+  align-items: center;
+  background-color: $gray-light;
+  display: flex !important;
+  height: 400px;
+  justify-content: center;
+
+  &__title {
+    align-items: flex-start;
+    color: $slate-hover;
+    flex-direction: column;
+  }
+
+  &__sub-title {
+    color: $slate-hover;
+    margin-bottom: $space-xxs-px;
+  }
+}

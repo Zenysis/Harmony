@@ -1,0 +1,4 @@
+{%- macro js_base_resource_url(resource) -%}
+{%- set prefix = '/js/' -%}
+{{prefix}}{{resource}}
+{%- endmacro -%}

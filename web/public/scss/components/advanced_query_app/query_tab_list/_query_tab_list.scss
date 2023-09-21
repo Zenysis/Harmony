@@ -1,0 +1,63 @@
+.aqt-tab-list-wrapper {
+  align-items: center;
+  background-color: #f9f9f9;
+  border-top: 1px solid $gray;
+  box-shadow: -10px 10px 20px 0 rgba(30, 30, 30, 0.05);
+  display: flex;
+  flex: 0 0 $aqt-query-tab-list-height;
+  height: $aqt-query-tab-list-height;
+  z-index: 1;
+}
+
+.aqt-tab-list-action-buttons {
+  display: flex;
+  flex-direction: row;
+
+  &__button {
+    color: $slate;
+    flex: 0 0 20px;
+    padding: 0 10px;
+    position: relative;
+
+    @include tooltip-top(nowrap);
+  }
+}
+
+.aqt-tab-list {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  overflow: auto;
+  /* Hide scrollbar for IE and Edge */
+  -ms-overflow-style: none;
+  width: 100%;
+
+  &__inner-container {
+    display: flex;
+    padding: 0 5px;
+    position: relative;
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.aqt-tab-list::-webkit-scrollbar {
+  display: none;
+}
+
+.aqt-tab-scroll {
+  display: flex;
+  margin-left: auto;
+
+  &__button {
+    background: transparent;
+    border: none;
+
+    &--active {
+      color: black;
+    }
+
+    &--inactive {
+      color: $gray;
+    }
+  }
+}

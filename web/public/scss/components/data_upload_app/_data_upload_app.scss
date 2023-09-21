@@ -1,0 +1,66 @@
+.data-status-page {
+  margin: auto;
+  // NOTE: The content width shold be 1224 with 36px padding on the
+  // left and right.
+  max-width: calc(1224px + 2 * #{$space-xl-px});
+  padding: $space-xl-px;
+
+  &__caption {
+    color: $slate-hover;
+    font-size: 12px;
+  }
+
+  &__no-info {
+    color: $gray;
+  }
+
+  &__tooltip {
+    align-items: center;
+    display: flex;
+  }
+}
+
+.data-upload-preview-page {
+  &__error-icon {
+    color: $error-color;
+    height: 20px;
+  }
+
+  &__error-text {
+    color: $error-color;
+  }
+
+  &__caption {
+    color: $slate;
+  }
+
+  &__table {
+    border: 1px solid $gray;
+    border-radius: 5px;
+  }
+}
+
+.data-upload-modal {
+  // override default modal styling
+  .zen-modal__body {
+    padding: 0px;
+  }
+
+  .zen-modal-footer {
+    border-top: 1px solid $gray;
+    box-shadow: 0;
+  }
+
+  .zen-modal-header {
+    border-bottom: 1px solid $gray;
+  }
+
+  &__body {
+    height: 100%;
+    padding: $space-l-px $space-l-px 0px $space-l-px;
+  }
+
+  &__mapping-page {
+    height: 100%;
+  }
+}

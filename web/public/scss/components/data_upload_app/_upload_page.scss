@@ -1,0 +1,174 @@
+.data-upload-upload-page {
+  &__source-name-tooltip {
+    width: 100%;
+  }
+
+  // Override the default attribute selector
+  &__source-name[disabled] {
+    // $gray is too light to read
+    color: #787a7f;
+  }
+
+  &__icon-label-wrapper {
+    align-items: center;
+    display: flex;
+  }
+
+  &__success-box {
+    background-color: #a7f0ba;
+    border: 1px solid $success-color-active;
+    border-radius: 5px;
+    padding: $space-m-px;
+    width: 780px;
+  }
+
+  &__success-box-text {
+    color: #0e6027;
+    font-size: 21px;
+    font-weight: bold;
+    letter-spacing: 1.17px;
+    line-height: 27px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+  }
+
+  &__success-box-button {
+    &:hover {
+      background-color: rgba(#091e42, 0.06);
+    }
+
+    &:active {
+      background-color: rgba(#091e42, 0.12);
+    }
+  }
+
+  &__success-box-icon {
+    height: 17px;
+  }
+
+  &__validated-icon {
+    color: $success-color-active;
+    display: block;
+    height: 20px;
+    width: 20px;
+  }
+
+  &__validated-label {
+    color: $slate-hover;
+  }
+
+  &__source-toggle {
+    color: $slate;
+  }
+
+  &__source-dropdown {
+    min-width: 50%;
+  }
+
+  &__info-icon {
+    height: $space-m-px;
+  }
+
+  &__error-text {
+    color: $error-color;
+  }
+
+  &__update-value {
+    width: 30%
+  }
+}
+
+.data-upload-fileinput {
+  border-color: $gray;
+  border-radius: 5px;
+  border-style: dashed;
+  border-width: 1px;
+
+  &__caption-text {
+    @extend .u-caption-text;
+
+    // Override the position so that the glyphicon will be center aligned
+    .glyphicon {
+      position: unset;
+    }
+  }
+
+  &__upload-input {
+    height: 156px;
+  }
+
+  &__tooltip {
+    width: 100%;
+  }
+
+  &__description {
+    border-color: $gray-light-active;
+    border-left-style: solid;
+    border-width: 1px;
+    color: $slate-hover;
+    height: 100%;
+    // NOTE: The width include 24px of padding so 515px + 24px = 539px.
+    width: 539px;
+  }
+
+  &__description-example {
+    @extend .u-info-text;
+    align-items: flex-start;
+    background: $gray-light-active;
+    border-radius: 4px;
+    color: $slate;
+    padding: 16px;
+  }
+
+  &__description-text {
+    @extend .u-info-text;
+    color: $slate-hover;
+  }
+
+  &__description-headers {
+    margin: 0px
+  }
+
+  &__headers-title {
+    @extend .u-paragraph-text;
+    color: $slate-hover;
+
+    &--disabled {
+      color: $gray;
+    }
+  }
+
+  &__learn-more-link {
+    @extend .u-caption-text;
+    color: $blue-dark;
+  }
+}
+
+.data-upload-file-table {
+  &__icon {
+    color: $slate-hover;
+    height: $space-l-px;
+  }
+}
+
+.data-upload-dataprep-validation {
+  background: #ffebe6;
+  border: 1px dashed $error-color;
+  border-radius: 5px;
+  margin-bottom: $space-l-px;
+
+  &__error-icon {
+    color: $error-color;
+    height: 32px;
+    width: 32px;
+  }
+
+  &__subheader {
+    font-size: 16px;
+  }
+
+  &__description-headers {
+    margin: 0px
+  }
+}

@@ -1,0 +1,25 @@
+.gd-exclusion-settings-button {
+  &--vertical {
+    margin-top: 1px;
+    // TODO: Inject this component rather than using absolute positioning
+    position: absolute;
+    right: 24px;
+  }
+
+  &--horizontal {
+    height: 20px;
+    margin-left: $space-s-px;
+    // TODO: change how this positioning is done so that it is naturally
+    // centered rather than hackily like this.
+    margin-top: 25px;
+    width: 20px;
+  }
+}
+
+.gd-exclusion-settings-popover {
+  &__checkbox {
+    .zen-label-wrapper__label {
+      font-size: 12px;
+    }
+  }
+}

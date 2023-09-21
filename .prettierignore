@@ -1,0 +1,4 @@
+web/client/locales/*
+web/public/js/vendor/*
+web/public/js/vendor/min/*
+__generated__/*

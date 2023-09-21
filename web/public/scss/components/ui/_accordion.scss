@@ -1,0 +1,34 @@
+$accordion-border: 1px solid $gray;
+
+.zen-accordion {
+  background-color: $gray-light;
+  border-bottom: $accordion-border;
+  border-top: $accordion-border;
+}
+
+.zen-accordion-item-wrapper {
+  &--active {
+    &:not(:first-child) {
+      border-top: $accordion-border;
+    }
+
+    &:not(:last-child) {
+      border-bottom: $accordion-border;
+    }
+  }
+}
+
+.zen-accordion-item-content-wrapper {
+  background-color: $white;
+  padding: $space-m-px $space-l-px;
+}
+
+.zen-accordion-item-header {
+  &--active {
+    background-color: $white;
+  }
+
+  &--inactive {
+    background-color: $gray-light;
+  }
+}

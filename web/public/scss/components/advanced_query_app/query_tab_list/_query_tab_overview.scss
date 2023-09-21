@@ -1,0 +1,73 @@
+.query-tab-overview {
+  background-color: transparentize($aqt-blueblack-1, 0.15);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  min-height: 100%;
+  padding: $aqt-query-tab-overview-item-spacing
+    $aqt-query-tab-overview-item-spacing;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 2;
+
+  &__query-result-wrapper {
+    flex: 1;
+    margin: $aqt-query-tab-overview-item-spacing;
+
+    // Want a maximum of 2 items per row and two rows per page. Need to subtract
+    // margin since flexbox includes it in the item size calculation when
+    // wrapping.
+    min-height: calc(50% - #{2 * $aqt-query-tab-overview-item-spacing});
+    min-width: calc(50% - #{2 * $aqt-query-tab-overview-item-spacing});
+    position: relative;
+  }
+
+  &__query-result-overlay {
+    align-items: center;
+    bottom: 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 2;
+
+    // Only show children when hovering.
+    & > * {
+      visibility: hidden;
+    }
+
+    &:hover {
+      background-color: transparentize($aqt-gray-2, 0.6);
+
+      & > * {
+        visibility: visible;
+      }
+    }
+  }
+
+  &__query-result {
+    background-color: $white;
+    bottom: -100%;
+    height: initial !important;
+    left: 0;
+    padding: $space-xs-px;
+    position: absolute;
+    right: -100%;
+    top: 0;
+    transform: scale3d(0.5, 0.5, 1);
+    transform-origin: top left;
+    z-index: 0;
+  }
+
+  &__tab-name {
+    background-color: $aqt-blueblack-1;
+    border-radius: $font-l;
+    color: $white;
+    font-size: $font-l;
+    padding: 10px;
+  }
+}

@@ -1,0 +1,17 @@
+#!/bin/bash -eu
+set -o pipefail
+
+STEP='populate_pipeline_run_metadata'
+SOURCES=($("${PIPELINE_SRC_ROOT}/data/pipeline/scripts/generate_pipeline_sources.py" ${STEP}))
+
+# To run locally, add a --run_locally flag and replace the `source_out_dir`
+# path to wherever the files are stored on your machine. Locally, this will
+# commonly be something like:
+# "${PIPELINE_SRC_ROOT}/pipeline/out/harmony_demo/process/out/##SOURCE##/##RUN DATE##"
+source_out_dir="/home/share/data/SAMPLE/##SOURCE##/current"
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/scripts/data_digest/populate_pipeline_run_metadata.py" \
+  --sources "${SOURCES[@]}" \
+  --source_out_dir "${source_out_dir}" \
+  --metadata_digest_file 'metadata_digest_file.csv' \
+  --deployment_names 'SAMPLE'

@@ -1,0 +1,30 @@
+.zen-input-upload {
+  &__drag-area {
+    align-items: center;
+    background-color: #d1e5ff;
+    border: none;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+    width: 100%;
+
+    &--disabled {
+      background-color: $gray-light-active;
+      color: $gray;
+    }
+  }
+
+  &__upload-icon {
+    color: $slate-hover;
+    height: $space-xxl-px;
+    width: $space-xxl-px;
+
+    &--disabled {
+      color: $gray;
+    }
+  }
+}

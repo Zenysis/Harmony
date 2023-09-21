@@ -1,0 +1,40 @@
+.zen-card {
+  @include zen-elevation-1;
+  background-color: $white;
+  transition: all 0.5s;
+
+  &__heading,
+  &__body {
+    padding: 12px;
+  }
+
+  &__heading {
+    border-bottom: 1px solid #dcdcdc;
+    font-weight: bold;
+
+    &--offwhite {
+      background-color: $offwhite-card-header;
+      color: $dark-gray-3;
+    }
+
+    &--white {
+      background-color: $white;
+      color: $dark-gray-3;
+    }
+
+    &--red {
+      background-color: $error-color;
+      color: $white;
+    }
+
+    &--green {
+      background-color: $success-color;
+      color: $white;
+    }
+
+    &--orange {
+      background-color: $warning-color;
+      color: $white;
+    }
+  }
+}

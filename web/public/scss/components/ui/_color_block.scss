@@ -1,0 +1,50 @@
+.zen-color-block {
+  display: inline-block;
+  margin-bottom: -1px;
+  position: relative;
+
+  &__clickable {
+    cursor: pointer;
+  }
+
+  &__icon {
+    &--no-color {
+      border: 1px solid $gray;
+    }
+  }
+}
+
+// NOTE: Mostly matching the style for the color picker that matches
+// react-color.
+.ui-color-picker {
+  background-color: $white;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+
+  &__title-block {
+    align-items: center;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    display: flex;
+    font-size: 18px;
+    height: 110px;
+    justify-content: center;
+  }
+
+  &__color-block {
+    display: grid;
+    padding: $space-xs-px;
+  }
+
+  &__color-swatch {
+    align-items: center;
+    border-radius: 4px;
+    justify-content: center;
+  }
+
+  &__input-block {
+    padding: $space-xs-px;
+    padding-top: 0;
+  }
+}

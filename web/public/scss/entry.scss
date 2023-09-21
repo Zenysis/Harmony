@@ -1,0 +1,357 @@
+/* ==========================================================================
+  Normalize
+========================================================================== */
+@import 'vendor/bootstrap/normalize';
+
+/* ==========================================================================
+ Variables
+  ========================================================================== */
+@import 'vendor/bootstrap/variables';
+@import 'overrides/bootstrap_variables_overrides';
+@import 'overrides/smartadmin_variables_overrides';
+@import 'zen_variables_legacy';
+@import 'zen_variables';
+
+/* ==========================================================================
+ Bootstrap Mixins
+  ========================================================================== */
+@import 'vendor/bootstrap/mixins/grid';
+@import 'vendor/bootstrap/mixins/buttons';
+@import 'vendor/bootstrap/mixins/opacity';
+@import 'vendor/bootstrap/mixins/tab-focus';
+@import 'vendor/bootstrap/mixins/grid-framework';
+@import 'vendor/bootstrap/mixins/vendor-prefixes';
+@import 'vendor/bootstrap/mixins/clearfix';
+@import 'vendor/bootstrap/mixins/forms';
+@import 'vendor/bootstrap/mixins/image';
+@import 'vendor/bootstrap/mixins/reset-filter';
+@import 'vendor/bootstrap/mixins/nav-divider';
+@import 'vendor/bootstrap/mixins/table-row';
+@import 'vendor/bootstrap/mixins/panels';
+@import 'vendor/bootstrap/mixins/hide-text';
+@import 'vendor/bootstrap/mixins/center-block';
+@import 'vendor/bootstrap/mixins/border-radius';
+@import 'vendor/bootstrap/mixins/pagination';
+@import 'vendor/bootstrap/mixins/gradients';
+@import 'vendor/bootstrap/mixins/progress-bar';
+
+/* ==========================================================================
+ Bootstrap Components and Utilities
+  ========================================================================== */
+@import 'vendor/bootstrap/buttons';
+@import 'vendor/bootstrap/dropdowns';
+@import 'vendor/bootstrap/glyphicons';
+@import 'vendor/bootstrap/forms';
+@import 'vendor/bootstrap/grid';
+@import 'vendor/bootstrap/scaffolding';
+@import 'vendor/bootstrap/tables';
+@import 'vendor/bootstrap/utilities';
+@import 'vendor/bootstrap/pagination';
+@import 'vendor/bootstrap/panels';
+@import 'vendor/bootstrap/wells';
+@import 'vendor/bootstrap/input-groups';
+@import 'vendor/bootstrap/progress-bars';
+
+/* ==========================================================================
+ Vendor Styles
+  ========================================================================== */
+@import 'vendor/bootstrap-datepicker-1.5.1';
+@import 'vendor/bootstrap-select-1.9.4';
+@import 'vendor/cursors';
+@import 'vendor/flags';
+@import 'vendor/literallycanvas';
+@import 'vendor/react-grid-layout-syles-1.2.5';
+@import 'vendor/react-resizable-styles-1.6.0';
+@import 'vendor/toastr-2.1.2';
+
+/* ==========================================================================
+ Node Module Styles
+  ========================================================================== */
+@import 'node_modules/mapbox-gl/dist/mapbox-gl';
+@import 'node_modules/react-day-picker/lib/style';
+@import 'node_modules/jodit/build/jodit';
+
+/* ==========================================================================
+ Vendor Overrides
+  ========================================================================== */
+@import 'overrides/bootstrap_overrides';
+@import 'overrides/plotly_overrides';
+@import 'overrides/select_overrides';
+@import 'overrides/smartadmin_overrides';
+@import 'overrides/vendor_overrides';
+
+/* ==========================================================================
+ Zenysis Utilities
+  ========================================================================== */
+@import 'zen_main';
+@import 'zen_fonts';
+@import 'zen_mixins';
+@import 'zen_typography';
+
+/* ==========================================================================
+ Zenysis UI Components
+  ========================================================================== */
+@import 'components/ui/variables';
+@import 'components/ui/accordion';
+@import 'components/ui/alert';
+@import 'components/ui/base_modal';
+@import 'components/ui/borderless_input_text';
+@import 'components/ui/breadcrumb';
+@import 'components/ui/button';
+@import 'components/ui/card';
+@import 'components/ui/caret';
+@import 'components/ui/checkbox';
+@import 'components/ui/color_block';
+@import 'components/ui/draggable_item';
+@import 'components/ui/draggable_item_list';
+@import 'components/ui/dropdown';
+@import 'components/ui/fallback_pill';
+@import 'components/ui/group';
+@import 'components/ui/hierarchical_selector';
+@import 'components/ui/hierarchical_selector_dropdown';
+@import 'components/ui/hypertext_link';
+@import 'components/ui/icon';
+@import 'components/ui/icon_button';
+@import 'components/ui/input_text';
+@import 'components/ui/label_wrapper';
+@import 'components/ui/list';
+@import 'components/ui/loading_spinner';
+@import 'components/ui/page_selector';
+@import 'components/ui/popover';
+/** NOTE: InfotoolTip uses popover component and in order to allow
+InfotoolTip css to override popover css we move the import after popover. */
+@import 'components/ui/info_tooltip';
+@import 'components/ui/progress_modal';
+@import 'components/ui/range_slider';
+@import 'components/ui/radio_group';
+@import 'components/ui/tabbed_modal';
+@import 'components/ui/table';
+@import 'components/ui/tabs';
+@import 'components/ui/tag';
+@import 'components/ui/text_highlighter';
+@import 'components/ui/toaster';
+@import 'components/ui/toggle_switch';
+@import 'components/ui/tooltip';
+@import 'components/ui/upload_input';
+@import 'components/ui/remove_item_button';
+@import 'components/ui/visualizations/line_graph';
+@import 'components/ui/visualizations/number_trend';
+@import 'components/ui/visualizations/pie_chart';
+@import 'components/ui/visualizations/responsive_container';
+@import 'components/ui/visualizations/simple_tooltip';
+@import 'components/ui/visualizations/table';
+/** NOTE: need to move DatePicker to the end because it needs to
+ override default radio item css */
+@import 'components/ui/date_picker';
+
+/* ==========================================================================
+ Zenysis Common Components
+  ========================================================================== */
+@import 'components/alerts';
+@import 'components/settings';
+@import 'components/status_page';
+
+@import 'components/common/alert_message';
+@import 'components/common/data_quality/overall_score_card';
+@import 'components/common/destructive_action_modal';
+@import 'components/common/empty_table_banner';
+@import 'components/common/file_upload_validation';
+@import 'components/common/progress_bar';
+@import 'components/common/query_builder/customizable_filter_tag';
+@import 'components/common/query_builder/query_item_tag';
+@import 'components/common/query_builder/date_filter_customization_module';
+@import 'components/common/remove_button_col';
+@import 'components/common/save_query_modal';
+@import 'components/common/sharing/share_query_modal';
+@import 'components/common/sharing/tag_input_text';
+@import 'components/common/user_select/user_select';
+@import 'components/common/visualization_icon';
+
+/* ==========================================================================
+ Zenysis Admin
+  ========================================================================== */
+@import 'components/admin_app/admin_app';
+@import 'components/admin_app/create_role_modal';
+@import 'components/admin_app/role_card';
+@import 'components/admin_app/pill';
+@import 'components/admin_app/admin_app_card';
+@import 'components/admin_app/group_view_modal';
+@import 'components/admin_app/user_view_modal';
+@import 'components/admin_app/access_selection_view';
+
+/* ==========================================================================
+ Zenysis Navbar
+  ========================================================================== */
+@import 'components/navbar/navbar';
+@import 'components/navbar/dashboards_flyout';
+
+/* ==========================================================================
+ Zenysis Dashboard
+  ========================================================================== */
+
+@import 'components/dashboard_builder/dashboard_builder';
+@import 'components/dashboard_builder/dashboard_container/common_settings_panel/draggable_tile_pill';
+@import 'components/dashboard_builder/dashboard_container/common_settings_panel/common_settings_panel';
+@import 'components/dashboard_builder/dashboard_container/common_settings_panel/exclusions_settings_button';
+@import 'components/dashboard_builder/dashboard_container/dashboard_container';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/dashboard_grid';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/dashboard_tile_outline';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/fullscreen_tile/fullscreen_tile';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/grid_background/grid_background';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/grid_background/page_break_marker';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/fullscreen_edit_container';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/divider_tile';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/gis_tile';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/iframe_tile';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/placeholder_tile';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/query_tile';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/text_tile';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/text_edit_view_tile';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/tile_container';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/tile_drag_button';
+@import 'components/dashboard_builder/dashboard_container/dashboard_grid/tile_container/tile_menu/tile_menu';
+@import 'components/dashboard_builder/dashboard_container/scroll_to_top_button';
+@import 'components/dashboard_builder/dashboard_controls/dashboard_control_button';
+@import 'components/dashboard_builder/dashboard_controls/dashboard_controls';
+@import 'components/dashboard_builder/dashboard_controls/dashboard_settings_modal/dashboard_users_table';
+@import 'components/dashboard_builder/dashboard_controls/dashboard_settings_modal/query_panel_tab';
+@import 'components/dashboard_builder/dashboard_controls/share_dashboard_modal/share_dashboard_modal';
+@import 'components/dashboard_builder/dashboard_controls/share_dashboard_modal/scheduled_reports_tab';
+@import 'components/dashboard_builder/dashboard_controls/share_dashboard_modal/dashboard_report_schedule_form_tab';
+@import 'components/dashboard_builder/dashboard_controls/share_dashboard_modal/delete_scheduled_report_button';
+@import 'components/dashboard_builder/dashboard_header/dashboard_header';
+@import 'components/dashboard_builder/dashboard_screenshot';
+
+/* ==========================================================================
+ Zenysis Advanced Query
+  ========================================================================== */
+@import 'components/advanced_query_app/variables';
+@import 'components/advanced_query_app/advanced_query_app';
+@import 'components/advanced_query_app/annotate_control';
+@import 'components/advanced_query_app/custom_calculations_modal';
+@import 'components/advanced_query_app/customizable_tag';
+@import 'components/advanced_query_app/customization_module_wrapper';
+@import 'components/advanced_query_app/expandable_tag_list';
+@import 'components/advanced_query_app/filter_customization_module';
+@import 'components/advanced_query_app/group_customization_module';
+@import 'components/advanced_query_app/indicator_customization_module';
+@import 'components/advanced_query_app/insights/analytical_section';
+@import 'components/advanced_query_app/insights/data_quality_section';
+@import 'components/advanced_query_app/insights/insights_action_card';
+@import 'components/advanced_query_app/insights/analytical_action_card';
+@import 'components/advanced_query_app/insights/data_quality_action_card';
+@import 'components/advanced_query_app/insights/insights_field_selector';
+@import 'components/advanced_query_app/insights/insights_section';
+@import 'components/advanced_query_app/query_result_actions/query_result_actions';
+@import 'components/advanced_query_app/query_result_actions/query_result_action_button';
+@import 'components/advanced_query_app/query_tab_list/query_tab';
+@import 'components/advanced_query_app/query_tab_list/query_tab_context_menu';
+@import 'components/advanced_query_app/query_tab_list/query_tab_list';
+@import 'components/advanced_query_app/query_tab_list/query_tab_overview';
+@import 'components/advanced_query_app/visualization_picker/disabled_view';
+@import 'components/advanced_query_app/visualization_picker/control_bar';
+@import 'components/advanced_query_app/visualization_picker/explore_view';
+@import 'components/advanced_query_app/visualization_picker/visualization_picker';
+
+/* ==========================================================================
+  Zenysis Embedded Query
+  ========================================================================== */
+@import 'components/embedded_query_app';
+
+/* ==========================================================================
+ Zenysis Query
+  ========================================================================== */
+@import 'components/query_results/filter';
+@import 'components/query_results/query_result';
+@import 'components/query_results/settings_modal/settings_modal';
+@import 'components/query_results/settings_modal/table_themes_settings_tab';
+
+/* ==========================================================================
+ Zenysis Visualizations
+  ========================================================================== */
+@import 'components/visualizations/bubblechart';
+@import 'components/visualizations/common/graph_title';
+@import 'components/visualizations/expandotree';
+@import 'components/visualizations/heattile';
+@import 'components/visualizations/legend';
+@import 'components/visualizations/line_graph/line_graph';
+@import 'components/visualizations/line_graph/band_settings';
+@import 'components/visualizations/map_viz/map_viz';
+@import 'components/visualizations/map_viz/query_result_layer';
+@import 'components/visualizations/sunburst';
+@import 'components/visualizations/table/table';
+@import 'components/visualizations/visualization_container';
+
+/* ==========================================================================
+ Zenysis Login/Auth
+  ========================================================================== */
+@import 'components/auth/login';
+
+/* ==========================================================================
+   Zenysis Alerts App
+  ========================================================================== */
+@import 'components/alerts_app/alerts_app';
+
+/* ==========================================================================
+   Zenysis Data Quality App
+  ========================================================================== */
+@import 'components/data_quality_app/data_quality_app';
+
+/* ==========================================================================
+   Zenysis Data Status App
+  ========================================================================== */
+@import 'components/data_status_app/data_status_app';
+
+/* ==========================================================================
+   Zenysis Data Digest App
+  ========================================================================== */
+@import 'components/data_digest_app/data_digest_app';
+
+/* ==========================================================================
+   Zenysis Data Upload App
+  ========================================================================== */
+@import 'components/data_upload_app/column_card';
+@import 'components/data_upload_app/data_status_table';
+@import 'components/data_upload_app/data_upload_app';
+@import 'components/data_upload_app/mapping_page';
+@import 'components/data_upload_app/upload_page';
+
+/* ==========================================================================
+   Zenysis Unauthorized Page
+  ========================================================================== */
+@import 'components/unauthorized_page/unauthorized_page';
+
+/* ==========================================================================
+   Zenysis NotFound Page
+  ========================================================================== */
+@import 'components/notfound_page/notfound_page';
+
+/* ==========================================================================
+   Zenysis Overview (Home) Page
+  ========================================================================== */
+@import 'components/overview_page/overview_page';
+@import 'components/overview_page/pagination';
+@import 'components/overview_page/feed';
+
+/* ==========================================================================
+   Zenysis Data Catalog App
+  ========================================================================== */
+@import 'components/data_catalog_app/common';
+@import 'components/data_catalog_app/directory_page/_breadcrumb_path';
+@import 'components/data_catalog_app/directory_page/_directory_page';
+@import 'components/data_catalog_app/directory_page/directory_table_container/_container_header';
+@import 'components/data_catalog_app/directory_page/directory_table_container/_directory_table_container';
+@import 'components/data_catalog_app/directory_page/directory_table_container/_directory_table_header';
+@import 'components/data_catalog_app/directory_page/directory_table_container/directory_table/_directory_row';
+@import 'components/data_catalog_app/directory_page/directory_table_container/directory_table/_directory_table';
+@import 'components/data_catalog_app/field_overview_page';
+@import 'components/data_catalog_app/field_details_page';
+@import 'components/data_catalog_app/field_formula_section';
+@import 'components/data_catalog_app/field_dimension_section';
+@import 'components/data_catalog_app/field_profiling_section';
+
+/* ==========================================================================
+   Zenysis Field Setup Page
+  ========================================================================== */
+@import 'components/field_setup/field_setup_page';
+@import 'components/field_setup/unpublished_fields_table';

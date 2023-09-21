@@ -1,0 +1,51 @@
+.query-result-filter-modal {
+  &__delete-icon {
+    color: $error-color;
+    &:hover {
+      color: $error-color-hover;
+    }
+
+    &:active {
+      color: $error-color-active;
+    }
+  }
+
+  // TODO: remove this once the Well component no longer relies on
+  // bootstrap
+  .well {
+    margin-bottom: 0;
+  }
+}
+
+// TODO: all these classes below are used in NewUserButton which makes
+// no sense and should be refactored or removed
+.filter-slice-modal {
+  height: 100%;
+}
+
+.filter-slice-modal .zen-color-block > .zen-color-block__color-picker {
+  position: absolute;
+  right: -90px;
+  top: -150px;
+  z-index: 100;
+}
+
+.filter-slice-modal-header > h3,
+.filter-slice-modal-header > h4 {
+  font-weight: lighter;
+  margin: 0;
+  padding: 5px 0px 10px 0px;
+}
+
+.filter-slice-modal-header > h3 {
+  font-size: 35px;
+}
+.filter-slice-modal-header > h4 {
+  font-size: 16px;
+  margin-top: -15px;
+}
+
+.filter-slice-modal-header > .btn-close-modal {
+  color: #384b59;
+  top: -1px;
+}

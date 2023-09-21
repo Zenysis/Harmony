@@ -1,0 +1,22 @@
+.data-quality-action-card {
+  align-items: center;
+  background-color: white;
+  border: 1px solid $gray-light;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.302),
+    0 1px 3px 1px rgba(60, 64, 67, 0.149);
+  display: flex;
+  margin: 20px $spacing-xs;
+  padding: $spacing-m $spacing-m $spacing-m $spacing-m;
+
+  &__insights-summary {
+    border-right: 2px solid $aqt-gray-4;
+    padding-right: $space-xs-px;
+  }
+
+  &__score {
+    font-size: $font-xl;
+    font-weight: $bold;
+    padding-left: $space-xs-px;
+  }
+}

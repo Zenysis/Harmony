@@ -1,0 +1,133 @@
+.zen-checkbox {
+  $checkbox-size: 20px;
+
+  .zen-label-wrapper__label {
+    cursor: pointer;
+    font-size: 15px;
+  }
+
+  &--disabled {
+    .zen-checkbox__custom-item-wrapper,
+    .zen-checkbox__input-item,
+    .zen-label-wrapper__label {
+      cursor: not-allowed;
+    }
+
+    .zen-label-wrapper__label {
+      color: $gray;
+    }
+  }
+
+  &__custom-item-wrapper {
+    cursor: pointer;
+  }
+
+  &__input-item-wrapper {
+    height: $checkbox-size;
+    position: relative;
+
+    // TODO: It would be really, really nice if the checkbox
+    // structure took up only its place in the DOM and didn't need special
+    // positioning. I tried removing this with `255ab06ce` but it caused
+    // positioning regressions across many different parts of the site because
+    // apparently this positioning is critical. I don't know why.
+    top: 3px;
+  }
+
+  &__input-item {
+    cursor: pointer;
+    height: $checkbox-size;
+
+    // set opacity to 0 to hide the default checkbox, but that way it is kept
+    // in the DOM for accessibility purposes
+    opacity: 0;
+    width: $checkbox-size;
+
+    // for accessibility reasons, we need to add a :focus style to our checkbox
+    &:focus + .zen-checkbox__input-item-override::before {
+      box-shadow: inset 0 0 1px 0 rgba(0, 0, 0, 0.8);
+    }
+
+    &:focus + .zen-checkbox__input-item-override--checked::before {
+      box-shadow: none;
+      outline: $blue-primary-active auto 5px;
+      outline-offset: -3px;
+    }
+  }
+
+  &__input-item-override {
+    height: $checkbox-size;
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    width: $checkbox-size;
+
+    // create custom checkbox
+    &::before {
+      background-color: $white;
+      border: 1px solid $gray;
+      border-radius: 3px;
+      content: '';
+      display: inline-block;
+      height: $checkbox-size;
+      width: $checkbox-size;
+    }
+
+    // set hover and disabled states
+    &--is-hovered::before,
+    &--disabled::before,
+    &--checked-and-disabled::before,
+    &--indeterminate-and-disabled::before {
+      background-color: $gray;
+    }
+
+    // create checkmark
+    &::after {
+      border-bottom: 2px solid $white;
+      border-left: 2px solid $white;
+      content: none;
+      display: inline-block;
+      height: 6px;
+      left: 50%;
+      margin-top: -1px;
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      width: 11px;
+    }
+
+    &--checked,
+    &--indeterminate {
+      // make the checkbox blue when checked
+      &::before {
+        background-color: $blue-primary;
+        background-image: $blue-primary-gradient;
+        border: none;
+      }
+    }
+
+    // Unset the checkmark and draw a dash when the box is indeterminate.
+    &--indeterminate,
+    &--indeterminate-and-disabled {
+      &::after {
+        border-bottom: initial;
+        border-left: initial;
+        border-top: 2px solid $white;
+        height: initial;
+        margin-top: 0;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    &--checked,
+    &--checked-and-disabled,
+    &--indeterminate,
+    &--indeterminate-and-disabled {
+      // display the checkmark when checked
+      &::after {
+        content: '';
+      }
+    }
+  }
+}

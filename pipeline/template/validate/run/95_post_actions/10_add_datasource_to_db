@@ -1,0 +1,4 @@
+#!/bin/bash -eu
+set -o pipefail
+
+${PIPELINE_SRC_ROOT}/scripts/druid/update_db_datasource.py

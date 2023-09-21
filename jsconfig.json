@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": "web/client",
+    "checkJs": true,
+    "experimentalDecorators": true
+  },
+  "include": [
+    "web/client/**/*"
+  ]
+}

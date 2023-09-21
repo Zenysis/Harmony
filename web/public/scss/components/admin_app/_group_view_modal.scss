@@ -1,0 +1,76 @@
+.group-view-modal {
+  &__tab-contents {
+    padding: $space-xl-px $space-xxl-px;
+  }
+
+  &__add-button {
+    background-color: transparent;
+    border-style: none;
+    border-width: 0px;
+    color: $blue-primary;
+    font-weight: 700;
+
+    &:hover {
+      color: $blue-primary-hover;
+    }
+  }
+
+  &__table {
+    .zen-table-search-container {
+      float: none;
+      margin-bottom: $space-m-px;
+    }
+  }
+
+  &__label-wrapper {
+    .zen-label-wrapper__label--newline-before {
+      margin-bottom: $space-xs-px;
+    }
+  }
+
+  &__info {
+    font-size: $font-m;
+  }
+
+  &__dot {
+    background-color: $gray;
+    border-radius: 100px;
+    height: 10px;
+    width: 10px;
+  }
+
+  &__color-blocks {
+    background-color: $gray-light;
+    border-radius: 100px;
+    height: 8px;
+    width: 50px;
+
+    &--filled {
+      @extend .role-card__color-blocks;
+      background-color: $gray;
+    }
+  }
+
+  &__remove-icon {
+    float: right;
+    margin-right: $space-xxs-px;
+  }
+
+  &__num-users {
+    color: $gray;
+    font-size: $font-m;
+  }
+
+  &__dashboard-label-link {
+    color: $blue-dark;
+    font-weight: 700;
+
+    &:hover {
+      color: $blue-dark-hover;
+    }
+  }
+
+  &__header {
+    border-top: 1px solid #eee;
+  }
+}

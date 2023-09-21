@@ -1,0 +1,22 @@
+.visualization-picker {
+  background-color: $white;
+  border-radius: $aqt-query-result-border-radius;
+  flex: 0;
+  height: $visualization-picker-control-bar-height;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+
+  &--empty-state {
+    // When the empty state is shown, we need to stretch to fill the entire
+    // parent container since there are no adjacent elements around us to
+    // influence our sizing since no query result is shown.
+    flex: 1;
+  }
+
+  &--show-explore-view,
+  &--show-disabled-view {
+    display: flex;
+    flex-direction: column;
+  }
+}

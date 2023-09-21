@@ -1,0 +1,19 @@
+.gd-dashboard-iframe-tile {
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+
+  &__title {
+    color: $slate;
+    font-size: 24px;
+    padding-bottom:  $space-xxs-px;
+    text-align: center;
+  }
+
+  &__iframe {
+    background: transparent;
+    border: 1px solid #ccc;
+    height: 100%;
+    width: 100%;
+  }
+}

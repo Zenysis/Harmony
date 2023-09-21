@@ -1,0 +1,54 @@
+// Advanced Query Tool base colors
+$aqt-purple-1: #8e44ad;
+$aqt-purple-2: #9b59b6;
+
+$aqt-blueblack-1: #2c3e50;
+$aqt-blueblack-2: #34495e;
+
+$aqt-gray-1: #7f8c8d;
+$aqt-gray-2: #95a5a6;
+$aqt-gray-3: #bdc3c7;
+$aqt-gray-4: #ecf0f1;
+
+$aqt-indicator-item-color: #c4e7ff;
+$aqt-indicator-item-gradient: linear-gradient(to right, #c2ecff, #c2e1ff);
+$aqt-grouping-item-color: #fff5c2;
+$aqt-grouping-item-gradient: linear-gradient(to right, #fff8c2, #fff3c2);
+$aqt-filter-item-color: $aqt-grouping-item-color;
+$aqt-filter-item-gradient: linear-gradient(to right, $white, $white);
+
+// Advanced Query Tool font colors
+$aqt-base-font-color: $dark-gray-3;
+$aqt-font-color-dark: $slate;
+
+// Advanced Query Tool background colors
+$aqt-background-color: $aqt-gray-4;
+$query-form-panel-bg-color: $white;
+$query-part-selector-bg-color: $white;
+$query-part-selector-add-btn-hover: $light-gray-4;
+
+// Advanced Query Tool border colors
+$aqt-base-border-color: $light-gray-3;
+
+// Advanced Query Tool transitions
+$aqt-base-transition-hover-color: background-color 270ms
+  cubic-bezier(0, 0, 0.2, 1);
+$hierarchical-selector-transition-open-close: transform 100ms ease-out;
+
+// Advanced Query Tool dimensions
+$aqt-customization-module-width: 360px;
+$aqt-query-result-border-radius: 4px;
+
+$aqt-query-form-z-index: 1;
+
+$aqt-query-tab-list-bg-color: transparentize($aqt-gray-3, 0.5);
+$aqt-query-tab-overview-item-spacing: 20px;
+
+$aqt-query-result-container-spacing: 25px;
+
+$aqt-query-tab-list-height: 35px;
+$aqt-query-form-panel-height: calc(
+  100vh - #{$navbar-height} - #{$aqt-query-tab-list-height}
+);
+$aqt-query-form-panel-height-without-tabs: calc(100vh - #{$navbar-height});
+$visualization-picker-control-bar-height: 35px;

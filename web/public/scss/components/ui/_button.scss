@@ -1,0 +1,226 @@
+.zen-button {
+  $large-border-radius: 25px;
+  $medium-border-radius: 20px;
+  $small-border-radius: 17.5px;
+  border: 0;
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.3);
+  color: $white;
+  cursor: pointer;
+  margin-right: 0.4em;
+  position: relative;
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  // large button should be 50px when the contents fit on a single line
+  &--large {
+    border-radius: $large-border-radius;
+    font-size: 21px;
+    min-height: 50px;
+    padding: 9px 25px;
+  }
+
+  // medium button should be 40px when the contents fit on a single line
+  &--medium {
+    border-radius: $medium-border-radius;
+    font-size: 15px;
+    min-height: 40px;
+    padding: 9px 25px;
+  }
+
+  // small button should be 35px when the contents fit on a single line
+  &--small {
+    border-radius: $small-border-radius;
+    font-size: 15px;
+    min-height: 35px;
+    padding: 7px 12px;
+  }
+
+  &__contents {
+    font-family: $base-font-family;
+    font-size: inherit;
+    position: relative;
+    text-align: center;
+    text-transform: uppercase;
+
+    // need to give the inner contents a z-index so it can show *above* the
+    // &::after overlay, so that our gradient lightening/darkening effect
+    // doesn't affect the button contents.
+    z-index: 1;
+
+    &--large {
+      font-weight: 700;
+      letter-spacing: 1.17px;
+    }
+
+    &--medium {
+      font-weight: 700;
+      letter-spacing: 0.83px;
+    }
+
+    &--small {
+      font-weight: 700;
+      letter-spacing: 0.83px;
+    }
+  }
+
+  @mixin outline-button($base-color, $hover-color, $active-color) {
+    background-color: transparent;
+    border: 2px solid $base-color;
+    color: $base-color;
+
+    // reduce the padding top & bottom of all button sizes by 2px to account for
+    // the 2px border we're adding now. This way all buttons still stay the same
+    // size.
+    &.zen-button {
+      &--large,
+      &--medium {
+        padding-bottom: 7px;
+        padding-top: 7px;
+      }
+
+      &--small {
+        padding-bottom: 5px;
+        padding-top: 5px;
+      }
+    }
+
+    &:hover {
+      border: 2px solid $hover-color;
+      color: $hover-color;
+    }
+
+    &:active {
+      border: 2px solid $active-color;
+      color: $active-color;
+    }
+  }
+
+  @mixin gradient-button($base-color, $gradient, $overlay-modifier-percent) {
+    background-color: $base-color;
+    background-image: $gradient;
+
+    // add an overlay to lighten/darken based on hover or active state
+    &::after {
+      content: '\A';
+      height: 100%;
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: 100%;
+    }
+
+    &:hover::after {
+      background-color: rgba(255, 255, 255, $overlay-modifier-percent);
+    }
+
+    &:active::after {
+      background-color: rgba(0, 0, 0, $overlay-modifier-percent);
+    }
+
+    // the overlay must match border-radius for the different button sizes
+    &.zen-button {
+      &--large::after {
+        border-radius: $large-border-radius;
+      }
+      &--medium::after {
+        border-radius: $medium-border-radius;
+      }
+      &--small::after {
+        border-radius: $small-border-radius;
+      }
+    }
+  }
+
+  @mixin minimal-button($color) {
+    background-color: transparent;
+    box-shadow: none;
+    color: $color;
+
+    &:hover {
+      background-color: $gray-light-active;
+    }
+
+    &:active {
+      background-color: $gray-hover;
+    }
+  }
+
+  &--primary {
+    @include gradient-button($blue-primary, $blue-primary-gradient, 0.15);
+  }
+
+  &--success {
+    @include gradient-button($success-color, $success-color-gradient, 0.15);
+  }
+
+  &--danger {
+    @include gradient-button($error-color, $error-color-gradient, 0.15);
+  }
+
+  &--primary-outline {
+    @include outline-button(
+      $blue-primary,
+      $blue-primary-hover,
+      $blue-primary-active
+    );
+  }
+
+  &--success-outline {
+    @include outline-button(
+      $success-color,
+      $success-color-hover,
+      $success-color-active
+    );
+  }
+
+  &--danger-outline {
+    @include outline-button(
+      $error-color,
+      $error-color-hover,
+      $error-color-active
+    );
+  }
+
+  &--primary-minimal {
+    @include minimal-button($blue-primary);
+  }
+
+  &--success-minimal {
+    @include minimal-button($success-color);
+  }
+
+  &--danger-minimal {
+    @include minimal-button($error-color);
+  }
+
+  &--disabled {
+    background-color: $gray;
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: $gray-hover;
+    }
+
+    &:active {
+      background-color: $gray-active;
+    }
+  }
+
+  &--disabled-outline {
+    @include outline-button(
+      $gray,
+      $gray-hover,
+      $gray-active
+    );
+    cursor: not-allowed;
+  }
+}
+
+.zen-unstyled-button {
+  background-color: initial;
+  border: none;
+  outline: none;
+  padding: 0;
+}

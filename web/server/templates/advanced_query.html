@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+{% set body_class="condensed-navbar advanced-query-app-body" %}
+
+{% block css %}
+{% endblock %}
+
+{% block content %}
+  <!-- React app -->
+  <div id="app"></div>
+  <div id="disclaimer"></div>
+{% endblock %}
+
+{% block scripts %}
+  {% include 'query_app_vendor_scripts.html' %}
+
+  <script src="{{ bundle_resource_url('advancedQuery.bundle.js') }}"></script>
+{% endblock %}

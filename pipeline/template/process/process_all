@@ -1,0 +1,32 @@
+#!/bin/bash -eu
+set -o pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd -P)
+
+# Get the date in case the date changes before all the steps are complete.
+DATE=$(date +%Y%m%d)
+
+pushd "${SCRIPT_DIR}" &> /dev/null
+
+TASKS='run/...'
+
+# Run the full data processing pipeline.
+# NOTE: We mark this as || true as we always want to attempt exporting the data
+# for whatever we computed. In case the pipeline was aborted, the exporter will
+# not export it.
+./zeus_process \
+  --date="${DATE}" \
+  run \
+    "${TASKS}" || true
+
+# Export the generated data.
+./zeus_process \
+  --date="${DATE}" \
+  export "${TASKS}"
+
+# Publish the generated data.
+./zeus_process \
+  --date="${DATE}" \
+  publish "${TASKS}"
+
+popd &> /dev/null

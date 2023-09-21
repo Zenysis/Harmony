@@ -1,0 +1,20 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+SetupEnvForPyPy
+
+pushd "${PIPELINE_TMP_DIR}" &> /dev/null
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/scripts/process_csv.py" \
+  --date 'date' \
+  --dimensions 'GeoDimension1' 'GeoDimension2' 'SomeOtherDimension' \
+  --prefix 'mysourcename' \
+  --sourcename 'My Source Name' \
+  --input='my_input_file.csv' \
+  --output_locations="${PIPELINE_TMP_DIR}/locations.csv" \
+  --output_fields="${PIPELINE_TMP_DIR}/fields.csv" \
+  --output_rows="${PIPELINE_TMP_DIR}/processed_data.json.lz4"
+
+popd &> /dev/null

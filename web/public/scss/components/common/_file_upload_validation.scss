@@ -1,0 +1,124 @@
+.full-width {
+  width: 100%;
+}
+
+.file-validation {
+  &__info {
+    white-space: pre-wrap;
+  }
+
+  &__label-wrapper {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+  }
+
+  &__subheader {
+    font-size: 16px;
+  }
+
+  &__icon {
+    display: block;
+    height: 32px;
+    width: 32px;
+
+    &--success {
+      color: $success-color-active;
+    }
+
+    &--warning {
+      color: $warning-color-active;
+    }
+
+    &--error {
+      color: $error-color;
+    }
+  }
+
+  &__success-box {
+    background-color: #a7f0ba;
+    border: 1px solid $success-color-active;
+    border-radius: 5px;
+    padding: $space-m-px;
+
+    &-check {
+      color: $success-color-active;
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    &-button {
+      @extend .full-width;
+
+      &:hover {
+        background-color: rgba($success-color-active, 0.06);
+      }
+
+      &:active {
+        background-color: rgba($success-color-active, 0.12);
+      }
+    }
+
+    &-text {
+      height: 17px;
+    }
+  }
+
+  &__warning-box {
+    background-color: #fff5c2;
+    border: 1px solid $warning-color-active;
+    border-radius: 5px;
+    padding: $space-m-px;
+
+    &-check {
+      color: $warning-color-active;
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    &-button {
+      @extend .full-width;
+
+      &:hover {
+        background-color: rgba($warning-color-active, 0.06);
+      }
+
+      &:active {
+        background-color: rgba($warning-color-active, 0.12);
+      }
+    }
+
+    &-text {
+      color: $error-color;
+    }
+  }
+
+  &__error-box {
+    background-color: #ffebe6;
+    border: 1px solid $error-color-active;
+    border-radius: 5px;
+    padding: $space-m-px;
+
+    &-check {
+      color: $error-color-active;
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    &-button {
+      @extend .full-width;
+
+      &:hover {
+        background-color: rgba($error-color-active, 0.06);
+      }
+
+      &:active {
+        background-color: rgba($error-color-active, 0.12);
+      }
+    }
+
+    &-text {
+      color: $error-color;
+    }
+  }
+}

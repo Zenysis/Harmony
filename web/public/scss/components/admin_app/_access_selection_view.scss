@@ -1,0 +1,45 @@
+.access-selection-view {
+  .zen-modal__body {
+    padding: $space-xl-px $space-xxl-px;
+  }
+
+  &__back-arrow {
+    color: $blue-primary;
+  }
+
+  &__title-content {
+    background-color: transparent;
+    border: none;
+  }
+
+  &__check-all-rows {
+    float: left;
+    padding-left: $space-xxs-px;
+    padding-top: $space-xxs-px;
+  }
+
+  &__checkbox {
+    padding-left: $space-xxs-px;
+  }
+
+  &__table {
+    .zen-table-search-container {
+      float: right;
+      margin-left: auto;
+      width: 90%;
+    }
+
+    .zen-table__cell {
+      vertical-align: top;
+    }
+  }
+
+  &__dashboard-label-link {
+    color: $blue-dark;
+    font-weight: 700;
+
+    &:hover {
+      color: $blue-dark-hover;
+    }
+  }
+}

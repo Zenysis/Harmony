@@ -1,0 +1,111 @@
+// Via: https://gist.github.com/johnferrie/3836468
+@mixin transform($transforms) {
+  -webkit-transform: $transforms;
+  -moz-transform: $transforms;
+  -ms-transform: $transforms;
+  transform: $transforms;
+}
+
+// sharp, small elevation
+@mixin zen-elevation-1() {
+  box-shadow: (0 2px 2px 0 rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.14));
+}
+
+@mixin zen-elevation-2() {
+  box-shadow: (0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(0, 0, 0, 0.08));
+}
+
+@mixin zen-elevation-3() {
+  box-shadow: (0 2px 2px 0 rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(0, 0, 0, 0.16));
+}
+
+// soft, larger elevation
+@mixin zen-elevation-4() {
+  box-shadow: (0 3px 8px 0 rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08));
+}
+
+// sharper, larger elevation. Good for a transition from elevation-4 to
+// elevation-5 on hover.
+@mixin zen-elevation-5() {
+  box-shadow: (0 3px 8px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.16));
+}
+
+@mixin tooltip-body-base($whitespace: initial) {
+  background: #3a3a3a;
+  border-radius: 2px;
+  color: white;
+  content: attr(data-content);
+  font-size: 13px;
+  padding: 5px 15px;
+  position: absolute;
+  white-space: $whitespace;
+  z-index: 100;
+}
+
+// Designed to be used as :after
+// TODO: Replace current usage of `tooltip-body` and `tooltip-arrow`
+// with direction specific versions.
+@mixin tooltip-body() {
+  @include tooltip-body-base();
+
+  border-top-left-radius: 1px;
+  right: 0;
+  top: 33px;
+}
+
+// Designed to be used as :before
+@mixin tooltip-arrow() {
+  border-bottom: 5px solid #3a3a3a;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  content: '';
+  position: absolute;
+  top: 28px;
+  z-index: 100;
+}
+
+@mixin tooltip-bottom() {
+  &:hover {
+    &:before {
+      @include tooltip-arrow();
+    }
+
+    &:after {
+      @include tooltip-body();
+    }
+  }
+}
+
+// Tooltip that displays above an element. There is a hover delay applied so
+// that the tooltip only appears if the user lingers long enough on the element.
+@mixin tooltip-top($whitespace: initial, $delay: 0.5s) {
+  &:before {
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #3a3a3a;
+    bottom: 18px;
+    content: '';
+    position: absolute;
+    z-index: 100;
+  }
+
+  &:after {
+    @include tooltip-body-base($whitespace);
+
+    bottom: 23px;
+    left: 5px;
+  }
+
+  &:before,
+  &:after {
+    transition: 0s visibility;
+    visibility: hidden;
+  }
+  &:hover {
+    &:before,
+    &:after {
+      transition-delay: $delay;
+      visibility: visible;
+    }
+  }
+}

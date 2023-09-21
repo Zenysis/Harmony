@@ -1,0 +1,23 @@
+.gis-download-map-modal {
+  // Overriding CSS
+  .zen-modal__body {
+    overflow: hidden;
+  }
+}
+
+.gis-image-custom-size-input-box {
+  border: 1px solid $gray;
+  padding: $space-s-px $space-m-px;
+}
+
+.gis-image-preview-container {
+  background-color: $gray;
+}
+
+.gis-modal-footer {
+  @extend .zen-modal-footer;
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}

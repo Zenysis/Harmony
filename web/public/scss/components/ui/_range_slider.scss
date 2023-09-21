@@ -1,0 +1,35 @@
+.range-slider {
+  display: flex;
+  position: relative;
+
+  &__circle {
+    background-color: $blue-dark;
+  }
+
+  &__line {
+    position: absolute;
+
+    &--active {
+      background-color: $blue-dark;
+    }
+
+    &--inactive {
+      background-color: $gray-light;
+    }
+  }
+
+  &__value {
+    display: flex;
+    font-size: 12px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  &__item {
+    // Clear the box shadow that is set by the DraggableItem UI component when
+    // dragging.
+    box-shadow: none !important;
+    display: flex;
+    flex-direction: column;
+  }
+}

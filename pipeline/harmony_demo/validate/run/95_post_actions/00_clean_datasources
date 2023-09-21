@@ -1,0 +1,4 @@
+#!/bin/bash -eu
+set -o pipefail
+
+${PIPELINE_SRC_ROOT}/scripts/druid/clean_old_datasources.py --amount_to_keep=2 --force

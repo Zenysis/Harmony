@@ -1,0 +1,42 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+# Cleanup data if pipeline is run multiple times
+rm -rf "${PIPELINE_FEED_DIR}"/*
+
+pushd "${PIPELINE_FEED_DIR}" &> /dev/null
+
+############################################
+BUCKET_NAME='s3/zenysis-harmony-demo/self-serve'
+############################################
+
+# The active sources file is not created until there are self serve sources.
+if [ -z $(mc find "${BUCKET_NAME}" --name active_sources.txt) ]; then
+    echo "No active sources file, creating one."
+    touch "${PIPELINE_FEED_DIR}/active_sources.txt"
+else
+    FetchFiles "${BUCKET_NAME}/active_sources.txt" .
+
+    # Fetch only the necessary files
+    SOURCES=($(cat active_sources.txt))
+
+    if [ ${#SOURCES[@]} -eq 0 ]; then
+        echo -e "\n\nNo sources to fetch"
+    else
+        for cur_source in "${SOURCES[@]}" ; do
+            echo -e "\n\nFetching source '${cur_source}'"
+            FetchFiles "${BUCKET_NAME}/${cur_source}/config.json" "${cur_source}/"
+            file_name=$(jq -r '.data_filename' "${cur_source}/config.json")
+            FetchFiles "${BUCKET_NAME}/${cur_source}/${file_name}" "${cur_source}/"
+
+            # Unzip files, remove BOM, rezip
+            gunzip "${cur_source}/${file_name}"
+            RemoveBOM "${cur_source}/"*.csv
+            gzip "${cur_source}/"*.csv
+        done
+    fi
+fi
+
+popd &> /dev/null

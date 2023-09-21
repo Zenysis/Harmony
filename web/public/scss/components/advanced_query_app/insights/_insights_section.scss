@@ -1,0 +1,50 @@
+.analytical-subsection {
+  // The Subsection CSS is a combination of the analytical sections background
+  // gradient and the insights section spacing
+  background-image: linear-gradient(
+    to bottom,
+    rgba(232, 240, 255, 0.65),
+    white 90%
+  );
+  border: 1px solid $gray;
+  border-radius: 7px;
+  padding: $space-m-px;
+  &__title {
+    font-size: $font-m;
+    margin-bottom: 20px;
+    padding-bottom: $space-xs-px;
+    position: relative;
+
+    // adds a partial underline to the subsection title
+    &:before {
+      border-bottom: 3px solid;
+      bottom: 0;
+      content: '';
+      left: 0;
+      position: absolute;
+      width: 30px;
+    }
+  }
+}
+
+.insights-subsection {
+  margin: $spacing-m;
+
+  &__title {
+    font-size: $font-m;
+    margin-bottom: 20px;
+    padding-bottom: $spacing-s;
+    padding-top: 14px;
+    position: relative;
+
+    // adds a partial underline to the subsection title
+    &:before {
+      border-bottom: 3px solid;
+      bottom: 0;
+      content: '';
+      left: 0;
+      position: absolute;
+      width: 30px;
+    }
+  }
+}
