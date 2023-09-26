@@ -265,6 +265,9 @@ const translations: TranslationDictionary = {
     importSelfServe: 'Configura\xE7\xE3o de importa\xE7\xE3o autom\xE1tica',
     importSetupPrompt:
       'A importa\xE7\xE3o desta nova configura\xE7\xE3o de auto-atendimento sobregravar\xE1 o cat\xE1logo de dados atualmente ativo e as fontes de carregamento de dados. Ao fazer isso, observe que voc\xEA pode sobrescrever as mudan\xE7as n\xE3o inclu\xEDdas na configura\xE7\xE3o importada. Ap\xF3s completar esta a\xE7\xE3o, se surgir um problema com a nova configura\xE7\xE3o de autoatendimento, voc\xEA poder\xE1 reimportar a configura\xE7\xE3o atual de autoatendimento (encontrada em sua pasta Downloads).',
+    '%(fileName)s Passes Validation': '%(fileName)s passa na valida\\xE7\\xE3o',
+    '%(fileName)s contains potential conflicts':
+      '%(fileName)s cont\\xE9m poss\\xEDveis conflitos',
     'Are you sure you want to import %(csvFileName)s?':
       'Voc\xEA tem certeza de que quer importar %(csvFileName)s?',
     'Are you sure you want to import %(fileName)s?':
@@ -278,10 +281,16 @@ const translations: TranslationDictionary = {
       'Exportar a configura\xE7\xE3o de auto-atendimento desta inst\xE2ncia para ser usada em outras inst\xE2ncias',
     'Import a self serve setup to replace the active one on this instance':
       'Importar uma configura\xE7\xE3o de auto-atendimento para substituir a ativa neste caso',
+    'Import a self serve setup to replace the active one on this instance_ You can export this setup in the Admin App in the Site Configuration tab_ This setup will replace the existing metadata in this instance for the following records: Field, Field Category, Dimension, Dimension Category, and Datasource_':
+      'Importe uma configura\\xE7\\xE3o de autoatendimento para substituir a configura\\xE7\\xE3o ativa nessa inst\\xE2ncia. Voc\\xEA pode exportar essa configura\\xE7\\xE3o no aplicativo Admin, na guia Site Configuration (Configura\\xE7\\xE3o do site). Essa configura\\xE7\\xE3o substituir\\xE1 os metadados existentes nessa inst\\xE2ncia para os seguintes registros: Field (Campo), Field Category (Categoria de campo), Dimension (Dimens\\xE3o), Dimension Category (Categoria de dimens\\xE3o) e Datasource (Fonte de dados).',
     'Import confirmation': 'Confirma\xE7\xE3o de importa\xE7\xE3o',
     'Import new indicators or update existing indicators defined in the Google Sheet CSV':
       'Importar novos indicadores ou atualizar indicadores existentes definidos no Google Sheet CSV',
+    'Looks like the upload failed': 'Parece que o upload falhou',
+    'Select file to import': 'Selecione o arquivo a ser importado',
     'Self Serve': 'Auto-servi\xE7o',
+    'Your data catalog conflicts summary file will download shortly':
+      'Seu arquivo de resumo de conflitos do cat\\xE1logo de dados ser\\xE1 baixado em breve',
     'Your data catalog metadata export will download shortly':
       'Sua exporta\xE7\xE3o de metadados do cat\xE1logo de dados ser\xE1 baixada em breve',
     'Your fields csv import might take some time to complete':

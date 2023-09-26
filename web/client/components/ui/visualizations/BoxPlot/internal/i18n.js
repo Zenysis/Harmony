@@ -42,6 +42,7 @@ const translations: TranslationDictionary = {
     'Third Quartile': 'Troisième quartile',
   },
   br: {
+    Median: 'Mediana',
     'First Quartile': 'Primeiro quartil',
     'Outlier value': 'Valor(es) fora da curva (outliers)',
     'Third Quartile': 'Terceiro quartil',
