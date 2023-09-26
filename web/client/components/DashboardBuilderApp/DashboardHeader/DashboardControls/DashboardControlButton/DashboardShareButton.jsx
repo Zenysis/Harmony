@@ -69,8 +69,7 @@ export default function DashboardShareButton({
     />
   );
 
-  // Disable email option for unregistered users and
-  // Report Generator option for non-admins
+  // Disable email option for unregistered users
   return (
     <React.Fragment>
       <Dropdown
@@ -96,7 +95,6 @@ export default function DashboardShareButton({
         <ShareDashboardModal
           dashboard={currentDashboard}
           defaultTabName={sharingType}
-          enableScheduleReport={IS_AUTHENTICATED_USER}
           enableShareEmail={IS_AUTHENTICATED_USER}
           hasUnsavedDashboardModifiers={hasUnsavedDashboardModifiers}
           onRequestClose={onCloseShareModal}

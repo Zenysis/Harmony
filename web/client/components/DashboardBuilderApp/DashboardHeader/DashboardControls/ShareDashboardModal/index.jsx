@@ -42,11 +42,9 @@ const TAB_NAMES = {
   DOWNLOAD: I18N.text('Download'),
   EMAIL: I18N.textById('Email'),
   LINK: I18N.textById('Link'),
-  REPORT_GENERATOR: I18N.text('Report Generator'),
 };
 
 type DefaultProps = {
-  enableScheduleReport: boolean,
   enableShareEmail: boolean,
 };
 
@@ -70,7 +68,6 @@ type State = {
   selectedTabName: string,
   sendingPreviewEmail: boolean,
   showConfirmModal: boolean,
-  showCreateScheduleForm: boolean,
   supplementalModalProps: PrimaryButtonModalProps | SecondaryButtonModalProps,
 };
 
@@ -112,7 +109,6 @@ export default class ShareDashboardModal extends React.PureComponent<
     selectedTabName: this.props.defaultTabName,
     sendingPreviewEmail: false,
     showConfirmModal: false,
-    showCreateScheduleForm: false,
     supplementalModalProps: {
       disablePrimaryButton: false,
       onPrimaryAction: () => {},
@@ -121,7 +117,6 @@ export default class ShareDashboardModal extends React.PureComponent<
   };
 
   static defaultProps: DefaultProps = {
-    enableScheduleReport: false,
     enableShareEmail: false,
   };
 
@@ -362,12 +357,7 @@ export default class ShareDashboardModal extends React.PureComponent<
       PDFSelected,
       selectedTabName,
       sendingPreviewEmail,
-      showCreateScheduleForm,
     } = this.state;
-
-    if (showCreateScheduleForm) {
-      return null;
-    }
 
     let onPrimaryAction;
     let primaryButtonText;
@@ -382,9 +372,6 @@ export default class ShareDashboardModal extends React.PureComponent<
     } else if (selectedTabName === TAB_NAMES.LINK) {
       primaryButtonText = I18N.text('Copy URL');
       onPrimaryAction = this.copyLinkToClipboard;
-    } else if (selectedTabName === TAB_NAMES.SCHEDULE_REPORT) {
-      primaryButtonText = 'Schedule';
-      onPrimaryAction = () => {};
     }
 
     const supplementalModalProps:
@@ -398,7 +385,7 @@ export default class ShareDashboardModal extends React.PureComponent<
           onSecondaryAction: this.onSendPreviewEmailClick,
           secondaryButtonIntent: 'primary',
           secondaryButtonText: this.renderSecondaryButtonContent(),
-          showPrimaryButton: selectedTabName !== TAB_NAMES.SCHEDULE_REPORT,
+          showPrimaryButton: true,
           showSecondaryButton: selectedTabName === TAB_NAMES.EMAIL,
         }
       : this.state.supplementalModalProps;
