@@ -174,6 +174,7 @@ const translations: TranslationDictionary = {
       'Ocorreu um problema ao criar o link, tente novamente mais tarde.',
     'Copy URL': 'Copiar URL',
     'Dashboard Analysis Shared': 'Análise do painel compartilhada',
+    'Report Generator': 'Gerador de relat\\xF3rios',
     'Semi-Annually': 'Semi-Annualmente',
     'Send Email': 'Enviar email',
     'Send Preview Email': 'Enviar e-mail de visualização',

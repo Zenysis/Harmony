@@ -36,8 +36,11 @@ const translations: TranslationDictionary = {
   },
   fr: {},
   br: {
+    Age: 'Idades Simples',
     MunicipalityName: 'Município',
+    Sex: 'Sexo',
     StateName: 'Estado',
+    source: 'Origem',
     timestamp: 'Data',
   },
 };
