@@ -152,6 +152,7 @@ const translations: TranslationDictionary = {
     'Bar treatment': 'Tratamento da barra',
     'Goal line': 'Goal line',
     'Sort by': 'Sortir por',
+    'Unpivot indicators': 'Desativar indicadores',
     'Value label rotation': 'Rota\xE7\xE3o da etiqueta de valor',
   },
 };

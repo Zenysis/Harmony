@@ -40,6 +40,7 @@ const translations: TranslationDictionary = {
   br: {
     'Change password': 'Alterar senha',
     'New Password': 'Nova senha',
+    'Retype Password': 'Digite a senha novamente',
   },
 };
 export default translations;
