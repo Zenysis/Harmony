@@ -42,7 +42,6 @@ const translations: TranslationDictionary = {
       'There was a problem creating link, please try again later.',
     'Copy URL': 'Copy URL',
     'Dashboard Analysis Shared': 'Dashboard Analysis Shared',
-    'Report Generator': 'Report Generator',
     'Semi-Annually': 'Semi-Annually',
     'Send Email': 'Send Email',
     'Send Preview Email': 'Send Preview Email',
