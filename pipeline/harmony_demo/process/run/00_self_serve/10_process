@@ -40,7 +40,7 @@ else
     WaitMultipleThreads "${pids[@]}"
 
     # Combine each file's processed output.
-    # NOTE(abby): This is here rather than a 15_merge step since if there are no sources,
+    # NOTE: This is here rather than a 15_merge step since if there are no sources,
     # there is nothing to merge.
     MergeDimensionsAndFields "${PIPELINE_TMP_DIR}"
     cat "${PIPELINE_TMP_DIR}"/processed_data_*.json.lz4 > "${PIPELINE_TMP_DIR}/processed_data.json.lz4"

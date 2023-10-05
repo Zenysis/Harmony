@@ -220,12 +220,6 @@ class GroupByQueryBuilder(BaseDruidQuery):
             else self.dimension_filter
         )
 
-        # Remove RegionName = 'Nation' from national level query in the ET database.
-        # When nation is selected and no dimension filters are set.
-        # TODO: We shouldn't have a region named 'Nation' in the first place ... ?
-        # The national value could be computed as a post aggregation or in a dataframe.
-        if not self.dimensions and isinstance(self.dimension_filter, EmptyFilter):
-            self.query_filter &= Dimension('RegionName') != 'Nation'
         self.having = None
         self.optimize = optimize
 
