@@ -237,7 +237,7 @@ const translations: TranslationDictionary = {
     'Abbreviated (K/M/B) (3 decimals)': 'Abreviado (K/M/B) (3 decimais)',
     'Hide series': 'Ocultar s\xE9ries',
     'Note: Settings applied when bar chart is unpivoted are applied to all series':
-      'Observa\\xE7\\xE3o: as configura\\xE7\\xF5es aplicadas quando o gr\\xE1fico de barras \\xE9 desvinculado s\\xE3o aplicadas a todas as s\\xE9ries',
+      'Observa\xE7\xE3o: as configura\xE7\xF5es aplicadas quando o gr\xE1fico de barras \xE9 desvinculado s\xE3o aplicadas a todas as s\xE9ries',
     'Percentage (0 decimals)': 'Porcentagem (0 decimais)',
     'Percentage (1 decimals)': 'Porcentagem (1 decimal)',
     'Percentage (2 decimals)': 'Porcentagem (2 decimais)',

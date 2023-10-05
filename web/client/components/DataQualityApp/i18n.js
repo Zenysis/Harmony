@@ -24,6 +24,7 @@ const translations: TranslationDictionary = {
     Categorical: 'Categorical',
     high: 'high',
     low: 'low',
+    medium: 'medium',
     'Add Filter': 'Add Filter',
     'Select indicator': 'Select indicator',
     'The Quality Score is based on the following factors___':
@@ -35,6 +36,7 @@ const translations: TranslationDictionary = {
     Categorical: 'Categ\xF3rico',
     high: 'alto',
     low: 'baixo',
+    medium: 'm\xE9dio',
     'Add Filter': 'Adicionar filtro',
     'Select indicator': 'Selecione o indicador',
     'The Quality Score is based on the following factors___':
@@ -46,6 +48,7 @@ const translations: TranslationDictionary = {
     Categorical: 'Ph\xE2n lo\u1EA1i',
     high: 'cao',
     low: 'Th\u1EA5p',
+    medium: 'v\u1EEBa ph\u1EA3i',
     'Add Filter': 'Th\xEAm b\u1ED9 l\u1ECDc',
     'Select indicator': 'Ch\u1ECDn ch\u1EC9 s\u1ED1',
     'The Quality Score is based on the following factors___':
@@ -57,6 +60,7 @@ const translations: TranslationDictionary = {
     Categorical: 'ምድብ',
     high: 'ከፍተኛ',
     low: 'ዝቅተኛ',
+    medium: 'መካከለኛ',
     'Add Filter': '\u121B\u1323\u122A\u12EB \u12EB\u12AD\u1209',
     'Select indicator':
       '\u12A0\u1218\u120D\u12AB\u127D \u12ED\u121D\u1228\u1321',
@@ -69,6 +73,7 @@ const translations: TranslationDictionary = {
     Categorical: 'Cat\xE9gorique',
     high: 'élevé',
     low: 'faible',
+    medium: 'moyen',
     'Add Filter': 'Ajouter un filtre',
     'Select indicator': "S\xE9lectionner l'indicateur",
     'The Quality Score is based on the following factors___':
@@ -80,6 +85,7 @@ const translations: TranslationDictionary = {
     Categorical: 'Categ\xF3rico',
     high: 'alto',
     low: 'baixo',
+    medium: 'm\xE9dio',
     'Add Filter': 'Adicionar filtro',
     'Select indicator': 'Selecione o indicador',
     'The Quality Score is based on the following factors___':
