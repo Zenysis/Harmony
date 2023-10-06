@@ -77,7 +77,26 @@
   }
 
   &__match-selector-button {
+    background: none;
+    border-bottom: 1px dashed $blue-dark;
+    color: $blue-dark;
+    font-size: 14px;
     padding-bottom: $space-xs-px;
+    padding-left: 0;
+    padding-right: 0;
+
+    &:hover {
+      border-bottom: 1px solid $blue-dark;
+    }
+
+    &:active {
+      border-bottom: 1px solid $blue-dark-active;
+      color: $blue-dark-active;
+
+      &::after {
+        background-color: transparent !important;
+      }
+    }
   }
 
   &__message {
