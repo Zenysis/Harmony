@@ -14,7 +14,8 @@
   padding: $space-s-px 0;
 
   &--highlighted {
-    animation: card-highlighted-animation 1200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: card-highlighted-animation 1200ms
+      cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
   &:last-of-type {
@@ -77,7 +78,26 @@
   }
 
   &__match-selector-button {
+    background: none;
+    border-bottom: 1px dashed $blue-dark;
+    color: $blue-dark;
+    font-size: 14px;
     padding-bottom: $space-xs-px;
+    padding-left: 0;
+    padding-right: 0;
+
+    &:hover {
+      border-bottom: 1px solid $blue-dark;
+    }
+
+    &:active {
+      border-bottom: 1px solid $blue-dark-active;
+      color: $blue-dark-active;
+
+      &::after {
+        background-color: transparent !important;
+      }
+    }
   }
 
   &__message {
