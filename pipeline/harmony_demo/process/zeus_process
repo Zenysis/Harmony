@@ -15,7 +15,7 @@ ZEUS_OUT_DIRS='feed,out,tmp'
 ZEUS_ROOT_DIR="${SCRIPT_DIR}/run"
 ZEUS_BIN_DIR="${SCRIPT_DIR}/../bin"
 ZEUS_UTILS_DIR="${ZEN_HOME}/util/pipeline"
-ZEUS_PUBLISH_DIR="/home/share/data/harmony_demo"
+ZEUS_PUBLISH_DIR="${DRUID_SHARED_FOLDER:-/home/share}/data/harmony_demo"
 
 ZEUS_CMD="\
 zeus \
