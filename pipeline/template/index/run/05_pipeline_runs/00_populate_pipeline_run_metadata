@@ -8,7 +8,7 @@ SOURCES=($("${PIPELINE_SRC_ROOT}/data/pipeline/scripts/generate_pipeline_sources
 # path to wherever the files are stored on your machine. Locally, this will
 # commonly be something like:
 # "${PIPELINE_SRC_ROOT}/pipeline/out/harmony_demo/process/out/##SOURCE##/##RUN DATE##"
-source_out_dir="/home/share/data/SAMPLE/##SOURCE##/current"
+source_out_dir="${DRUID_SHARED_FOLDER:-/home/share}/data/SAMPLE/##SOURCE##/current"
 
 "${PIPELINE_SRC_ROOT}/data/pipeline/scripts/data_digest/populate_pipeline_run_metadata.py" \
   --sources "${SOURCES[@]}" \
