@@ -135,6 +135,18 @@ def main():
         default='local',
         help='Whether to use Minio or Local Filesystem',
     )
+    Flags.PARSER.add_argument(
+        '--local_server_shared_folder',
+        type=str,
+        default=None,
+        help='Path to the shared druid folder on the local server',
+    )
+    Flags.PARSER.add_argument(
+        '--druid_server_shared_folder',
+        type=str,
+        default='/home/share',
+        help='Path to the shared druid folder on the druid server',
+    )
     Flags.InitArgs()
 
     datasource_name = build_datasource_name(DEPLOYMENT_NAME, Flags.ARGS.datasource_name)
@@ -183,6 +195,8 @@ def main():
                 files_to_index,
                 Flags.ARGS.use_nested_json_format,
                 max_num_files,
+                Flags.ARGS.local_server_shared_folder,
+                Flags.ARGS.druid_server_shared_folder
             ),
             'tuningConfig': build_tuning_config(
                 Flags.ARGS.concurrent_subtasks,

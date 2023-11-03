@@ -5,4 +5,5 @@ set -o pipefail
   --data_files="${DRUID_SHARED_FOLDER:-/home/share}/data/harmony_demo/*/current/processed_rows.*" \
   --task_id_file="${PIPELINE_TMP_DIR}/task_id" \
   --task_hash_dir "${DRUID_SHARED_FOLDER:-/home/share}/data/logs/druid_indexing/hash" \
+  --local_server_shared_folder "${DRUID_SHARED_FOLDER:-/home/share}" \
   --min_data_date='1970-01-01'
