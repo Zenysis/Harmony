@@ -196,7 +196,7 @@ def main():
                 Flags.ARGS.use_nested_json_format,
                 max_num_files,
                 Flags.ARGS.local_server_shared_folder,
-                Flags.ARGS.druid_server_shared_folder
+                Flags.ARGS.druid_server_shared_folder,
             ),
             'tuningConfig': build_tuning_config(
                 Flags.ARGS.concurrent_subtasks,
