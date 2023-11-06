@@ -1,0 +1,23 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+FILENAME='dhis2_facilities.csv'
+latest_dir=$(GetLatestDirectory 's3/zenysis-harmony-demo/sive' "${FILENAME}")
+
+PREVIOUS_FILES_DIR='previous_files'
+
+rm -rf "${PIPELINE_TMP_DIR}/${PREVIOUS_FILES_DIR}"/fetched_data_*
+rm -rf "${PIPELINE_TMP_DIR}/${PREVIOUS_FILES_DIR}"/resample_fetched_data_*
+rm -rf "${PIPELINE_OUT_DIR}"/fetched_data_*
+rm -rf "${PIPELINE_OUT_DIR}"/resample_fetched_data_*
+mkdir -p "${PIPELINE_TMP_DIR}/${PREVIOUS_FILES_DIR}"
+FetchFiles "${latest_dir}/fetched_data_*.csv.gz" "${PIPELINE_TMP_DIR}/${PREVIOUS_FILES_DIR}" || true
+FetchFiles "${latest_dir}/resample_fetched_data_*.csv.gz" "${PIPELINE_TMP_DIR}/${PREVIOUS_FILES_DIR}" || true
+
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/dhis2/scripts/update_dhis2_data.py" \
+  --old_data_path="${PIPELINE_TMP_DIR}/${PREVIOUS_FILES_DIR}" \
+  --new_data_path="${PIPELINE_TMP_DIR}" \
+  --output_path="${PIPELINE_OUT_DIR}"

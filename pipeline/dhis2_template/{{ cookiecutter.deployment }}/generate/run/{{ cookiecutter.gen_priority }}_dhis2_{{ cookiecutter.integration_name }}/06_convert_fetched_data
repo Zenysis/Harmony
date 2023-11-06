@@ -1,0 +1,10 @@
+#!/bin/bash -eu
+set -o pipefail
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+rm -rf "${PIPELINE_TMP_DIR}"/fetched_data_*
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/dhis2/scripts/convert_dhis2_json_to_csv.py" \
+  --input_file_pattern=fetched_data_#.json.gz \
+  --input_dir="${PIPELINE_FEED_DIR}" \
+  --output_dir="${PIPELINE_TMP_DIR}"

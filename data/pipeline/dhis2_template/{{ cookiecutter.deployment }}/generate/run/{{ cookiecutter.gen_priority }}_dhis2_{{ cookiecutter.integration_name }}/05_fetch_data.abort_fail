@@ -1,0 +1,19 @@
+#!/bin/bash -eu
+set -o pipefail
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+rm -rf "${PIPELINE_FEED_DIR}"/fetched_data_*
+
+FILENAME='last_update_timestamps.json'
+
+# Shouldn't fail if we cannot find the last update timestamps.
+# We shall assume this is a new integration and create a new one
+latest_dir=$(GetLatestDirectory '{{cookiecutter.minio_path}}' "${FILENAME}") || true
+FetchFiles "${latest_dir}/${FILENAME}" "${PIPELINE_OUT_DIR}/${FILENAME}" || true
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/dhis2/scripts/fetch_dhis2_data_dvs.py" \
+  --output_file_pattern="${PIPELINE_FEED_DIR}/fetched_data_#.json.gz" \
+  --input_datasets_filepath="${PIPELINE_FEED_DIR}/dhis2_non_resampled_fields.data_sets.json" \
+  --input_resample_datasets_filepath="${PIPELINE_FEED_DIR}/dhis2_resampled_fields.data_sets.json" \
+  --last_updated_filepath="${PIPELINE_OUT_DIR}/last_update_timestamps.json" \
+  --api_config_filepath="${PIPELINE_BIN_DIR}/dhis2_{{cookiecutter.integration_name}}/dhis2_api.py"

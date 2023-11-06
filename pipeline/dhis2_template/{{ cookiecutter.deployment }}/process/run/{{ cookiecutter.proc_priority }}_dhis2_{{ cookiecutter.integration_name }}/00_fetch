@@ -1,0 +1,18 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+pushd "${PIPELINE_FEED_DIR}" &> /dev/null
+
+rm -f *.csv{.gz,.lz4} || true
+
+FILENAME_FACILITIES='dhis2_facilities.csv'
+
+latest_dir=$(GetLatestDirectory '{{cookiecutter.minio_path}}' "${FILENAME_FACILITIES}")
+
+FetchFiles "${latest_dir}/${FILENAME_FACILITIES}" .
+FetchFiles "${latest_dir}/fetched_data*.csv*" .
+FetchFiles "${latest_dir}/fetched_reporting_rate_data.*.*" .
+
+popd &> /dev/null

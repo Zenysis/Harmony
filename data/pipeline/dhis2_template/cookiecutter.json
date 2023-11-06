@@ -1,0 +1,30 @@
+{
+  "deployment": "",
+  "integration_name": "",
+  "passphrase_id": "",
+  "hierarchical_locations": "'Nation' 'State' 'County' 'City' 'Facility'",
+  "gen_priority": "00",
+  "proc_priority": "00",
+  "minio_path": "",
+  "default_disaggregation": "HllvX50cXC0",
+  "dhis2_domain": "",
+  "instance_name": "",
+  "nation": "",
+  "prefix": "None",
+  "data_start_date": "200801",
+  "__prompts__": {
+    "deployment": "What is the name of the deployment?",
+    "integration_name": "What is the name of the integration?",
+    "passphrase_id": "What is the PHAB passphrase id with the credentials for the DHIS2 instance?",
+    "hierarchical_locations": "What are the location levels from DHIS2? Each level should be in single quotes and separated by a space.",
+    "gen_priority": "What is the priority for the generation step?",
+    "proc_priority": "What is the priority for the process step?",
+    "minio_path": "What is the mc compatible path to the Minio or S3 bucket?",
+    "default_disaggregation": "What is the default disaggregation? Can be found at `/api/categoryOptionCombos.json?paging=false` with name `default`",
+    "dhis2_domain": "What is the domain name of the DHIS2 instance?",
+    "instance_name": "What is the name of the DHIS2 instance? This is only applicable if multiple instances are hosted on the same dhis2 domain.",
+    "nation": "What is the name of the nation ID? Can be found at `api/organisationUnits.json?paging=false` with the lowest level",
+    "prefix": "This prefix will be used to prepend to DHIS2 IDs in Zenysis. Useful for DHIS2 instances that share dataElement IDs.",
+    "data_start_date": "What is the start date of the data? Format: YYYYMM"
+  }
+}

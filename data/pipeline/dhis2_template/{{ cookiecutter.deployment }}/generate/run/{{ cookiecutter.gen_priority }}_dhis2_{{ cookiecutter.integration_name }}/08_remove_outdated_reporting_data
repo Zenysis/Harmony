@@ -1,0 +1,20 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+FILENAME='dhis2_facilities.csv'
+latest_dir=$(GetLatestDirectory '{{cookiecutter.minio_path}}' "${FILENAME}")
+
+rm -rf "${PIPELINE_TMP_DIR}/previous_files/fetched_reporting_rate_data*"
+mkdir -p "${PIPELINE_TMP_DIR}/previous_files"
+FetchFiles "${latest_dir}/fetched_reporting_rate_data*.csv.lz4" "${PIPELINE_TMP_DIR}/previous_files" || true
+
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/dhis2/scripts/remove_outdated_data.py" \
+  --api_config_filepath="${PIPELINE_BIN_DIR}/dhis2_{{cookiecutter.integration_name}}/dhis2_api.py" \
+  --input_directory="${PIPELINE_TMP_DIR}" \
+  --prefix=fetched_reporting_rate_data. \
+  --lz4_errors=ignore \
+  --dataset_groups_path="${PIPELINE_FEED_DIR}/dhis2_reporting_fields.json" \
+  --dataset_group_id_key="id"

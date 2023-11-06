@@ -1,0 +1,13 @@
+#!/bin/bash -eu
+set -o pipefail
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/dhis2/scripts/fetch_fields.py" \
+  --api_config_filepath="${PIPELINE_BIN_DIR}/dhis2_{{cookiecutter.integration_name}}/dhis2_api.py" \
+  --output_dhis2_fetch_file="${PIPELINE_FEED_DIR}/dhis2_non_resampled_fields.#.json" \
+  --output_dhis2_resampled_fetch_file="${PIPELINE_FEED_DIR}/dhis2_resampled_fields.#.json" \
+  --output_dhis2_reporting_fetch_file="${PIPELINE_FEED_DIR}/dhis2_reporting_fields.json" \
+  --output_field_metadata_file="${PIPELINE_OUT_DIR}/field_metadata.csv" \
+  --output_category_metadata_file="${PIPELINE_OUT_DIR}/category_metadata.csv" \
+  --output_raw_dhis2_fetch="${PIPELINE_FEED_DIR}/raw_dhis2.json" \
+  --use_dvs_endpoint \
+  --fetch_formula_fields

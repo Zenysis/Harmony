@@ -1,0 +1,9 @@
+#!/bin/bash -eu
+set -o pipefail
+
+rm -rf "${PIPELINE_TMP_DIR}"/fetched_reporting_rate_data.*.csv.lz4
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/dhis2/scripts/fetch_dhis2_reporting_data_new.py" \
+  --api_config_filepath="${PIPELINE_BIN_DIR}/dhis2_sive/dhis2_api.py" \
+  --input_fields_filepath="${PIPELINE_FEED_DIR}/dhis2_reporting_fields.json" \
+  --output_file_pattern="${PIPELINE_TMP_DIR}/fetched_reporting_rate_data.#.csv.lz4"

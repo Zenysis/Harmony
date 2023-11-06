@@ -1,0 +1,24 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+pushd "${PIPELINE_TMP_DIR}" &> /dev/null
+
+# Clear old files if any in merge directory
+mkdir -p merged_files
+rm -rf merged_files/fetched_data_*
+
+rm -rf "${PIPELINE_OUT_DIR}"/fetched_reporting_rate_data*
+
+
+# We merge the newly fetched data with the historical data and copy the complete dataset to PIPELINE_OUT_DIR directory
+# Merge reporting data.
+"${PIPELINE_SRC_ROOT}/data/pipeline/dhis2/scripts/merge_partial_data.py" \
+  --input_dir="${PIPELINE_TMP_DIR}" \
+  --output_dir="${PIPELINE_OUT_DIR}" \
+  --prefix=fetched_reporting_rate_data. \
+  --dataset_groups_path="${PIPELINE_FEED_DIR}/dhis2_reporting_fields.json" \
+  --dataset_group_id_key="id"
+
+popd &> /dev/null

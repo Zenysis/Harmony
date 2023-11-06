@@ -1,0 +1,12 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+REMOTE_DESTINATION='s3/zenysis-harmony-demo/sive'
+
+# Ensure all required files have been fetched
+ls "${PIPELINE_OUT_DIR}"/{field_metadata,category_metadata,dhis2_facilities,fetched_data,fetched_reporting_rate_data,resample_fetched_data}* > /dev/null
+
+# Sync entire directory to minio
+UploadDirectory "${PIPELINE_OUT_DIR}" "${REMOTE_DESTINATION}"

@@ -1,0 +1,27 @@
+#!/bin/bash -eu
+set -o pipefail
+
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+pushd "${PIPELINE_TMP_DIR}" &> /dev/null
+
+# Merge locations
+locations_header=$(head -n1 locations_0.csv)
+
+echo "${locations_header}" > locations.csv
+cat locations_*.csv \
+  | sort -n \
+  | uniq \
+  | grep -v "${locations_header}" \
+  >> locations.csv
+
+# Merge fields
+cat fields_*.csv \
+  | sort -n \
+  | uniq \
+  > fields.csv
+
+# Merge processed data
+cat processed_data_*.json.lz4 > processed_data.json.lz4
+
+popd &> /dev/null

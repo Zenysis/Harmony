@@ -1,0 +1,20 @@
+#!/bin/bash -eu
+set -o pipefail
+source "${PIPELINE_UTILS_DIR}/bash/common.sh"
+
+SetupEnvForPyPy
+
+pushd "${PIPELINE_TMP_DIR}" &> /dev/null
+rm -rf processed_data_.*.json.lz4
+
+"${PIPELINE_SRC_ROOT}/data/pipeline/dhis2/scripts/process_dhis2.py" \
+  --input_file_pattern="${PIPELINE_FEED_DIR}/fetched_data#.csv.gz" \
+  --locations_file="${PIPELINE_FEED_DIR}/dhis2_facilities.csv" \
+  --output_file_pattern="${PIPELINE_TMP_DIR}/processed_data_.#.json.lz4" \
+  --location_list="${PIPELINE_TMP_DIR}/locations_0.csv" \
+  --field_list="${PIPELINE_TMP_DIR}/fields_0.csv" \
+  --default_disaggregation HllvX50cXC0 \
+  --use_dvs_columns \
+  --data_source="dhis2_sive"
+
+popd &> /dev/null
