@@ -14,8 +14,11 @@ CANONICAL_PREFIX = 'Canonical'
 class Dimension:
     SOURCE = (BaseRow.SOURCE_FIELD,)
     DATE = (BaseRow.DATE_FIELD,)
-    STATE = 'StateName'
-    MUNICIPALITY = 'MunicipalityName'
+
+    # They are currently duplicated in multiple places
+    PROVINCE = 'ProvinceName'
+    DISTRICT = 'DistrictName'
+    FACILITY = 'FacilityName'
 
     # Yellow Fever dimensions
     SEX = 'Sex'
@@ -24,8 +27,9 @@ class Dimension:
 
 
 HIERARCHICAL_DIMENSIONS = [
-    Dimension.STATE,
-    Dimension.MUNICIPALITY,
+    Dimension.PROVINCE,
+    Dimension.DISTRICT,
+    Dimension.FACILITY
 ]
 DIMENSION_PARENTS = {
     parent: HIERARCHICAL_DIMENSIONS[: parent_index + 1]

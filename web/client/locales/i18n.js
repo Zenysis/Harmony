@@ -18,7 +18,10 @@ const translations: TranslationDictionary = {
   en: {
     Age: 'Age',
     Death: 'Death',
+    DistrictName: 'District',
+    FacilityName: 'Facility',
     MunicipalityName: 'Municipality',
+    ProvinceName: 'Province',
     Sex: 'Sex',
     StateName: 'State',
     source: 'source',

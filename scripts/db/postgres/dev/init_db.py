@@ -316,7 +316,7 @@ def main() -> int:
 
     # Ensure the Postgres database is running locally and has received its initial
     # setup (like creating the postgres db admin user).
-    run_dev_script('start_postgres.sh', True)
+    # run_dev_script('start_postgres.sh', True)
 
     TermColor.PrintStr('Beginning database initialization', 'PURPLE', False)
 

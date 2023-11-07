@@ -218,3 +218,6 @@ dask-worker-space/
 
 #mypy
 .dmypy.*
+
+.env.harmony_demo
+yarn.lock

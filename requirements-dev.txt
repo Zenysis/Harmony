@@ -48,3 +48,6 @@ types-Werkzeug==0.1.8
 testfixtures==6.17.1
 alchemy-mock==0.4.3
 factory-boy==3.2.0
+
+#Cookiecutter
+cookiecutter==2.3.0

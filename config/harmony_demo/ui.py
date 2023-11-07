@@ -6,10 +6,10 @@ from config.locales import LOCALES
 # General template UI
 
 # Shows in top left.
-FULL_PLATFORM_NAME = 'Zenysis Data Analytics Platform'
+FULL_PLATFORM_NAME = 'MZ Training Demo Platform'
 
 # Classname for country flag.
-FLAG_CLASS = 'flag-br'
+FLAG_CLASS = 'flag-mz'
 
 # Default language
 DEFAULT_LOCALE = 'en'
@@ -45,16 +45,18 @@ TIMESERIES_DEFAULT_GRANULARITY = 'month'
 # Map UI
 
 # Two letter ISO country code
-COUNTRY_CODE = 'br'
+COUNTRY_CODE = 'mz'
 
 # Center of map view.
-MAP_DEFAULT_LATLNG = [-14.2350, -51.9253]
+# NOTE(vinh): This is centered over Tamboni right now.
+MAP_DEFAULT_LATLNG = [-16.5598187, 36.1220383]
 
 # Default zoom level.
-MAP_DEFAULT_ZOOM = 4
+MAP_DEFAULT_ZOOM = 6.0
 
-# GeoJson Tile Overlay
-MAP_GEOJSON_LOCATION = 'https://d2ke70b3fbr0dr.cloudfront.net/brazil_20190807.geojson'
+MAP_GEOJSON_LOCATION = (
+    'https://dvvivclrsb6tx.cloudfront.net/mz/geojson/mozambique-20210714.geojson'
+)
 
 # Static geo data locations.
 GEO_DATA_URL = ''
@@ -74,7 +76,7 @@ GEO_DATA_LABEL_KEY = ''
 GIS_APP_SETTINGS = None
 
 # List of geo dimensions that can be shown on the dql map viz
-DQL_MAP_DIMENSIONS = [Dimension.STATE]
+DQL_MAP_DIMENSIONS = [Dimension.PROVINCE, Dimension.DISTRICT]
 
 # Mapbox access token.
 MAPBOX_ACCESS_TOKEN = os.environ['MAPBOX_ACCESS_TOKEN']
