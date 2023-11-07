@@ -25,15 +25,21 @@ Problems with instructions in repo:
 ```
 git clone https://github.com/Zenysis/Harmony.git
 cd Harmony
+git checkout mz-training
 ```
 
 ### Install python dependencies
 
 ```
-python -m venv venv
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+
+python3.9 -m venv venv
 source ./venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt -r requirements-dev.txt -r requirements-web.txt -r requirements-pipeline.txt
+pip install --upgrade pip
+pip install -r requirements.txt 
+pip install -r requirements-dev.txt 
+pip install -r requirements-web.txt 
+pip install -r requirements-pipeline.txt
 ```
 
 ### Install node dependencies
