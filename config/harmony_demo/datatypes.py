@@ -16,6 +16,8 @@ class Dimension:
     DATE = (BaseRow.DATE_FIELD,)
 
     # They are currently duplicated in multiple places
+    STATE = 'StateName'
+    Municipality = 'MunicipalityName'
     PROVINCE = 'ProvinceName'
     DISTRICT = 'DistrictName'
     FACILITY = 'FacilityName'
@@ -27,6 +29,8 @@ class Dimension:
 
 
 HIERARCHICAL_DIMENSIONS = [
+    Dimension.STATE,
+    Dimension.Municipality,
     Dimension.PROVINCE,
     Dimension.DISTRICT,
     Dimension.FACILITY
@@ -38,7 +42,7 @@ DIMENSION_PARENTS = {
 NON_HIERARCHICAL_DIMENSIONS = []
 
 
-BrazilDimensionFactory = DimensionFactory(
+HarmonyDimensionFactory = DimensionFactory(
     HIERARCHICAL_DIMENSIONS,
     NON_HIERARCHICAL_DIMENSIONS,
     RAW_PREFIX,
@@ -49,4 +53,4 @@ BrazilDimensionFactory = DimensionFactory(
 BaseRowType = BaseRowFactory(
     Dimension, HIERARCHICAL_DIMENSIONS, DIMENSION_PARENTS, NON_HIERARCHICAL_DIMENSIONS
 )
-DimensionFactoryType = BrazilDimensionFactory
+DimensionFactoryType = HarmonyDimensionFactory

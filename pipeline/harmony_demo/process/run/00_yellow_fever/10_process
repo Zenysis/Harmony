@@ -1,18 +1,13 @@
 #!/bin/bash -eu
 set -o pipefail
 
-# load the utilities file to use the 'setupenvforpypy' command.
-source "${pipeline_utils_dir}/bash/common.sh"
-
-# enters the pypy virtual environment for better performance.
-setupenvforpypy
 
 # this data will still need to be process by the shared steps, so put it in
 # the temp directory for intermediate outputs.
-pushd "${pipeline_tmp_dir}" &> /dev/null
+pushd "${PIPELINE_TMP_DIR}" &> /dev/null
 
 # clear past processed data if step is run multiple times.
-rm -rf "${pipeline_tmp_dir}"/*
+rm -rf "${PIPELINE_TMP_DIR}"/*
 
 # the process_csv script takes in data in the zenysis base format, cleans it,
 # and transforms it into the optimal format for final processing. to explain
@@ -34,17 +29,17 @@ rm -rf "${pipeline_tmp_dir}"/*
 #   output_fields: this output file lists all field ids that were found in the
 #     data.
 #   output_rows: this output file contains the processed data rows.
-"${pipeline_src_root}/data/pipeline/scripts/process_csv.py" \
+"${PIPELINE_SRC_ROOT}/data/pipeline/scripts/process_csv.py" \
   --delimiter ';' \
-  --rename_cols 'cod_mun_lpi:municipalityname' 'sexo:sex' 'idade:age' 'obito:death' \
-  --date 'dt_is' \
+  --rename_cols 'COD_MUN_LPI:MunicipalityName' 'SEXO:Sex' 'IDADE:Age' 'OBITO:Death' \
+  --date 'DT_IS' \
   --prefix 'yellow_fever' \
   --sourcename 'yellow_fever' \
   --set_cols 'cases:1' 'test_indicator:5'\
   --fields 'cases' 'test_indicator'\
-  --input="${pipeline_feed_dir}/yellow_fever_cases.csv" \
-  --output_locations="${pipeline_tmp_dir}/locations.csv" \
-  --output_fields="${pipeline_tmp_dir}/fields.csv" \
-  --output_rows="${pipeline_tmp_dir}/processed_data.json.lz4"
+  --input="${PIPELINE_FEED_DIR}/yellow_fever_cases.csv" \
+  --output_locations="${PIPELINE_TMP_DIR}/locations.csv" \
+  --output_fields="${PIPELINE_TMP_DIR}/fields.csv" \
+  --output_rows="${PIPELINE_TMP_DIR}/processed_data.json.lz4"
 
 popd &> /dev/null
