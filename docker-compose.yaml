@@ -129,7 +129,7 @@ services:
       - DRUID_HOST=${DRUID_HOST}
       - MAPBOX_ACCESS_TOKEN=${MAPBOX_ACCESS_TOKEN}
       - REDIS_HOST=redis
-      - HASURA_HOST=http://hasura:8080
+      - HASURA_HOST=http://hasura:8088
       - SQLALCHEMY_DATABASE_URI=${DATABASE_URL}
       - VIRTUAL_HOST=${WEB_VIRTUAL_HOST}
       - URLBOX_API_KEY=${URLBOX_API_KEY:-}
