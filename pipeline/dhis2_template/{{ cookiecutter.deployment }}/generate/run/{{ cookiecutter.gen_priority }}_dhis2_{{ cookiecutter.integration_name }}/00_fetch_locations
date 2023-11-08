@@ -1,7 +1,0 @@
-#!/bin/bash -eu
-set -o pipefail
-
-"${PIPELINE_SRC_ROOT}/data/pipeline/dhis2/scripts/fetch_locations.py" \
-  --api_config_filepath="${PIPELINE_BIN_DIR}/dhis2_{{cookiecutter.integration_name}}/dhis2_api.py" \
-  --hierarchy {{ cookiecutter.hierarchical_locations }} \
-  --output_file="${PIPELINE_OUT_DIR}/dhis2_facilities.csv"
