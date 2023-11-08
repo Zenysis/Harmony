@@ -327,7 +327,7 @@ def main() -> int:
             TermColor.ColorStr('Database to process:', 'AUQA'),
             TermColor.ColorStr(Flags.ARGS.db_name, 'YELLOW'),
         )
-        initialize_database('zen', Flags.ARGS.db_name, initialization_functions)
+        initialize_database(os.getenv("ZEN_ENV"), Flags.ARGS.db_name, initialization_functions)
         return 0
 
     # Initialize the database for each deployment specified. If no deployments were
