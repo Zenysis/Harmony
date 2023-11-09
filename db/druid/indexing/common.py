@@ -75,7 +75,7 @@ def build_io_config_minio(
     }
 
 
-def fix_local_path(
+def _fix_path_for_druid(
     files: List[str], local_folder: Optional[str], druid_folder: Optional[str]
 ):
     """The shared folder on the pipeline, might not match the shared folder on the druid machine.
@@ -95,7 +95,7 @@ def build_io_config_local(
     local_folder: Optional[str],
     druid_folder: Optional[str],
 ) -> dict:
-    flattened_files = fix_local_path(
+    flattened_files = _fix_path_for_druid(
         flatten_files(files, max_num_files), local_folder, druid_folder
     )
     return {
