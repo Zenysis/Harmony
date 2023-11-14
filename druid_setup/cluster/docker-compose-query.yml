@@ -22,13 +22,6 @@ volumes:
   zen_extensions: {}
   broker_var: {}
   router_var: {}
-  druid_shared:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/share
-
 
 services:
   extension_loader:

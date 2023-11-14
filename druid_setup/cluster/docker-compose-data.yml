@@ -22,19 +22,6 @@ volumes:
   zen_extensions: {}
   middle_var: {}
   historical_var: {}
-  druid_shared:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/share
-  data_output:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /data/output
-
 
 services:
   extension_loader:
@@ -50,8 +37,8 @@ services:
     container_name: historical
     restart: always
     volumes:
-      - druid_shared:/home/share
-      - data_output:/data/output
+      - /home/share:/home/share
+      - /data/output:/data/output
       - historical_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -72,8 +59,8 @@ services:
     container_name: middlemanager
     restart: always
     volumes:
-      - druid_shared:/home/share
-      - data_output:/data/output
+      - /home/share:/home/share
+      - /data/output:/data/output
       - middle_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
