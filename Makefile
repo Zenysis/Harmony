@@ -4,6 +4,7 @@ ENV_FILE?=.env
 COMMIT?=master
 DOCKER_NAMESPACE?=zengineering
 DOCKER_TAG?=latest
+IMAGE_PREFIX?=harmony
 DOCKER_HOST?=ssh://$(WEB_REMOTE)
 SERVICE?=
 PROJECT_NAME?=harmony-web
@@ -126,6 +127,7 @@ web-server-push: # Push the web server docker image to the container registry.
 web-build:
 	@docker build -t $(DOCKER_NAMESPACE)/harmony-web:$(DOCKER_TAG) \
 		-f docker/web/Dockerfile_web \
+		--build-arg IMAGE_PREFIX=$(IMAGE_PREFIX) \
 		--build-arg NAMESPACE=$(DOCKER_NAMESPACE) \
 		--build-arg TAG=$(DOCKER_TAG)  .
 
