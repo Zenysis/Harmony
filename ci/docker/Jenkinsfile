@@ -7,7 +7,7 @@ pipeline {
         // Checkout github project
         stage('Checkout') {
           steps {
-            git url: "https://github.com/Zenysis/Harmony.git", branch: 'main'
+            git url: "https://github.com/Zenysis/Harmony.git", branch: 'need-buildkit'
           }
         }
         // Build all docker web containers
