@@ -125,7 +125,7 @@ web-server-push: # Push the web server docker image to the container registry.
 	docker push $(DOCKER_NAMESPACE)/harmony-web-server:$(DOCKER_TAG)
 
 web-build:
-	@docker build -t $(DOCKER_NAMESPACE)/harmony-web:$(DOCKER_TAG) \
+	docker build -t $(DOCKER_NAMESPACE)/harmony-web:$(DOCKER_TAG) \
 		-f docker/web/Dockerfile_web \
 		--build-arg IMAGE_PREFIX=$(IMAGE_PREFIX) \
 		--build-arg NAMESPACE=$(DOCKER_NAMESPACE) \
