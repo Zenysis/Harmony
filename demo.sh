@@ -108,6 +108,11 @@ source .env.demo
 # Run the pipeline
 ##################
 
+# zengineering
+# latest
+# $(DOCKER_NAMESPACE)/harmony-etl-pipeline:$(DOCKER_TAG)
+# zengineering/harmony-etl-pipeline:latest
+
 echo COMMAND="./pipeline/harmony_demo/generate/generate_wrapper run/...\ \
     docker compose --project-name harmony-etl-generate --env-file .env.demo \
     -f docker-compose.pipeline.yaml up
