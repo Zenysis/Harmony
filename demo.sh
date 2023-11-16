@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 DRUID_SHARED_FOLDER=~/druid/home/share
 DATA_OUTPUT_FOLDER=~/druid/data/output
@@ -91,6 +92,9 @@ POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 DRUID_SHARED_FOLDER=$DRUID_SHARED_FOLDER
 DATA_OUTPUT_FOLDER=$DATA_OUTPUT_FOLDER
 
+DOCKER_NAMESPACE=zengineering
+DOCKER_TAG=latest
+
 # Assuming you've created a minio alias called "local":
 OBJECT_STORAGE_ALIAS=local" > .env.demo
 fi
@@ -113,8 +117,18 @@ source .env.demo
 # $(DOCKER_NAMESPACE)/harmony-etl-pipeline:$(DOCKER_TAG)
 # zengineering/harmony-etl-pipeline:latest
 
-echo COMMAND="./pipeline/harmony_demo/generate/generate_wrapper run/...\ \
-    docker compose --project-name harmony-etl-generate --env-file .env.demo \
+# For the Harmony Demo, we skip the generate step.
+
+COMMAND="./pipeline/harmony_demo/process/process_all" \
+    docker compose --project-name harmony-etl-process --env-file .env.demo \
+    -f docker-compose.pipeline.yaml up
+
+COMMAND="./pipeline/harmony_demo/index/index_all" \
+    docker compose --project-name harmony-etl-index --env-file .env.demo \
+    -f docker-compose.pipeline.yaml up
+
+COMMAND="./pipeline/harmony_demo/validate/validate_all" \
+    docker compose --project-name harmony-etl-validate --env-file .env.demo \
     -f docker-compose.pipeline.yaml up
 
 
