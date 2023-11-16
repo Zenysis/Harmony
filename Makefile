@@ -133,7 +133,8 @@ web-push: # Push the web docker image to the container registry.
 	docker push $(DOCKER_NAMESPACE)/harmony-web:$(DOCKER_TAG)
 
 etl-pipeline-build:
-	@docker build -t $(DOCKER_NAMESPACE)/harmony-etl-pipeline:$(DOCKER_TAG) \
+	@DOCKER_BUILDKIT=1 docker build -t \
+		$(DOCKER_NAMESPACE)/harmony-etl-pipeline:$(DOCKER_TAG) \
 		-f docker/pipeline/Dockerfile  .
 
 etl-pipeline-push: # Push the etl pipeline docker image to the container registry.
