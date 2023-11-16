@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:18.17
 
 # Separate directories for storing build files so that the post-build results
 # can be easily copied out.

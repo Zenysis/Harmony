@@ -65,6 +65,7 @@ const translations: TranslationDictionary = {
     'First name is required': 'O primeiro nome \xE9 obrigat\xF3rio',
     'Last Name': 'Sobrenome',
     'Last name is required': 'O sobrenome \xE9 obrigat\xF3rio',
+    'Please re-type your password': 'Por favor, digite sua senha novamente',
   },
 };
 export default translations;

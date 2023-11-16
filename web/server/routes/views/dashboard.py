@@ -527,7 +527,7 @@ def share_dashboard_via_email(
         ):
             # When user exists but is unregistered on the platform, send email
             # but do not generate dashboard/pdf attachments
-            # NOTE(isabel) This prevents urlbox JWT from triggering identifies events
+            # NOTE: This prevents urlbox JWT from triggering identifies events
             kwargs['should_attach_pdf'] = False
             kwargs['should_embed_image'] = False
             send_email(

@@ -159,6 +159,8 @@ const translations: TranslationDictionary = {
   },
   br: {
     Complex: 'Complexo',
+    Max: 'M\xE1ximo',
+    Min: 'Minimo',
     'Average Over Time': 'M\xE9dia ao longo do tempo',
     'Calculate the value of the data points with the latest date':
       'Calcular o valor dos pontos de dados com a \xFAltima data',

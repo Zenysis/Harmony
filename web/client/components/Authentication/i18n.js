@@ -100,6 +100,7 @@ const translations: TranslationDictionary = {
     invalid_login_credentials: 'Nome de usu\xE1rio e/ou senha incorretos.',
     invalid_reset_link: 'Link de redefini\xE7\xE3o de senha inv\xE1lido.',
     no_invitation_link: 'O registro \xE9 somente por convite.',
+    non_existent_user: 'Esta conta de usu\xE1rio n\xE3o existe',
     password_reset_email_failed:
       'Falha no envio do e-mail de redefini\xE7\xE3o de senha.',
     password_reset_email_sent:
