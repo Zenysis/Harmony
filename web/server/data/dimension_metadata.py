@@ -21,6 +21,7 @@ from web.server.data.data_access import Transaction
 from web.server.data.dimension_metadata_util.compute_sketch_sizes import (
     compute_sketch_sizes,
 )
+from web.server.data.dimension_values import DimensionValuesLookup
 
 # When enabled, metadata for each raw field ID in the druid datasource will be
 # collected. This includes first/last event timestamp, the number of rows this field is
@@ -123,6 +124,7 @@ class DimensionMetadata:
         dimension_id_map,
         interval,
         skip_grouped_sketch_sizes: bool,
+        dimension_values: DimensionValuesLookup,
     ):
         """
         Evaluates dimension metadata and populates DB with them for further (re)use.
@@ -147,6 +149,7 @@ class DimensionMetadata:
             sorted(queryable_dimensions),
             dimension_id_map,
             skip_grouped_sketch_sizes,
+            dimension_values,
         )
 
         if ENABLE_FIELD_METADATA_QUERY:

@@ -12,6 +12,7 @@ from pydruid.utils.filters import Dimension as DimensionFilter
 from db.druid.post_aggregations.theta_sketch import bound_sketch_size
 from db.druid.query_client import DruidQueryClient
 from log import LOG
+from web.server.data.dimension_values import DimensionValuesLookup
 
 
 def build_sketch_size(approximate_cardinality: float) -> int:
@@ -53,6 +54,7 @@ def compute_dimension_sketch_sizes(
     datasource_name: str,
     intervals: List[str],
     dimensions: List[str],
+    dimension_values: DimensionValuesLookup,
     batch_size: int = 8,
 ) -> Dict[str, int]:
     '''Calculate the minimum sketch size to use for each dimension provided that will
@@ -61,17 +63,21 @@ def compute_dimension_sketch_sizes(
     '''
     output = {}
 
+    unfetched_dimensions = []
+    for dimension in dimensions:
+        if dimension in dimension_values.dimension_map:
+            sketch_size = build_sketch_size(
+                len(dimension_values.dimension_map[dimension])
+            )
+            output[dimension] = sketch_size
+            LOG.debug('Sketch size %s for dimension %s', sketch_size, dimension)
+        else:
+            unfetched_dimensions.append(dimension)
+
     # Batch the dimensions to reduce the number of queries issued and improve
     # performance.
-    it = iter(sorted(dimensions))
-    # NOTE: it how it used to work and should work after
-    # pipeline's python is upgraded
-    # while dimension_batch := list(itertools.islice(it, batch_size)):
-    while True:
-        dimension_batch = list(itertools.islice(it, batch_size))
-        if not dimension_batch:
-            break
-
+    it = iter(sorted(unfetched_dimensions))
+    while dimension_batch := list(itertools.islice(it, batch_size)):
         response = query_client.run_raw_query(
             {
                 'dataSource': datasource_name,
@@ -313,6 +319,7 @@ def compute_sketch_sizes(
     queryable_dimensions: List[str],
     dimension_id_map: Dict[str, str],
     skip_grouped_sketch_sizes: bool,
+    dimension_values: DimensionValuesLookup,
 ) -> Tuple[Dict[str, int], Dict[str, Dict[str, int]]]:
     '''Calculate the minimum sketch size to use when querying for a dimension inside a
     theta or tuple sketch.
@@ -335,7 +342,11 @@ def compute_sketch_sizes(
 
     LOG.info('Building sketch sizes')
     sketch_sizes = compute_dimension_sketch_sizes(
-        query_client, datasource_name, intervals, sorted(sketch_dimensions)
+        query_client,
+        datasource_name,
+        intervals,
+        sorted(sketch_dimensions),
+        dimension_values,
     )
     LOG.info('Finished building sketch sizes')
 

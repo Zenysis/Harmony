@@ -213,5 +213,6 @@ class PopulatingDruidApplicationContext(DruidApplicationContext):
             # pylint: disable=no-member
             self.data_time_boundary.get_full_time_interval(),
             self._skip_grouped_sketch_sizes,
+            self.dimension_values_lookup,
         )
         return dimension_metadata
