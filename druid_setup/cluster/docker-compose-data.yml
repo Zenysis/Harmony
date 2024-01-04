@@ -37,8 +37,8 @@ services:
     container_name: historical
     restart: always
     volumes:
-      - /home/share:/home/share
-      - /data/output:/data/output
+      - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
+      - ${DATA_OUTPUT_FOLDER:-/data/output}:/data/output
       - historical_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -59,8 +59,8 @@ services:
     container_name: middlemanager
     restart: always
     volumes:
-      - /home/share:/home/share
-      - /data/output:/data/output
+      - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
+      - ${DATA_OUTPUT_FOLDER:-/data/output}:/data/output
       - middle_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
