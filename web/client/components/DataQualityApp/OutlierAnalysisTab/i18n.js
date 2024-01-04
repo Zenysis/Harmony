@@ -311,8 +311,8 @@ const translations: TranslationDictionary = {
       'Extremo (3+ stdev a partir da m\xE9dia) limite superior anterior',
     moderate: 'moderado',
     noFacilitySelectedExplanation:
-      'Clique em um ponto de dados no gráfico de caixa/extremo acima para visualizar os dados dessa instalação com outliers marcados aqui',
-    noFacilitySelectedTitle: 'Nenhuma instalação selecionada',
+      'Clique em um ponto de dados no gr\xE1fico de caixa/extremo acima para visualizar os dados dessa instala\xE7\xE3o com outliers marcados aqui',
+    noFacilitySelectedTitle: 'Nenhuma instala\xE7\xE3o selecionada',
     outlierLowerBound:
       'Moderado (2+ stdev a partir da m\xE9dia) limite inferior anterior',
     outlierUpperBound:
@@ -321,41 +321,41 @@ const translations: TranslationDictionary = {
     '# Outlier Reports': '# Relat\xF3rios anteriores',
     '%% Outlier Reports': '%% Relat\xF3rios anteriores',
     '%% of facility data points that are %(outlierType)s outliers':
-      '%% de dados de instalações que são %(outlierType)s outliers',
+      '%% de dados de instala\xE7\xF5es que s\xE3o %(outlierType)s outliers',
     '%% of facility data points that are %(outlierType)s outliers by %(geography)s':
-      '%% de dados de instalações que são %(outlierType)s outliers por %(geography)s',
+      '%% de dados de instala\xE7\xF5es que s\xE3o %(outlierType)s outliers por %(geography)s',
     '%% of reported values that are outliers':
       '%% dos valores reportados que s\xE3o aberrantes',
     '%(numReports)s reports have been received from %(numFacilities)s facilities since %(firstReportDate)s_':
       'Relat\xF3rios de %(numReports)s foram recebidos de %(numFacilities)s instala\xE7\xF5es desde %(firstReportDate)s.',
-    'All (2+ stdev from mean)': 'Todos (2+ stdev da média)',
+    'All (2+ stdev from mean)': 'Todos (2+ stdev da m\xE9dia)',
     'Box Plot': 'Diagrama de caixa',
     'Click to view reported data & outliers on time series below':
       'Clique para ver os dados reportados e os outliers das s\xE9ries cronol\xF3gicas abaixo',
     'Data Outlier Analysis Score Explanation':
-      'Explicação da Pontuação das Análises de Outliers',
+      'Explica\xE7\xE3o da Pontua\xE7\xE3o das An\xE1lises de Outliers',
     'Each dot on the box plot represents the %% of reported values that are outliers for a single facility_':
-      'Cada ponto no boxplot representa a %% dos valores relatados que são valores atípicos para uma única instalação.',
-    'Extreme (3+ stdev from mean)': 'Extrema (3+ stdev da média)',
+      'Cada ponto no boxplot representa a %% dos valores relatados que s\xE3o valores at\xEDpicos para uma \xFAnica instala\xE7\xE3o.',
+    'Extreme (3+ stdev from mean)': 'Extrema (3+ stdev da m\xE9dia)',
     'Investigate Outliers': 'Investigar Outliers',
-    'Moderate (2-3 stdev from mean)': 'Moderada (2-3 stdev da média)',
+    'Moderate (2-3 stdev from mean)': 'Moderada (2-3 stdev da m\xE9dia)',
     'Note that for indicators with strong seasonality, there will be a higher proportion of outlier data points by definition and this may not mean there are actual data quality issues_':
-      'Note que para os indicadores com forte sazonalidade, haverá uma maior proporção de outliers, por definição, e isso pode não significar que hajam questões reais de qualidade de dados.',
+      'Observe que, para indicadores com forte sazonalidade, haver\xE1 uma propor\xE7\xE3o maior de pontos de dados discrepantes por defini\xE7\xE3o e isso pode n\xE3o significar que haja problemas reais de qualidade de dados.',
     'Note that the mean value for each facility is calculated using all historical data, even if you have a time filter set_ Options to choose dates to exclude from this calculation are coming soon and will be found here_':
-      'Note que o valor médio para cada instalação é calculada usando todos os dados históricos, mesmo se você tiver um conjunto de filtros de tempo. Opções para escolher datas para serem excluidas desse cálculo estão chegando em breve e vai ser encontrada aqui.',
+      'Observe que o valor m\xE9dio de cada instala\xE7\xE3o \xE9 calculado usando todos os dados hist\xF3ricos, mesmo que voc\xEA tenha definido um filtro de tempo. As op\xE7\xF5es para escolher as datas a serem exclu\xEDdas desse c\xE1lculo estar\xE3o dispon\xEDveis em breve e poder\xE3o ser encontradas aqui.',
     'Outlier type': 'Tipo de Outlier',
     'Proportion of facility data points that are extreme outliers:':
-      'Proporção de pontos de dados que são valores atípicos extremos:',
+      'Propor\xE7\xE3o de pontos de dados que s\xE3o valores at\xEDpicos extremos:',
     'Proportion that are moderate outliers:':
-      'Proporção que são valores atípicos moderados:',
+      'Propor\xE7\xE3o que s\xE3o valores at\xEDpicos moderados:',
     'Reporting Period': 'Per\xEDodo de relat\xF3rio',
-    'Reports Received': 'Relatórios Recebidos',
+    'Reports Received': 'Relat\xF3rios Recebidos',
     "This tool identifies data points that are extreme outliers (3+ standard deviations from the mean) and moderate outliers (2-3 standard deviations) relative to a facility's historical mean_ The higher the average proportion of outliers, the worse it is for the quality score_":
-      'Esta ferramenta identifica pontos que são valores atípicos extremos (3 + desvios padrão da média) e outliers moderadas (2-3 desvios padrão) em relação à média histórica de uma instalação. Quanto maior a proporção média de outliers, pior é para o índice de qualidade.',
+      'Esta ferramenta identifica pontos que s\xE3o valores at\xEDpicos extremos (3 + desvios padr\xE3o da m\xE9dia) e outliers moderadas (2-3 desvios padr\xE3o) em rela\xE7\xE3o \xE0 m\xE9dia hist\xF3rica de uma instala\xE7\xE3o. Quanto maior a propor\xE7\xE3o m\xE9dia de outliers, pior \xE9 para o \xEDndice de qualidade.',
     'This tool is intended to help you isolate data points which are outliers relative to the mean for each facility_':
-      'Esta ferramenta se destina a ajudar a isolar pontos de dados que são discrepantes em relação à média para cada instalação.',
+      'Esta ferramenta se destina a ajudar a isolar pontos de dados que s\xE3o discrepantes em rela\xE7\xE3o \xE0 m\xE9dia para cada instala\xE7\xE3o.',
     "You can click on each dot to view that facility's data on a time series below and see which datapoints are outliers relative to the mean_ Some of the outliers may be erroneous and require follow up with the facility to understand & resolve_":
-      'Você pode clicar em cada ponto para ver os dados de cada instalação em uma série de tempo e ver quais pontos de dados são discrepantes em relação à média. Alguns dos valores atípicos podem ser incorrectos e exigem acompanhamento com a instalação.',
+      'Voc\xEA pode clicar em cada ponto para ver os dados de cada instala\xE7\xE3o em uma s\xE9rie de tempo e ver quais pontos de dados s\xE3o discrepantes em rela\xE7\xE3o \xE0 m\xE9dia. Alguns dos valores at\xEDpicos podem ser incorrectos e exigem acompanhamento com a instala\xE7\xE3o.',
   },
 };
 export default translations;

@@ -215,42 +215,42 @@ const translations: TranslationDictionary = {
       'Nombre total de rapports re\xE7us par p\xE9riode de rapport pour cet indicateur',
   },
   br: {
-    Aggregation: 'Agregação',
+    Aggregation: 'Agrega\xE7\xE3o',
     All: 'Todos',
-    consistency: 'Consistência no número de relatórios recebidos:',
+    consistency: 'Consist\xEAncia no n\xFAmero de relat\xF3rios recebidos:',
     lineGraphHelperText:
-      'Utilize este gráfico de linha para observar as tendências de relatórios e encontrar momentos em que menos relatos do que o esperado foram recebidos. Clicando em um ponto irá filtrar a tabela abaixo apenas para o período de tempo selecionado.',
+      'Utilize este gr\xE1fico de linha para observar as tend\xEAncias de relat\xF3rios e encontrar momentos em que menos relatos do que o esperado foram recebidos. Clicando em um ponto ir\xE1 filtrar a tabela abaixo apenas para o per\xEDodo de tempo selecionado.',
     national: 'nacional',
-    noData: 'Não há dados para exibição',
-    reportsAnalyzed: 'relatórios foram recebidos desde',
+    noData: 'N\xE3o h\xE1 dados para exibi\xE7\xE3o',
+    reportsAnalyzed: 'relat\xF3rios foram recebidos desde',
     reportsAnalyzedSmallprint:
-      'Este gráfico mostra a tendência temporal destes relatórios e a tabela mostra a apenas as instalação que reportam estes indicadores.',
+      'Este gr\xE1fico mostra a tend\xEAncia temporal destes relat\xF3rios e a tabela mostra a apenas as instala\xE7\xE3o que reportam estes indicadores.',
     reportsReceivedStats:
-      'Nº de relatórios recebidos por período de relatório: Média %(average)s, Min %(min)s, Max %(max)s, Modo %(mode)s, Desvio padrão %(stdDev)s',
+      'N\xBA de relat\xF3rios recebidos por per\xEDodo de relat\xF3rio: M\xE9dia %(average)s, Min %(min)s, Max %(max)s, Modo %(mode)s, Desvio padr\xE3o %(stdDev)s',
     scoreExplanationSmallprint:
-      'Quanto maior a consitência no número de relatórios recebidos, melhor para o índice de qualidade. Isso acontece porque o número de relatórios recebidos muda muito entre os períodos em análise, significando que provavelmente houve menos relatórios recebidos do que o esperado durante alguns dos períodos apresentados.',
+      'Quanto maior a consit\xEAncia no n\xFAmero de relat\xF3rios recebidos, melhor para o \xEDndice de qualidade. Isso acontece porque o n\xFAmero de relat\xF3rios recebidos muda muito entre os per\xEDodos em an\xE1lise, significando que provavelmente houve menos relat\xF3rios recebidos do que o esperado durante alguns dos per\xEDodos apresentados.',
     '# Periods With No Report': '# de Periodos sem Relatos',
     '# Periods With Report': '# de Periodos com Relatos',
     '%% of Periods With Report': '%% de Periodos com Relatos',
-    'Days Since Last Report': 'Dias Desde o Último Relatório',
+    'Days Since Last Report': 'Dias Desde o \xDAltimo Relat\xF3rio',
     'Download Data': 'Download dos Dados',
     'Investigate Reporting Completeness Issues':
       'Investigue Problemas de Completude',
-    'Last Report': 'Último Relatório',
+    'Last Report': '\xDAltimo Relat\xF3rio',
     'Limit Results': 'Limitar resultados',
-    'Number of Reports Received': 'Número de relatórios recebidos',
+    'Number of Reports Received': 'N\xFAmero de relat\xF3rios recebidos',
     'Reporting Completeness Score Explanation':
-      'Explicação da Pontuação do Relatório Completude',
-    'Reporting Facilities': 'Instalações Reportando',
+      'Explica\xE7\xE3o da Pontua\xE7\xE3o do Relat\xF3rio Completude',
+    'Reporting Facilities': 'Instala\xE7\xF5es Reportando',
     'Reporting Facilities For This Indicator':
-      'Instalações Reportando Para Este Indicador',
-    'Reports Analyzed': 'Relatório analisados',
+      'Instala\xE7\xF5es Reportando Para Este Indicador',
+    'Reports Analyzed': 'Relat\xF3rio analisados',
     'These tools are here to help you isolate where reporting completeness issues are coming from so you can help resolve them or share the results with those who can_':
-      'Estas ferramentas estão aqui para ajudá-lo a isolar de onde problemas de completude integralidade estão vindo para que você possa ajudar a resolvê-los ou compartilhar os resultados com aqueles que possa.',
+      'Estas ferramentas est\xE3o aqui para ajud\xE1-lo a isolar de onde problemas de completude integralidade est\xE3o vindo para que voc\xEA possa ajudar a resolv\xEA-los ou compartilhar os resultados com aqueles que possa.',
     'This table shows the number of reports and time since reports have been received by location_ You can expand from "%(largestGeoDimension)s" all the way down to see this information at the %(smallestGeoDimension)s level_':
-      'Essa tabela mostra o número de relatórios e o tempo desde que o último relatório foi recebio por localidade. Você pode expandi-la "%(largestGeoDimension)s" até o nivel de %(smallestGeoDimension)s .',
+      'Essa tabela mostra o n\xFAmero de relat\xF3rios e o tempo desde que o \xFAltimo relat\xF3rio foi recebio por localidade. Voc\xEA pode expandi-la "%(largestGeoDimension)s" at\xE9 o nivel de %(smallestGeoDimension)s .',
     'Total Number of Reports Received by Reporting Period For This Indicator':
-      'Número total de relatórios recebidos por período de relatório para este indicador',
+      'N\xFAmero total de relat\xF3rios recebidos por per\xEDodo de relat\xF3rio para este indicador',
   },
 };
 export default translations;

@@ -36,7 +36,7 @@ const translations: TranslationDictionary = {
     'Date Group': 'Grouper par Dates',
   },
   br: {
-    'Date Extraction': 'Extracção de Data',
+    'Date Extraction': 'Extra\xE7\xE3o de datas',
     'Date Group': 'Datas',
   },
 };

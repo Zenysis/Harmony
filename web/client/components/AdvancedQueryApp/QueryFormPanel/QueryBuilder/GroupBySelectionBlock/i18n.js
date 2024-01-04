@@ -33,7 +33,7 @@ const translations: TranslationDictionary = {
       'Sélectionnez les groupes pour désagréger votre analyse',
   },
   br: {
-    selectAnalysisGroups: 'Selecione os grupos para agregar a sua análise',
+    selectAnalysisGroups: 'Selecione os grupos para agregar a sua an\xE1lise',
   },
 };
 export default translations;

@@ -42,9 +42,9 @@ const translations: TranslationDictionary = {
     'Please enter a valid date': 'Veuillez entrer une date valide',
   },
   br: {
-    'Calendar date picker': 'Seleccionar data',
+    'Calendar date picker': 'Selecionar data',
     'Enter date': 'Insira a data',
-    'Please enter a valid date': 'Por favor digite uma data válida',
+    'Please enter a valid date': 'Por favor digite uma data v\xE1lida',
   },
 };
 export default translations;

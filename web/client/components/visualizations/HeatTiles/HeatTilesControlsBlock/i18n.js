@@ -46,10 +46,10 @@ const translations: TranslationDictionary = {
     'Logarithmic Scaling': "Mise à l'Échelle Logarithmique",
   },
   br: {
-    timeOnYAxis: 'Mostrar o tempo no Eixo-Y',
-    'Divergent Coloration': 'Coloração Divergente',
-    'Invert Coloration': 'Inverter Coloração',
-    'Logarithmic Scaling': 'Escala logarítimica',
+    timeOnYAxis: 'Mostrar data no Eixo-Y',
+    'Divergent Coloration': 'Colora\xE7\xE3o Divergente',
+    'Invert Coloration': 'Inverter Colora\xE7\xE3o',
+    'Logarithmic Scaling': 'Escala logar\xEDtimica',
   },
 };
 export default translations;

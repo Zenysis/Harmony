@@ -82,15 +82,15 @@ const translations: TranslationDictionary = {
   br: {
     attachPDF: 'Anexar PDF',
     attachmentSettingsCheckbox:
-      'Os anexos respeitam os direitos de acesso aos dados dos destinatários',
+      'Os anexos respeitam os direitos de acesso aos dados dos destinat\xE1rios',
     attachmentSettingsMessage:
-      'Quando ativos, os anexos respeitarão os direitos de acesso aos dados dos destinatários. Os anexos de cada destinatário incluirão apenas os dados que eles poderão ver na plataforma quando estiverem conectados. Essa configuração está ativa por padrão.',
+      'Quando ativos, os anexos respeitar\xE3o os direitos de acesso aos dados dos destinat\xE1rios. Os anexos de cada destinat\xE1rio incluir\xE3o apenas os dados que eles poder\xE3o ver na plataforma quando estiverem conectados. Essa configura\xE7\xE3o est\xE1 ativa por padr\xE3o.',
     attachmentSettingsSwitchOn:
-      'Desative essa configuração se desejar que os anexos incluam todos os dados que você pode ver.',
+      'Desative essa configura\xE7\xE3o se desejar que os anexos incluam todos os dados que voc\xEA pode ver.',
     embedImage: 'Incorporar imagem',
     useSingleThreadWarning:
-      'Nota: Os anexos aos t\xF3picos compartilhados incluir\xE3o todos os dados vis\xEDveis para voc\xEA neste painel - eles n\xE3o honrar\xE3o os direitos de acesso aos dados dos destinat\xE1rios.',
-    'Attachment Settings': 'Configurações de anexo',
+      'Observa\xE7\xE3o: os anexos de t\xF3picos compartilhados incluir\xE3o todos os dados vis\xEDveis para voc\xEA nesse painel - eles n\xE3o honrar\xE3o os direitos de acesso aos dados dos destinat\xE1rios.',
+    'Attachment Settings': 'Configura\xE7\xF5es de anexo',
   },
 };
 export default translations;

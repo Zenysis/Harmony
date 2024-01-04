@@ -84,17 +84,16 @@ const translations: TranslationDictionary = {
   br: {
     'Edit IFrame': 'Editar iFrame',
     'Editing map': 'Editar Mapa',
-    'Editing visualization': 'Editar Visualização',
+    'Editing visualization': 'Editar Visualiza\xE7\xE3o',
     'Paste the URL source for the iFrame below':
       'Coloque abaixo a URL da origem para o iFrame ',
     "Please only enter the embed source URL, not the entire embed code_ You will find the source URL in the embed code within quotes after 'src='_":
-      "Insira apenas a URL de origem da incorporação, não o código de incorporação inteiro. Você irá encontrar o URL de origem no código de incorporação entre aspas após 'src='.",
-    'Save changes': 'Salvar',
-    'The URL entered is not valid': 'A URL submetida não é válida',
-    'iFrame Title': 'Título do iFrame',
+      "Insira apenas a URL de origem da incorpora\xE7\xE3o, n\xE3o o c\xF3digo de incorpora\xE7\xE3o inteiro. Voc\xEA ir\xE1 encontrar o URL de origem no c\xF3digo de incorpora\xE7\xE3o entre aspas ap\xF3s 'src='.",
+    'Save changes': 'Salvar mudan\xE7as',
+    'The URL entered is not valid': 'A URL submetida n\xE3o \xE9 v\xE1lida',
+    'iFrame Title': 'T\xEDtulo do iFrame',
   },
 };
-
 I18N.mergeSupplementalTranslations(translations, [
   i18n_components_DashboardBuilderApp_DashboardContainer_DashboardGrid_TileContainer_EditItemView_TextEditView,
 ]);

@@ -227,7 +227,7 @@ const translations: TranslationDictionary = {
     'File(s) uploaded successfully_ Dataprep job has been kicked off and output will be integrated':
       'Arquivo(s) carregado(s) com sucesso. O trabalho de prepara\xE7\xE3o de dados foi iniciado e a sa\xEDda ser\xE1 integrada.',
     'Sample of 20 rows from the uploaded file':
-      'Amostra de 20 filas do arquivo carregado',
+      'Amostra de 20 linhas do arquivo carregado',
     'Succesfully created new dataprep source':
       'Nova fonte de informa\xE7\xE3o criada com sucesso',
     'Succesfully created new source': 'Nova fonte criada com sucesso',

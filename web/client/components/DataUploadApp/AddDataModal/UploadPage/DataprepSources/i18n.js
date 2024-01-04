@@ -364,7 +364,7 @@ const translations: TranslationDictionary = {
       'O ID da receita do Dataprep n\xE3o existe.',
     'Dataprep recipe ID is not the last recipe ID in Flow_':
       'O ID da receita do Dataprep n\xE3o \xE9 o \xFAltimo ID da receita no fluxo.',
-    'Date uploaded': 'Data do upload',
+    'Date uploaded': 'Data de upload',
     'Error downloading file': 'Erro no download do arquivo',
     'Existing Files (%(numberFiles)s)': 'Arquivos Existentes (%(numberFiles)s)',
     'Existing Source': 'Fonte Existente',

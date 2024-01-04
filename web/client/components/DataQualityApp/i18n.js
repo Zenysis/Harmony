@@ -89,7 +89,7 @@ const translations: TranslationDictionary = {
     'Add Filter': 'Adicionar filtro',
     'Select indicator': 'Selecione o indicador',
     'The Quality Score is based on the following factors___':
-      'O Índice de qualidade é baseado nos seguintes fatores ...',
+      'O \xCDndice de qualidade \xE9 baseado nos seguintes fatores ...',
     'very high': 'muito alto',
     'very low': 'muito baixo',
   },

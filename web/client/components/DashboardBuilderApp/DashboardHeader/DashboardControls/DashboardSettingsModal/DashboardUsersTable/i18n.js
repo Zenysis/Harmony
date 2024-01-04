@@ -94,10 +94,10 @@ const translations: TranslationDictionary = {
       'Este usu\xE1rio \xE9 o \xFAnico Admin do Painel de Controle, portanto sua fun\xE7\xE3o n\xE3o pode ser atualizada. Voc\xEA precisar\xE1 adicionar outro Dashboard Admin primeiro.',
     userRemoveButtonColDisabledText:
       'Este usu\xE1rio \xE9 o \xFAnico Admin do Painel de Controle, portanto n\xE3o pode ser removido. Voc\xEA precisar\xE1 adicionar outro Dashboard Admin primeiro.',
-    'Add users and groups': 'Adicionar usuários e grupos',
+    'Add users and groups': 'Adicionar usu\xE1rios e grupos',
     'Are you sure you want to delete this user?':
       'Tem a certeza de que pretende apagar este utilizador?',
-    'Specify role': 'Especifique a função',
+    'Specify role': 'Especifique a fun\xE7\xE3o',
   },
 };
 export default translations;

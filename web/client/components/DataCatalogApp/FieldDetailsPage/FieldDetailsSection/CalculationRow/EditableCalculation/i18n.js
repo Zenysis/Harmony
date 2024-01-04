@@ -55,7 +55,7 @@ const translations: TranslationDictionary = {
     'Window size': 'La taille de la fen\xEAtre',
   },
   br: {
-    Dimension: 'Dimensão',
+    Dimension: 'Dimens\xE3o',
     'Default operation': 'Opera\xE7\xE3o padr\xE3o',
     'Last value operation type': '\xDAltimo valor tipo de opera\xE7\xE3o',
     'Window operation type': 'Tipo de opera\xE7\xE3o de janela',

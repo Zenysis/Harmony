@@ -70,10 +70,10 @@ const translations: TranslationDictionary = {
     Label: 'Etiqueta',
     'Add Constituents': 'Adicionar constituientes',
     'Copy indicator': 'Copiar indicador',
-    'Limit data for the indicator you have selected':
-      'Limitar dados para o indicador que você selecionou',
     "Display 'No Data' results as zero":
       "Mostrar resultados 'Sem Dados' como zero",
+    'Limit data for the indicator you have selected':
+      'Limitar dados para o indicador que voc\xEA selecionou',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

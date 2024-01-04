@@ -53,9 +53,10 @@ const translations: TranslationDictionary = {
   br: {
     Leaf: 'Folha',
     Lined: 'Alinhado',
-    Minimal: 'Mínimo',
+    Minimal: 'M\xEDnimo',
     Night: 'Noite',
     Ocean: 'Oceano',
+    'KP Tracker': 'Rastreador KP',
   },
 };
 export default translations;

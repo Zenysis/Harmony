@@ -74,15 +74,15 @@ const translations: TranslationDictionary = {
   },
   br: {
     'Are you sure you want to permanently delete this role?':
-      'Tem certeza de que deseja excluir permanentemente esta função?',
-    'Delete Role': 'Apagar função',
-    'Edit Role': 'Editar função',
+      'Tem certeza de que deseja excluir permanentemente esta fun\xE7\xE3o?',
+    'Delete Role': 'Apagar fun\xE7\xE3o',
+    'Edit Role': 'Editar fun\xE7\xE3o',
     'Edit Users': 'Editar utilizador',
     'No tools added to this role':
-      'Nenhuma ferramenta adicionada a esta função',
+      'Nenhuma ferramenta adicionada a esta fun\xE7\xE3o',
     'Roles specify which platform tools and data access are granted when assigned to a user or group_ Roles are additive meaning if you assign multiple, the assignee will gain access to the tools and data specified in each of the assigned roles_':
-      'Funções especificam quais os acessos de dados e ferramentas da plataforma serão concedidos, quando atribuídas a um utilizador ou grupo. Funções tem caracter aditivo, o utilizador terá acesso às ferramentas e dados especificados em cada uma das funções atribuídas.',
-    'Search role by name': 'Pesquisar função pelo nome',
+      'Fun\xE7\xF5es especificam quais os acessos de dados e ferramentas da plataforma ser\xE3o concedidos, quando atribu\xEDdas a um utilizador ou grupo. Fun\xE7\xF5es tem caracter aditivo, o utilizador ter\xE1 acesso \xE0s ferramentas e dados especificados em cada uma das fun\xE7\xF5es atribu\xEDdas.',
+    'Search role by name': 'Pesquisar fun\xE7\xE3o pelo nome',
   },
 };
 export default translations;

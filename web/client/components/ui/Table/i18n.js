@@ -41,7 +41,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     noSearchResults:
-      'Desculpe, não ha nenhum resultado correspondente a sua análise.',
+      'Desculpe, n\xE3o ha nenhum resultado correspondente a sua an\xE1lise.',
     nothingToDisplay: 'Nada a mostrar.',
   },
 };

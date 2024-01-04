@@ -39,6 +39,20 @@ const translations: TranslationDictionary = {
   br: {
     from: 'a partir de',
     'Show overview for': 'Mostrar vis\xE3o geral para',
+    'The dimension that is being matched':
+      'A dimens\xE3o que est\xE1 sendo correspondida',
+    'The dimension value as it is in the source data':
+      'O valor dimensional como est\xE1 nos dados de origem',
+    'The dimension value as it shows in Zenysis':
+      'O valor dimensional como mostra em Zenysis',
+    'These are all the dimension values that could not get matched in our pipeline_ These are values for dimensions that are not a part of the geo hierarchy that were set up to go through matching_ This means that the raw value coming from the source data could not find a match in our canonical mappings file_ Go to the Mapping Files tab to view the canonical mappings files_':
+      'Estes s\xE3o todos os valores dimensionais que n\xE3o puderam ser correspondidos em nossa tubula\xE7\xE3o. Estes s\xE3o valores para dimens\xF5es que n\xE3o fazem parte da hierarquia geol\xF3gica que foram configuradas para passar por uma correspond\xEAncia. Isto significa que o valor bruto proveniente dos dados de origem n\xE3o p\xF4de encontrar uma correspond\xEAncia em nosso arquivo de mapeamentos can\xF4nicos. V\xE1 para a guia Arquivos de mapeamento para visualizar os arquivos de mapeamento can\xF4nico.',
+    'These are all the dimension values that were successfully matched in our pipeline_ These are values for dimensions that are not a part of the geo hierarchy that were set up to go through matching_ This means that the raw value coming from the source data correctly found a match in our canonical mappings file_ Go to the Mapping Files tab to view the canonical mappings files_':
+      'Estes s\xE3o todos os valores dimensionais que foram correspondidos com sucesso em nosso pipeline. Estes s\xE3o valores para dimens\xF5es que n\xE3o fazem parte da hierarquia geol\xF3gica que foram configuradas para passar por uma correspond\xEAncia. Isto significa que o valor bruto proveniente dos dados de origem encontrou corretamente uma correspond\xEAncia em nosso arquivo de mapeamentos can\xF4nicos. V\xE1 para a guia Arquivos de mapeamento para visualizar os arquivos de mapeamento can\xF4nico.',
+    'These are all the locations that could not get matched in our pipeline_ This means that the raw location coming from the source data could not find a match in our canonical mappings file_ Go to the Mapping Files tab to view the canonical mappings files_':
+      'Estes s\xE3o todos os locais que n\xE3o puderam ser correspondidos em nosso pipeline. Isto significa que a localiza\xE7\xE3o bruta proveniente dos dados originais n\xE3o p\xF4de encontrar uma correspond\xEAncia em nosso arquivo de mapeamentos can\xF4nicos. V\xE1 para a guia Arquivos de mapeamento para visualizar os arquivos de mapeamento can\xF4nico.',
+    'These are all the locations that were successfully matched in our pipeline_ This means that the raw location coming from the source data correctly found a match in our canonical mappings file_ Go to the Mapping Files tab to view the canonical mappings files_':
+      'Estes s\xE3o todos os locais que foram combinados com sucesso em nosso oleoduto. Isto significa que a localiza\xE7\xE3o bruta proveniente dos dados de origem encontrou corretamente uma correspond\xEAncia em nosso arquivo de mapeamentos can\xF4nicos. V\xE1 para a guia Arquivos de mapeamento para visualizar os arquivos de mapeamento can\xF4nico.',
   },
 };
 export default translations;

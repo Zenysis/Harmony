@@ -64,13 +64,13 @@ const translations: TranslationDictionary = {
     'Request Access': 'Demande d’accès',
   },
   br: {
-    Note: 'Nota',
+    Note: 'Observa\xE7\xE3o',
     loginContentL1:
-      'To submit feedback about EHDAP or request an account for access, please click Continue below.',
+      'Para enviar coment\xE1rios sobre o EHDAP ou solicitar uma conta para acesso, clique em Continuar abaixo.',
     loginContentL2:
-      "Note that at this time accounts are only being granted to the users as per the ministry's approval.",
+      'Observe que, no momento, as contas s\xF3 est\xE3o sendo concedidas aos usu\xE1rios de acordo com a aprova\xE7\xE3o do minist\xE9rio.',
     loginContentL3:
-      'Please make sure that you get the approval from the ministry before you submit a request.',
+      'Certifique-se de obter a aprova\xE7\xE3o do minist\xE9rio antes de enviar uma solicita\xE7\xE3o.',
     'Request Access': 'Pedir Acesso',
   },
 };

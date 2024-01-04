@@ -48,7 +48,7 @@ const translations: TranslationDictionary = {
     'Drag and drop or click to select file':
       'Arraste e solte ou clique para selecionar o arquivo',
     'Upload Failed! Incorrect File Type':
-      'Upload Failed! Tipo de Arquivo Incorreto',
+      'Carregamento Falhou! Tipo de Arquivo Incorreto',
   },
 };
 export default translations;

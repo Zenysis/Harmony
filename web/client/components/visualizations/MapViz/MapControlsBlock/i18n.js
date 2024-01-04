@@ -106,22 +106,24 @@ const translations: TranslationDictionary = {
       "D\xE9marrer l'animation \xE0 partir de la date la plus r\xE9cente",
   },
   br: {
-    Display: 'Exibição',
+    Display: 'Exibi\xE7\xE3o',
     Dots: 'Pontos',
     Level: 'Nível',
     displayMapLabels: 'Mostrar as legendas do mapa',
     showAdminBoundaries: 'Mostrar limites administrativos',
     '0 selected': '0 selecionados',
+    'Automatically zoom map to show all data points':
+      'Mapa de zoom autom\xE1tico para mostrar todos os pontos de dados',
     'Background opacity': 'Opacidade de fundo',
     'Bold Text': 'Texto em negrito',
-    'Boundary Thickness': 'Boundary Thickness',
-    'Colored tiles': 'Azulejos coloridas',
+    'Boundary Thickness': 'Espessura do contorno',
+    'Colored tiles': 'Azulejos coloridos',
     'Font Color': 'Cor da fonte',
     'Font Size': 'Tamanho da fonte',
     'Scaled dots': 'Pontos em escala',
-    'Show Series': 'Show Series',
+    'Show Series': 'Mostrar s\xE9ries',
     'Start animation from most recent date':
-      'Inicie a animação pela data mais recente',
+      'Inicie a anima\xE7\xE3o pela data mais recente',
   },
 };
 export default translations;

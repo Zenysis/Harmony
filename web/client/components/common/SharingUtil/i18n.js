@@ -68,13 +68,14 @@ const translations: TranslationDictionary = {
   },
   br: {
     copyToClipboardSuccess:
-      'O link para partilhá foi copiado para seu clipboard com sucesso',
+      'O link para partilh\xE1 foi copiado para seu clipboard com sucesso',
     '"%(value)s" is not a valid email address or group name':
       '%(value)s n\xE3o \xE9 um endere\xE7o de e-mail v\xE1lido ou nome de grupo',
     'Please enter a correct recipient email':
-      'Por favor, indique um email destinatário correto',
+      'Por favor, indique um email destinat\xE1rio correto',
     'Please enter a message': 'Por favor, digite uma mensagem',
     'Please enter a subject': 'Por favor insira um assunto',
+    'Sharable link': 'Link compartilh\xE1vel',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

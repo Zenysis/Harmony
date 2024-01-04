@@ -79,7 +79,7 @@ const translations: TranslationDictionary = {
     Axis: 'Eixo',
     Value: 'Valor',
     'Band area color (optional)': 'Cor da \xE1rea da faixa (opcional)',
-    'Legend label (optional)': 'Etiqueta de legenda (opcional)',
+    'Legend label (optional)': 'R\xF3tulo de legenda (opcional)',
     'Lower bound': 'Limite inferior',
     'Remove this colored band': 'Remover esta faixa colorida',
     'Upper bound': 'Limite superior',

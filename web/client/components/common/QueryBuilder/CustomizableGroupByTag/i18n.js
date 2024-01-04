@@ -73,7 +73,7 @@ const translations: TranslationDictionary = {
     dimensionAllTooltip:
       'Quando poss\xEDvel, incluir todos os valores %(dimension)s no resultado, mesmo que n\xE3o tenham dados. Advert\xEAncia: Esta op\xE7\xE3o pode fazer com que sua consulta seja muito mais lenta.',
     dimensionTotalTooltip:
-      'This option adds a total row across all values for this group by. If more than one group by is selected, the total row will be added for each section within the parent group.',
+      'Essa op\xE7\xE3o adiciona uma linha total de todos os valores para esse grupo por. Se mais de um grupo por for selecionado, a linha total ser\xE1 adicionada para cada se\xE7\xE3o dentro do grupo pai.',
     forceAllValuesToBeIncluded:
       'For\xE7ar todos os valores a serem inclu\xEDdos (slow)',
     includeNull: 'Incluir dados em branco',

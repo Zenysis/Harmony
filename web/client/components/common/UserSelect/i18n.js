@@ -36,7 +36,7 @@ const translations: TranslationDictionary = {
     'Add users': 'Sélectionner des utilisateurs supplémentaires',
   },
   br: {
-    Role: 'Função',
+    Role: 'Fun\xE7\xE3o',
     'Add users': 'Adicionar utilizador',
   },
 };

@@ -37,7 +37,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     hidden: 'Escondido',
-    visible: 'Visível',
+    visible: 'Vis\xEDvel',
   },
 };
 export default translations;

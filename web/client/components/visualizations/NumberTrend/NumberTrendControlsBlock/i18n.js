@@ -51,11 +51,11 @@ const translations: TranslationDictionary = {
     'Secondary Field': 'Secondary Field',
   },
   br: {
-    displayLastValue: 'Display last value',
-    'Display as pill': 'Display as pill',
-    'No selection': 'Nenhuma seleção',
+    displayLastValue: 'Exibir o \xFAltimo valor',
+    'Display as pill': 'Exibir como coluna',
+    'No selection': 'Nenhuma sele\xE7\xE3o',
     'Primary Field': 'Primary Field',
-    'Secondary Field': 'Secondary Field',
+    'Secondary Field': 'Campo secund\xE1rio',
   },
 };
 export default translations;

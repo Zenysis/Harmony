@@ -54,8 +54,9 @@ const translations: TranslationDictionary = {
   br: {
     exclusionSettingsGroupingHeader:
       'Escolha as consultas que podem ser agrupar por',
-    groupingHelpText: 'Selecione os grupos para dividir a análise em seu paine',
-    'Add Dashboard Grouping': 'Adicionar Agrupamento de Paínel',
+    groupingHelpText:
+      'Selecione os grupos para dividir a an\xE1lise em seu paine',
+    'Add Dashboard Grouping': 'Adicionar Agrupamento de Pa\xEDnel',
   },
 };
 export default translations;

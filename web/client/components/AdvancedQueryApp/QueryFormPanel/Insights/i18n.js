@@ -33,7 +33,7 @@ const translations: TranslationDictionary = {
     'Selected Indicator': 'Indicateur Choisi',
   },
   br: {
-    'Selected Indicator': 'Seleccione o indicador',
+    'Selected Indicator': 'Selecione o indicador',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

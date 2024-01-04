@@ -71,12 +71,12 @@ const translations: TranslationDictionary = {
   br: {
     Disabled: 'Desabilitado',
     Enabled: 'Habilitado',
-    '%(key)s is Currently:': '%(key)s está actualmente:',
+    '%(key)s is Currently:': '%(key)s est\xE1 atualmente:',
     "Are you certain you wish to reset the configuration for '%(key)s'? The value will be reset to '%(defaultValue)s'_":
-      "Tem certeza de que pretende redefinir a configuracao de '%(key)s'? O valor será redefinido para '%(defaultValue)s'.",
+      "Tem certeza de que pretende redefinir a configuracao de '%(key)s'? O valor ser\xE1 redefinido para '%(defaultValue)s'.",
     'Latest Datasource': '\xDAltimas fontes de dados',
-    'Reset to default': 'Restabelecer os valores padrão',
     'Reset Configuration': 'Redefinir as configurações',
+    'Reset to default': 'Restabelecer os valores padr\xE3o',
   },
 };
 export default translations;

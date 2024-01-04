@@ -95,6 +95,8 @@ const translations: TranslationDictionary = {
       'L\'indicateur "%(name)s" a \xE9t\xE9 supprim\xE9 avec succ\xE8s',
   },
   br: {
+    deleteElement:
+      'N\xE3o \xE9 poss\xEDvel recuperar "%(name)s" depois de exclu\xEDda.',
     deleteField:
       'Voc\xEA n\xE3o pode recuperar o indicador "%(name)s" uma vez apagado.',
     deletionPrompt:

@@ -345,45 +345,45 @@ const translations: TranslationDictionary = {
       "Vous n'avez aucun jeton d'acc\xE8s API",
   },
   br: {
-    Active: 'Activo',
+    Active: 'Ativo',
     Copy: 'Copiar',
     Group: 'Grupo',
     ID: 'ID',
-    Inactive: 'Inactivo',
+    Inactive: 'Inativo',
     Password: 'Senha',
     Pending: 'Pendente',
     Revoke: 'Revogar',
     Revoked: 'Revogado',
     revokedTokensCount: {
-      one: '1 token de acesso revogado',
-      other: '%(count)s de tokens de acesso revogados',
-      zero: '',
+      one: '%(count)s de tokens de acesso revogados',
+      other: '1 token de acesso revogado',
+      zero: '2 de tokens de acesso revogados',
     },
     '%(username)s has access to this alert through the %(groupName)s group_ To change, you will have to modify access from %(groupName)s':
-      '%(username)s tem acesso a este alerta através do grupo %(groupName)s. Para alterar, você terá de modificar o acesso no %(GroupName)s',
+      '%(username)s tem acesso a este alerta atrav\xE9s do grupo %(groupName)s. Para alterar, voc\xEA ter\xE1 de modificar o acesso no %(GroupName)s',
     '%(username)s has access to this alert through the %(groupName)s group_ To delete, you will have to remove %(username)s from %(groupName)s':
-      '%(username)s tem acesso a este alerta através do grupo %(groupName)s. Para excluir, você terá que remover %(username)s do grupo %(GroupName)s',
+      '%(username)s tem acesso a este alerta atrav\xE9s do grupo %(groupName)s. Para excluir, voc\xEA ter\xE1 que remover %(username)s do grupo %(GroupName)s',
     '%(username)s has access to this dashboard through the %(groupName)s group_ To change, you will have to modify access from %(groupName)s':
-      '%(username)s tem acesso a este painel através do grupo %(groupName)s. Para alterar, você terá de modificar o acesso de %(GroupName)s',
+      '%(username)s tem acesso a este painel atrav\xE9s do grupo %(groupName)s. Para alterar, voc\xEA ter\xE1 de modificar o acesso de %(GroupName)s',
     '%(username)s has access to this dashboard through the %(groupName)s group_ To delete, you will have to remove %(username)s from %(groupName)s':
-      '%(username)s tem acesso a este painel através do grupo %(groupName)s. Para excluir, você terá que remover %(username)s de do grupo %(GroupName)s',
+      '%(username)s tem acesso a este painel atrav\xE9s do grupo %(groupName)s. Para excluir, voc\xEA ter\xE1 que remover %(username)s de do grupo %(GroupName)s',
     '%(username)s has access to this role through the %(groupName)s group_ To delete, you will have to remove %(username)s from %(groupName)s':
-      '%(username)s tem acesso a esta função através do grupo %(groupName)s. Para excluir, você terá que remover %(username)s do grupo %(groupName)s',
+      '%(username)s tem acesso a esta fun\xE7\xE3o atrav\xE9s do grupo %(groupName)s. Para excluir, voc\xEA ter\xE1 que remover %(username)s do grupo %(groupName)s',
     '+ Add Alerts': '+ Adicionar Alertas',
-    '+ Add Dashboards': '+ Adicionar Painéis',
+    '+ Add Dashboards': '+ Adicionar Pain\xE9is',
     '+ Add Groups': '+ Adicionar grupos',
-    '+ Add Roles': '+ Adicionar funções',
+    '+ Add Roles': '+ Adicionar fun\xE7\xF5es',
     'API Access Tokens': 'Tokens de acesso \xE0 API',
     'API Tokens': 'Tokens de API',
     'API access tokens are used to authenticate and authorize access to the Integrated Data API_':
       'Os tokens de acesso \xE0 API s\xE3o usados para autenticar e autorizar o acesso \xE0 API de dados integrados.',
     'Access Granted': 'Acesso Concedido',
-    'Added Through': 'Adicionado Através',
+    'Added Through': 'Adicionado Atrav\xE9s',
     'Are you sure you wish to proceed?': 'Tem certeza de que deseja continuar?',
     'Be sure to copy your new token below_ It won\u2019t be shown in full again_':
       'Certifique-se de copiar seu novo token abaixo. Ele n\xE3o ser\xE1 exibido por completo novamente.',
-    'Dashboards & Alerts': 'Painéis e Alertas',
-    'Direct Access': 'Acesso Directo',
+    'Dashboards & Alerts': 'Pain\xE9is e Alertas',
+    'Direct Access': 'Acesso Direto',
     'Generate Access Token': 'Gerar token de acesso',
     'Group Access': 'Acesso de Grupo',
     'New token generated': 'Novo token gerado',
@@ -392,7 +392,7 @@ const translations: TranslationDictionary = {
     'Profile Details': 'Detalhes de perfil',
     'Resend Invite': 'Reenviar convite.',
     'Revoke Token': 'Revogar token',
-    'Roles & Groups': 'Funções e Grupos',
+    'Roles & Groups': 'Fun\xE7\xF5es e Grupos',
     'Send password reset via email': 'Enviar email para redefinir senha',
     'There was a problem generating a token':
       'Houve um problema ao gerar um token',
@@ -400,7 +400,8 @@ const translations: TranslationDictionary = {
       'Ocorreu um problema ao actualizar este utilizador',
     'Token has been copied to your clipboard_ Do not forget to save changes before using it!':
       'O token foi copiado para sua \xE1rea de transfer\xEAncia. N\xE3o se esque\xE7a de salvar as altera\xE7\xF5es antes de us\xE1-lo!',
-    "User can't remember their password?": 'Utilizador não recorda da senha?',
+    "User can't remember their password?":
+      'Utilizador n\xE3o recorda da senha?',
     'User successfully updated': 'Utilizador actualizado com sucesso',
     "When you revoke an access token, it becomes invalid and can no longer be used to access the API_ This means that any API requests made using that token will fail and the user or application associated with the token will no longer have access to the API's resources_":
       'Quando voc\xEA revoga um token de acesso, ele se torna inv\xE1lido e n\xE3o pode mais ser usado para acessar a API. Isso significa que todas as solicita\xE7\xF5es de API feitas com esse token falhar\xE3o e o usu\xE1rio ou aplicativo associado ao token n\xE3o ter\xE1 mais acesso aos recursos da API.',

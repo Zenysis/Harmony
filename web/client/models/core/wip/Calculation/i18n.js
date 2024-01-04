@@ -158,6 +158,7 @@ const translations: TranslationDictionary = {
       'Additionnez les points de données rapportés.',
   },
   br: {
+    Cohort: 'Coorte',
     Complex: 'Complexo',
     Max: 'M\xE1ximo',
     Min: 'Minimo',
@@ -172,13 +173,13 @@ const translations: TranslationDictionary = {
       'Compute o valor dos dados complexos.',
     'Count Distinct': 'Contagem Distinta',
     'Count the number of data points reported_':
-      'Contagem do número de pontos de dados reportados.',
+      'Contagem do n\xFAmero de pontos de dados reportados.',
     'Count the unique number of dimension values_':
       'Conte o n\xFAmero \xFAnico de valores dimensionais.',
     'Find the average value of the data points reported over time_':
       'Encontre o valor m\xE9dio dos pontos de dados informados ao longo do tempo.',
     'Find the average value of the data points reported_':
-      'Ache o valor médio dos pontos de dados reportados.',
+      'Ache o valor m\xE9dio dos pontos de dados reportados.',
     'Find the largest single data point reported_':
       'Ache o maior ponto de dados reportado.',
     'Find the smallest single data point reported_':
@@ -186,6 +187,7 @@ const translations: TranslationDictionary = {
     'Last Value': '\xDAltimo valor',
     'Moving Window': 'Janela de datas',
     'Sum the data points reported_': 'Soma dos pontos de dados reportados.',
+    'Track a cohort over time_': 'Acompanhar uma coorte ao longo do tempo.',
   },
 };
 export default translations;

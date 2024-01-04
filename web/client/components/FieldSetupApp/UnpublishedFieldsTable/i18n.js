@@ -56,7 +56,7 @@ const translations: TranslationDictionary = {
     'data-source-explanation': '',
   },
   br: {
-    Calculation: 'Cálculo',
+    Calculation: 'C\xE1lculo',
     Category: 'Categoria',
     'Indicator ID': 'ID do indicador',
     'Short Name': 'Nome curto',

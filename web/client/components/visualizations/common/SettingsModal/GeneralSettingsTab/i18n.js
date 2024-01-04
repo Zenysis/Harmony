@@ -31,7 +31,7 @@ const translations: TranslationDictionary = {
     'Display options': 'Option d’affichage',
   },
   br: {
-    'Display options': 'Opções de exibição',
+    'Display options': 'Op\xE7\xF5es de exibi\xE7\xE3o',
   },
 };
 export default translations;

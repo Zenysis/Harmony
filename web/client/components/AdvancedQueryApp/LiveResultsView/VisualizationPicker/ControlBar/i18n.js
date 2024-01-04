@@ -47,7 +47,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     Back: 'Voltar',
-    Current: 'Actual',
+    Current: 'Atual',
     'Return to': 'Voltar para',
     'Show all': 'Mostrar todos',
   },

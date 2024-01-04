@@ -64,10 +64,10 @@ const translations: TranslationDictionary = {
     'Text size': 'Taille du texte',
   },
   br: {
-    'Add header line': 'Adicionar linha de cabeçalho',
+    'Add header line': 'Adicionar linha de cabe\xE7alho',
     'Bold text': 'Texto em negrito',
     'Line color': 'Cor da linha',
-    'Rotate header': 'Girar cabeçalho',
+    'Rotate header': 'Girar cabe\xE7alho',
     'Text color': 'Cor do texto',
     'Text font': 'Fonte do texto',
     'Text size': 'Tamanho do texto',

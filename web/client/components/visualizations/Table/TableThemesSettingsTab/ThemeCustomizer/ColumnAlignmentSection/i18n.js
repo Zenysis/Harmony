@@ -43,8 +43,8 @@ const translations: TranslationDictionary = {
   },
   br: {
     Centered: 'Centrado',
-    'Left-aligned': 'Alinhado à esquerda',
-    'Right-aligned': 'Alinhado à direita',
+    'Left-aligned': 'Alinhado \xE0 esquerda',
+    'Right-aligned': 'Alinhado \xE0 direita',
   },
 };
 export default translations;

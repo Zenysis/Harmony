@@ -219,7 +219,7 @@ const translations: TranslationDictionary = {
       'Sem informa\xE7\xE3o sobre o intervalo de datas',
     'See job': 'Ver trabalho',
     'Time range of data': 'Intervalo de tempo dos dados',
-    'Update Data': 'Actualizar dados',
+    'Update Data': 'Atualizar dados',
     'dataprep failed': 'Dataapreprep falhou',
     'dataprep running': 'execu\xE7\xE3o do dataprep',
     'delete source': 'eliminar fonte',

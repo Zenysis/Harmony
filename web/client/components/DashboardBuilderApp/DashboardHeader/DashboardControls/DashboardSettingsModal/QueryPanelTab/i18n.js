@@ -128,9 +128,9 @@ const translations: TranslationDictionary = {
     'Align Filters and Group bys across the top of the dashboard':
       'Alinhar filtros e grupamentos atrav\xE9s da parte superior do painel de instrumentos',
     'Allow users to use filters on this dashboard':
-      'Permitir que os usuários usem filtros neste painel',
+      'Permitir que os usu\xE1rios usem filtros neste painel',
     'Allow users to use group bys on this dashboard':
-      'Permitir que os usuários usem agrupar por neste painel',
+      'Permitir que os usu\xE1rios usem agrupar por neste painel',
     'Choose which filters to enable': 'Escolha quais filtros activar',
     'Choose which group bys to enable': 'Escolha quais agrupar por activar',
     'If no filter values are specified for a category, then all filter types in this category and their filter value will be allowed_ However if a user specifies filter values, then only specified filter categories and values will be allowed':

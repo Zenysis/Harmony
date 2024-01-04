@@ -31,7 +31,7 @@ const translations: TranslationDictionary = {
     'Page Break': 'Saut de page',
   },
   br: {
-    'Page Break': 'Quebra de página',
+    'Page Break': 'Quebra de p\xE1gina',
   },
 };
 export default translations;

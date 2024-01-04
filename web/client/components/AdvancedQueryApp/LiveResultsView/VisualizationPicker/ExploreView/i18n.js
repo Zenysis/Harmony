@@ -90,7 +90,7 @@ const translations: TranslationDictionary = {
     additional: 'adicional',
     not: 'n\xE3o',
     requirementsSummaryInstructionsText:
-      'Passe o mouse sobre uma visualização para explorar seus requisitos',
+      'Passe o mouse sobre uma visualiza\xE7\xE3o para explorar seus requisitos',
     select: 'selecione',
     '%(min)s or more': '%(min)s ou mais',
     '%(vizName)s: %(numSatisfied)s of %(numCriteria)s requirements fulfilled':

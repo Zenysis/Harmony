@@ -74,18 +74,23 @@ const translations: TranslationDictionary = {
       'Veuillez entrer un nom de tableau de bord valide',
   },
   br: {
-    Calculations: 'Cálculos',
+    Calculations: 'C\xE1lculos',
     Share: 'Compartilhar',
     share: 'Compartilhar',
     'Add to dashboard': 'Adicionar ao painel',
-    'Custom Calculations': 'Calculações Customizadas',
+    'Ask AI': 'Perguntar \xE0 IA',
+    'Custom Calculations': 'Calcula\xE7\xF5es Customizadas',
     'Filter Data': 'Filtrar Dados',
     'Filter Results': 'Filtrar Resultados',
+    'How would you like AI to analyze your query?':
+      'Como voc\xEA gostaria que a IA analisasse sua consulta?',
+    'Open AI Analysis': 'Abrir an\xE1lise de IA',
     'Please enter a valid dashboard name':
-      'Por favor entre um nome valido para seu paínel',
+      'Por favor entre um nome valido para seu pa\xEDnel',
+    "You don't have sufficient data to make AI analysis, you need at least two indicators selected or an indicator and a group by":
+      'Voc\xEA n\xE3o tem dados suficientes para fazer a an\xE1lise de IA, precisa de pelo menos dois indicadores selecionados ou um indicador e um grupo por',
   },
 };
-
 I18N.mergeSupplementalTranslations(translations, [
   i18n_components_AdvancedQueryApp_LiveResultsView_QueryResultActionButtons_FilterModal,
   i18n_components_AdvancedQueryApp_LiveResultsView_QueryResultActionButtons_ShareQueryModal,

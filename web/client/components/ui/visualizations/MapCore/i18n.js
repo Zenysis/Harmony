@@ -54,9 +54,9 @@ const translations: TranslationDictionary = {
   },
   br: {
     Blank: 'Em Branco',
-    Satellite: 'Satélite',
+    Satellite: 'Sat\xE9lite',
     Streets: 'Ruas',
-    Thick: 'Thick',
+    Thick: 'Espessura',
     Thin: 'Fino',
   },
 };

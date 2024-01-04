@@ -90,14 +90,15 @@ const translations: TranslationDictionary = {
     Axes: 'Eixo',
     General: 'Geral',
     Legend: 'Legenda',
-    Series: 'Série',
+    Series: 'S\xE9rie',
     Themes: 'Temas',
     axesHelpText:
-      'Use esta configurações para mudar as legendas dos eixos, tamanhos das fontes, e escalas',
+      'Use esta configura\xE7\xF5es para mudar as legendas dos eixos, tamanhos das fontes, e escalas',
     generalHelpText:
-      'Use estas configurações para mudar como sua análise é exibida',
-    legendHelpText: 'Customize como legendas são mostradas',
-    seriesHelpText: 'Customize how your selected indicators are displayed',
+      'Use estas configura\xE7\xF5es para mudar como sua an\xE1lise \xE9 exibida',
+    legendHelpText: 'Personalize como sua legenda \xE9 exibida',
+    seriesHelpText:
+      'Personalize como os indicadores selecionados s\xE3o exibidos',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

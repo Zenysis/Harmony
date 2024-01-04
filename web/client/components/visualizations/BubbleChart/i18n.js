@@ -38,7 +38,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     bubbleChartErrorMessage:
-      'Esta visualização requere que mais de dois indicadores sejam selecionados.',
+      'Esta visualiza\xE7\xE3o requere que mais de dois indicadores sejam selecionados.',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

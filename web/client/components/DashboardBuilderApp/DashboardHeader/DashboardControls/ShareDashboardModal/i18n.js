@@ -157,25 +157,28 @@ const translations: TranslationDictionary = {
     Monthly: 'Mensal',
     Weekly: 'Semanal',
     dashboardShareEmailMessageTemplate:
-      'Prezado(a),\n\nSegue o link para o Painel que eu criei na Plataforma Ivis Anal\xEDtico.\nAtenciosamente,\n%(yourName)s',
+      'Prezado(a),\r\n\r\nSegue o link para o Painel que eu criei na Plataforma Ivis Anal\xEDtico.\r\nAtenciosamente,\r\n%(yourName)s',
     dashboardShareFailureMessage: 'Ocorreu um erro ao compartilhar o painel',
     dashboardShareSendingPendingMessage:
-      'Seus arquivos serão enviados em breve. Isso pode demorar alguns minutos.',
+      'Seus arquivos ser\xE3o enviados em breve. Isso pode demorar alguns minutos.',
     dashboardShareTitleTooltip:
-      'Partilhe a sua análise com outros usuários por e-mail, enviando-lhes um link ou exportando os dados',
+      'Partilhe a sua an\xE1lise com outros usu\xE1rios por e-mail, enviando-lhes um link ou exportando os dados',
     downloadDashboardDownloadPendingMessage:
-      'Arquivos do painel está baixando. Isso pode demorar alguns minutos \u2026',
+      'Arquivos do painel est\xE1 baixando. Isso pode demorar alguns minutos \u2026',
     downloadDashboardNoSelectedExportMessage:
       'Selecione PDF, JPEG ou ambos para baixar o painel',
+    scheduleReportFromMessage:
+      'Sua entrega programada est\xE1 pronta. Voc\xEA pode acessar este painel atrav\xE9s do link abaixo.',
+    scheduleReportFromSubject: 'Relat\xF3rio programado: %(dashboardName)s',
     sendPreviewTooltip:
-      'Um e-mail de visualização será enviado apenas para o seu endereço de e-mail',
+      'Um e-mail de visualiza\xE7\xE3o ser\xE1 enviado apenas para o seu endere\xE7o de e-mail',
     sessionFetchError:
       'Ocorreu um problema ao criar o link, tente novamente mais tarde.',
     'Copy URL': 'Copiar URL',
-    'Dashboard Analysis Shared': 'Análise do painel compartilhada',
+    'Dashboard Analysis Shared': 'An\xE1lise do painel compartilhada',
     'Semi-Annually': 'Semi-Annualmente',
     'Send Email': 'Enviar email',
-    'Send Preview Email': 'Enviar e-mail de visualização',
+    'Send Preview Email': 'Enviar e-mail de visualiza\xE7\xE3o',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

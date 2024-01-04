@@ -72,9 +72,11 @@ const translations: TranslationDictionary = {
       'O nome da fun\xE7\xE3o "%(label)s" j\xE1 existe. Por favor, selecione outro nome.',
     'Role users were successfully updated':
       'Os usu\xE1rios da fun\xE7\xE3o foram atualizados com sucesso',
-    'Role was successfully created_': 'Função foi criado com sucesso.',
-    'Role was successfully deleted_': 'Função foi excluído com sucesso.',
-    'Role was successfully updated_': 'Função foi actualizado com sucesso.',
+    'Role was successfully created_': 'Fun\xE7\xE3o foi criado com sucesso.',
+    'Role was successfully deleted_':
+      'Fun\xE7\xE3o foi exclu\xEDdo com sucesso.',
+    'Role was successfully updated_':
+      'Fun\xE7\xE3o foi actualizado com sucesso.',
   },
 };
 export default translations;

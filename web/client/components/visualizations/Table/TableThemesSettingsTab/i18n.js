@@ -65,7 +65,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     Continue: 'Continuar',
-    Customize: 'Customizar',
+    Customize: 'Personalizar',
     Done: 'Completo',
     'Continue?': 'Continuar?',
     'Current Theme': 'Tema atual',

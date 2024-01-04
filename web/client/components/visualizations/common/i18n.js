@@ -42,7 +42,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     more: 'mais',
-    unableToCompleteQuery: 'O servidor não conseguiu completar a consulta.',
+    unableToCompleteQuery: 'O servidor n\xE3o conseguiu completar a consulta.',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

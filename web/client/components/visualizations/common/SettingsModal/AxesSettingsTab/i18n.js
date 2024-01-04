@@ -84,6 +84,7 @@ const translations: TranslationDictionary = {
   br: {
     Range: 'Escala',
     to: 'para',
+    'Axis title padding': 'Espa\xE7o da legenda',
     'Labels font': 'Legenda do titulo',
     'Labels font color': 'Cor da onte das legendas',
     'Labels font size': 'Tamanho das fontes da legenda',

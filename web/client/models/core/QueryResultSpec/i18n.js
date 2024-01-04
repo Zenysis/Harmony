@@ -39,7 +39,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     'No data': 'Sem dados',
-    'Not a Number': 'Não é um número',
+    'Not a Number': 'N\xE3o \xE9 um n\xFAmero',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

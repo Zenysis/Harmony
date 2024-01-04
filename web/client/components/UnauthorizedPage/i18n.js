@@ -37,7 +37,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     'You are not authorized to perform this action':
-      'Você não está autorizado a tomar esta ação',
+      'Voc\xEA n\xE3o est\xE1 autorizado a tomar esta a\xE7\xE3o',
   },
 };
 export default translations;

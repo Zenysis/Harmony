@@ -56,7 +56,7 @@ const translations: TranslationDictionary = {
     Delete: 'Excluir',
     Edit: 'Editar',
     'Delete tile from dashboard': 'Eliminar o azulejo do painel',
-    'More options': 'Mais opções',
+    'More options': 'Mais op\xE7\xF5es',
   },
 };
 export default translations;

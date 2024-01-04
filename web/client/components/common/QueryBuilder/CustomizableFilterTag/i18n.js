@@ -85,9 +85,9 @@ const translations: TranslationDictionary = {
       zero: 'Zero %(granularity)s',
     },
     'Check "NOT" filters in order to remove rows with the selected values from your query results':
-      'Check "NOT" filtros para remover as linhas com os valores seleccionados dos resultados da sua consulta',
+      'Marque os filtros "N\xC3O" para remover as linhas com os valores selecionados dos resultados da consulta',
     'Customize group by': 'Personalizar grupo por',
-    'Enable NOT filter': 'Activar o filtro NÃO',
+    'Enable NOT filter': 'Ativar o filtro N\xC3O',
     'This %(granularity)s': 'Esta %(granularity)s',
   },
 };

@@ -268,11 +268,16 @@ const translations: TranslationDictionary = {
     '%(fileName)s Passes Validation': '%(fileName)s passa na valida\xE7\xE3o',
     '%(fileName)s contains potential conflicts':
       '%(fileName)s cont\xE9m poss\xEDveis conflitos',
+    'After clicking `Complete Upload`, the new setup will be applied_':
+      'Ap\xF3s clicar em `Complete Upload`, a nova configura\xE7\xE3o ser\xE1 aplicada.',
     'Are you sure you want to import %(csvFileName)s?':
       'Voc\xEA tem certeza de que quer importar %(csvFileName)s?',
     'Are you sure you want to import %(fileName)s?':
       'Voc\xEA tem certeza de que quer importar %(fileName)s?',
+    'Before continuing with this import, we highly recommend that you review the conflicts_ You can review these conflicts by downloading a summary below_ If there are conflitcs that should not be overwritten (e_g_ new calculated indicators), we recommend that you recreate these first before overwriting the active setup_':
+      'Antes de continuar com essa importa\xE7\xE3o, recomendamos que voc\xEA revise os conflitos. Voc\xEA pode revisar esses conflitos fazendo o download de um resumo abaixo. Se houver conflitos que n\xE3o devam ser sobrescritos (por exemplo, novos indicadores calculados), recomendamos que voc\xEA os recrie antes de sobrescrever a configura\xE7\xE3o ativa.',
     'Complete Upload': 'Upload completo',
+    'Download Conflict Report': 'Download do relat\xF3rio de conflitos',
     'Download current self serve setup for backup purposes':
       'Download da configura\xE7\xE3o atual de auto-atendimento para fins de backup',
     'Download dimension IDs, category mappings and data source IDs to be used when creating new indicators':

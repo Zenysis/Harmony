@@ -37,8 +37,9 @@ const translations: TranslationDictionary = {
     'Edit formula': 'Modifier la formule',
   },
   br: {
-    Formula: 'Fórmula',
-    'Edit formula': 'Editar fórmula',
+    Formula: 'F\xF3rmula',
+    'Edit cohort': 'Editar coorte',
+    'Edit formula': 'Editar f\xF3rmula',
   },
 };
 export default translations;

@@ -115,14 +115,14 @@ const translations: TranslationDictionary = {
   },
   br: {
     Fullscreen: 'Tela cheia',
-    Widescreen: 'Panorâmico',
+    Widescreen: 'Panor\xE2mico',
     'AQT Data': 'Dados AQT',
     'All Data (Excel)': 'Todos os dados (Excel)',
     'All Data (XML, FHIR/mADX)': 'Todos os dados (FHIR)',
     'All Data Raw Data (csv)': 'Todos os dados brutos (csv)',
-    'Disaggregated Data': 'Dados desagregados',
     'Current size': 'Tamanho atual',
     'Custom size': 'Tamanho personalizado',
+    'Disaggregated Data': 'Dados desagregados',
     'Export Data': 'Exportar os dados',
     'Field ID to data element name mapping':
       'Mapeamento do ID ao do elemento de dados',

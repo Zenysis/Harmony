@@ -31,7 +31,7 @@ const translations: TranslationDictionary = {
     '+ Add Users': 'Ajouter les utilisateurs ',
   },
   br: {
-    '+ Add Users': '+ Adicionar Usuários',
+    '+ Add Users': '+ Adicionar Usu\xE1rios',
   },
 };
 export default translations;

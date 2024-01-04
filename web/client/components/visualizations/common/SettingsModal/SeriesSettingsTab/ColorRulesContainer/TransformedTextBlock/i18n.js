@@ -58,7 +58,7 @@ const translations: TranslationDictionary = {
     Apply: 'Aplique',
     replaceText: 'Substituir valor por...',
     valuePlaceholder: 'Text entered here will replace indicator values.',
-    'Add symbols:': 'Adicionar símbolos:',
+    'Add symbols:': 'Adicionar s\xEDmbolos:',
     'Replace value': 'Substituir valor',
   },
 };

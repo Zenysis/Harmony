@@ -114,17 +114,18 @@ const translations: TranslationDictionary = {
       "Une erreur s'est produite lors de la r\xE9initialisation du mot de passe de l'utilisateur.",
   },
   br: {
-    'Successfully resent an invitation e-mail to the user_':
-      'Convite reenviado com sucesso.',
-    'The user was successfully deleted_':
-      'O utilizador foi deletado com sucesso.',
     'Are you sure you want to permanently delete this user?':
       'Tem certeza de que deseja excluir permanentemente este utilizador?',
     'Delete User': 'Apagar utilizador',
     'Edit User': 'Editar utilizador',
+    'Resend Invitation': 'Reenviar convite',
     'Reset Password': 'Redefinir Senha',
-    'Search for users': 'Procurar por utilizadores',
+    'Search for users': 'Procurar por usu\xE1rios',
+    'Successfully resent an invitation e-mail to the user_':
+      'Convite reenviado com sucesso.',
     "Sucessfully reset the user's password_": 'Senha alterada',
+    'The user was successfully deleted_':
+      'O utilizador foi deletado com sucesso.',
     'There was an error deleting the user_':
       'Ocorreu um erro ao apagar o perfil do utilizador.',
     'There was an error resending the user an invitation_':

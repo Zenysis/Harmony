@@ -52,7 +52,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     unknownError:
-      'An unexpected error occurred while updating your query result. Please try again.',
+      'Ocorreu um erro inesperado ao atualizar o resultado de sua consulta. Tente novamente.',
     unrecoverableError:
       'Something went wrong and we are unable to show your query result. Please refresh the page and try again.',
   },

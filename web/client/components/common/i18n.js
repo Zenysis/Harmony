@@ -123,9 +123,9 @@ const translations: TranslationDictionary = {
     Export: 'Exportar',
     Proceed: 'Proceder',
     imageDownloadSuccess:
-      'O download da imagen está completo. Cheque sua pasta de downloads.',
+      'O download da imagen est\xE1 completo. Cheque sua pasta de downloads.',
     instructionFormat:
-      "Para essa ação, por favor digite '%(acknowledgeText)s' para confirmar que entendeu.",
+      "Para essa a\xE7\xE3o, por favor digite '%(acknowledgeText)s' para confirmar que entendeu.",
     'After clicking `Complete Upload`, the new setup will be applied_':
       'Ap\xF3s clicar em `Complete Upload`, a nova configura\xE7\xE3o ser\xE1 aplicada.',
     'Are you sure you want to delete this entry?':
@@ -133,13 +133,13 @@ const translations: TranslationDictionary = {
     'Before continuing with this import, we highly recommend that you review the conflicts_ You can review these conflicts by downloading a summary below_ If there are conflitcs that should not be overwritten (e_g_ new calculated indicators), we recommend that you recreate these first before overwriting the active setup_':
       'Before continuing with this import, we highly recommend that you review the conflicts_ You can review these conflicts by downloading a summary below_ If there are conflitcs that should not be overwritten (e_g_ new calculated indicators), we recommend that you recreate these first before overwriting the active setup_',
     'Cannot create dashboard with empty name':
-      'Não pode criar um painel com nome em branco',
-    'Confirmation Required': 'Confirmação necessária',
+      'N\xE3o pode criar um painel com nome em branco',
+    'Confirmation Required': 'Confirma\xE7\xE3o necess\xE1ria',
     'Create Dashboard': 'Criar Painel',
     'Download Conflict Report': 'Download do relat\xF3rio de conflitos',
     'I understand': 'Eu entendo',
     'What would you like to name your new dashboard?':
-      'Qual nome queres dar ao seu novo paínel?',
+      'Qual nome queres dar ao seu novo pa\xEDnel?',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

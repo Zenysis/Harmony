@@ -69,14 +69,14 @@ const translations: TranslationDictionary = {
     'Select All': 'Sélectionnez tout',
   },
   br: {
-    emptyGroup: 'Não há opções neste grupo',
-    noOptions: 'Não há opções para serem selecionadas',
+    emptyGroup: 'N\xE3o h\xE1 op\xE7\xF5es neste grupo',
+    noOptions: 'N\xE3o h\xE1 op\xE7\xF5es para serem selecionadas',
     noSearch: 'Por favor escreva o que pretende procurar',
     searchPlaceholder: 'Procurar...',
-    selected: 'seleccionado',
+    selected: 'selecionado',
     'No results matched "%(searchText)s"':
       'Nenhum resultado para "%(searchText)s"',
-    'Select All': 'Seleccionar tudo',
+    'Select All': 'Selecionar tudo',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

@@ -115,7 +115,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     alerts: 'alertas',
-    dashboards: 'Painéis',
+    dashboards: 'Pain\xE9is',
     'Are you sure you want to permanently delete this group?':
       'Tem certeza de que deseja excluir permanentemente este grupo?',
     'Create group': 'Criar grupo',
@@ -124,12 +124,13 @@ const translations: TranslationDictionary = {
     'Delete Group': 'Apagar Grupo',
     'Edit Group': 'Editar Grupo',
     'Groups make it easy to manage the access rights for many users at a time_ All users in a group will get access to all of the roles, dashboards and alerts that are assigned to the group_':
-      'Grupos tornam mais fácil a gestão de acessos aos recursos da plataforma para vários usuários de uma só vez. Membros de um grupo assumem os acessos definidos para o grupo.',
-    'No groups yet': 'Ainda não há grupos',
-    'No roles added to this group': 'Não há funções adicionadas a esse grupo',
+      'Grupos tornam mais f\xE1cil a gest\xE3o de acessos aos recursos da plataforma para v\xE1rios usu\xE1rios de uma s\xF3 vez. Membros de um grupo assumem os acessos definidos para o grupo.',
+    'No groups yet': 'Ainda n\xE3o h\xE1 grupos',
+    'No roles added to this group':
+      'N\xE3o h\xE1 fun\xE7\xF5es adicionadas a esse grupo',
     'Search group by name': 'Pesquisar grupo pelo nome',
     'Seems like no one has created any groups':
-      'Parece que niguém criou grupos ainda',
+      'Parece que nigu\xE9m criou grupos ainda',
     'total members': 'Todos membros',
   },
 };

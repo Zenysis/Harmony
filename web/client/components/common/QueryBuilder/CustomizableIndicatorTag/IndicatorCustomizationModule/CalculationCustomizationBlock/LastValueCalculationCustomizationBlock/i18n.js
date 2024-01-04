@@ -47,7 +47,7 @@ const translations: TranslationDictionary = {
     'Last value aggregation': 'Agr\xE9gation de la derni\xE8re valeur',
   },
   br: {
-    Average: 'Média',
+    Average: 'M\xE9dia',
     Count: 'Contagem',
     Sum: 'Soma',
     'Last value aggregation': 'Agrega\xE7\xE3o do \xFAltimo valor',

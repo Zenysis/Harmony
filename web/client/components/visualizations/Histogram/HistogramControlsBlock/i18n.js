@@ -67,13 +67,13 @@ const translations: TranslationDictionary = {
     'Bar Display Settings': "Param\xE8tres d'affichage de la barre",
   },
   br: {
-    Default: 'Predefinição',
+    Default: 'Predefini\xE7\xE3o',
     dateFormat: 'Formato dos dados',
     displayBarBorders: 'Exibir bordas de barra',
     hideZeroValueLabels: 'Esconder valores iguais a zero',
-    rotateDataValueLabels: 'Legendas númericas verticais',
-    rotateXAxisLabels: 'Legendas do eixo-x verticais',
-    'Bar Display Settings': 'Configurações de exibição da barra',
+    rotateDataValueLabels: 'Girar r\xF3tulos de valores de dados',
+    rotateXAxisLabels: 'Girar r\xF3tulos do eixo x',
+    'Bar Display Settings': 'Configura\xE7\xF5es de exibi\xE7\xE3o da barra',
   },
 };
 export default translations;

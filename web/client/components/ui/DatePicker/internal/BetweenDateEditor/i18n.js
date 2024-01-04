@@ -91,10 +91,10 @@ const translations: TranslationDictionary = {
     'Calendar date range picker':
       'Selecionador de intervalos de datas do calend\xE1rio',
     'End date': 'Data final',
-    'Enter end date': 'Insira a data de término',
-    'Enter start date': 'Insira a data de início',
-    'Please enter a valid end date': 'Digite uma data de término válida',
-    'Please enter a valid start date': 'Digite uma data de início válida',
+    'Enter end date': 'Insira a data de t\xE9rmino',
+    'Enter start date': 'Insira a data de in\xEDcio',
+    'Please enter a valid end date': 'Digite uma data de t\xE9rmino v\xE1lida',
+    'Please enter a valid start date': 'Digite uma data de in\xEDcio v\xE1lida',
     'Start date': 'Data de in\xEDcio',
   },
 };

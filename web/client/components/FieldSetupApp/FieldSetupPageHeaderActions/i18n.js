@@ -46,8 +46,22 @@ const translations: TranslationDictionary = {
     'Update Category': 'Mettre \xE0 jour la cat\xE9gorie',
   },
   br: {
+    '%(numIndicators)s indicator(s) will be updated':
+      'O(s) indicador(es) %(numIndicators)s ser\xE1(\xE3o) atualizado(s)',
+    'Bulk import indicator name, short name, and description for indicators on the Indicator Setup page_ This flow allows you to manage the collection of metadata for large numbers of indicators in a separate CSV to then import this data into the Indicator Setup page before publishing to Data Catalog_ The uploaded file is required to have "id", "name", "short_name", and "description" columns_ Any additional columns will be ignored_':
+      'Importar em massa o nome do indicador, o nome abreviado e a descri\xE7\xE3o dos indicadores na p\xE1gina Configura\xE7\xE3o do indicador. Esse fluxo permite que voc\xEA gerencie a coleta de metadados para um grande n\xFAmero de indicadores em um CSV separado para, em seguida, importar esses dados para a p\xE1gina Configura\xE7\xE3o do indicador antes de publicar no Data Catalog. \xC9 necess\xE1rio que o arquivo carregado tenha as colunas "id", "name", "short_name" e "description". Todas as colunas adicionais ser\xE3o ignoradas.',
+    'Download unpublished indicators': 'Baixar indicadores n\xE3o publicados',
+    'File upload failed!': 'Falha no upload do arquivo!',
+    'Import Indicator Metadata': 'Importar metadados do indicador',
+    'No unpublished indicators were found':
+      'N\xE3o foram encontrados indicadores n\xE3o publicados',
+    'Required columns missing': 'Faltam colunas obrigat\xF3rias',
     'Successfully updated categories!': 'Categorias atualizadas com sucesso!',
-    'Update Calculation': 'Atualizar cálculo',
+    'The following required columns were missing from the uploaded file:':
+      'As seguintes colunas obrigat\xF3rias estavam faltando no arquivo carregado:',
+    'The following unpublished indicators were found in the uploaded file:':
+      'Os seguintes indicadores n\xE3o publicados foram encontrados no arquivo carregado:',
+    'Update Calculation': 'Atualizar c\xE1lculo',
     'Update Category': 'Atualizar categoria',
   },
 };

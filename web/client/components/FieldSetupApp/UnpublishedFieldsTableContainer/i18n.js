@@ -38,6 +38,10 @@ const translations: TranslationDictionary = {
     '%(numFields)s selected |': '%(numFields)s s\xE9lectionn\xE9s |',
   },
   br: {
+    '%(numFields)s Matching Indicators Found':
+      '%(numFields)s Indicadores correspondentes encontrados',
+    '%(numFields)s Selected Indicators |':
+      '%(numFields)s Indicadores selecionados',
     '%(numFields)s indicators': '%(numFields)s indicadores',
     '%(numFields)s selected |': '%(numFields)s selecionados |',
   },

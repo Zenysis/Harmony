@@ -60,11 +60,11 @@ const translations: TranslationDictionary = {
   },
   br: {
     'Custom calculations cannot be empty':
-      'Cálculos customizados não podem estar vazios',
-    'Custom calculations must be valid': 'Cálculo tem que ser válido',
+      'C\xE1lculos customizados n\xE3o podem estar vazios',
+    'Custom calculations must be valid': 'C\xE1lculo tem que ser v\xE1lido',
     'Custom calculations must have a name':
-      'Cálculos customizados tem que ter nomes',
-    'This custom calculation already exists': 'Este indicador já existe',
+      'C\xE1lculos customizados tem que ter nomes',
+    'This custom calculation already exists': 'Este indicador j\xE1 existe',
   },
 };
 export default translations;

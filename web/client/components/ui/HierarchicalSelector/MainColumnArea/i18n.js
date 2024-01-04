@@ -48,10 +48,12 @@ const translations: TranslationDictionary = {
       'Aucun indicateur récent. Exécutez une requête pour que les indicateurs apparaissent ici.',
   },
   br: {
+    addAllIndicatorsError: 'N\xE3o h\xE1 indicadores nesta categoria',
     'A list of your most recently selected indicators':
       'Lista dos indicadores mais seleccionados',
+    'Add all indicators': 'Adicionar todos os indicadores',
     'No recent indicators_ Run a query for indicators to appear here_':
-      'Sem indicadores recentes. Faça uma análise e os indicadores irão começar a aparecer aqui',
+      'Sem indicadores recentes. Fa\xE7a uma an\xE1lise e os indicadores ir\xE3o come\xE7ar a aparecer aqui',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

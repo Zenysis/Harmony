@@ -51,6 +51,10 @@ const translations: TranslationDictionary = {
     },
   },
   br: {
+    'No dimensions failed match_ Nice!':
+      'Nenhuma dimens\xE3o falhou na correspond\xEAncia. Legal!',
+    'No locations failed match_ Nice!':
+      'Nenhuma localiza\xE7\xE3o falhou na correspond\xEAncia. Legal!',
     'lookback-weeks': {
       one: 'semana para',
       other: 'semanas para',

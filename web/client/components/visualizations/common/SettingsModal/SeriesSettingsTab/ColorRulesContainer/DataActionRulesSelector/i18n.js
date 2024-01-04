@@ -55,7 +55,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     'Add one or more color rules for each series':
-      'Adicione uma ou mais regras de cores para cada série',
+      'Adicione uma ou mais regras de cores para cada s\xE9rie',
     'Create a new color rule': 'Crie uma nova regra de cores',
     'Rule %(idx)s': 'Regra %(idx)s',
     'Select a rule to apply': 'Selecione uma regra para aplicar',

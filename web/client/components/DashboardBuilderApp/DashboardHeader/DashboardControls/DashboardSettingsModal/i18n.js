@@ -234,42 +234,42 @@ const translations: TranslationDictionary = {
     FetchGroupsFail:
       'Falha ao buscar a lista de grupos. Detalhes adicionais foram gravados no console.',
     FetchUsersFail:
-      'Falha ao tentar buscar a lista de usuários. Detalhes adicionais foram escritos no console.',
-    SaveDashboardSuccess: 'O Paínel foi salvo com sucesso.',
+      'Falha ao tentar buscar a lista de usu\xE1rios. Detalhes adicionais foram escritos no console.',
+    SaveDashboardSuccess: 'O Pa\xEDnel foi salvo com sucesso.',
     Title: 'Titulo',
     deleteDashboardWarning:
-      'Você tem certeza que quer deletar este paínel permanentemente?',
+      'Voc\xEA tem certeza que quer deletar este pa\xEDnel permanentemente?',
     fetchCurrentUsersFail:
-      'Falha ao tentar buscar a lista de usuários deste paínel.',
+      'Falha ao tentar buscar a lista de usu\xE1rios deste pa\xEDnel.',
     pasteJSON:
-      'Cole a representação de JSON na especificação do paínel abaixo.',
+      'Cole a representa\xE7\xE3o de JSON na especifica\xE7\xE3o do pa\xEDnel abaixo.',
     registeredUsersCheckboxText:
-      'Habilitar o acesso ao Visualizador de Painel para todos os usuários registrados',
+      'Habilitar o acesso ao Visualizador de Painel para todos os usu\xE1rios registrados',
     unregisteredUsersCheckboxText:
-      'Permitir o acesso ao Visualizador de Painel para todos os usuários não registados',
+      'Permitir o acesso ao Visualizador de Painel para todos os usu\xE1rios n\xE3o registados',
     updateModalBadJson:
-      'A especificação que foi escrita não é um próprio JSON. Detalhes adicionais foram escritos no console.',
+      'A especifica\xE7\xE3o que foi escrita n\xE3o \xE9 um pr\xF3prio JSON. Detalhes adicionais foram escritos no console.',
     updateModalInvalidSpec:
-      'Houve erros nesta especificação. Detalhes foram escritos no console.',
+      'Houve erros nesta especifica\xE7\xE3o. Detalhes foram escritos no console.',
     usersTabAdditionalUsers:
-      'Usuários com permissões de espectador/editor/administrator também tem acesso a este paínel não importa as configurações postas aqui.',
+      'Usu\xE1rios com permiss\xF5es de espectador/editor/administrator tamb\xE9m tem acesso a este pa\xEDnel n\xE3o importa as configura\xE7\xF5es postas aqui.',
     usersTabPublicAccessWarning:
-      'Ao marcar esta caixa, você permitirá que usuários não registrados acessem e visualizem todos os dados neste painel.',
+      'Ao marcar esta caixa, voc\xEA permitir\xE1 que usu\xE1rios n\xE3o registrados acessem e visualizem todos os dados neste painel.',
     'Clone Dashboard': 'Clonar Painel',
-    'Dashboard Users': 'Usuários do Paínel',
-    'Delete Dashboard': 'Deletar Paínel',
+    'Dashboard Users': 'Usu\xE1rios do Pa\xEDnel',
+    'Delete Dashboard': 'Deletar Pa\xEDnel',
     'Download Permissions': 'Permiss\xF5es de download',
-    'Edit Specification': 'Editar Especificação',
+    'Edit Specification': 'Editar Especifica\xE7\xE3o',
     'Enable dashboard viewers to download analyses on this dashboard':
       'Permitir que os visualizadores do painel fa\xE7am download de an\xE1lises nesse painel',
     'Enable unregistered viewers to download analyses on this dashboard':
       'Permitir que visualizadores n\xE3o registrados fa\xE7am download de an\xE1lises nesse painel',
     'Failed to update users for the Dashboard_ Additional details were written to the console_':
       'Falha na atualiza\xE7\xE3o dos usu\xE1rios do Painel de Controle. Detalhes adicionais foram escritos para o console.',
-    'Filter Configuration': 'Configuração de filtro',
-    'General Settings': 'Configurações Gerais',
+    'Filter Configuration': 'Configura\xE7\xE3o de filtro',
+    'General Settings': 'Configura\xE7\xF5es Gerais',
     'Legacy dashboard': 'Painel legado',
-    'Make Dashboard Official': 'Faça Painel Oficial',
+    'Make Dashboard Official': 'Tornar o Painel oficial',
     'Official Dashboard': 'Painel Oficial',
     'View legacy dashboard': 'Ver painel legado',
   },

@@ -68,16 +68,15 @@ const translations: TranslationDictionary = {
     'Successfully copied': 'Copié avec succès',
   },
   br: {
-    Insights: 'Percepções',
+    Insights: 'Percep\xE7\xF5es',
     Quality: 'Qualidade',
-    'Build Query': 'Construir análise',
-    'Copy to clipboard': 'Copiar para a memória',
+    'Build Query': 'Construir an\xE1lise',
+    'Copy to clipboard': 'Copiar para a mem\xF3ria',
     'Please select an indicator to view Quality score and details':
-      'Por favor selecione um indicador para ver o índice de qualidade e outros detalhes',
+      'Por favor selecione um indicador para ver o \xEDndice de qualidade e outros detalhes',
     'Successfully copied': 'Copiado com sucesso',
   },
 };
-
 I18N.mergeSupplementalTranslations(translations, [
   i18n_components_AdvancedQueryApp_QueryFormPanel_Insights,
   i18n_components_AdvancedQueryApp_QueryFormPanel_QueryBuilder_FilterSelectionBlock,

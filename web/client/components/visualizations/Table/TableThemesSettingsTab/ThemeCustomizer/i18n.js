@@ -64,8 +64,8 @@ const translations: TranslationDictionary = {
     'Table style': 'Style de tableau',
   },
   br: {
-    Gridlines: 'Gridlines',
-    Header: 'Cabeçalho',
+    Gridlines: 'Linhas de grade',
+    Header: 'Cabe\xE7alho',
     Total: 'Total',
     Worksheet: 'Planilha',
     'Column Alignment': 'Alinhamento de coluna',

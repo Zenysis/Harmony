@@ -136,20 +136,21 @@ const translations: TranslationDictionary = {
     '%(firstReportDate)s till %(lastReportDate)s':
       '%(firstReportDate)s a %(lastReportDate)s',
     'A recent last report means that fresh data is available and being collected_ The fewer reporting periods that have passed since the most recent report was received, the better it is for the score_':
-      'Relatórios recentes significando que os dados novos estão sendo inputados. Quanto menos periodos se passaram antes do ültimo relatório foi recebido, melhor a pontuação.',
+      'Relat\xF3rios recentes significando que os dados novos est\xE3o sendo inputados. Quanto menos periodos se passaram antes do \xFCltimo relat\xF3rio foi recebido, melhor a pontua\xE7\xE3o.',
     'Average time between reports: %(numDays)s days':
-      'Tempo médio entre relatórios: %(numDays)s dias',
-    'Completeness Trend': 'Tendência de Completude',
-    'Estimated Reporting Period': 'Periodo de Relatório Estimado',
+      'Tempo m\xE9dio entre relat\xF3rios: %(numDays)s dias',
+    'Completeness Trend': 'Tend\xEAncia de Completude',
+    'Estimated Reporting Period': 'Periodo de Relat\xF3rio Estimado',
     'Indicator Age': 'Idade do indicador',
-    'Last report %(lastReportDate)s': 'Último relatório %(lastReportDate)s',
+    'Last report %(lastReportDate)s':
+      '\xDAltimo relat\xF3rio %(lastReportDate)s',
     'Older indicators tend to be more established and encounter fewer issues common among new indicators_ The larger the number of reporting periods an indicator has been reported for, the better it is for the score_':
-      'Indicadores mais velhos tendem a ser mais estabelecidos e tem menos problemas que os indicadores mais novos. Quanto maior o número de períodos de relatório que um indicador tem, melhor sua pontuação.',
+      'Indicadores mais velhos tendem a ser mais estabelecidos e tem menos problemas que os indicadores mais novos. Quanto maior o n\xFAmero de per\xEDodos de relat\xF3rio que um indicador tem, melhor sua pontua\xE7\xE3o.',
     'The estimated reporting period is based on the average time observed between reports analyzed_ While this does not directly affect the quality score, it is used as an input when computing some parts of the quality score_':
-      'O período de relatório é estimado com base no tempo médio observado entre os relatórios analisados. Enquanto isso não afeta diretamente o Índice de qualidade, ele é usado como uma entrada ao computar algumas partes do índice de qualidade.',
+      'O per\xEDodo de relat\xF3rio \xE9 estimado com base no tempo m\xE9dio observado entre os relat\xF3rios analisados. Enquanto isso n\xE3o afeta diretamente o \xCDndice de qualidade, ele \xE9 usado como uma entrada ao computar algumas partes do \xEDndice de qualidade.',
     'This shows the direction of the trend line for number of reports received per reporting period in the selected date range_ A negative trend is bad for the quality score_':
-      'Isso mostra a direção da tendência do número de relatórios recebidos este period para as datas selecionadas. Uma tendência negativa é ruim para a pontuação.',
-    'Time Since Last Report': 'Tempo desde o último relatório',
+      'Isso mostra a dire\xE7\xE3o da tend\xEAncia do n\xFAmero de relat\xF3rios recebidos este period para as datas selecionadas. Uma tend\xEAncia negativa \xE9 ruim para a pontua\xE7\xE3o.',
+    'Time Since Last Report': 'Tempo desde o \xFAltimo relat\xF3rio',
   },
 };
 export default translations;

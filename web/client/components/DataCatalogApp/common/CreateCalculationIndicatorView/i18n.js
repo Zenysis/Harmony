@@ -93,10 +93,12 @@ const translations: TranslationDictionary = {
     'copy existing indicator': 'copier un indicateur existant',
   },
   br: {
+    cohort: 'Correla\xE7\xE3o',
     formula: 'f\xF3rmula',
     'Change indicator': 'Indicador de mudan\xE7a',
     'Create indicator': 'Criar indicador',
     'Define calculation': 'Definir c\xE1lculo',
+    'Defined by': 'Definido por',
     'Edit calculation': 'Editar c\xE1lculo',
     'New indicator created:': 'Novo indicador criado:',
     'Unable to change operation type for formula and cohort calculation type indicators':

@@ -119,26 +119,25 @@ const translations: TranslationDictionary = {
   },
   br: {
     Editing: 'Editando',
-    'Add Custom Calculation': 'Adicionar cálculo customizado',
+    'Add Custom Calculation': 'Adicionar c\xE1lculo customizado',
     'Add expanded calculation to formula >>':
-      'Adicionar cálculo expandido para fórmula >>',
-    'Add to formula': 'Adicionar a fórmula',
+      'Adicionar c\xE1lculo expandido para f\xF3rmula >>',
+    'Add to formula': 'Adicionar a f\xF3rmula',
     'Calculation Name': 'Nome do Indicador',
     'Click on an indicator to add it to the formula_ Or click on a custom calculation dropdown to see more options_':
-      'Clique em um indicador para adicioná-lo à fórmula. Ou clique em um cálculo dropdown personalizado para ver mais opções.',
+      'Clique em um indicador para adicion\xE1-lo \xE0 f\xF3rmula. Ou clique em um c\xE1lculo dropdown personalizado para ver mais op\xE7\xF5es.',
     'Close panel': 'Fechar painel',
     'Create a new indicator using mathematical operations or custom logic_ Your calculation will show up as a new series in your query results_':
-      'Crie um indicador usando matematica. Seu cálculo irá mostrar como um novo indicador nos seus resultados finais.',
-    'Delete calculation': 'Excluir cálculo',
+      'Crie um indicador usando matematica. Seu c\xE1lculo ir\xE1 mostrar como um novo indicador nos seus resultados finais.',
+    'Delete calculation': 'Excluir c\xE1lculo',
     'Edit an existing custom calculation which will update the calculated values in your query results_':
-      'Editar um cálculo personalizado existente que irá atualizar os valores calculados nos resultados da consulta.',
-    'Editing Custom Calculation': 'Editando Cáculos Customizados',
-    'Fields and Calculations:': 'Campos e Cálculos:',
+      'Editar um c\xE1lculo personalizado existente que ir\xE1 atualizar os valores calculados nos resultados da consulta.',
+    'Editing Custom Calculation': 'Editando C\xE1culos Customizados',
+    'Fields and Calculations:': 'Campos e C\xE1lculos:',
     "Treat 'No data' as 0 in calculation":
       "Tratar 'Sem dados' como 0 no c\xE1lculo",
   },
 };
-
 I18N.mergeSupplementalTranslations(translations, [
   i18n_components_common_CustomCalculationsModal_util,
 ]);

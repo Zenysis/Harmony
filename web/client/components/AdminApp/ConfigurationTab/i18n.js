@@ -71,13 +71,21 @@ const translations: TranslationDictionary = {
   },
   br: {
     '%(key)s has been updated_': '%(key)s foram guardadas',
+    'Are you sure you want to reset all case management configurations back to their default values?':
+      'Tem a certeza de que pretende restabelecer todas as configura\xE7\xF5es da gest\xE3o de caso para os seus valores padr\xE3o?',
     'Automatically sign out users after 30 minutes of inactivity by default':
-      'Desconectar automaticamente após 30 minutos de inactividade.',
+      'Desconectar automaticamente ap\xF3s 30 minutos de inactividade.',
+    'Case management configuration': 'Configura\xE7\xE3o de Gest\xE3o de Caso',
+    'Custom case management homepage dashboard':
+      'Painel de controle da p\xE1gina inicial de gerenciamento de casos personalizados',
+    'Enable case management': 'Ativar Gest\xE3o de Caso',
+    'Reset Configuration': 'Redefinir as configura\xE7\xF5es',
     'Save %(key)s': 'Salvar %(key)s',
+    'Select dashboard': 'Selecione o painel de controle',
     'The configuration setting has been reset to its default value_':
-      'As configurações foram alteradas de volta para os valores padrão.',
+      'As configura\xE7\xF5es foram alteradas de volta para os valores padr\xE3o.',
     'There was an error updating settings_ Contact an Administrator for assistance_':
-      'Houve um erro ao actualizar as configurações. Contacte um administrador de projecto.',
+      'Houve um erro ao actualizar as configura\xE7\xF5es. Contacte um administrador de projecto.',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

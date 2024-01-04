@@ -31,7 +31,7 @@ const translations: TranslationDictionary = {
     Query: 'Requête',
   },
   br: {
-    Query: 'Análise',
+    Query: 'An\xE1lise',
   },
 };
 export default translations;

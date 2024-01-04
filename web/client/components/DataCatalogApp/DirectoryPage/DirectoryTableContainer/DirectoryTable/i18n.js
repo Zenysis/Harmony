@@ -64,8 +64,9 @@ const translations: TranslationDictionary = {
       "Il n'y a pas de ressources dans ce dossier",
   },
   br: {
-    description: 'Descrição',
     Name: 'Nome',
+    description: 'Descri\xE7\xE3o',
+    name: 'Nome',
     status: 'Status',
     'Data Source': 'Fonte de dados',
     'No resources found': 'Nenhum recurso encontrado',

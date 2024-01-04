@@ -94,6 +94,7 @@ const translations: TranslationDictionary = {
     'Wrap Column Titles': 'Envelopper les titres de colonne',
   },
   br: {
+    linkToCasePages: 'Link to %(caseTypeName)s case pages',
     'Alternating Background Color': 'Cor de fundo alternada',
     'Auto-expand tile to display all rows on dashboards':
       'Expans\xE3o autom\xE1tica da telha para exibir todas as fileiras nos pain\xE9is',

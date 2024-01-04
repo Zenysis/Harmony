@@ -52,7 +52,7 @@ const translations: TranslationDictionary = {
     exclusionSettingsFilterHeader:
       'Escolha as consultas que podem ser filtradas',
     filterHelpText: 'Limitar os dados que pretende visualizar no painel',
-    'Add Dashboard Filter': 'Adicionar filtro ao Paínel',
+    'Add Dashboard Filter': 'Adicionar filtro ao Pa\xEDnel',
   },
 };
 export default translations;

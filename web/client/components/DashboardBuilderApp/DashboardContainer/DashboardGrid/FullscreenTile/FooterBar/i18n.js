@@ -47,6 +47,8 @@ const translations: TranslationDictionary = {
   br: {
     Exit: 'Sa\xEDda',
     Options: 'Op\xE7\xF5es',
+    'Add platform attribution text':
+      'Adicionar texto de atribui\xE7\xE3o de plataforma',
     'Play timer (delay in seconds)':
       'Temporizador de jogo (atraso em segundos)',
   },

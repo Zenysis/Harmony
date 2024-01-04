@@ -67,11 +67,11 @@ const translations: TranslationDictionary = {
   br: {
     Homepage: 'Pagina inicial',
     'A correct default url is set in the Site Configuration tab of the':
-      'A url padrão é definida na guia Configuração do site',
+      'A url padr\xE3o \xE9 definida na guia Configura\xE7\xE3o do site',
     'Make sure that you typed the url correctly':
-      'Certifique-se que você digitou o URL corretamente',
+      'Certifique-se que voc\xEA digitou o URL corretamente',
     'The page you are trying to access does not exist':
-      'A página que você está tentando acessar não existe',
+      'A p\xE1gina que voc\xEA est\xE1 tentando acessar n\xE3o existe',
     'Try visiting the': 'Tente entrar em',
   },
 };

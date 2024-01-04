@@ -105,7 +105,7 @@ const translations: TranslationDictionary = {
     'File format passes validation': 'Valida\xE7\xE3o dos passes de arquivo',
     'Replace File': 'Substituir arquivo',
     'Source ID: %(sourceId)s': 'Identifica\xE7\xE3o da fonte: %(sourceId)s',
-    'Upload New File': 'Upload de novo arquivo',
+    'Upload New File': 'Carregamento de novo arquivo',
     'file-match-extension':
       'O arquivo deve corresponder ao tipo de arquivo existente: %(extension)s',
     'only-csv-accepted': 'somente arquivos .csv ou .csv.gz aceitos',

@@ -49,10 +49,10 @@ const translations: TranslationDictionary = {
     'Unassigned variable': 'Variable non attribuée',
   },
   br: {
-    Valid: 'Válido',
-    'Cannot evaluate formula': 'não é possível avaliar fórmula',
-    'Invalid or missing symbol': 'símbolo inválido ou em falta',
-    'Unassigned variable': 'variável não atribuída',
+    Valid: 'V\xE1lido',
+    'Cannot evaluate formula': 'n\xE3o \xE9 poss\xEDvel avaliar f\xF3rmula',
+    'Invalid or missing symbol': 's\xEDmbolo inv\xE1lido ou em falta',
+    'Unassigned variable': 'vari\xE1vel n\xE3o atribu\xEDda',
   },
 };
 export default translations;

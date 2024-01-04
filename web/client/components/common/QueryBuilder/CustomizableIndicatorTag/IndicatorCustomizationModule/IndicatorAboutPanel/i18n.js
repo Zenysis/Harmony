@@ -56,10 +56,10 @@ const translations: TranslationDictionary = {
       "L'indicateur a des parties constituantes",
   },
   br: {
-    defaultName: 'Nome padrão',
+    defaultName: 'Nome padr\xE3o',
     'Data availability': 'Disponibilidade de Dados',
     'Data points': 'Pontos de Dados',
-    'Default calculation type': 'Operação de Cálculo Padrão',
+    'Default calculation type': 'Opera\xE7\xE3o de C\xE1lculo Padr\xE3o',
     'Indicator has constituent parts': 'O indicador tem partes constituintes',
   },
 };

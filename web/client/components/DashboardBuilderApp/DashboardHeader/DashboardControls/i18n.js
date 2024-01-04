@@ -103,15 +103,15 @@ const translations: TranslationDictionary = {
   br: {
     Save: 'Salvar',
     cloneDashboardError:
-      'Ocorreu um erro ao salvar especificação painel. Detalhes foram escritos para o console.',
-    editMode: 'Modo de Edição',
+      'Ocorreu um erro ao salvar especifica\xE7\xE3o painel. Detalhes foram escritos para o console.',
+    editMode: 'Modo de Edi\xE7\xE3o',
     legacy_warning:
       'Atualmente voc\xEA est\xE1 vendo a vers\xE3o legada deste painel. Esta vers\xE3o legada ser\xE1 descontinuada em %(daysUntilRemoval)s dias.',
-    presentMode: 'Modo de Visualização',
+    presentMode: 'Modo de Visualiza\xE7\xE3o',
     'Dashboard cannot be cloned with the same name':
-      'Painel não pode ser clonado com o mesmo nome',
+      'Painel n\xE3o pode ser clonado com o mesmo nome',
     'Provide a name for your new dashboard':
-      'Forneça um nome para o seu novo painel',
+      'Forne\xE7a um nome para o seu novo painel',
     'This legacy dashboard can only be viewed':
       'Este painel s\xF3 pode ser visualizado em',
     'View Latest Dashboard': 'Ver o painel mais recente',

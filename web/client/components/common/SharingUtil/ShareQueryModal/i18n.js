@@ -159,32 +159,32 @@ const translations: TranslationDictionary = {
       'Bonjour, n nVeuillez trouver une analyse que j’ai faite dans %(platformName)s ci-jointe. n nMerci, n%(yourName)s',
   },
   br: {
-    Attaching: 'Attaching',
+    Attaching: 'Anexar',
     Email: 'Email',
     Link: 'Link',
     Send: 'Enviar',
     Sending: 'Enviando',
     'A preview email will be sent to your email address only':
-      'Um e-mail será enviado para seu endereço de e-mail apenas',
-    'Analysis Shared': 'Análise compartilhada',
+      'Um e-mail ser\xE1 enviado para seu endere\xE7o de e-mail apenas',
+    'Analysis Shared': 'An\xE1lise compartilhada',
     'Analysis sharing did not happen successfully':
-      'A parilha da análise não aconteceu com sucesso',
+      'A parilha da an\xE1lise n\xE3o aconteceu com sucesso',
     'Copy link to clipboard': 'Copiar link para o clipboard',
     'Data export download is complete_ Check your Downloads folder_':
-      'Exportação dos dados está completa. Cheque sua pasta de downloads.',
+      'Exporta\xE7\xE3o dos dados est\xE1 completa. Cheque sua pasta de downloads.',
     'Download image': 'Baixar imagem',
     'Export data': 'Exportar os dados',
     'Failed to copy link_ Click generate button to generate link':
-      'Falha ao copiar o link. Clique no botã de Gerar para gerar o link',
+      'Falha ao copiar o link. Clique no bot\xE3 de Gerar para gerar o link',
     'Send Preview': 'Enviar visualiza\xE7\xE3o pr\xE9via',
     'Share your analysis with other users by email, by sending them a link or by exporting the data':
-      'Partilhe a sua análise com outros usuários por e-mail, enviando-lhes um link ou por exportar os dados',
+      'Partilhe a sua an\xE1lise com outros usu\xE1rios por e-mail, enviando-lhes um link ou por exportar os dados',
     'Your analysis will be shared shortly':
-      'Your analysis will be shared shortly',
+      'Sua an\xE1lise ser\xE1 compartilhada em breve',
     'Your data will download shortly, check the download folder':
-      'Your data will download shortly, check the download folder',
+      'Seus dados ser\xE3o baixados em breve, verifique a pasta de download',
     'email-message':
-      'Prezado(a),\n\nSegue anexa a an\xE1lise que eu criei na Plataforma Ivis Anal\xEDtico.\nAtenciosamente,\n%(yourName)s',
+      'Prezado(a),\r\n\r\nSegue anexa a an\xE1lise que eu criei na Plataforma Ivis Anal\xEDtico.\r\nAtenciosamente,\r\n%(yourName)s',
   },
 };
 export default translations;

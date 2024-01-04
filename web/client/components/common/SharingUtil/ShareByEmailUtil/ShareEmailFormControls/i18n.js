@@ -174,21 +174,21 @@ const translations: TranslationDictionary = {
       'a déjà été ajouté. Veuillez entrer une adresse courriel différente.',
   },
   br: {
-    attachmentsText: 'Anexos incluirão todos os dados visíveis.',
+    attachmentsText: 'Anexos incluir\xE3o todos os dados vis\xEDveis.',
     confirmText: 'Confirme se gostaria de continuar.',
     externalRecipientText:
       'Voc\xEA est\xE1 enviando esta an\xE1lise para um destinat\xE1rio que n\xE3o est\xE1 registrado na plataforma. Os destinat\xE1rios externos s\xE3o:',
     noDashboardAccess:
       'Eles n\xE3o poder\xE3o acessar o painel de controle ou ver dados sobre os anexos (a menos que seja um t\xF3pico compartilhado ou que voc\xEA tenha alterado as configura\xE7\xF5es de anexos para este e-mail). Considere convid\xE1-los para o painel de controle antes de enviar este e-mail.',
     noUsersPlaceholder:
-      'Não há usuários com este e-mail na lista de diretório.',
+      'N\xE3o h\xE1 usu\xE1rios com este e-mail na lista de diret\xF3rio.',
     '"%(value)s" is not a valid email address or user group name':
       '%(value)s n\xE3o \xE9 um endere\xE7o de e-mail ou nome de grupo de usu\xE1rios v\xE1lido.',
     'Confirm Sharing': 'Confirmar compartilhamento',
     "Enter a user group name or recipient's email address":
-      'Insira nome do grupo de usuários ou enderço de email',
+      'Insira nome do grupo de usu\xE1rios ou ender\xE7o de email',
     'Enter your subject': 'Digite o assunto',
-    'External user': 'Usuário Externo',
+    'External user': 'Usu\xE1rio Externo',
     'Message:': 'Mensagem:',
     'Reply-to:': 'Responder a:',
     'Selected group "%(name)s" has no members':
@@ -198,11 +198,11 @@ const translations: TranslationDictionary = {
       'Os seguintes destinat\xE1rios n\xE3o t\xEAm acesso a este painel:',
     'To:': 'Para:',
     'Users will reply to this email address':
-      'Os usuários vão responder a este endereço de e-mail',
+      'Os usu\xE1rios v\xE3o responder a este endere\xE7o de e-mail',
     'email does not belong to a user on this platform_':
       'o e-mail n\xE3o pertence a um usu\xE1rio nesta plataforma.',
     'has already been added_ Please enter a different email address_':
-      'já foi adicionado. Insira um endereço de e-mail diferente.',
+      'j\xE1 foi adicionado. Insira um endere\xE7o de e-mail diferente.',
   },
 };
 export default translations;

@@ -67,7 +67,7 @@ const translations: TranslationDictionary = {
     'Successfully published indicator %(name)s':
       'Indicador publicado com sucesso %(nome)s',
     'There are no indicators to triage':
-      'Não há indicadores para fazer a triagem',
+      'N\xE3o h\xE1 indicadores para fazer a triagem',
   },
 };
 export default translations;

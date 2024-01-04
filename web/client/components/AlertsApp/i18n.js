@@ -104,8 +104,8 @@ const translations: TranslationDictionary = {
   },
   br: {
     Trigger: 'Desencadear',
-    'Alert Definitions': 'Definições de Alerta',
-    'Alert Notifications': 'Notificações de Alerta',
+    'Alert Definitions': 'Defini\xE7\xF5es de Alerta',
+    'Alert Notifications': 'Notifica\xE7\xF5es de Alerta',
     'Created by': 'Criado por',
     'Delete Alert': 'Apagar Alerta',
     'Delete this alert?': 'Tem certeza?',
@@ -113,9 +113,9 @@ const translations: TranslationDictionary = {
     'Group By Values': 'Agrupar por valores',
     'Remove Alert': 'Remover Alerta',
     'Successfully deleted alert': 'Alerta deletado com sucesso',
-    'There are no Alert Definitions': 'Não ha definições de alerta',
-    'There are no Alert Notifications': 'Nenhuma notificação de alertas',
-    'Time Frequency': 'Frequência de Tempo',
+    'There are no Alert Definitions': 'N\xE3o ha defini\xE7\xF5es de alerta',
+    'There are no Alert Notifications': 'Nenhuma notifica\xE7\xE3o de alertas',
+    'Time Frequency': 'Frequ\xEAncia de Tempo',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

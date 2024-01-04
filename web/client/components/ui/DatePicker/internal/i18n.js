@@ -130,7 +130,7 @@ const translations: TranslationDictionary = {
   },
   br: {
     Between: 'Entre',
-    Last: 'Último',
+    Last: '\xDAltimo',
     Since: 'Desde',
     This: 'Este',
     Year: 'Ano',
@@ -142,12 +142,12 @@ const translations: TranslationDictionary = {
     'Include current %(dateUnit)s as well':
       'Incluir tamb\xE9m %(dateUnit)s atuais',
     'Number of units': 'N\xFAmero de unidades',
-    'Quick options': 'Opções rápidas',
-    'Select date modifier': 'Seleccionar modificador de data',
+    'Quick options': 'Op\xE7\xF5es r\xE1pidas',
+    'Select date modifier': 'Selecionar modificador de data',
     'Since %(date)s': 'Desde %(date)s',
     'Western calendar': 'Calend\xE1rio ocidental',
     'Year to date': 'Ano at\xE9 hoje',
-    'Your date selection': 'Seleção de datas',
+    'Your date selection': 'Sele\xE7\xE3o de datas',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

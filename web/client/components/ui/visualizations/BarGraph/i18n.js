@@ -31,7 +31,7 @@ const translations: TranslationDictionary = {
     'Bar chart': 'Diagramme à bandes',
   },
   br: {
-    'Bar chart': 'Gráfico de barras',
+    'Bar chart': 'Gr\xE1fico de barras',
   },
 };
 export default translations;

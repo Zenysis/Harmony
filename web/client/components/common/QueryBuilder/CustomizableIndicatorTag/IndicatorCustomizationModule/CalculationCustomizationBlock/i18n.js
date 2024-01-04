@@ -40,7 +40,11 @@ const translations: TranslationDictionary = {
     'Count distinct dimension': 'Compter une dimension distincte',
   },
   br: {
-    Operation: 'Operaçao',
+    Operation: 'Opera\xE7ao',
+    'Cohort-Warning-Modal': 'Aviso',
+    'Cohort-Warning-Modal-Button': 'Continuar',
+    'Cohort-Warning-Modal-Text':
+      'As opera\xE7\xF5es de troca resultar\xE3o em um resultado onde a correla\xE7\xE3o n\xE3o ser\xE1 salva. Voc\xEA deseja continuar?',
     'Count distinct dimension': 'Contagem distinta',
   },
 };

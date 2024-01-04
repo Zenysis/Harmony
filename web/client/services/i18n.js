@@ -174,34 +174,49 @@ const translations: TranslationDictionary = {
       'Votre navigateur ne prend pas en charge les sessions de requête persistantes. L’actualisation de votre navigateur réinitialisera vos requêtes.',
   },
   br: {
+    Crisp: 'Crisp',
     Datasource: 'Fonte de dados',
     "A list of project managers for this platform_ Project managers are bcc'ed on all 'critical' communications sent by the platform_":
       "Uma lista de gerentes de projeto para esta plataforma. Os gerentes de projeto s\xE3o bcc'ed em todas as comunica\xE7\xF5es 'cr\xEDticas' enviadas pela plataforma.",
-    'Automatic Sign Out Setting': 'Configuração de Logout Automático',
+    'A unique identifier that Crisp uses to resolve a chat session to an individual domain_':
+      'Esta configura\xE7\xE3o indica para que p\xE1gina o utilizador ser\xE1 redireccionado depois do login.',
+    'Automatic Sign Out Setting': 'Configura\xE7\xE3o de Logout Autom\xE1tico',
     'By changing the value of this checkbox, you will allow or prevent unregistered users from running queries on the site and viewing Dashboards_':
-      'Ao alterar esta opção vai permitir, ou impedir, que usuários sem registo façam análises e tenham acesso aos painéis.',
+      'Ao alterar esta op\xE7\xE3o vai permitir, ou impedir, que usu\xE1rios sem registo fa\xE7am an\xE1lises e tenham acesso aos pain\xE9is.',
+    'Case Management Home Page Dashboard':
+      'Home Page Dashboard do Gerenciamento de Casos',
+    'Crisp Chat ID': 'ID do Chat do Crisp',
     'Data Catalog Last Import Date':
       'Cat\xE1logo de dados Data da \xFAltima importa\xE7\xE3o',
     'Default URL': 'URL',
+    'Enable Case Management': 'Habilitar o gerenciamento de casos',
     'Group users were successfully updated':
       'Os usu\xE1rios do grupo foram atualizados com sucesso',
     'Group was successfully created_': 'Grupo foi criado com sucesso.',
-    'Group was successfully deleted_': 'Grupo foi excluído com sucesso.',
-    'Group was successfully updated_': 'Grupo foi actualizado com sucesso.',
+    'Group was successfully deleted_': 'Grupo foi exclu\xEDdo com sucesso.',
+    'Group was successfully updated_': 'Grupo foi atualizado com sucesso.',
+    'Indicates whether or not Crisp chat is enabled_':
+      'Um identificador \xFAnico que o Crisp US utiliza para resolver uma sess\xE3o chat.',
     'Indicates whether or not public user support is enabled_ When enabled, unregistered users will be able to access the site as well_':
-      'Indica se está diponível para acesso público. Quando disponível, usuários não registrados também podem aceder ao site.',
-    'Project Managers': 'Gestor de Projectos',
-    'Public Access': 'Acesso Público',
+      'Indica se est\xE1 dipon\xEDvel para acesso p\xFAblico. Quando dispon\xEDvel, usu\xE1rios n\xE3o registrados tamb\xE9m podem aceder ao site.',
+    'Project Managers': 'Gestor de Projetos',
+    'Public Access': 'Acesso P\xFAblico',
+    'The case management app name to show in the navbar':
+      'O nome do aplicativo de gerenciamento de casos para mostrar na barra de navega\xE7\xE3o',
+    'The dashboard to optionally use as the case management home page':
+      'O painel de controle a ser usado opcionalmente como p\xE1gina inicial do gerenciamento de casos',
     'This setting allows user to select which datasource models will use_':
-      'Esta configuração permite que os usuários selecionem a fonte de dados modelo a ser utilizada.',
+      'Esta configura\xE7\xE3o permite que os usu\xE1rios selecionem a fonte de dados modelo a ser utilizada.',
+    'This setting dictates whether or not the Case Management App is enabled':
+      'Esta configura\xE7\xE3o dita se o aplicativo de gerenciamento de casos est\xE1 ou n\xE3o habilitado',
     "This setting dictates whether or not users will be automatically signed out after 30 minutes of inactivity by default_ Users will still be able to select the 'Keep me signed in' check box to avoid being automatically signed out_":
-      "Esta configuração determina se os usuários serão desconectados automaticamente após 30 minutos de inactividade por defeito. Os utilizadores serão capazes de seleccionar a opção 'Mantenha-me conectado' para evitar que sejam automaticamente desconectados.",
+      "Esta configura\xE7\xE3o determina se os usu\xE1rios ser\xE3o desconectados automaticamente ap\xF3s 30 minutos de inactividade por defeito. Os utilizadores ser\xE3o capazes de seleccionar a op\xE7\xE3o 'Mantenha-me conectado' para evitar que sejam automaticamente desconectados.",
     'This setting dictates which page the user will be redirected to upon logging in/accessing the index page_':
-      'Indica se o Crisp está disponível.',
+      'Indica se o Crisp est\xE1 dispon\xEDvel.',
     'This setting indicates the last date Data Catalog was imported_':
       'Esta configura\xE7\xE3o indica a \xFAltima data em que o Cat\xE1logo de Dados foi importado.',
     'Your browser does not support persisting query sessions_ Refreshing your browser will reset your queries_':
-      'Seu browser não suporta esse número de análises. Atualizar seu navegador irá redefinir suas análises.',
+      'Seu browser n\xE3o suporta esse n\xFAmero de an\xE1lises. Atualizar seu navegador ir\xE1 redefinir suas an\xE1lises.',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

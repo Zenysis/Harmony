@@ -35,6 +35,11 @@ const translations: TranslationDictionary = {
     'select datasource': 's\xE9lectionner la source de donn\xE9es',
   },
   br: {
+    'Delivery Slab': 'Placa de entrega',
+    'No input rows had any locations_':
+      'Nenhuma linha de entrada tinha nenhuma localiza\xE7\xE3o.',
+    'No input rows had any of the matched dimensions_':
+      'Nenhuma linha de entrada tinha qualquer uma das dimens\xF5es combinadas.',
     'select datasource': 'selecione a fonte de dados',
   },
 };

@@ -54,10 +54,10 @@ const translations: TranslationDictionary = {
   },
   br: {
     loadDashboardError:
-      'Houve um erro carregando o paínel. Contate um administrador para ajuda. Mais detalhes foram escritos no console.',
+      'Houve um erro carregando o pa\xEDnel. Contate um administrador para ajuda. Mais detalhes foram escritos no console.',
     saveDashboardError:
-      'Houve um erro ao salvar as novas especificações do paínel. Mais detalhes foram escritos no console. ',
-    saveDashboardSuccess: 'O Paínel foi salvo com sucesso. ',
+      'Houve um erro ao salvar as novas especifica\xE7\xF5es do pa\xEDnel. Mais detalhes foram escritos no console. ',
+    saveDashboardSuccess: 'O Pa\xEDnel foi salvo com sucesso. ',
   },
 };
 export default translations;

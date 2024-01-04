@@ -156,32 +156,32 @@ const translations: TranslationDictionary = {
       "Les utilisateurs auront acc\xE8s \xE0 tous les outils associ\xE9s, \xE0 l'acc\xE8s aux donn\xE9es et \xE0 l'acc\xE8s au syst\xE8me",
   },
   br: {
-    Duration: 'Duração',
-    Roles: 'Funções',
+    Duration: 'Dura\xE7\xE3o',
+    Roles: 'Fun\xE7\xF5es',
     Status: 'Estado',
+    totalMembers: {
+      one: '%(count)s \xE9 membro do total de',
+      other: '%(count)s membros totais',
+      zero: 'Sem membros',
+    },
     'Access Control': 'Controle de acesso',
     'Add Alerts': 'Adicionar Alertas',
-    'Add Dashboards': 'Adicionar Painéis',
+    'Add Dashboards': 'Adicionar Pain\xE9is',
     'Add Groups': 'Adicionar Grupos',
-    'Add Roles': 'Adicionar funções',
-    'Add Users': 'Adicionar funções',
+    'Add Roles': 'Adicionar fun\xE7\xF5es',
+    'Add Users': 'Adicionar fun\xE7\xF5es',
     'Date Created': 'Data Criada',
     'Member Count': 'Contagem de membro',
     'User will gain access to all associated tools, data access & system access':
-      'Os usuários terão acesso a todas as ferramenta, dados e permissões de sistema associados.',
+      'Os usu\xE1rios ter\xE3o acesso a todas as ferramenta, dados e permiss\xF5es de sistema associados.',
     'User will gain access to all selected alerts and the chosen level of access':
-      'Utilizador terá acesso a todos alertas selecionados e com o nível de acesso escolhido',
+      'Utilizador ter\xE1 acesso a todos alertas selecionados e com o n\xEDvel de acesso escolhido',
     'User will gain access to all selected dashboards and the chosen level of access':
-      'Utilizador terá acesso a todos painéis selecionados e com o nível de acesso escolhido',
+      'Utilizador ter\xE1 acesso a todos pain\xE9is selecionados e com o n\xEDvel de acesso escolhido',
     'Users will gain access to all associated roles and tools':
-      'Os usuários terão acesso a todas as funções e ferramentas associadas',
+      'Os usu\xE1rios ter\xE3o acesso a todas as fun\xE7\xF5es e ferramentas associadas',
     'Users will gain access to all associated tools, data access & system access':
-      'Os usuários terão acesso a todas as ferramenta, dados e permissões de sistema associados.',
-    totalMembers: {
-      zero: 'Sem membros',
-      one: '%(count)s é membro do total de',
-      other: '%(count)s membros totais',
-    },
+      'Os usu\xE1rios ter\xE3o acesso a todas as ferramenta, dados e permiss\xF5es de sistema associados.',
   },
 };
 export default translations;

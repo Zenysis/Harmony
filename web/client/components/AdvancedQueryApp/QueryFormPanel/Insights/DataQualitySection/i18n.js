@@ -49,9 +49,9 @@ const translations: TranslationDictionary = {
   },
   br: {
     dataQualitySectionTooltip:
-      'Esta seção e o índice de qualidade visam quantificar os relatórios e a qualidade dos dados para esse indicador com base nos fatores detalhados. Não deve ser considerado uma pontuação oficial por si só, mas vale a pena investigar uma pontuação baixa para garantir que ela não tenha um impacto significativo nos resultados de sua análise. Você pode expandir esta seção e clicar na ferramenta de qualidade de dados completa para investigar.',
-    insightFound: 'factor que afecta a pontuação',
-    insightsFound: 'factores que afectam a pontuação',
+      'Esta se\xE7\xE3o e o \xEDndice de qualidade visam quantificar os relat\xF3rios e a qualidade dos dados para esse indicador com base nos fatores detalhados. N\xE3o deve ser considerado uma pontua\xE7\xE3o oficial por si s\xF3, mas vale a pena investigar uma pontua\xE7\xE3o baixa para garantir que ela n\xE3o tenha um impacto significativo nos resultados de sua an\xE1lise. Voc\xEA pode expandir esta se\xE7\xE3o e clicar na ferramenta de qualidade de dados completa para investigar.',
+    insightFound: 'fator que afeta a pontua\xE7\xE3o',
+    insightsFound: 'fatores que afetam a pontua\xE7\xE3o',
   },
 };
 export default translations;

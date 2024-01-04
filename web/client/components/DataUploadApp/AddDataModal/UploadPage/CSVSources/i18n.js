@@ -102,12 +102,27 @@ const translations: TranslationDictionary = {
     indicatorFormatDescription:
       'Os indicadores devem ter apenas valores num\xE9ricos ou vazios.',
     selfServeSourceExists: 'J\xE1 existe uma fonte self-service com esse nome.',
+    'Column %(columnName)s has an unrecognized data type_':
+      'A coluna %(columnName)s tem um tipo de dados n\xE3o reconhecido.',
+    'Duplicate column names are not allowed_':
+      'N\xE3o s\xE3o permitidos nomes de coluna duplicados.',
+    'File cannot be parsed as a CSV file_':
+      'O arquivo n\xE3o pode ser analisado como um arquivo CSV.',
     'In order to successfully ingest your data into our database, data must be in the Zenysis Base Format:':
       'A fim de ingerir com sucesso seus dados em nosso banco de dados, os dados devem estar no formato Zenysis Base Format:',
+    'Invalid filename for uploaded file_':
+      'Nome de arquivo inv\xE1lido para o arquivo carregado.',
     'Learn More': 'Saiba mais',
     'Set data source name before uploading file':
       'Definir o nome da fonte de dados antes de carregar o arquivo',
-    'Upload Failed! %(errorMessage)s': 'Parece que o envio falhou',
+    'Unsupported encoding: file upload requires utf-8 encoding_':
+      'Codifica\xE7\xE3o n\xE3o suportada: o upload do arquivo requer codifica\xE7\xE3o utf-8.',
+    'Unsupported file extension_': 'Extens\xE3o de arquivo n\xE3o suportada.',
+    'Upload Failed! %(errorMessage)s': 'Falha no upload! %(errorMessage)s',
+    'Uploaded data has no valid date columns_':
+      'Os dados carregados n\xE3o t\xEAm colunas de data v\xE1lidas.',
+    'Uploaded data has no valid indicator columns_':
+      'Os dados carregados n\xE3o t\xEAm colunas de indicadores v\xE1lidas.',
     'file-upload-example':
       'grupo por 1, grupo por 2, ..., grupo porN, data, indicador 1, indicador 2, ..., indicadorN',
   },

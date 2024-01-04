@@ -86,14 +86,14 @@ const translations: TranslationDictionary = {
     Tools: 'Ferramenta',
     View: 'Ver',
     'Cannot add or update group without a name_':
-      'Não pode criar ou actualizar um grupo sem um nome',
+      'N\xE3o pode criar ou actualizar um grupo sem um nome',
     'Group Details': 'Detalhes do grupo',
     'Group name "%(name)s" already exists_ Please select another name_':
       'O nome do grupo "%(name)s" j\xE1 existe. Por favor, selecione outro nome.',
     'Item Access': 'Acesso ao item',
     'Summary of access': 'Resumo do acesso',
     'The disaggregated platform access for this group_':
-      'O acesso à plataforma desagregados para este grupo.',
+      'O acesso \xE0 plataforma desagregados para este grupo.',
   },
 };
 I18N.mergeSupplementalTranslations(translations, [

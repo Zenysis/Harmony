@@ -117,19 +117,20 @@ const translations: TranslationDictionary = {
     Filter: 'Filtro',
     beta: 'beta',
     lackOfDataErrorForQualityScore:
-      'Não foi possível calcular um índice de qualidade para este indicador devido à falta de dados.',
+      'N\xE3o foi poss\xEDvel calcular um \xEDndice de qualidade para este indicador devido \xE0 falta de dados.',
     'Data Outlier Analysis Score': 'Pontua\xE7\xE3o de an\xE1lise de dados',
     'Indicator Characteristics Score':
-      'Pontuação das Caracterisicas do indicador',
+      'Pontua\xE7\xE3o das Caracterisicas do indicador',
     'It should not be taken as an authoritative score on its own_ It can be used to prioritize between indicators and as a starting point to investigate and isolate issues using the tools provided below_':
-      'Este não deve ser uma pontuação autoritaria, mas sim como um ponto inicial para se fazer uma investigação usando as ferramentas abaixo.',
-    'Overall Score': 'Pontuação geral',
-    'Quality Score': 'Índice de qualidade',
-    'Reporting Completeness Score': 'Pontuação da Completude do indicador',
+      'Este n\xE3o deve ser uma pontua\xE7\xE3o autoritaria, mas sim como um ponto inicial para se fazer uma investiga\xE7\xE3o usando as ferramentas abaixo.',
+    'Overall Score': 'Pontua\xE7\xE3o geral',
+    'Quality Score': '\xCDndice de qualidade',
+    'Reporting Completeness Score':
+      'Pontua\xE7\xE3o da Completude do indicador',
     'There may be quality issues which are not accounted for in the score and some indicators may have a low score where there is no real quality issue_ Examples include cases where there is strong seasonality or a non-standard reporting cadence and structure_ These cases should be observable with the tools below by an analyst with programmatic knowledge_':
-      'Pode haver problemas de qualidade que não são contabilizadas na pontuação e alguns indicadores podem ter uma pontuação baixa em que não há problema de qualidade real. Exemplos incluem os casos em que existem uma forte sazonalidade ou uma cadência de informação não padrão e estruturada. Estes casos devem ser observádos com as ferramentas abaixo por um analista com conhecimento programático.',
+      'Pode haver problemas de qualidade que n\xE3o s\xE3o contabilizadas na pontua\xE7\xE3o e alguns indicadores podem ter uma pontua\xE7\xE3o baixa em que n\xE3o h\xE1 problema de qualidade real. Exemplos incluem os casos em que existem uma forte sazonalidade ou uma cad\xEAncia de informa\xE7\xE3o n\xE3o padr\xE3o e estruturada. Estes casos devem ser observ\xE1dos com as ferramentas abaixo por um analista com conhecimento program\xE1tico.',
     'This score aims to quantify the reporting and data quality for this indicator based on the factors detailed in each of the below tabs_':
-      'Esta pontuação tem como objetivo quantificar o reporte e a qualidade dos dados para este indicador com base nos fatores detalhados em cada uma das guias abaixo.',
+      'Esta pontua\xE7\xE3o tem como objetivo quantificar o reporte e a qualidade dos dados para este indicador com base nos fatores detalhados em cada uma das guias abaixo.',
     'What does this mean?': 'O que isto significa?',
   },
 };

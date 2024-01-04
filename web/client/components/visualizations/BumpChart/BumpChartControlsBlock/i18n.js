@@ -31,7 +31,7 @@ const translations: TranslationDictionary = {
     showEthiopianDates: 'Afficher les Dates Éthiopiennes',
   },
   br: {
-    showEthiopianDates: 'Show Ethiopian Dates',
+    showEthiopianDates: 'Mostrar datas da Eti\xF3pia',
   },
 };
 export default translations;

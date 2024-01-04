@@ -48,8 +48,8 @@ const translations: TranslationDictionary = {
   br: {
     Theme: 'Tema',
     displayGroupingLevel: 'Exibir Agrupamento',
-    'Show distribution': 'Mostrar distribuição',
-    'Show outliers': 'Mostrar Outliers',
+    'Show distribution': 'Mostrar distribui\xE7\xE3o',
+    'Show outliers': 'Mostrar valores discrepantes',
   },
 };
 export default translations;
