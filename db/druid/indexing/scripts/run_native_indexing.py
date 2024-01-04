@@ -16,7 +16,6 @@ from db.druid.indexing.common import (
     get_max_number_of_files,
     INDEX_URL,
     build_io_config,
-    DEFAULT_TASK_HASH_DIR,
     build_tuning_config,
     build_datasource_version,
 )
@@ -82,7 +81,7 @@ def main():
     Flags.PARSER.add_argument(
         '--task_hash_dir',
         type=str,
-        default=DEFAULT_TASK_HASH_DIR,
+        required=True,
         help='Directory where indexing task hashes are stored',
     )
     Flags.PARSER.add_argument(
