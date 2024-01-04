@@ -1,7 +1,7 @@
 import math
 import os
 from datetime import datetime
-from typing import Any, List, Union
+from typing import Any, List, Union, Optional
 
 from config.druid import DIMENSIONS, UNFILTERABLE_DIMENSIONS
 from config.datatypes import BaseRowType
@@ -13,10 +13,6 @@ from db.druid.indexing.task_runner_util import build_dimension_spec_dimensions
 from db.druid.util import build_time_interval
 from util.connections.connection_manager import get_connection_values
 
-
-# Directory location where a hash of the files ingested for a datasource
-# are stored
-DEFAULT_TASK_HASH_DIR = '/home/share/data/logs/druid_indexing/hash'
 
 INDEX_URL = f'{DruidConfig.router_endpoint()}/druid/indexer/v1/task'
 
@@ -75,10 +71,29 @@ def build_io_config_minio(
     }
 
 
+def _fix_path_for_druid(
+    files: List[str], local_folder: Optional[str], druid_folder: Optional[str]
+):
+    """The shared folder on the pipeline, might not match the shared folder on the druid machine.
+    The zenysis convention is to have a consistent /home/share folder on all machines, but this
+    may not always be practical. e.g. on the pipeline, one could map to `/home/myuser/share`, but
+    on the druid machine, it could be `/home/share`
+    """
+    if local_folder and druid_folder and local_folder != druid_folder:
+        files = [file.replace(local_folder, druid_folder) for file in files]
+    return files
+
+
 def build_io_config_local(
-    files: List[str], use_nested_json_format: bool, max_num_files: int
+    files: List[str],
+    use_nested_json_format: bool,
+    max_num_files: int,
+    local_folder: Optional[str],
+    druid_folder: Optional[str],
 ) -> dict:
-    flattened_files = flatten_files(files, max_num_files)
+    flattened_files = _fix_path_for_druid(
+        flatten_files(files, max_num_files), local_folder, druid_folder
+    )
     return {
         'inputFormat': input_format(use_nested_json_format),
         'inputSource': {
@@ -89,10 +104,18 @@ def build_io_config_local(
     }
 
 
-def build_io_config(files: List[Any], use_nested_json_format: bool, max_num_files: int):
+def build_io_config(
+    files: List[Any],
+    use_nested_json_format: bool,
+    max_num_files: int,
+    local_folder: Optional[str],
+    druid_folder: Optional[str],
+):
     if files and isinstance(files[0], MinioObject):
         return build_io_config_minio(files, use_nested_json_format, max_num_files)
-    return build_io_config_local(files, use_nested_json_format, max_num_files)
+    return build_io_config_local(
+        files, use_nested_json_format, max_num_files, local_folder, druid_folder
+    )
 
 
 def input_format(use_nested_json_format):

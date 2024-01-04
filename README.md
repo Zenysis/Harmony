@@ -104,7 +104,9 @@ See [Makefiles.md](Makefiles.md) for more information on the Makefiles in this r
 
 In order to run a local web server or run data pipeline steps on the command line, you'll need to set up a local development environment. This is distinct from setting up production servers (explained in other sections).
 
-The instructions found below are for running a local development environment using Docker. It is possible to run a local development environment without Docker on Linux or MacOs, but instructions for doing so are not provided here.
+The instructions found below are for running a local development environment using Docker.
+
+[Step by step instructions for running "un-containerised" can be found on the Harmony Wiki](https://github.com/Zenysis/Harmony/wiki/Local-Development-%E2%80%90-Step-by-step-instructions).
 
 ### Prepare environment
 

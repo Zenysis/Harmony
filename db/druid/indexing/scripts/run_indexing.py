@@ -31,10 +31,6 @@ from db.druid.util import DRUID_DATE_FORMAT
 
 INDEX_URL = f'{DruidConfig.indexing_endpoint()}/druid/indexer/v1/task'
 
-# Directory location where a hash of the files ingested for a datasource
-# are stored
-DEFAULT_TASK_HASH_DIR = '/home/share/data/logs/druid_indexing/hash'
-
 # Date range to index data for.
 TODAY = datetime.datetime.today()
 DEFAULT_MIN_DATA_DATE_STR = '2009-01-01'
@@ -110,7 +106,7 @@ def main():
     Flags.PARSER.add_argument(
         '--task_hash_dir',
         type=str,
-        default=DEFAULT_TASK_HASH_DIR,
+        required=True,
         help='Directory where indexing task hashes are stored',
     )
     Flags.PARSER.add_argument(

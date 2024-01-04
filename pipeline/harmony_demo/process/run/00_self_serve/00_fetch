@@ -9,7 +9,7 @@ rm -rf "${PIPELINE_FEED_DIR}"/*
 pushd "${PIPELINE_FEED_DIR}" &> /dev/null
 
 ############################################
-BUCKET_NAME='s3/zenysis-harmony-demo/self_serve'
+BUCKET_NAME="${OBJECT_STORAGE_ALIAS:-s3}/zenysis-harmony-demo/self_serve"
 ############################################
 
 # The active sources file is not created until there are self serve sources.

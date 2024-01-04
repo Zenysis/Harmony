@@ -29,18 +29,6 @@ volumes:
   broker_var: {}
   coordinator_var: {}
   router_var: {}
-  druid_shared:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DRUID_SHARED_FOLDER:-/home/share}
-  data_output:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_OUTPUT_FOLDER:-/data/output}
 
 services:
   extension_loader:
@@ -92,7 +80,7 @@ services:
     container_name: coordinator
     restart: always
     volumes:
-      - druid_shared:/home/share
+      - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
       - coordinator_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -135,8 +123,8 @@ services:
     container_name: historical
     restart: always
     volumes:
-      - druid_shared:/home/share
-      - data_output:/data/output
+      - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
+      - ${DATA_OUTPUT_FOLDER:-/data/output}:/data/output
       - historical_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
@@ -159,8 +147,8 @@ services:
     container_name: middlemanager
     restart: always
     volumes:
-      - druid_shared:/home/share
-      - data_output:/data/output
+      - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
+      - ${DATA_OUTPUT_FOLDER:-/data/output}:/data/output
       - middle_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:

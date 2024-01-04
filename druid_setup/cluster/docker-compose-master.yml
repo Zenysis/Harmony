@@ -34,13 +34,6 @@ volumes:
       type: none
       o: bind
       device: /data/output/zookeeper/datalog
-  druid_shared:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/share
-
 
 services:
   extension_loader:
@@ -89,7 +82,7 @@ services:
     container_name: coordinator
     restart: always
     volumes:
-      - druid_shared:/home/share
+      - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
       - coordinator_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:

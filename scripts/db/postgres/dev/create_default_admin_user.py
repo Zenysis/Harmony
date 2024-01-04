@@ -18,7 +18,7 @@ def main():
 
     first_name = 'Software'
     last_name = 'Developer'
-    email = 'software@something.com'
+    email = 'demo@zenysis.com'
 
     postgres_host = os.environ.get('POSTGRES_HOST', 'localhost')
     args = [
