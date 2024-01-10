@@ -12,7 +12,6 @@ services:
       - ./graphql/hasura/metadata/versions/latest:/hasura-metadata
   postgres:
     image: postgres:15.2-alpine
-    container_name: postgres
     restart: always
     environment:
       POSTGRES_USER: postgres
