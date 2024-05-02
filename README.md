@@ -90,11 +90,11 @@ For many Harmony projects, the free tier of Mapbox will be sufficient. Refer to 
 
 When you run a script or the web server, select a configuration by setting the `ZEN_ENV` environmental variable. This environmental variable maps directly to folder names in `config/`, and will cause the `config` module to export the contents of that particular configuration.
 
-      Say there is configuration directory named `usa`. We can specify that configuration with the following:
+Say there is configuration directory named `usa`. We can specify that configuration with the following:
 
-      ```bash
-      export ZEN_ENV='usa'
-      ```
+```
+export ZEN_ENV='usa'
+```
 
 ### A note on Makefiles
 
@@ -137,31 +137,86 @@ All instructions going forward will assume that the environment variables have b
 
 ### Prepare Database
 
+```
 Run `make dev-prepare-database`
+```
 
 ### Run Web Server
 
-1. Run `make up`
-2. In a separate terminal, connect to the running web container, run `SERVICE=web make exec-bash`
-3. Now run: `source venv/bin/activate && ./scripts/create_user.py --username=me@mydomain.com --password=password --first_name=admin --last_name=istrator --site_admin`
+1. Run
+   
+   ```
+   make up
+   ```
+2. In a separate terminal, connect to the running web container, run
+   
+   ```
+   SERVICE=web make exec-bash
+   ```
+3. Now run:
+   
+   ```
+   source venv/bin/activate && ./scripts/create_user.py --username=me@mydomain.com --password=password --first_name=admin --last_name=istrator --site_admin
+   ```
 4. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 3.
 
 ### Run Pipeline
 
-1. Execute a command on the pipeline container `COMMAND=<your command here> make up-dev-pipeline`
+1. Execute a command on the pipeline container
+   
+   ```
+   COMMAND=<your command here> make up-dev-pipeline
+   ```
    or
-1. Get a terminal on the pipeline container: `SERVICE=pipeline make run-bash`
+   
+   Get a terminal on the pipeline container:
+   
+   ```
+   SERVICE=pipeline make run-bash
+   ```
 
 ### Run development tools
 
-1. Run translations: `SERVICE=web make exec-bash` then `source venv/bin/activate && yarn translations`
+1. Run translations:
+   
+   ```
+   SERVICE=web make exec-bash
+   ```
+
+   then 
+
+   ```
+   source venv/bin/activate && yarn translations
+   ```
 
 ### Next steps & useful tips
 
-- You can do a lot with docker compose that's beyond the scope of this document, but a good starting point is `docker compose --help`
-- Know what containers are running: `make ps`
-- It's useful to have a terminal open on the web instance: `SERVICE=web make exec-bash` ; furthermore running `source venv/bin/activate` will activate the python virtual environment.
-- You can start a container and attach to the shell with: `SERVICE=web make run-bash`.
+- You can do a lot with docker compose that's beyond the scope of this document, but a good starting point is
+  
+  ```
+  docker compose --help
+  ```
+- Know what containers are running:
+
+  ```
+  make ps
+  ```
+- It's useful to have a terminal open on the web instance:
+  
+  ```
+  SERVICE=web make exec-bash
+  ```
+  furthermore running the below command will activate the python virtual environment.
+
+  ```
+  source venv/bin/activate
+  ```
+  
+- You can start a container and attach to the shell with:
+
+  ```
+  SERVICE=web make run-bash
+  ```
 
 ## Object storage setup
 
