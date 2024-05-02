@@ -92,9 +92,9 @@ When you run a script or the web server, select a configuration by setting the `
 
 Say there is configuration directory named `usa`. We can specify that configuration with the following:
 
-```
-export ZEN_ENV='usa'
-```
+  ```bash
+  export ZEN_ENV='usa'
+  ```
 
 ### A note on Makefiles
 
