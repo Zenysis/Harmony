@@ -15,8 +15,13 @@ class SQLAlchemy(SQLAlchemyBase):
 
     def make_declarative_base(self, model, metadata=None):
         """Creates or extends the declarative base."""
-        if self.Model is None:
-            self.Model = super().make_declarative_base(model, metadata)
+        try:
+            if self.Model is None:
+                self.Model = super().make_declarative_base(model, metadata)
 
-        set_query_property(self.Model, self.session)
-        return self.Model
+            set_query_property(self.Model, self.session)
+            return self.Model
+        except Exception as e:
+            # Handle any exceptions that might occur during base creation
+            print(f"Error during declarative base creation: {e}")
+            raise
