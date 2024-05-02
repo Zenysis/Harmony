@@ -1,7 +1,9 @@
+import logging
 from flask_sqlalchemy import SQLAlchemy as SQLAlchemyBase
 
 from models.alchemy.base import set_query_property
 
+logger = logging.getLogger(__name__)
 
 class SQLAlchemy(SQLAlchemyBase):
     """Flask extension that integrates alchy with Flask-SQLAlchemy."""
@@ -22,6 +24,4 @@ class SQLAlchemy(SQLAlchemyBase):
             set_query_property(self.Model, self.session)
             return self.Model
         except Exception as e:
-            # Handle any exceptions that might occur during base creation
-            print(f"Error during declarative base creation: {e}")
-            raise
+            logger.exception("Error during declarative base creation: %s", e)
