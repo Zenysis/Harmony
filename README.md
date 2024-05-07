@@ -139,22 +139,23 @@ All instructions going forward will assume that the environment variables have b
 
 ```bash
 make dev-prepare-database
+```
 
 ### Run Web Server
 
 1. Run
    
-   ```
+   ```bash
    make up
    ```
 2. In a separate terminal, connect to the running web container, run
    
-   ```
+   ```bash
    SERVICE=web make exec-bash
    ```
 3. Now run:
    
-   ```
+   ```bash
    source venv/bin/activate && ./scripts/create_user.py --username=me@mydomain.com --password=password --first_name=admin --last_name=istrator --site_admin
    ```
 4. Browse to website on [http://localhost:5000](http://localhost:5000) and log in with the credentials used in step 3.
@@ -163,14 +164,14 @@ make dev-prepare-database
 
 1. Execute a command on the pipeline container
    
-   ```
+   ```bash
    COMMAND=<your command here> make up-dev-pipeline
    ```
    or
    
    Get a terminal on the pipeline container:
    
-   ```
+   ```bash
    SERVICE=pipeline make run-bash
    ```
 
@@ -178,13 +179,13 @@ make dev-prepare-database
 
 1. Run translations:
    
-   ```
+   ```bash
    SERVICE=web make exec-bash
    ```
 
    then 
 
-   ```
+   ```bash
    source venv/bin/activate && yarn translations
    ```
 
@@ -197,23 +198,23 @@ make dev-prepare-database
   ```
 - Know what containers are running:
 
-  ```
+  ```bash
   make ps
   ```
 - It's useful to have a terminal open on the web instance:
   
-  ```
+  ```bash
   SERVICE=web make exec-bash
   ```
   furthermore running the below command will activate the python virtual environment.
 
-  ```
+  ```bash
   source venv/bin/activate
   ```
   
 - You can start a container and attach to the shell with:
 
-  ```
+  ```bash
   SERVICE=web make run-bash
   ```
 
@@ -229,13 +230,13 @@ As described above, any object storage server works and using a MinIO server is 
 2. Set the requisite environment variables in a `.env` file: `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD`.
 3. Create directory for Docker volume. This location can be customized with the `MINIO_DATA_FOLDER` env variable.
 
-```
+```bash
 sudo mkdir /localdisk/data
 ```
 
 4. Switch volume directory to non-root ownership. (On machines without an "ubuntu" user, other default, non-root users can be swapped in here.)
 
-```
+```bash
 sudo chown ubuntu:ubuntu /localdisk/data
 ```
 
@@ -272,14 +273,14 @@ The pipeline server runs the ETL data pipeline to generate datasources (typicall
 4. Optionally add `$DRUID_SHARED_FOLDER` and `$OUTPUT_PATH` if the defaults are not suitable. Set `$DOCKER_HOST` if connecting to remote host.
 5. Create directories for Docker volumes.
 
-```
+```bash
 sudo mkdir /home/share
 sudo mkdir /data/output
 ```
 
 5. Switch volume directories to non-root ownership. (On machines without an "ubuntu" user, other default, non-root users can be swapped in here.)
 
-```
+```bash
 sudo chown ubuntu:ubuntu /home/share
 sudo chown ubuntu:ubuntu /data/output
 ```
