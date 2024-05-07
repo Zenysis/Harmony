@@ -138,7 +138,7 @@ All instructions going forward will assume that the environment variables have b
 ### Prepare Database
 
    ```
-   Run `make dev-prepare-database`
+make dev-prepare-database
 
 ### Run Web Server
 
