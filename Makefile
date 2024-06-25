@@ -67,6 +67,9 @@ mypy: # Run mypy using `mypy --config-file mypy.ini`
 	source venv/bin/activate;
 	mypy --config-file mypy.ini;
 
+populate-dc: # Populate the data catalog tables.
+	$(COMPOSE_COMMAND) run --rm web /bin/bash -c "ZEN_ENV=${ZEN_ENV} ./scripts/data_catalog/populate_query_models_from_config.py"
+
 postgres-psql:
 	$(COMPOSE_COMMAND) exec postgres psql -h ${POSTGRES_HOST} -U ${POSTGRES_USER} ${POSTGRES_DB}
 
