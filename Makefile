@@ -91,6 +91,9 @@ up-dev-pipeline: # Start the dev pipeline.
 up-pipeline:
 	DOCKER_HOST=$(DOCKER_HOST) docker compose --env-file $(ENV_FILE) -f docker-compose.pipeline.yaml up
 
+up-postgres:
+	DOCKER_HOST=$(DOCKER_HOST) docker compose --env-file $(ENV_FILE) -f docker-compose.db.yaml up --detach
+
 bash-pipeline:
 	DOCKER_HOST=$(DOCKER_HOST) docker compose --env-file $(ENV_FILE) -f docker-compose.pipeline.yaml run --rm etl-pipeline /bin/bash -c "source venv/bin/activate && /bin/bash"
 
