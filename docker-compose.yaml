@@ -78,6 +78,8 @@ services:
       # Workarond if you want healtchecks for nginx (not guaranteed to work)
       # - ACME_PRE_HOOK=sleep 30; ping -c 1 -t 1 nginx || exit 1
     logging: *default-logging
+    profiles:
+      - donotstart
   # see: https://docs.docker.com/storage/volumes/#back-up-restore-or-migrate-data-volumes
   # 'flags_extra': {'volumes-from': 'nginx'},
   redis:
