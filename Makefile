@@ -13,7 +13,7 @@ DB_OVERRIDE := $(if $(DB), -f docker-compose.db.yaml,)
 LOCAL_OVERRIDE := $(if $(LOCAL), -f docker-compose.local.yaml,)
 PROD_OVERRIDE := $(if $(PROD), -f docker-compose.prod.yaml,)
 OVERRIDES := $(DB_OVERRIDE)$(LOCAL_OVERRIDE)$(DEV_OVERRIDE)$(PROD_OVERRIDE)
-COMPOSE_COMMAND := DOCKER_HOST=$(DOCKER_HOST) docker compose -p $(PROJECT_NAME) --env-file $(ENV_FILE) -f docker-compose.yaml $(OVERRIDES)
+COMPOSE_COMMAND := docker compose -p $(PROJECT_NAME) --env-file $(ENV_FILE) -f docker-compose.yaml $(OVERRIDES)
 
 # help command copied from https://dwmkerr.com/makefile-help-command/
 help: # Show help for each of the Makefile recipes.
@@ -58,10 +58,10 @@ logs: # Tail the logs of all containers.
 	$(COMPOSE_COMMAND) logs $(SERVICE) -f --tail 100
 
 minio-server-up: # Start the minio server container.
-	DOCKER_HOST=$(DOCKER_HOST) docker compose --env-file $(ENV_FILE) -f docker-compose.minio.yaml up --detach
+	docker compose --env-file $(ENV_FILE) -f docker-compose.minio.yaml up --detach
 
 minio-server-down: # Stop the minio server container.
-	DOCKER_HOST=$(DOCKER_HOST) docker compose --env-file $(ENV_FILE) -f docker-compose.minio.yaml down
+	docker compose --env-file $(ENV_FILE) -f docker-compose.minio.yaml down
 
 mypy: # Run mypy using `mypy --config-file mypy.ini`
 	source venv/bin/activate;
@@ -92,13 +92,13 @@ up-dev-pipeline: # Start the dev pipeline.
 	COMMAND=$(COMMAND) $(COMPOSE_COMMAND) up pipeline
 
 up-pipeline:
-	DOCKER_HOST=$(DOCKER_HOST) docker compose --env-file $(ENV_FILE) -f docker-compose.pipeline.yaml up
+	docker compose --env-file $(ENV_FILE) -f docker-compose.pipeline.yaml up
 
 up-postgres:
-	DOCKER_HOST=$(DOCKER_HOST) docker compose --env-file $(ENV_FILE) -f docker-compose.db.yaml up --detach
+	docker compose --env-file $(ENV_FILE) -f docker-compose.db.yaml up --detach
 
 bash-pipeline:
-	DOCKER_HOST=$(DOCKER_HOST) docker compose --env-file $(ENV_FILE) -f docker-compose.pipeline.yaml run --rm etl-pipeline /bin/bash -c "source venv/bin/activate && /bin/bash"
+	docker compose --env-file $(ENV_FILE) -f docker-compose.pipeline.yaml run --rm etl-pipeline /bin/bash -c "source venv/bin/activate && /bin/bash"
 
 bash-dev-pipeline:
 	$(COMPOSE_COMMAND) run --rm pipeline /bin/bash -c "source venv/bin/activate && /bin/bash"
