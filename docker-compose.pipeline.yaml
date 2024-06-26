@@ -1,7 +1,7 @@
 services:
   etl-pipeline:
     platform: linux/amd64
-    image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/harmony-etl-pipeline:${DOCKER_TAG:-latest}
+    image: ${DOCKER_NAMESPACE:-public.ecr.aws/c2p2c6h0}/harmony-etl-pipeline:${DOCKER_TAG:-latest}
     volumes:
       - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
       - ${OUTPUT_PATH:-/data/output}:/zenysis/pipeline/out

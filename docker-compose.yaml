@@ -111,7 +111,7 @@ services:
   web:
     platform: linux/amd64
     pull_policy: always
-    image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/${DOCKER_IMAGE_PREFIX:-harmony}-web:${DOCKER_TAG:-latest}
+    image: ${DOCKER_NAMESPACE:-public.ecr.aws/c2p2c6h0}/${DOCKER_IMAGE_PREFIX:-harmony}-web:${DOCKER_TAG:-latest}
     ports:
       - 5000:5000
     environment:
@@ -149,7 +149,7 @@ services:
     logging: *default-logging
   worker:
     platform: linux/amd64
-    image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/${DOCKER_IMAGE_PREFIX:-harmony}-web:${DOCKER_TAG:-latest}
+    image: ${DOCKER_NAMESPACE:-public.ecr.aws/c2p2c6h0}/${DOCKER_IMAGE_PREFIX:-harmony}-web:${DOCKER_TAG:-latest}
     # Assign some random ports for worker service to work
     ports:
       - 61234:61234
