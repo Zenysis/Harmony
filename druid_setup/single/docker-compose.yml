@@ -38,7 +38,6 @@ services:
       - zen_extensions:/druid/extensions
     environment:
       - ZEN_DRUID_VERSION=${DRUID_VERSION}
-    user: 1002:1002
 
   postgres:
     image: postgres:latest
@@ -60,7 +59,6 @@ services:
     restart: always
     ports:
       - "11211:11211"
-    user: 1002:1002
 
   # Need 3.5 or later for container nodes
   zookeeper:
@@ -96,7 +94,6 @@ services:
     env_file:
       - environment/common.env
       - environment/coordinator.env
-    user: 1002:1002
 
   broker:
     platform: linux/amd64
@@ -119,7 +116,6 @@ services:
     env_file:
       - environment/common.env
       - environment/broker.env
-    user: 1002:1002
 
   historical:
     platform: linux/amd64
@@ -144,7 +140,6 @@ services:
     env_file:
       - environment/common.env
       - environment/historical.env
-    user: 1002:1002
 
   middlemanager:
     platform: linux/amd64
@@ -169,7 +164,6 @@ services:
     env_file:
       - environment/common.env
       - environment/middlemanager.env
-    user: 1002:1002
 
   router:
     platform: linux/amd64
@@ -191,4 +185,3 @@ services:
     env_file:
       - environment/common.env
       - environment/router.env
-    user: 1002:1002
