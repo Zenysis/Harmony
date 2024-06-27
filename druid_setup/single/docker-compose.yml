@@ -60,7 +60,6 @@ services:
     restart: always
     ports:
       - "11211:11211"
-    user: 0:0
 
   # Need 3.5 or later for container nodes
   zookeeper:
