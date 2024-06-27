@@ -53,7 +53,6 @@ services:
       - POSTGRES_PASSWORD=FoolishPassword
       - POSTGRES_USER=druid
       - POSTGRES_DB=druid
-    user: 1002:1002
 
   memcache:
     container_name: memcache
@@ -76,7 +75,6 @@ services:
       - zookeeper_logs:/logs
     environment:
       - ZOO_MY_ID=1
-    user: 1002:1002
 
   coordinator:
     platform: linux/amd64
