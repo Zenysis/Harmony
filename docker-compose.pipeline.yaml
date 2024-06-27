@@ -23,6 +23,7 @@ services:
       resources:
         limits:
           memory: 50g
+    user: ${PIPELINE_USER:-1000}:${PIPELINE_GROUP:-1000}
     command: [ "/bin/bash", "-c", "./docker/entrypoint_pipeline.sh" ]
 volumes:
   mc_config:
