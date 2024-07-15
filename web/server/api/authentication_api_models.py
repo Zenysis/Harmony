@@ -4,7 +4,7 @@ from datetime import timedelta
 from http.client import OK
 
 from flask import current_app, jsonify, make_response, request
-from flask_potion import fields
+from flask_potion import fields, Resource
 from flask_potion.routes import Route
 from flask_potion.schema import FieldSet
 from flask_user.emails import send_password_changed_email
@@ -12,7 +12,6 @@ from flask_user.signals import user_registered, user_reset_password
 from werkzeug.exceptions import BadRequest
 
 from models.alchemy.user import User, UserStatusEnum
-from web.server.api.api_models import PrincipalResource
 from web.server.api.authentication_api_schemas import (
     USER_FORGOT_PASSWORD_SCHEMA,
     USER_LOGIN_SCHEMA,
@@ -28,10 +27,9 @@ from web.server.util.api_validation import GenericValidationError
 from web.server.util.authentication import create_user_access_token, login_user
 
 
-class AuthenticationResource(PrincipalResource):
+class AuthenticationResource(Resource):
     class Meta:
         name = 'authentication'
-        model = User
 
     @Route.POST(
         '/login',

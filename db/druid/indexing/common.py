@@ -14,10 +14,6 @@ from db.druid.util import build_time_interval
 from util.connections.connection_manager import get_connection_values
 
 
-# Directory location where a hash of the files ingested for a datasource
-# are stored
-DEFAULT_TASK_HASH_DIR = '/home/share/data/logs/druid_indexing/hash'
-
 INDEX_URL = f'{DruidConfig.router_endpoint()}/druid/indexer/v1/task'
 
 

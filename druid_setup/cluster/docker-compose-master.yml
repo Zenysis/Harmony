@@ -82,7 +82,7 @@ services:
     container_name: coordinator
     restart: always
     volumes:
-      - /home/share:/home/share
+      - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
       - coordinator_var:/opt/druid/var
       - zen_extensions:/var/lib/zen/extensions/
     depends_on:
