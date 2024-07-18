@@ -6,8 +6,8 @@ PyNaCl==1.4.0
 paramiko==2.7.1
 
 # Testing
-pytest>=6.2.5
-pytest-selenium==4.0.0
+pytest>=7.4.3
+pytest-selenium==4.0.1
 selenium==4.5.0
 pytest-flask>=0.15.0
 pytest-xdist>=1.29.0
