@@ -7,7 +7,7 @@ from web.server.workers import celery_app
 
 
 @celery_app.register_task
-class SendEmailTask(celery_app.Task): # type: ignore[name-defined]
+class SendEmailTask(celery_app.Task):  # type: ignore[name-defined]
     name = 'send_email_task'
     ignore_result = True
 
@@ -20,7 +20,7 @@ class SendEmailTask(celery_app.Task): # type: ignore[name-defined]
 
 
 @celery_app.register_task
-class SendSMSTask(celery_app.Task): # type: ignore[name-defined]
+class SendSMSTask(celery_app.Task):  # type: ignore[name-defined]
     name = 'send_sms_task'
     ignore_result = True
 
