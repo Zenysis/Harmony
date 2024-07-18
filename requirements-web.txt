@@ -7,7 +7,7 @@ flask-caching==2.0.1
 flask-login==0.4.1
 gunicorn[gevent]==20.0.4
 isodate>=0.5.4
-redis==3.2.1
+redis==5.0.1
 scipy>=1.2.1
 twilio==6.24.1
 PyJWT==1.7.1
