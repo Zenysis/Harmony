@@ -2,7 +2,7 @@
 # so requirements reflect the actual state of what is installed at pipeline machines,
 # for some reason they don't correspond to the requirements state.
 # It's still to be examined if all of these are really necessary there.
-celery==4.4.6
+celery==5.4.0
 Werkzeug==0.16.1
 MarkupSafe==0.23
 Flask==1.0.1
