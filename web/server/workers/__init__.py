@@ -27,9 +27,11 @@ def init(**_kwargs):
             initialize_cache(app)
             initialize_jwt_manager(app)
 
+
 config = CeleryConfig()
 celery_app = Celery(__name__, include=config.TASKS_LIST)
 celery_app.config_from_object(config)
+
 
 def create_celery(instance_configuration=None):
     '''Create a new celery application instance'''
