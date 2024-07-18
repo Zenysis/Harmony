@@ -2,7 +2,7 @@
 # so requirements reflect the actual state of what is installed at pipeline machines,
 # for some reason they don't correspond to the requirements state.
 # It's still to be examined if all of these are really necessary there.
-celery==4.4.6
+celery==5.4.0
 Werkzeug==0.16.1
 MarkupSafe==0.23
 Flask==1.0.1
@@ -26,7 +26,7 @@ psycopg2-binary==2.8.5 ; platform_python_implementation != 'PyPy' # use psycopg2
 python-Levenshtein==0.12.0
 python-dateutil>=2.8.1
 requests==2.28.1 ; platform_python_implementation != 'PyPy'
-httpx==0.22.0
+httpx[socks]==0.27.0
 six>=1.9.0
 stringcase==1.2.0
 toposort==1.5
@@ -80,3 +80,4 @@ openpyxl>=3.0.9
 ijson-bigint==3.2.0.post1
 
 types-jsonschema==4.17.0.8
+future==0.18.3
