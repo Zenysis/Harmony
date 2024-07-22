@@ -36,7 +36,7 @@ module.exports = {
 
     // Needed for friendly errors plugin.
     quiet: true,
-    port: 9001
+    port: 5001
   },
   devtool: 'source-map',
   entry: {
