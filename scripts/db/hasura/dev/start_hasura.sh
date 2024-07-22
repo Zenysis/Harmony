@@ -35,7 +35,7 @@ if (( CONTAINER_COUNT == 0 )) ; then
       --name "${CONTAINER_NAME}" \
       -v "${HASURA_METADATA_DIR}:/hasura-metadata" \
       -v "${HASURA_CONTAINER_SCRIPTS_DIR}:/zenysis:ro" \
-      -p '9002:8080' \
+      -p '5003:8080' \
       --entrypoint 'sh' \
     "${IMAGE_NAME}"
 fi
