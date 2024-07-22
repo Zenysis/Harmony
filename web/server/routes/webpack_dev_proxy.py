@@ -22,11 +22,11 @@ def _proxy_request(url):
 @webpack_dev_proxy.route('/build/<path:asset>')
 def route_to_webpack_build(asset):
     # Built files will live in webpack-dev-server's virtual `build/` directory.
-    return _proxy_request(f'http://localhost:8080/build/{asset}')
+    return _proxy_request(f'http://localhost:9000/build/{asset}')
 
 
 @webpack_dev_proxy.route('/static/<path:asset>')
 def route_to_webpack_static_asset(asset):
     # Static assets will not be copied into webpack-dev-server's virtual
     # directories but will exist in the same path on the filesystem.
-    return _proxy_request(f'http://localhost:8080/{asset}')
+    return _proxy_request(f'http://localhost:9000/{asset}')
