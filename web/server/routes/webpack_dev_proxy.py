@@ -1,8 +1,11 @@
+import os
 from flask import Blueprint, Response, request as incoming_request
 import requests
 
 # pylint: disable-msg=C0103
 webpack_dev_proxy = Blueprint('webpack_proxy', __name__)
+
+WEBPACK_PORT = os.getenv('WEBPACK_PORT', '8080')
 
 
 def _proxy_request(url):
@@ -22,11 +25,11 @@ def _proxy_request(url):
 @webpack_dev_proxy.route('/build/<path:asset>')
 def route_to_webpack_build(asset):
     # Built files will live in webpack-dev-server's virtual `build/` directory.
-    return _proxy_request(f'http://localhost:8080/build/{asset}')
+    return _proxy_request(f'http://localhost:{WEBPACK_PORT}/build/{asset}')
 
 
 @webpack_dev_proxy.route('/static/<path:asset>')
 def route_to_webpack_static_asset(asset):
     # Static assets will not be copied into webpack-dev-server's virtual
     # directories but will exist in the same path on the filesystem.
-    return _proxy_request(f'http://localhost:8080/{asset}')
+    return _proxy_request(f'http://localhost:{WEBPACK_PORT}/{asset}')

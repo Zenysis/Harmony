@@ -168,9 +168,11 @@ class FlaskConfiguration:
 
         self.QUERY_DATA_CACHE_TIMEOUT = 86400  # 1 day, is it the best value?
 
+        hasura_port = getenv('HASURA_PORT', '8088')
+
         self.HASURA_HOST = getenv(
             'HASURA_HOST',
-            settings.HASURA_HOST if IS_PRODUCTION else 'http://localhost:8088',
+            settings.HASURA_HOST if IS_PRODUCTION else f'http://localhost:{hasura_port}',
         )
 
         # NOTE: Flag to switch between dashboard app and new dashboard
