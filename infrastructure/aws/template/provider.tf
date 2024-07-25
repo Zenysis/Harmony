@@ -8,11 +8,11 @@ terraform {
 
   backend "s3" {
     bucket      = "mols-terraform-state"
-    key         = "stag"
-    region      = "eu-west-1"
+    key         = "__ENVIRONMENT_CODE__"
+    region      = "__AWS_REGION_OF_YOUR_CHOICE__"
   }
 }
 
 provider "aws" {
-  region      = "eu-west-1"
+  region      = "__AWS_REGION_OF_YOUR_CHOICE__"
 }
