@@ -1,12 +1,13 @@
-from celery.task.base import Task
 import related
 from log import LOG
 from web.server.errors.errors import NotificationError
 from web.server.notifications.sms_client import TwilioClient
 from web.server.util.email_client import EmailMessage, EmailClient
+from web.server.workers import celery_app
 
 
-class SendEmailTask(Task):
+@celery_app.register_task
+class SendEmailTask(celery_app.Task):  # type: ignore[name-defined]
     name = 'send_email_task'
     ignore_result = True
 
@@ -18,7 +19,8 @@ class SendEmailTask(Task):
         EmailClient(**email_client_kwargs).send(mail_msg=msg)
 
 
-class SendSMSTask(Task):
+@celery_app.register_task
+class SendSMSTask(celery_app.Task):  # type: ignore[name-defined]
     name = 'send_sms_task'
     ignore_result = True
 

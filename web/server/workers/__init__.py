@@ -28,6 +28,11 @@ def init(**_kwargs):
             initialize_jwt_manager(app)
 
 
+config = CeleryConfig()
+celery_app = Celery(__name__, include=config.TASKS_LIST)
+celery_app.config_from_object(config)
+
+
 def create_celery(instance_configuration=None):
     '''Create a new celery application instance'''
     instance_configuration = (
@@ -45,7 +50,5 @@ def create_celery(instance_configuration=None):
         max_overflow=0,
         connect_args={'application_name': 'worker'},
     )
-    celery = Celery(__name__, include=config.TASKS_LIST)
-    celery.config_from_object(config)
-    celery.conf['engine'] = engine
-    return celery
+    celery_app.conf['engine'] = engine
+    return celery_app
