@@ -213,9 +213,9 @@ The pipeline server runs the ETL data pipeline to generate datasources (typicall
 
 1. Configure your server's users, firewall, etc. Sign in.
 2. Follow the [instructions](https://docs.docker.com/engine/install/ubuntu/) to install Docker on Linux (Ubuntu).
-3. Set the requisite environment variables in a `.env` file: `$DATABASE_URL`, `$ZEN_ENV`, `$DRUID_HOST`, `$PIPELINE_USER`, `$PIPELINE_GROUP`, `$DEFAULT_SECRET_KEY`, and `$HASURA_HOST`.
+3. Set the requisite environment variables in a `.env` file: `$DATABASE_URL`, `$ZEN_ENV`, `$DRUID_HOST`, `$PIPELINE_USER`, `$PIPELINE_GROUP`, `$DEFAULT_SECRET_KEY` and `$HASURA_HOST`.
    > Running `id` on the host machine will show you your user and group IDs.
-4. Optionally add `$DRUID_SHARED_FOLDER` and `$OUTPUT_PATH` if the defaults are not suitable. Set `$DOCKER_HOST` if connecting to remote host.
+4. Optionally add `$DRUID_SHARED_FOLDER`, `$OUTPUT_PATH`, `$HASURA_PORT` and `$WEBPACK_PORT` if the defaults are not suitable. Set `$DOCKER_HOST` if connecting to remote host.
 5. Create directories for Docker volumes.
 
 ```

@@ -3,7 +3,7 @@ set -o pipefail
 
 # Run specific initialization steps that are needed when a new docker web
 # container is being run for the first time.
-DEFAULT_HASURA_HOST='http://hasura:8080'
+DEFAULT_HASURA_HOST="http://hasura:${HASURA_PORT:-8080}"
 
 # Copy static assets to a directory that nginx can access.
 echo 'Copying static files...'
