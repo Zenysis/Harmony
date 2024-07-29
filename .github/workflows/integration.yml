@@ -37,10 +37,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m venv venv
           source venv/bin/activate
-          pip install -r requirements.txt
-          pip install -r requirements-web.txt
-          pip install -r requirements-dev.txt
-          pip install -r requirements-pipeline.txt
+          pip install wheel==0.43.0
+          pip install --no-build-isolation --verbose -r requirements.txt -r requirements-web.txt -r requirements-dev.txt -r requirements-pipeline.txt
       - name: Cache dependencies
         uses: actions/cache/save@v3
         if: steps.cache-venv.outputs.cache-hit != 'true'
