@@ -136,6 +136,8 @@ USER zenysis
 RUN python3.9 -m venv venv
 # Install dependencies.
 COPY requirements.txt requirements-pipeline.txt ./
+# wheel 0.43.0 HAS to be installed prior to installing requirments. If changing version here, also
+# change in requirements.txt.
 RUN . venv/bin/activate \
     && python -m pip install wheel==0.43.0 \
     && python -m pip install --no-build-isolation --verbose -r requirements.txt -r requirements-pipeline.txt
@@ -150,7 +152,8 @@ RUN . venv/bin/activate \
 #       image.
 RUN pypy3 -m venv venv_pypy3
 # Install pypy dependencies.
-# pip-24.2
+# wheel 0.43.0 HAS to be installed prior to installing requirments. If changing version here, also
+# change in requirements.txt.
 RUN . venv_pypy3/bin/activate \
     && python -m pip install wheel==0.43.0 \
     && pypy -m pip install --no-build-isolation --verbose -r requirements.txt -r requirements-pipeline.txt

@@ -1,5 +1,6 @@
 setuptools==71.1.0
 attrs==21.4.0
+# Wheel 0.43.0 is duplicated in Dockerfile. If changing version here, also change in Dockerfile.
 wheel==0.43.0
 Cython<3.0.0
 # NOTE: these requirements were moved here from `requirements-web.txt`
