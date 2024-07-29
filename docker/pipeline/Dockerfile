@@ -133,12 +133,9 @@ USER zenysis
 # NOTE: We can't easily create a venv in a seperate Docker stage, and then
 #       copy it here. Various links will be broken, and the venv will not
 #       work.
-RUN python3.9 -m venv venv \
-    && . venv/bin/activate \
-    && python -m pip install --upgrade pip
+RUN python3.9 -m venv venv
 # Install dependencies.
 COPY requirements.txt requirements-pipeline.txt ./
-# && python -m pip install --upgrade pip \
 RUN . venv/bin/activate \
     && python -m pip install --no-build-isolation --verbose -r requirements.txt -r requirements-pipeline.txt
 
@@ -153,7 +150,6 @@ RUN . venv/bin/activate \
 RUN pypy3 -m venv venv_pypy3
 # Install pypy dependencies.
 RUN . venv_pypy3/bin/activate \
-    && pypy3 -m pip install --upgrade pip \
     && pypy3 -m pip install --no-build-isolation -r requirements.txt -r requirements-pipeline.txt
 
 # Copy only what the pipeline needs.
