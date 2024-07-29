@@ -1,6 +1,8 @@
 setuptools==71.1.0
 attrs==21.4.0
 # Wheel 0.43.0 is duplicated in Dockerfile. If changing version here, also change in Dockerfile.
+# Take note that in some cases wheel needs to be installed prior to running pip install, so you
+# may find that running pip install twice will resolve relating to bdist_wheel being missing.
 wheel==0.43.0
 Cython<3.0.0
 # NOTE: these requirements were moved here from `requirements-web.txt`
