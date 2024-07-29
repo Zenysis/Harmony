@@ -138,8 +138,8 @@ RUN python3.9 -m venv venv \
     && python -m pip install --upgrade pip
 # Install dependencies.
 COPY requirements.txt requirements-pipeline.txt ./
+# && python -m pip install --upgrade pip \
 RUN . venv/bin/activate \
-    && python -m pip install --upgrade pip \
     && python -m pip install --no-build-isolation --verbose -r requirements.txt -r requirements-pipeline.txt
 
 # PyPy
