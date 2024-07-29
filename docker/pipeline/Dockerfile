@@ -137,6 +137,7 @@ RUN python3.9 -m venv venv
 # Install dependencies.
 COPY requirements.txt requirements-pipeline.txt ./
 RUN . venv/bin/activate \
+    && python -m pip install wheel==0.43.0 \
     && python -m pip install --no-build-isolation --verbose -r requirements.txt -r requirements-pipeline.txt
 
 # PyPy
