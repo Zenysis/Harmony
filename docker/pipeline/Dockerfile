@@ -152,7 +152,8 @@ RUN pypy3 -m venv venv_pypy3
 # Install pypy dependencies.
 # pip-24.2
 RUN . venv_pypy3/bin/activate \
-    && pypy -m pip install --no-build-isolation -r requirements.txt -r requirements-pipeline.txt
+    && python -m pip install wheel==0.43.0 \
+    && pypy -m pip install --no-build-isolation --verbose -r requirements.txt -r requirements-pipeline.txt
 
 # Copy only what the pipeline needs.
 COPY pipeline ./pipeline
