@@ -136,8 +136,7 @@ USER zenysis
 RUN python3.9 -m pip install --upgrade pip \
     && python3.9 -m venv venv \
     && . venv/bin/activate \
-    && python -m pip install --upgrade pip \
-    && python -m pip install "setuptools==71.1.0"
+    && python -m pip install --upgrade pip
 # Install dependencies.
 COPY requirements.txt requirements-pipeline.txt ./
 RUN . venv/bin/activate \
@@ -156,7 +155,6 @@ RUN pypy3 -m pip install --upgrade pip setuptools \
 # Install pypy dependencies.
 RUN . venv_pypy3/bin/activate \
     && pypy3 -m pip install --upgrade pip \
-    && pypy3 -m pip install "setuptools==71.1.0" \
     && pypy3 -m pip install -r requirements.txt -r requirements-pipeline.txt
 
 # Copy only what the pipeline needs.
