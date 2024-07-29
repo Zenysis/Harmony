@@ -1,4 +1,5 @@
 setuptools==71.1.0
+attrs==21.4.0
 # NOTE: these requirements were moved here from `requirements-web.txt`
 # so requirements reflect the actual state of what is installed at pipeline machines,
 # for some reason they don't correspond to the requirements state.
