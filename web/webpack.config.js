@@ -36,6 +36,7 @@ module.exports = {
 
     // Needed for friendly errors plugin.
     quiet: true,
+    port: 5001
   },
   devtool: 'source-map',
   entry: {
@@ -184,5 +185,5 @@ module.exports = {
     // You can now require('file') instead of require('file.jsx').
     extensions: ['.js', '.json', '.jsx'],
     modules: [absPath('web/client'), absPath('node_modules')],
-  },
+  }
 };
