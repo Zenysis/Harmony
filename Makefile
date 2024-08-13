@@ -8,6 +8,7 @@ DOCKER_HOST?=ssh://$(WEB_REMOTE)
 SERVICE?=
 PROJECT_NAME?=harmony-web
 
+ACTIVATE_VENV := $(if $(DEV), -c "source venv/bin/activate && /bin/bash",)
 DEV_OVERRIDE := $(if $(DEV), -f docker-compose.dev.yaml,)
 DB_OVERRIDE := $(if $(DB), -f docker-compose.db.yaml,)
 LOCAL_OVERRIDE := $(if $(LOCAL), -f docker-compose.local.yaml,)
@@ -45,7 +46,7 @@ create-db-setup-script: # Create the db setup script.
 create-admin-user: # Create an admin user.
 	$(COMPOSE_COMMAND) run --rm web /bin/bash -c "./scripts/create_user.py --username=${ADMIN_USERNAME} --password=${ADMIN_PASSWORD} --first_name=${ADMIN_FIRSTNAME} --last_name=${ADMIN_LASTNAME} --site_admin"
 
-dev-prepare-database: # Prepare database for development environment.
+dev-prepare-database: # Prepare database. Not something you can run in production. This is only for local development.
 	docker compose --env-file $(ENV_FILE) -f docker-compose.yaml -f docker-compose.dev.yaml run --rm web /bin/bash -c "source venv/bin/activate && yarn init-db $(ZEN_ENV) --populate_indicators"
 
 exec-bash: # Connect to a running container
@@ -98,7 +99,7 @@ bash-dev-pipeline:
 	$(COMPOSE_COMMAND) run --rm pipeline /bin/bash -c "source venv/bin/activate && /bin/bash"
 
 bash-web:
-	$(COMPOSE_COMMAND) run --rm web /bin/bash -c "source venv/bin/activate && /bin/bash"
+	$(COMPOSE_COMMAND) run --rm web /bin/bash $(ACTIVATE_VENV)
 
 upgrade-database:
 	$(COMPOSE_COMMAND) run --rm web /bin/bash -c "./scripts/upgrade_database.sh"
