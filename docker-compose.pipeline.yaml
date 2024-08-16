@@ -2,6 +2,7 @@ services:
   etl-pipeline:
     platform: linux/amd64
     image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/${DOCKER_IMAGE_PREFIX:-harmony}-etl-pipeline:${DOCKER_TAG:-latest}
+    pull_policy: always
     volumes:
       - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
       - ${OUTPUT_PATH:-/data/output}:/zenysis/pipeline/out
