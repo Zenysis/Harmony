@@ -20,7 +20,7 @@ NOREPLY_EMAIL = getenv('NOREPLY_EMAIL', None)
 SUPPORT_EMAIL = getenv('SUPPORT_EMAIL', None)
 
 REDIS_HOST = getenv('REDIS_HOST', '')  # Redis isn't a hard requirement
-HASURA_HOST = os.environ['HASURA_HOST']
+HASURA_HOST = getenv('HASURA_HOST') # Hasura is needed for web, but not for pipeline
 
 DRUID_HOST = os.environ['DRUID_HOST']
 
