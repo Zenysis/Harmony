@@ -13,6 +13,8 @@ services:
       - ${MC_CONFIG_PATH:-/home/zenysis/.mc}:/.mc
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      # Alembic uses POSTGRES_DB_URI
+      - POSTGRES_DB_URI:=${POSTGRES_DB_URI}
       - ZEN_ENV=${ZEN_ENV}
       - DRUID_HOST=${DRUID_HOST}
       - COMMAND=${COMMAND-echo Specify a pipeline command, e.g. "./pipeline/harmony_demo/generate/zeus_generate run"}
