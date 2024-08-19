@@ -16,6 +16,7 @@ services:
       - DRUID_HOST=${DRUID_HOST}
       - COMMAND=${COMMAND-echo Specify a pipeline command, e.g. "./pipeline/harmony_demo/generate/zeus_generate run"}
       - DEFAULT_SECRET_KEY=${DEFAULT_SECRET_KEY:-changeme}
+      - HASURA_PORT=${HASURA_PORT:-8080}
       - HASURA_HOST=${HASURA_HOST}
       - SQLALCHEMY_DATABASE_URI=${DATABASE_URL}
       - MAPBOX_ACCESS_TOKEN=${MAPBOX_ACCESS_TOKEN}
