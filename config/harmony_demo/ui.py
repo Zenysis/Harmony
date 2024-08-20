@@ -1,6 +1,7 @@
-import os
 from config.harmony_demo.datatypes import Dimension
 from config.locales import LOCALES
+from config.settings import getenv
+
 
 ############################################################################
 # General template UI
@@ -76,8 +77,8 @@ GIS_APP_SETTINGS = None
 # List of geo dimensions that can be shown on the dql map viz
 DQL_MAP_DIMENSIONS = [Dimension.STATE]
 
-# Mapbox access token.
-MAPBOX_ACCESS_TOKEN = os.environ['MAPBOX_ACCESS_TOKEN']
+# Mapbox access token. (Needed for web, but not pipeline)
+MAPBOX_ACCESS_TOKEN = getenv('MAPBOX_ACCESS_TOKEN')
 
 ############################################################################
 # Misc

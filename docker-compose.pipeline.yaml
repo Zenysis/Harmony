@@ -2,6 +2,7 @@ services:
   etl-pipeline:
     platform: linux/amd64
     image: ${DOCKER_NAMESPACE:-ghcr.io/zenysis}/${DOCKER_IMAGE_PREFIX:-harmony}-etl-pipeline:${DOCKER_TAG:-latest}
+    pull_policy: always
     volumes:
       - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
       - ${OUTPUT_PATH:-/data/output}:/zenysis/pipeline/out
@@ -12,13 +13,13 @@ services:
       - ${MC_CONFIG_PATH:-/home/zenysis/.mc}:/.mc
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      # Alembic uses POSTGRES_DB_URI
+      - POSTGRES_DB_URI:=${POSTGRES_DB_URI}
       - ZEN_ENV=${ZEN_ENV}
       - DRUID_HOST=${DRUID_HOST}
       - COMMAND=${COMMAND-echo Specify a pipeline command, e.g. "./pipeline/harmony_demo/generate/zeus_generate run"}
       - DEFAULT_SECRET_KEY=${DEFAULT_SECRET_KEY:-changeme}
-      - HASURA_HOST=${HASURA_HOST}
       - SQLALCHEMY_DATABASE_URI=${DATABASE_URL}
-      - MAPBOX_ACCESS_TOKEN=${MAPBOX_ACCESS_TOKEN}
     deploy:
       resources:
         limits:
