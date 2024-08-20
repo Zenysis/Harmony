@@ -9,7 +9,7 @@ services:
       - ${DATA_PATH}/output/zenysis_static:/usr/share/nginx/html/zenysis_static:ro
       # Set a custom vhost default configuration that includes compression
       # and caching.
-      - ${NGINX_VHOST}:/etc/nginx/vhost.d/default:ro
+      - ${NGINX_VHOST}:/etc/nginx/vhost.d/default.conf:ro
   hasura:
     volumes:
       - ${DATA_PATH}/output/logs:/logs
