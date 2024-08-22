@@ -1,8 +1,9 @@
 name: Web Image
 
 on:
-    # Trigger on all pull requests.
-    pull_request:
+    # We only have so many github minutes, so we use a manual trigger
+    # instead of automatically building on every push in a pull request.
+    workflow_dispatch:
     # Trigger on all pushes to main.
     push:
       branches:
