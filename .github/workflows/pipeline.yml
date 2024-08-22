@@ -8,9 +8,12 @@ on:
     push:
       branches:
         - main
+    pull_request_review:
+      types: [submitted]
 
 jobs:
     prepare:
+        if: github.event.review.state == 'approved'
         runs-on: ubuntu-latest
         steps:
             - id: repository_name
@@ -21,6 +24,7 @@ jobs:
             lowercase_repo_name: ${{ steps.repository_name.outputs.lowercase_repo_name }}
 
     build-etl-pipeline:
+        if: github.event.review.state == 'approved'
         runs-on: ubuntu-latest
         needs: prepare
         steps:
