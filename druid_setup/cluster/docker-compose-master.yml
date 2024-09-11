@@ -18,6 +18,12 @@
 #
 version: "2.2"
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "10"
+
 volumes:
   zen_extensions: {}
   metadata_data: {}
@@ -43,6 +49,7 @@ services:
       - zen_extensions:/druid/extensions
     environment:
       - ZEN_DRUID_VERSION=${DRUID_VERSION}
+    logging: *default-logging
 
   postgres:
     container_name: postgres
@@ -56,6 +63,7 @@ services:
       - POSTGRES_PASSWORD=${DRUID_POSTGRES_PASSWORD}
       - POSTGRES_USER=${DRUID_POSTGRES_USER}
       - POSTGRES_DB=${DRUID_POSTGRES_DB}
+    logging: *default-logging
 
   memcache:
     container_name: memcache
@@ -63,6 +71,7 @@ services:
     restart: always
     ports:
       - "11211:11211"
+    logging: *default-logging
 
   # Need 3.5 or later for container nodes
   zookeeper:
@@ -76,6 +85,7 @@ services:
       - zookeeper_datalog:/datalog
     environment:
       - ZOO_MY_ID=1
+    logging: *default-logging
 
   coordinator:
     image: apache/druid:${DRUID_VERSION}
@@ -102,3 +112,4 @@ services:
       - druid_metadata_storage_connector_connectURI=jdbc:postgresql://${DRUID_POSTGRES_HOST}:5432/${DRUID_POSTGRES_DB}
       - druid_metadata_storage_connector_user=${DRUID_POSTGRES_USER}
       - druid_metadata_storage_connector_password=${DRUID_POSTGRES_PASSWORD}
+    logging: *default-logging
