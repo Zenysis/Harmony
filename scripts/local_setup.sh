@@ -8,6 +8,15 @@
 # 4. The last name of the user to be created
 # 5. The password of the user to be created
 
+# Function to check if all required arguments are provided
+check_arguments() {
+    if [ $# -ne 5 ]; then
+        echo "Error: Missing arguments."
+        echo "Usage: $0 <env_file> <email> <first_name> <last_name> <password>"
+        exit 1
+    fi
+}
+
 # Function to install and configure the virtual environment
 setup_virtualenv() {
     echo "Creating virtual environment..."
@@ -54,6 +63,8 @@ start_server() {
     echo "Starting the server..."
     yarn server
 }
+
+check_arguments "$@"
 
 ENV_FILE=$1
 EMAIL=$2
