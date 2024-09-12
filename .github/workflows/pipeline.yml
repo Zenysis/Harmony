@@ -37,5 +37,7 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
             - name: Build ${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline
               run: |
+                echo "github.head_ref : ${{ github.head_ref }}"
+                echo "github.ref_name : ${{ github.ref_name }}"
                 docker build --platform linux/amd64 -t ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:${{ github.head_ref || github.ref_name }} -f docker/pipeline/Dockerfile --cache-from ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:main,ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
                 docker push ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:${{ github.head_ref || github.ref_name }}
