@@ -19,9 +19,10 @@ check_arguments() {
 
 # Function to install and configure the virtual environment
 setup_virtualenv() {
-    echo "Creating virtual environment..."
-    pwd
-    python3.9 -m venv venv
+    if [ ! -d "venv" ]; then
+        echo "Virtual environment not found, creating one..."
+        python3.9 -m venv venv
+    fi
     echo "Activating virtual environment..."
     source ./venv/bin/activate
     echo "Upgrading pip and installing dependencies..."
@@ -55,14 +56,9 @@ init_db() {
 # Function to create a user
 create_user() {
     echo "Creating user $EMAIL..."
-    ./scripts/create_user.py --username "$EMAIL" --first_name "$FIRST_NAME" --last_name "$LAST_NAME" --site_admin --password "$PASSWORD"
+    ./scripts/create_user.py --username "$EMAIL" --first_name "$FIRST_NAME" --last_name "$LAST_NAME" --site_admin  -o --password "$PASSWORD"
 }
 
-# Function to start the server
-start_server() {
-    echo "Starting the server..."
-    yarn server
-}
 
 check_arguments "$@"
 
@@ -80,7 +76,6 @@ load_env_vars
 run_pipeline
 init_db
 create_user $EMAIL $FIRST_NAME $LAST_NAME $PASSWORD
-start_server
 
 echo "All tasks completed successfully!"
 
