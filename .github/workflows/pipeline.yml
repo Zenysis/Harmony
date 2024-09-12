@@ -22,7 +22,7 @@ jobs:
               gh api \
                 -H "Accept: application/vnd.github+json" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
-                /repos/${{ github.repository_owner }}/${{ github.repository}}/pulls?head=${{ github.repository_owner }}:${{ github.ref }}
+                /repos/${{ github.repository}}/pulls?head=${{ github.repository_owner }}:${{ github.ref }}
           # - name: Get the PR associated with the branch
           #   id: get_pr
           #   uses: octokit/request-action@v2.x
