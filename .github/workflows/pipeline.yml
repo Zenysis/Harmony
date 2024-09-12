@@ -12,6 +12,11 @@ on:
     pull_request:
 
 jobs:
+    what:
+        runs-on: ubuntu-latest
+        steps:
+          - name: something
+            run: echo ${{github.event.review.state}}
     prepare:
         if: github.event.review.state == 'approved'
         runs-on: ubuntu-latest
