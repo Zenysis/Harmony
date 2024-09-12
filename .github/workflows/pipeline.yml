@@ -14,26 +14,32 @@ jobs:
     what:
         runs-on: ubuntu-latest
         steps:
-          - name: Get the PR associated with the branch
-            id: get_pr
-            uses: octokit/request-action@v2.x
-            with:
-              route: GET /repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:${{ github.ref }}
-              mediaType: '{"format": "json"}'
-          - name: Check if PR exists
+          - name: Thing
             run: |
-              if [ -z "${{ steps.get_pr.outputs.data }}" ]; then
-                echo "No PR found for this branch."
-                exit 0
-              fi
-          - name: Get review status
-            id: get_reviews
-            uses: octokit/request-action@v2.x
-            with:
-              route: GET /repos/${{ github.repository }}/pulls/${{ steps.get_pr.outputs.data[0].number }}/reviews
-          - name: Output reviews
-            run: |
-              echo "Reviews: ${{ steps.get_reviews.outputs.data }}"
+              gh api \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                /repos/${{ github.repository_owner }}/${{ github.repository}}/pulls?head=${{ github.repository_owner }}:${{ github.ref }}
+          # - name: Get the PR associated with the branch
+          #   id: get_pr
+          #   uses: octokit/request-action@v2.x
+          #   with:
+          #     route: GET /repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:${{ github.ref }}
+          #     mediaType: '{"format": "json"}'
+          # - name: Check if PR exists
+          #   run: |
+          #     if [ -z "${{ steps.get_pr.outputs.data }}" ]; then
+          #       echo "No PR found for this branch."
+          #       exit 0
+          #     fi
+          # - name: Get review status
+          #   id: get_reviews
+          #   uses: octokit/request-action@v2.x
+          #   with:
+          #     route: GET /repos/${{ github.repository }}/pulls/${{ steps.get_pr.outputs.data[0].number }}/reviews
+          # - name: Output reviews
+          #   run: |
+          #     echo "Reviews: ${{ steps.get_reviews.outputs.data }}"
     prepare:
         if: github.event.review.state == 'approved'
         runs-on: ubuntu-latest
