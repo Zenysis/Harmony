@@ -17,6 +17,16 @@ check_arguments() {
     fi
 }
 
+# Function to check if druid is running or not using curl
+check_druid() {
+    if curl localhost:8888 >/dev/null 2>&1; then
+	echo "Druid running"
+    else 
+        echo "Error: Druid not running"
+        exit 1
+    fi
+}
+
 # Function to install and configure the virtual environment
 setup_virtualenv() {
     if [ ! -d "venv" ]; then
@@ -71,6 +81,7 @@ PASSWORD=$5
 echo "Using environment file: $ENV_FILE"
 
 # Main execution starts here
+check_druid
 setup_virtualenv
 load_env_vars
 run_pipeline
