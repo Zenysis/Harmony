@@ -85,8 +85,8 @@ echo "Using environment file: $ENV_FILE"
 check_druid
 setup_virtualenv
 load_env_vars
-run_pipeline
 init_db
+run_pipeline
 create_user $EMAIL $FIRST_NAME $LAST_NAME $PASSWORD
 
 echo "All tasks completed successfully!"
