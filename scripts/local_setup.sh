@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # This script is used to run the harmony backend locally.
 # It consist of 5 arguments which are:
