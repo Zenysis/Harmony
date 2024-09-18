@@ -19,8 +19,8 @@ jobs:
                 echo "lowercase_repo_name=${lowercase_repo_name}" >> $GITHUB_OUTPUT
             - id: repository_owner
               run: |
-                echo ${{ github.event.repository.owner }}
-                lowercase_repo_owner=$(echo "${{ github.event.repository.owner }}" | tr '[:upper:]' '[:lower:]')
+                echo ${{ github.event.repository.owner.name }}
+                lowercase_repo_owner=$(echo "${{ github.event.repository.owner.name }}" | tr '[:upper:]' '[:lower:]')
                 echo "lowercase_repo_owner=${lowercase_repo_owner}" >> $GITHUB_OUTPUT
         outputs:
             lowercase_repo_name: ${{ steps.repository_name.outputs.lowercase_repo_name }}
