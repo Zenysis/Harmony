@@ -26,6 +26,7 @@ jobs:
             lowercase_repo_owner: ${{ steps.repository_owner.outputs.lowercase_repo_owner }}
 
     build-web-client:
+        permissions: write-all
         runs-on: ubuntu-latest
         needs: prepare
         steps:
@@ -41,6 +42,7 @@ jobs:
                 docker build --platform linux/amd64 -t ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:${{ github.head_ref || github.ref_name }} -f docker/web/Dockerfile_web-client --cache-from ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:main,ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
                 docker push ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:${{ github.head_ref || github.ref_name }}
     build-web-server:
+        permissions: write-all
         runs-on: ubuntu-latest
         needs: prepare
         steps:
@@ -56,6 +58,7 @@ jobs:
                 docker build --platform linux/amd64 -t ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:${{ github.head_ref || github.ref_name }} -f docker/web/Dockerfile_web-server --cache-from ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:main,ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
                 docker push ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:${{ github.head_ref || github.ref_name }}
     build-web-image:
+        permissions: write-all
         needs: [prepare, build-web-client, build-web-server]
         runs-on: ubuntu-latest
         steps:
