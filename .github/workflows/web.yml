@@ -17,8 +17,13 @@ jobs:
               run: |
                 lowercase_repo_name=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
                 echo "lowercase_repo_name=${lowercase_repo_name}" >> $GITHUB_OUTPUT
+            - id: repository_owner
+              run: |
+                lowercase_repo_owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+                echo "lowercase_repo_owner=${lowercase_repo_owner}" >> $GITHUB_OUTPUT
         outputs:
             lowercase_repo_name: ${{ steps.repository_name.outputs.lowercase_repo_name }}
+            lowercase_repo_owner: ${{ steps.repository_owner.outputs.lowercase_repo_owner }}
 
     build-web-client:
         runs-on: ubuntu-latest
@@ -33,8 +38,8 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
             - name: Build ${{ needs.prepare.outputs.lowercase_repo_name }}-web-client
               run: |
-                docker build --platform linux/amd64 -t ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:${{ github.head_ref || github.ref_name }} -f docker/web/Dockerfile_web-client --cache-from ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:main,ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
-                docker push ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:${{ github.head_ref || github.ref_name }}
+                docker build --platform linux/amd64 -t ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:${{ github.head_ref || github.ref_name }} -f docker/web/Dockerfile_web-client --cache-from ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:main,ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
+                docker push ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-client:${{ github.head_ref || github.ref_name }}
     build-web-server:
         runs-on: ubuntu-latest
         needs: prepare
@@ -48,8 +53,8 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
             - name: Build ${{ needs.prepare.outputs.lowercase_repo_name }}-web-server
               run: |
-                docker build --platform linux/amd64 -t ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:${{ github.head_ref || github.ref_name }} -f docker/web/Dockerfile_web-server --cache-from ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:main,ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
-                docker push ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:${{ github.head_ref || github.ref_name }}
+                docker build --platform linux/amd64 -t ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:${{ github.head_ref || github.ref_name }} -f docker/web/Dockerfile_web-server --cache-from ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:main,ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
+                docker push ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web-server:${{ github.head_ref || github.ref_name }}
     build-web-image:
         needs: [prepare, build-web-client, build-web-server]
         runs-on: ubuntu-latest
@@ -63,5 +68,5 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
             - name: Build ${{ needs.prepare.outputs.lowercase_repo_name }}-web-image
               run: |
-                docker build --platform linux/amd64 -t ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web:${{ github.head_ref || github.ref_name }} -f docker/web/Dockerfile_web --build-arg NAMESPACE=ghcr.io/zenysis --build-arg IMAGE_PREFIX=${{ needs.prepare.outputs.lowercase_repo_name }} --build-arg TAG=${{ github.head_ref || github.ref_name }} --cache-from ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web:main,ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
-                docker push ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-web:${{ github.head_ref || github.ref_name }}
+                docker build --platform linux/amd64 -t ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web:${{ github.head_ref || github.ref_name }} -f docker/web/Dockerfile_web --build-arg NAMESPACE=ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }} --build-arg IMAGE_PREFIX=${{ needs.prepare.outputs.lowercase_repo_name }} --build-arg TAG=${{ github.head_ref || github.ref_name }} --cache-from ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web:main,ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
+                docker push ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-web:${{ github.head_ref || github.ref_name }}
