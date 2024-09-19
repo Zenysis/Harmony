@@ -17,10 +17,16 @@ jobs:
               run: |
                 lowercase_repo_name=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
                 echo "lowercase_repo_name=${lowercase_repo_name}" >> $GITHUB_OUTPUT
+            - id: repository_owner
+              run: |
+                lowercase_repo_owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+                echo "lowercase_repo_owner=${lowercase_repo_owner}" >> $GITHUB_OUTPUT
         outputs:
             lowercase_repo_name: ${{ steps.repository_name.outputs.lowercase_repo_name }}
+            lowercase_repo_owner: ${{ steps.repository_owner.outputs.lowercase_repo_owner }}
 
     build-etl-pipeline:
+        permissions: write-all
         runs-on: ubuntu-latest
         needs: prepare
         steps:
@@ -33,5 +39,5 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
             - name: Build ${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline
               run: |
-                docker build --platform linux/amd64 -t ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:${{ github.head_ref || github.ref_name }} -f docker/pipeline/Dockerfile --cache-from ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:main,ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
-                docker push ghcr.io/zenysis/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:${{ github.head_ref || github.ref_name }}
+                docker build --platform linux/amd64 -t ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:${{ github.head_ref || github.ref_name }} -f docker/pipeline/Dockerfile --cache-from ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:main,ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:${{ github.head_ref || github.ref_name }} --build-arg BUILDKIT_INLINE_CACHE=1 .
+                docker push ghcr.io/${{ needs.prepare.outputs.lowercase_repo_owner }}/${{ needs.prepare.outputs.lowercase_repo_name }}-etl-pipeline:${{ github.head_ref || github.ref_name }}
