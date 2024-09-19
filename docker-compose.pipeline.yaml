@@ -5,7 +5,7 @@ services:
     pull_policy: always
     volumes:
       - ${DRUID_SHARED_FOLDER:-/home/share}:/home/share
-      - ${OUTPUT_PATH:-/data/output}:/zenysis/pipeline/out
+      - ${DATA_OUTPUT_FOLDER:-/data/output}:/zenysis/pipeline/out
       # Map minio config folder
       # When pipeline runs, mc should pick up $USER and point to this:
       - ${MC_CONFIG_PATH:-/home/zenysis/.mc}:/home/zenysis/.mc
@@ -26,10 +26,3 @@ services:
           memory: 50g
     user: ${PIPELINE_USER:-1000}:${PIPELINE_GROUP:-1000}
     command: [ "/bin/bash", "-c", "./docker/entrypoint_pipeline.sh" ]
-volumes:
-  mc_config:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${MC_CONFIG_PATH:-/home/zenysis/.mc}
