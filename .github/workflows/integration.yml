@@ -6,6 +6,7 @@ on:
 
 jobs:
   lint-python:
+    permissions: write-all
     name: Python - Lint
     runs-on: ubuntu-22.04
     strategy:
