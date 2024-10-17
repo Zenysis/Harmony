@@ -5,6 +5,7 @@ from werkzeug.exceptions import BadGateway
 from flask_potion import Resource, fields
 from flask_potion.routes import Route
 from flask_potion.schema import FieldSet
+from slugify import slugify
 
 from log import LOG
 from models.alchemy.feed import FeedUpdateTypeEnum
@@ -35,7 +36,7 @@ class ShareAnalysisResource(Resource):
 
         attachments = []
         for file_count, attachment in enumerate(kwargs['attachments'], 1):
-            file_name = attachment['filename']
+            file_name = slugify(attachment['filename'])
             attachments.append(
                 (
                     "attachment",
