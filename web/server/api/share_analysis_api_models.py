@@ -1,3 +1,4 @@
+import os
 import base64
 from flask import current_app, g
 from werkzeug.exceptions import BadGateway
@@ -36,12 +37,13 @@ class ShareAnalysisResource(Resource):
 
         attachments = []
         for file_count, attachment in enumerate(kwargs['attachments'], 1):
-            file_name = slugify(attachment['filename'])
+            # slugify the filename, but keep the extension in place
+            name, ext = os.path.splitext(attachment['filename'])
             attachments.append(
                 (
                     "attachment",
                     (
-                        f'{file_count}__{file_name}',
+                        f'{file_count}__{slugify(name)}{ext}',
                         base64.encodebytes(attachment['content'].encode()).decode(),
                     ),
                 )
