@@ -1,4 +1,3 @@
-import os
 import base64
 from flask import current_app, g
 from werkzeug.exceptions import BadGateway
@@ -6,7 +5,6 @@ from werkzeug.exceptions import BadGateway
 from flask_potion import Resource, fields
 from flask_potion.routes import Route
 from flask_potion.schema import FieldSet
-from slugify import slugify
 
 from log import LOG
 from models.alchemy.feed import FeedUpdateTypeEnum
@@ -37,13 +35,12 @@ class ShareAnalysisResource(Resource):
 
         attachments = []
         for file_count, attachment in enumerate(kwargs['attachments'], 1):
-            # slugify the filename, but keep the extension in place
-            name, ext = os.path.splitext(attachment['filename'])
+            file_name = attachment['filename']
             attachments.append(
                 (
                     "attachment",
                     (
-                        f'{file_count}__{slugify(name)}{ext}',
+                        f'{file_count}__{file_name}',
                         base64.encodebytes(attachment['content'].encode()).decode(),
                     ),
                 )
