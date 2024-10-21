@@ -10,11 +10,9 @@ services:
       # Set a custom vhost default configuration that includes compression
       # and caching.
       - ${NGINX_VHOST}:/etc/nginx/vhost.d/default_location:ro
-    restart: always
   hasura:
     volumes:
       - ${DATA_PATH}/output/logs:/logs
-    restart: always
   web:
     environment:
       - VIRTUAL_HOST=${WEB_VIRTUAL_HOST}
@@ -27,10 +25,8 @@ services:
       - ${DATA_PATH}/output:/data/output
       - ${DATA_PATH}/output/logs:/logs
       - ${DATA_PATH}/ubuntu/uploads:/zenysis/uploads
-    restart: always
   worker:
     volumes:
       - ${DATA_PATH}/output:/data/output
       - ${DATA_PATH}/output/logs:/logs
       - ${DATA_PATH}/ubuntu/.mc/config.json:/root/.mc/config.json
-    restart: always
