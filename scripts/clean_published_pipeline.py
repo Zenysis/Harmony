@@ -9,8 +9,10 @@ from pylib.base.flags import Flags
 
 from util.file.directory_util import compute_dir_hash, equal_dir_content
 
+DRUID_SHARED_FOLDER = os.environ.get('DRUID_SHARED_FOLDER', '/home/share')
+
 # Base directory of where to begin search.
-MAIN_DIR = '/home/share/data'
+MAIN_DIR = f'{DRUID_SHARED_FOLDER}/data'
 
 # Directories to whitelist
 WHITELIST_DIRS = set(['current'])
