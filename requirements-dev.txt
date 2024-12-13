@@ -1,5 +1,5 @@
 # Paramiko deps (used by Fabric)
-cryptography==37.0.2
+cryptography==44.0.0
 pyasn1==0.4.8
 PyNaCl==1.4.0
 
