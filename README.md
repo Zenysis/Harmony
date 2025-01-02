@@ -11,8 +11,8 @@ Server/environment setup:
 4. [Object storage setup](#object-storage-setup)
 5. [Production pipeline server setup](#production-pipeline-server-setup)
 6. [Production PostgreSQL server setup](#production-postgresql-server-setup)
-7. [Production web server setup](#production-web-server-setup)
-8. [Production Druid server setup](#production-druid-server-setup)
+7. [Production Druid server setup](#production-druid-server-setup)
+8. [Production web server setup](#production-web-server-setup)
 
 Codebase customization
 
@@ -350,6 +350,73 @@ Once we've upgraded the database and populated the appropriate seed values, we'l
 ADMIN_USERNAME=<YOUR_USERNAME> ADMIN_PASSWORD=<YOUR_PASSWORD> ADMIN_FIRSTNAME=<YOUR_FIRST_NAME> ADMIN_LASTNAME=YOUR_LAST_NAME make create-admin-user
 ```
 
+## Production Druid server setup
+
+[Apache Druid](https://druid.apache.org/docs/latest/design/index.html) is an OLAP database built to handle large analytical queries. It is:
+
+- Column-oriented, NoSQL built for analytical workloads
+- Distributed and scalable (via Apache Zookeeper)
+- Open source and customizable to many types of hardware
+
+Harmony uses Druid as a datastore for queryable data produced by the ETL pipeline. A new Druid collection is created every time the pipeline runs. This ensures that all datasets reflect a single common snapshot in time and makes it possible to inspect historical records for tampering and other inconsistencies.
+
+![](https://static.slab.com/prod/uploads/posts/images/h0kkzOZmq9pOgWwhc5n9T93t.png)
+
+### Setup overview
+
+This setup makes use of [docker compose](https://docs.docker.com/compose/) to easily spin up and manage Druid. For cluster configuration, we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file).
+
+> The instructions describe how to spin up a Druid cluster on a **single** server _or_ on **multiple** servers. Druid recommends having a [clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on multiple servers for production instances.
+
+Druid resource settings are usually tied to your hardware specifications. The optimized configuration in `environment` works for most Harmony deployments. Allocation can be changed based on your usage requirements. See [Druid Configuration](https://druid.apache.org/docs/latest/tutorials/docker.html#configuration) for more.
+
+These instructions were written for Ubuntu operating systems.
+
+### Instructions
+
+The first step is to update the appropriate `DOCKER_HOST` in `druid_setup/.env`.
+
+- For a single-server cluster, set `SINGLE_SERVER_DOCKER_HOST` to your local Druid host. (This is the default DOCKER ENDPOINT printed when `docker context ls` is run.)
+- For a multiple-server cluster, set the `CLUSTER_*_SERVER_DOCKER_HOST` variables to the machine IPs partitioned for each service ([master, data, and query](https://druid.apache.org/docs/latest/tutorials/cluster.html)).
+  - There are some additional environment variables that have to be configured for a multi-server cluster to run optimally.
+    - Common config is located in `druid_setup/cluster/environment/common.env` (`druid_zk_service_host`, `druid_metadata_storage_connector_connectURI`, and `druid_cache_hosts`)
+    - Coordinator config is located in `druid_setup/cluster/environment/coordinator.env` (`druid_host`)
+    - Historical config is located in `druid_setup/cluster/environment/historical.env` (`druid_host`)
+  - Also, ensure that [public key authentication](https://kb.iu.edu/d/aews) is enabled.
+
+Next, create the following directories on the remote server:
+
+- /home/share
+- /data/output
+
+Finally, deploy the appropriate Druid cluster:
+
+> Single server setup:
+
+```bash
+cd druid_setup
+# Deploy single server mode
+make single_server_up
+```
+
+> Cluster server setup:
+
+```bash
+cd druid_setup
+# Deploy cluster server mode
+make cluster_server_up
+```
+
+Once all containers are running, the Druid router console should be available at http://{SERVER_IP}:8888/.
+
+### Troubleshooting
+
+- If running Compose V1 (now deprecated), install the [docker-compose-plugin](https://docs.docker.com/compose/install/) package. Otherwise you will need to update all `druid_setup/Makefile` commands to call `docker-compose ...` instead of `docker compose ...`. (Replace the space with a hyphen.)
+
+- If running your `make *_server_up` command causes a `org.freedesktop.secrets` error, run `sudo apt install gnupg2 pass`.
+
+- If certain containers are continuously restarting, their services likely require more memory. Adjust the resource settings in the `druid_setup/*/environment` files or upgrade your machine(s).
+
 ## Production web server setup
 
 ### Before you begin
@@ -450,73 +517,6 @@ make up
 ```
 
 Once deployed you should be able to login at your domain specified in `WEB_VIRTUAL_HOST`, logging in with the credentials created in [Seeding The Database](#seeding-the-database).
-
-## Production Druid server setup
-
-[Apache Druid](https://druid.apache.org/docs/latest/design/index.html) is an OLAP database built to handle large analytical queries. It is:
-
-- Column-oriented, NoSQL built for analytical workloads
-- Distributed and scalable (via Apache Zookeeper)
-- Open source and customizable to many types of hardware
-
-Harmony uses Druid as a datastore for queryable data produced by the ETL pipeline. A new Druid collection is created every time the pipeline runs. This ensures that all datasets reflect a single common snapshot in time and makes it possible to inspect historical records for tampering and other inconsistencies.
-
-![](https://static.slab.com/prod/uploads/posts/images/h0kkzOZmq9pOgWwhc5n9T93t.png)
-
-### Setup overview
-
-This setup makes use of [docker compose](https://docs.docker.com/compose/) to easily spin up and manage Druid. For cluster configuration, we use a [Druid Docker Environment file](https://druid.apache.org/docs/latest/tutorials/docker.html#environment-file).
-
-> The instructions describe how to spin up a Druid cluster on a **single** server _or_ on **multiple** servers. Druid recommends having a [clustered deployment](https://druid.apache.org/docs/latest/tutorials/cluster.html) running on multiple servers for production instances.
-
-Druid resource settings are usually tied to your hardware specifications. The optimized configuration in `environment` works for most Harmony deployments. Allocation can be changed based on your usage requirements. See [Druid Configuration](https://druid.apache.org/docs/latest/tutorials/docker.html#configuration) for more.
-
-These instructions were written for Ubuntu operating systems.
-
-### Instructions
-
-The first step is to update the appropriate `DOCKER_HOST` in `druid_setup/.env`.
-
-- For a single-server cluster, set `SINGLE_SERVER_DOCKER_HOST` to your local Druid host. (This is the default DOCKER ENDPOINT printed when `docker context ls` is run.)
-- For a multiple-server cluster, set the `CLUSTER_*_SERVER_DOCKER_HOST` variables to the machine IPs partitioned for each service ([master, data, and query](https://druid.apache.org/docs/latest/tutorials/cluster.html)).
-  - There are some additional environment variables that have to be configured for a multi-server cluster to run optimally.
-    - Common config is located in `druid_setup/cluster/environment/common.env` (`druid_zk_service_host`, `druid_metadata_storage_connector_connectURI`, and `druid_cache_hosts`)
-    - Coordinator config is located in `druid_setup/cluster/environment/coordinator.env` (`druid_host`)
-    - Historical config is located in `druid_setup/cluster/environment/historical.env` (`druid_host`)
-  - Also, ensure that [public key authentication](https://kb.iu.edu/d/aews) is enabled.
-
-Next, create the following directories on the remote server:
-
-- /home/share
-- /data/output
-
-Finally, deploy the appropriate Druid cluster:
-
-> Single server setup:
-
-```bash
-cd druid_setup
-# Deploy single server mode
-make single_server_up
-```
-
-> Cluster server setup:
-
-```bash
-cd druid_setup
-# Deploy cluster server mode
-make cluster_server_up
-```
-
-Once all containers are running, the Druid router console should be available at http://{SERVER_IP}:8888/.
-
-### Troubleshooting
-
-- If running Compose V1 (now deprecated), install the [docker-compose-plugin](https://docs.docker.com/compose/install/) package. Otherwise you will need to update all `druid_setup/Makefile` commands to call `docker-compose ...` instead of `docker compose ...`. (Replace the space with a hyphen.)
-
-- If running your `make *_server_up` command causes a `org.freedesktop.secrets` error, run `sudo apt install gnupg2 pass`.
-
-- If certain containers are continuously restarting, their services likely require more memory. Adjust the resource settings in the `druid_setup/*/environment` files or upgrade your machine(s).
 
 ## Writing integrations
 
