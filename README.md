@@ -96,10 +96,6 @@ When you run a script or the web server, select a configuration by setting the `
       export ZEN_ENV='usa'
       ```
 
-### A note on Makefiles
-
-See [Makefiles.md](Makefiles.md) for more information on the Makefiles in this repository.
-
 ## Local development setup
 
 In order to run a local web server or run data pipeline steps on the command line, you'll need to set up a local development environment. This is distinct from setting up production servers (explained in other sections).
