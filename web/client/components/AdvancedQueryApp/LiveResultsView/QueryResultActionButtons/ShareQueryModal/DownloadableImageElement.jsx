@@ -55,7 +55,7 @@ export default function DownloadableImageElement({
 
   return (
     <React.Fragment>
-      {/* 
+      {/*
       NOTE: Hidden element that updates DownloadableElement Elt via onRender
       The Element rendered under scaled div bellow makes distorted images due to parent divs' scaling.
        */}

@@ -3,7 +3,7 @@ instance_config.json
 ### Web Server Cache ###
 cache_dir
 
-### Unit Test Files###
+### Unit Test Files ###
 results/
 test/integration_tests/dev/results
 test/integration_tests/prod/results

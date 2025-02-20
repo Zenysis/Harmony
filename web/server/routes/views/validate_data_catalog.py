@@ -478,7 +478,7 @@ def validate_import_file(
     if status_code == 200:
         response[
             'validationMessage'
-        ] = '''The uploaded file passed validation. 
+        ] = '''The uploaded file passed validation.
         No conflicts were found with the existing instance metadata.
         '''
         if response['validationSummary']:
@@ -487,7 +487,7 @@ def validate_import_file(
     elif status_code == 409:
         response[
             'validationMessage'
-        ] = '''The uploaded file failed validation. 
+        ] = '''The uploaded file failed validation.
         Conflicts were found with the existing instance metadata.
         '''
 

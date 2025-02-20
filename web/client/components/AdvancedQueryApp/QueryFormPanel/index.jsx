@@ -150,8 +150,7 @@ export default class QueryFormPanel extends React.PureComponent<Props, State> {
       // clear existing data so it will show loading
       this.setState(
         { analyticalInsightsData: undefined, loadingAnalyticalInsights: false },
-        () => {          
-        },
+        () => {},
       );
     }
   }

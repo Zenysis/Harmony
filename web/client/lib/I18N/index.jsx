@@ -203,7 +203,7 @@ function I18NRef(props: {
  *     { count: 0 },
  *   );
  */
-/* :: 
+/* ::
  declare function text(
   contents: string,
   idOrConfig?: string | TranslationConfig,

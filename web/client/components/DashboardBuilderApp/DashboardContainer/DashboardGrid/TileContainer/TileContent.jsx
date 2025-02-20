@@ -34,7 +34,7 @@ type Props = {
   >,
 
   extractedFilterItems: $ReadOnlyArray<QueryFilterItem>,
-  
+
   item: DashboardItemType,
   onHeightUpdate?: (rowCount: number) => void,
   onItemChange: DashboardItemType => void,

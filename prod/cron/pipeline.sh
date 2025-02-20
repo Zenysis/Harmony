@@ -5,7 +5,7 @@
 #
 # IMPORTANT NOTE: Ideally the pipeline should be run by some orchestration
 # /automation framework.
-# 
+#
 # Pre-requisites:
 #  - The administrator user is authenticated with the container registry.
 #  - The Harmony repository is cloned (or the required files are copied) to

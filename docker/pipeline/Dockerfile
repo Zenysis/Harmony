@@ -51,12 +51,12 @@ RUN apt-get update \
     build-essential \
     # wget: may be used in a pipeline step to download files.
     wget \
-    # cmake: is needed for installing proj.    
+    # cmake: is needed for installing proj.
     cmake \
     # curl: may be used in a pipeline step.
     curl \
     # sqlite: is needed for building proj?
-    sqlite3 \    
+    sqlite3 \
     # libsqlite3-dev: required for building proj.
     libsqlite3-dev \
     # libtiff-dev: is needed for building proj.

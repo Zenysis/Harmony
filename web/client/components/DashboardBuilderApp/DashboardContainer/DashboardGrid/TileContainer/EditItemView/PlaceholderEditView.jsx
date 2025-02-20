@@ -9,9 +9,9 @@ import type { TilePosition } from 'models/DashboardBuilderApp/DashboardItem/Dash
 
 type Props = {
   cellsPerRow: number,
-  
+
   /**
-   * extracted filters to apply to the display custom values in 
+   * extracted filters to apply to the display custom values in
    * the text box
    */
   extractedFilterItems: $ReadOnlyArray<QueryFilterItem>,

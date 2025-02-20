@@ -90,11 +90,11 @@ For many Harmony projects, the free tier of Mapbox will be sufficient. Refer to 
 
 When you run a script or the web server, select a configuration by setting the `ZEN_ENV` environmental variable. This environmental variable maps directly to folder names in `config/`, and will cause the `config` module to export the contents of that particular configuration.
 
-      Say there is configuration directory named `usa`. We can specify that configuration with the following:
+Say there is configuration directory named `usa`. We can specify that configuration with the following:
 
-      ```bash
-      export ZEN_ENV='usa'
-      ```
+```bash
+export ZEN_ENV='usa'
+```
 
 ## Local development setup
 

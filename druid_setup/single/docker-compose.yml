@@ -50,7 +50,7 @@ services:
     image: postgres:latest
     restart: always
     ports:
-      # expose postgres port to host on a non standard port, to avoid 
+      # expose postgres port to host on a non standard port, to avoid
       # possible conflicts with other postgres instances.
       - "5431:5432"
     volumes:

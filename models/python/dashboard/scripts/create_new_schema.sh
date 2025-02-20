@@ -147,7 +147,7 @@ TEST_UPGRADE_DOWNGRADE="    def test_upgrade_downgrade_${NEW_VERSION_UNDERSCORE}
             self.assertEqual(my_dashboard_spec_dict, downgraded_spec_dict, diff)"
 
 echo -e "\n${TEST_UPGRADE_DOWNGRADE}" >> models/python/dashboard/tests/test_schema_upgrade_downgrade.py
-    
+
 echo '(9/10) Adding all new files to git'
 git add \
   "${ZEN_SRC_ROOT}/models/python/dashboard/${SCHEMA_DIR_NAME}" \

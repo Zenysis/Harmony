@@ -20,7 +20,7 @@ COMPOSE_COMMAND := DOCKER_HOST=$(DOCKER_HOST) docker compose -p $(PROJECT_NAME) 
 help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -_]+:.*#'  Makefile | sort | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
 
-configure:	
+configure:
 	scp ./prod/nginx/nginx_vhost_default_location $(WEB_REMOTE):${NGINX_VHOST}
 
 lint-python: # Lint only the python files that have changed on this branch, with respect to master. (You can run `make lint-python COMMIT=<my-commit>` e.g. `make lint-python COMMIT=HEAD~1` to lint the files that have changed on the last commit.)
@@ -30,14 +30,14 @@ lint-js: # Lint only the js and jsx files that have changed on this branch, with
 	COMMIT=$(COMMIT) ./scripts/lint_js.sh
 
 lint: lint-python lint-js # Lint only the python, js and jsx files that have changed on this branch, with respect to master. (You can run `make lint COMMIT=<my-commit>` e.g. `make lint COMMIT=HEAD~1` to lint the files that have changed on the last commit.)
-	
+
 black: # Run black on all python files that have changed on this branch, with respect to master. (You can run `make black COMMIT=<my-commit>` e.g. `make black COMMIT=origin/master` to lint the files that have changed with respect to origin/master.)
 	COMMIT=$(COMMIT) ./scripts/format_python.sh
 
 build: # Build docker images (for development and production) using docker compose.
 	docker compose --env-file $(ENV_FILE) -f docker-compose.build.yaml build $(SERVICE)
 
-convert: # Use the "docker compose config" command to render the compose file. (Useful to see the impact of environment variables.) 
+convert: # Use the "docker compose config" command to render the compose file. (Useful to see the impact of environment variables.)
 	$(COMPOSE_COMMAND) config
 
 create-db-setup-script: # Create the db setup script.
