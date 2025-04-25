@@ -789,6 +789,16 @@ We are excited to see Harmony being shared and implemented across different geog
 Our basic community engagement policies are:
 - Open Communication: We welcome feedback, questions, and ideas related to Harmony. You can reach us directly at harmony@zenysis.com.
 - Respectful Interaction: We expect all communications to be respectful and constructive. We are committed to maintaining a professional and inclusive environment for all individuals engaging with the project.
+- Working with the Repository: Developers and implementers are encouraged to engage with the Harmony repository directly.
+  - If you encounter a bug, have a feature request, or a question, please open a GitHub Issue.
+  - If you would like to contribute a solution, feel free to open a Pull Request.
+  - Before submitting a pull request, please:
+    - Open an Issue to discuss the proposed change, unless it is a small fix.
+    - Ensure your code follows our general style and structure (consistency is appreciated).
+    - Write clear commit messages and include relevant context or references.
+    - Ensure your changes do not break existing functionality.
+  - Be respectful and collaborative in reviews and discussions.
+  - Contributions will be reviewed on a best-effort basis, prioritizing available capacity and alignment with the platform roadmap.
 - Transparency:We aim to be transparent about the development of Harmony. Major updates and changes to the platform will be documented through our public GitHub repository.
 - Support Boundaries: While we strive to be responsive, please note that support is provided on a best-effort basis. We prioritize responses based on available capacity and alignment with the core roadmap.
 
