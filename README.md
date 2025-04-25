@@ -29,6 +29,7 @@ Community engagement:
 
 14. [Community engagement policy](#community-engagement-policy)
 15. [Future community plans](#future-community-plans)
+16. [Do no harm policy](#do-no-harm-policy)
 
 ## Harmony overview
 
@@ -811,3 +812,16 @@ As Harmony adoption grows, we aim to strengthen and expand our support for the o
 - Community-Driven Roadmap Input: Exploring mechanisms for community feedback to help shape priorities and future enhancements to Harmony.
 
 We look forward to growing alongside the community and will share updates as these initiatives take shape.
+
+
+## Do No Harm Policy
+
+Zenysis is committed to ensuring that Harmony is used in ways that support positive social impact and protect individuals and communities.
+
+By engaging with, using, or contributing to Harmony, you agree to the following principles:
+- Use for Good: Harmony is intended to be used to improve data management, analysis, and decision-making for the benefit of public health, social good, and community development. It should not be used to cause harm, violate human rights, or enable discrimination, exploitation, surveillance, or violence against individuals or groups.
+- Respect for Privacy and Data Security: Users and implementers of Harmony must respect the privacy, security, and rights of individuals whose data is managed through the platform, in compliance with applicable laws and ethical best practices.
+- Responsible Implementation: Implementers should ensure that deployments of Harmony consider the local context, minimize unintended consequences, and prioritize the well-being of the communities served.
+- Contributions and Community Behavior: Contributions to Harmony (code, documentation, discussions) must align with these principles. We reserve the right to reject or remove contributions or users that do not respect this commitment.
+
+Zenysis reserves the right to update this policy as needed to reflect evolving best practices in responsible technology development and use.
