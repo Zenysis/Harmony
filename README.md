@@ -21,9 +21,14 @@ Codebase customization:
 
 Product documentation:
 
-12. [Product overview](#harmony-products)
-13. [Architecture overview](#architecture-overview)
-14. [Roadmap overview](#roadmap-overview)
+11. [Product overview](#harmony-products)
+12. [Architecture overview](#architecture-overview)
+13. [Roadmap overview](#roadmap-overview)
+
+Community engagement: 
+
+14. [Community engagement policy](#community-engagement-policy)
+15. [Future community plans](#future-community-plans)
 
 ## Harmony overview
 
@@ -777,3 +782,22 @@ Example initiatives include:
 
 These initiatives are forward-looking and subject to change based on user feedback, evolving needs, and collaboration with our partners. We are excited to continue advancing Harmony as an open, powerful, and sustainable tool for integrated data management and decision-making.
 
+## Community Engagement Policy
+
+We are excited to see Harmony being shared and implemented across different geographies. While we do not yet have a formal open-source community program, we are committed to supporting and engaging with users and implementers in a responsible and respectful way.
+
+Our basic community engagement policies are:
+- Open Communication: We welcome feedback, questions, and ideas related to Harmony. You can reach us directly at harmony@zenysis.com.
+- Respectful Interaction: We expect all communications to be respectful and constructive. We are committed to maintaining a professional and inclusive environment for all individuals engaging with the project.
+- Transparency:We aim to be transparent about the development of Harmony. Major updates and changes to the platform will be documented through our public GitHub repository.
+- Support Boundaries: While we strive to be responsive, please note that support is provided on a best-effort basis. We prioritize responses based on available capacity and alignment with the core roadmap.
+
+## Future Community Plans
+
+As Harmony adoption grows, we aim to strengthen and expand our support for the open-source community. Some initiatives we are considering include:
+- Community Slack Workspace: Creating a shared space where implementers can connect, share best practices, ask questions, and collaborate across geographies.
+- Periodic Community Calls: Hosting regular virtual calls to bring together implementers, share updates, highlight new features, and discuss lessons learned from deployments.
+- Expanded Documentation and Guides: Developing more detailed resources to help new users and implementers onboard more easily and contribute to the project.
+- Community-Driven Roadmap Input: Exploring mechanisms for community feedback to help shape priorities and future enhancements to Harmony.
+
+We look forward to growing alongside the community and will share updates as these initiatives take shape.
