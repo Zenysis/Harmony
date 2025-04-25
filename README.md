@@ -14,11 +14,15 @@ Server/environment setup:
 7. [Production web server setup](#production-web-server-setup)
 8. [Production Druid server setup](#production-druid-server-setup)
 
-Codebase customization
+Codebase customization:
 
 9. [Writing integrations](#writing-integrations)
 10. [Contributions](#contributions)
-11. [Product overview](#harmony-products)
+
+Product documentation:
+
+12. [Product overview](#harmony-products)
+13. [Roadmap overview](#roadmap-overview)
 
 ## Harmony overview
 
@@ -703,3 +707,42 @@ The Field Setup App allows users to set up fields that are in Druid and not yet 
 The app is populated with the id, data source, and default sum calculation for each field and users can edit the name, description, calculation, and category. Once the fields are ready, they can be published to Data Catalog.
 
 ![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/71BllLgN_UIJ0yWjjAaSxi2X.png)
+
+## Roadmap Overview 
+
+At Zenysis, we are committed to continuously improving Harmony to better serve governments and organizations around the world. While our roadmap may evolve based on new learnings and priorities, our current development focus over the next 12–24 months includes four major investment areas:
+
+### 1. Operational Efficiency
+
+We are continually enhancing the technical foundations of Harmony to make deployments even more efficient, reliable, and scalable.
+Example initiatives include:
+- Improving pipeline performance and maintainability
+- Streamlining infrastructure management through Infrastructure as Code (IaC)
+- Updating core back-end and front-end dependencies to enhance security and speed
+- Enhancing platform logs and monitoring tools for faster troubleshooting
+
+### 2. Mobile and Collaboration
+
+We are expanding Harmony’s reach by strengthening mobile support and enabling more collaborative workflows.
+Example initiatives include:
+- Improving mobile user experience and use of dashboards on the go
+- Supporting offline access to dashboards for mobile users
+- Enabling collaboration and data sharing directly through the platform
+
+### 3. AI-Powered Data Insights
+
+We are integrating Large Language Models (LLMs) to help users more easily interpret and act on data within Harmony.
+Example initiatives include:
+- Deploying lightweight, open-source AI models optimized for cost and performance to support data use 
+- Fine-tuning models using programmatic and contextual content to enable data querying and interpretation
+
+### 4. Technical Ownership Tooling
+
+We are investing in tools that make it even easier for users and technical teams to manage Harmony deployments independently.
+Example initiatives include:
+- Building front-end tools to simplify management of data integrations like DHIS2
+- Enhancing user interfaces for location matching and dimension resolution workflows
+- Expanding built-in server monitoring using open-source technologies
+
+These initiatives are forward-looking and subject to change based on user feedback, evolving needs, and collaboration with our partners. We are excited to continue advancing Harmony as an open, powerful, and sustainable tool for integrated data management and decision-making.
+
