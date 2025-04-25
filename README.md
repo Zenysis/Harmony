@@ -22,7 +22,8 @@ Codebase customization:
 Product documentation:
 
 12. [Product overview](#harmony-products)
-13. [Roadmap overview](#roadmap-overview)
+13. [Architecture overview](#architecture-overview)
+14. [Roadmap overview](#roadmap-overview)
 
 ## Harmony overview
 
@@ -707,6 +708,36 @@ The Field Setup App allows users to set up fields that are in Druid and not yet 
 The app is populated with the id, data source, and default sum calculation for each field and users can edit the name, description, calculation, and category. Once the fields are ready, they can be published to Data Catalog.
 
 ![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/71BllLgN_UIJ0yWjjAaSxi2X.png)
+
+## Architecture Overview
+
+The architecture diagram below describes Harmony’s robust data integration platform, outlining how data moves seamlessly from initial ingestion to impactful use by analysts, decision-makers, and external systems.
+
+<img width="1148" alt="Screenshot 2025-04-25 at 5 34 05 PM" src="https://github.com/user-attachments/assets/9b86dd0d-9f57-4d8c-a5e7-acdb1cd36046" />
+
+- Data Sources: Data enters the system from diverse sources—like electronic health records, disease surveillance platforms, facility registries, and logistic management systems. These datasets often differ significantly in format, complexity, and quality.
+
+- Data Integration Pipeline (Zeus ETL, Python): A sophisticated pipeline designed specifically to address these challenges by:
+Generation: Automatically extracting data from the original source systems. The way data is accessed and generated is flexible; it can happen via API or direct database replication; using prod or staging instances; configured at different times; with concurrency etc. 
+
+  - Processing: Cleaning, standardizing, and harmonizing data into a unified, consistent structure. This step ensures accuracy and comparability across datasets from different geographies, programmatic areas etc. 
+
+  - Indexing: Efficiently organizing the harmonized data, allowing for faster retrieval and analysis.
+
+  - Validation: Automatically checking the integrated data for accuracy and completeness, ensuring high-quality outputs. For instance, this step auto-flags outliers. 
+
+- Object Storage (MinIO): Provides a scalable and temporary holding place during data integration, ensuring pipeline stability, facilitating parallel processing, and supporting handling of large volumes of data.
+
+- Data Warehouse (Apache Druid): At the heart of RHAP is a high-performance data warehouse optimized for large-scale analytics. Druid supports real-time queries across billions of records, making it ideal for rapid analyses, trend tracking, and real-time decision-making critical in public health scenarios. More on this in the next slide. 
+
+- Relational Database (PostgreSQL): Stores essential metadata, such as user permissions, dashboard specifications, indicator and dimension metadata in data catalog, and other platform settings, ensuring users see the data and analysis most relevant to their specific context and role.
+
+- Web Server (Python/Flask): Serves as the primary bridge between stored data and the user. It manages and translates user queries into efficient Druid queries, formats the resulting datasets, and securely delivers tailored information back to the web interface and external applications.
+
+- Web Interface & Visualizations (React.js): The user-facing portal, built to enable intuitive data exploration and decision-making. Users—from ministry staff to hospital data managers—can quickly visualize trends, uncover insights, and directly interact with harmonized data through dashboards and reports. 
+
+- API Gateway (Python): Allows external applications and third-party systems, such as national health portals or other data systems, to seamlessly and securely access harmonized data from RHAP. This multiplies the value derived from integrated datasets across the broader health system. This also means that other analytics systems can be leveraged if desired. 
+
 
 ## Roadmap Overview 
 
