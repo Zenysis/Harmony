@@ -28,8 +28,9 @@ Product documentation:
 Community engagement: 
 
 14. [Community engagement policy](#community-engagement-policy)
-15. [Future community plans](#future-community-plans)
-16. [Do no harm policy](#do-no-harm-policy)
+15. [Governance structure](#governance-structure)
+16. [Future community plans](#future-community-plans)
+17. [Do no harm policy](#do-no-harm-policy)
 
 ## Harmony overview
 
@@ -802,6 +803,20 @@ Our basic community engagement policies are:
   - Contributions will be reviewed on a best-effort basis, prioritizing available capacity and alignment with the platform roadmap.
 - Transparency:We aim to be transparent about the development of Harmony. Major updates and changes to the platform will be documented through our public GitHub repository.
 - Support Boundaries: While we strive to be responsive, please note that support is provided on a best-effort basis. We prioritize responses based on available capacity and alignment with the core roadmap.
+
+## Governance Structure
+
+The Harmony project is currently maintained and stewarded by Zenysis Technologies.
+
+Roles and Responsibilities
+- Zenysis Maintainers: Zenysis leads the development, maintenance, and strategic direction of Harmony. Maintainers are responsible for reviewing issues and pull requests, setting priorities, approving changes, and ensuring the project evolves in line with its mission.
+- Community Contributors: We welcome external contributions from the community, including bug reports, feature suggestions, and pull requests. Contributors are encouraged to collaborate through open discussion, propose improvements, and engage respectfully with maintainers and other community members.
+- Community Participants: Implementers and users of Harmony are invited to share feedback, suggest ideas, and participate in discussions. While participants may not have direct decision-making authority, their input helps shape the project roadmap and priorities.
+
+Decision-Making
+- Zenysis maintains decision-making authority for the Harmony project, including decisions about feature inclusion, releases, and roadmap prioritization.
+- We strive to make decisions transparently, taking community feedback into account wherever possible.
+- As the community grows, we aim to evolve the governance model to support broader participation.
 
 ## Future Community Plans
 
