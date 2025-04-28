@@ -755,7 +755,6 @@ At Zenysis, we are committed to continuously improving Harmony to better serve g
 We are continually enhancing the technical foundations of Harmony to make deployments even more efficient, reliable, and scalable.
 Example initiatives include:
 - Improving pipeline performance and maintainability
-- Streamlining infrastructure management through Infrastructure as Code (IaC)
 - Updating core back-end and front-end dependencies to enhance security and speed
 - Enhancing platform logs and monitoring tools for faster troubleshooting
 
@@ -778,9 +777,9 @@ Example initiatives include:
 
 We are investing in tools that make it even easier for users and technical teams to manage Harmony deployments independently.
 Example initiatives include:
-- Building front-end tools to simplify management of data integrations like DHIS2
-- Enhancing user interfaces for location matching and dimension resolution workflows
-- Expanding built-in server monitoring using open-source technologies
+- Building front-end tools to simplify management of data integrations
+- Enhancing user tooling to support dimension resolution workflows
+- Providing server monitoring recommendations using open-source technologies
 
 These initiatives are forward-looking and subject to change based on user feedback, evolving needs, and collaboration with our partners. We are excited to continue advancing Harmony as an open, powerful, and sustainable tool for integrated data management and decision-making.
 
