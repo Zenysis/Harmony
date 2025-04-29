@@ -790,6 +790,7 @@ We are excited to see Harmony being shared and implemented across different geog
 
 Our basic community engagement policies are:
 - Open Communication: We welcome feedback, questions, and ideas related to Harmony. You can reach us directly at harmony@zenysis.com.
+- Join Our Community Slack: We invite users, implementers, and contributors to join the Harmony Community Slack: https://join.slack.com/t/harmonycommunitygroup/shared_invite/zt-34wabc1kw-TM38_~8k9~6nf3f_Et0Rpw. The Slack workspace provides a space for discussion, technical support, feature ideas, collaboration, and announcements. Please review and respect the community guidelines posted in Slack to ensure a welcoming environment for all participants.
 - Respectful Interaction: We expect all communications to be respectful and constructive. We are committed to maintaining a professional and inclusive environment for all individuals engaging with the project.
 - Working with the Repository: Developers and implementers are encouraged to engage with the Harmony repository directly.
   - If you encounter a bug, have a feature request, or a question, please open a GitHub Issue.
@@ -838,7 +839,6 @@ Decision-Making
 ## Future Community Plans
 
 As Harmony adoption grows, we aim to strengthen and expand our support for the open-source community. Some initiatives we are considering include:
-- Community Slack Workspace: Creating a shared space where implementers can connect, share best practices, ask questions, and collaborate across geographies.
 - Periodic Community Calls: Hosting regular virtual calls to bring together implementers, share updates, highlight new features, and discuss lessons learned from deployments.
 - Expanded Documentation and Guides: Developing more detailed resources to help new users and implementers onboard more easily and contribute to the project.
 - Community-Driven Roadmap Input: Exploring mechanisms for community feedback to help shape priorities and future enhancements to Harmony.
