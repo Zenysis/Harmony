@@ -17,7 +17,8 @@ Server/environment setup:
 Codebase customization:
 
 9. [Writing integrations](#writing-integrations)
-10. [Contributions](#contributions)
+10. [Contribution and quality assurance process](#contribution-and-quality-assurance-process)
+
 
 Product documentation:
 
@@ -28,15 +29,14 @@ Product documentation:
 Community engagement: 
 
 14. [Community engagement policy](#community-engagement-policy)
-15. [Contribution and quality assurance process](#contribution-and-quality-assurance-process)
-16. [Governance structure](#governance-structure)
-17. [Feature requests](#feature-requests)
-18. [Future community plans](#future-community-plans)
-19. [Do no harm policy](#do-no-harm-policy)
+15. [Governance structure](#governance-structure)
+16. [Feature requests](#feature-requests)
+17. [Future community plans](#future-community-plans)
+18. [Do no harm policy](#do-no-harm-policy)
 
 Ownership considerations: 
 
-20. [Cost of ownership](#cost-of-ownership)
+19. [Cost of ownership](#cost-of-ownership)
 
 
 ## Harmony overview
@@ -604,11 +604,22 @@ There is more to learn about the CSV processor - it supports a variety of format
 
 When calling process_csv, you must specify the `date` column, the `sourcename` (a label for your datasource), and the `prefix` for all indicators produced (usually the name of your datasource or some other informative tag). You will also have to specify some input and output files. You can call `process_csv` from your Python pipeline scripts directly, or invoke it on the command line.
 
-## Contributions
+## Contribution and Quality Assurance Process
 
-Contributions are welcome! Use Github's Issues and Pull Requests features to report bugs, plan features, or submit changes.
+We welcome contributions to Harmony and strive to maintain a high standard of code quality, performance, and stability across the platform.
 
-We have an open [Google Group mailing list zenysis-harmony@googlegroups.com](https://groups.google.com/forum/#!forum/zenysis-harmony), which you can join or email with questions and other discussion. For general open source matters at Zenysis you may contact open-source@zenysis.com.
+Developers looking to adapt or extend the system should follow these core contribution and QA guidelines:
+- Issue First: Before beginning major work, open a GitHub Issue to describe the proposed change and align with maintainers.
+- Fork and Branch: Work should be done in a feature branch from a forked repository, following semantic naming conventions (e.g., feature/dimension-matching-improvement).
+- Code Standards: Contributions should follow the existing code structure and style. Aim for clean, modular, and well-documented code.
+- Testing Requirements: All contributions must
+    - Include test coverage for new features or logic changes (unit or integration tests as appropriate).
+    - Pass all existing automated tests.
+    - Avoid introducing regressions or breaking backward compatibility.
+- Review and Merge: Submit a Pull Request with a clear description of the changes and link to any related Issues. Maintainers will review for correctness, clarity, alignment with roadmap priorities, and QA compliance.
+- Latest Version: Contributions should be based on the latest version of the Harmony repository’s main branch. Documentation and code structure may vary across versions, but the most up-to-date QA and development practices are reflected in the current codebase.
+
+We are continuously working to improve our developer documentation. For technical questions or clarification, reach out via harmony@zenysis.com.
 
 ## Harmony Products
 
@@ -810,23 +821,6 @@ Our basic community engagement policies are:
   - Contributions will be reviewed on a best-effort basis, prioritizing available capacity and alignment with the platform roadmap.
 - Transparency:We aim to be transparent about the development of Harmony. Major updates and changes to the platform will be documented through our public GitHub repository.
 - Support Boundaries: While we strive to be responsive, please note that support is provided on a best-effort basis. We prioritize responses based on available capacity and alignment with the core roadmap.
-
-## Contribution and Quality Assurance Process
-
-We welcome contributions to Harmony and strive to maintain a high standard of code quality, performance, and stability across the platform.
-
-Developers looking to adapt or extend the system should follow these core contribution and QA guidelines:
-- Issue First: Before beginning major work, open a GitHub Issue to describe the proposed change and align with maintainers.
-- Fork and Branch: Work should be done in a feature branch from a forked repository, following semantic naming conventions (e.g., feature/dimension-matching-improvement).
-- Code Standards: Contributions should follow the existing code structure and style. Aim for clean, modular, and well-documented code.
-- Testing Requirements: All contributions must
-    - Include test coverage for new features or logic changes (unit or integration tests as appropriate).
-    - Pass all existing automated tests.
-    - Avoid introducing regressions or breaking backward compatibility.
-- Review and Merge: Submit a Pull Request with a clear description of the changes and link to any related Issues. Maintainers will review for correctness, clarity, alignment with roadmap priorities, and QA compliance.
-- Latest Version: Contributions should be based on the latest version of the Harmony repository’s main branch. Documentation and code structure may vary across versions, but the most up-to-date QA and development practices are reflected in the current codebase.
-
-We are continuously working to improve our developer documentation. For technical questions or clarification, reach out via harmony@zenysis.com.
 
 ## Governance Structure
 
