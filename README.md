@@ -17,26 +17,27 @@ Server/environment setup:
 Codebase customization:
 
 9. [Writing integrations](#writing-integrations)
-10. [Contribution and quality assurance process](#contribution-and-quality-assurance-process)
+10. [Backup and recovery process](#backup-and-recovery-process)
+11. [Contribution and quality assurance process](#contribution-and-quality-assurance-process)
 
 
 Product documentation:
 
-11. [Product overview](#harmony-products)
-12. [Architecture overview](#architecture-overview)
-13. [Roadmap overview](#roadmap-overview)
+12. [Product overview](#harmony-products)
+13. [Architecture overview](#architecture-overview)
+14. [Roadmap overview](#roadmap-overview)
 
 Community engagement: 
 
-14. [Community engagement policy](#community-engagement-policy)
-15. [Governance structure](#governance-structure)
-16. [Feature requests](#feature-requests)
-17. [Future community plans](#future-community-plans)
-18. [Do no harm policy](#do-no-harm-policy)
+15. [Community engagement policy](#community-engagement-policy)
+16. [Governance structure](#governance-structure)
+17. [Feature requests](#feature-requests)
+18. [Future community plans](#future-community-plans)
+19. [Do no harm policy](#do-no-harm-policy)
 
 Ownership considerations: 
 
-19. [Cost of ownership](#cost-of-ownership)
+20. [Cost of ownership](#cost-of-ownership)
 
 
 ## Harmony overview
@@ -603,6 +604,18 @@ Here's an example of valid input that follows that format:
 There is more to learn about the CSV processor - it supports a variety of formats, wildcards, and even Python hooks. See `data/pipeline/scripts/process_csv.py` for a README.
 
 When calling process_csv, you must specify the `date` column, the `sourcename` (a label for your datasource), and the `prefix` for all indicators produced (usually the name of your datasource or some other informative tag). You will also have to specify some input and output files. You can call `process_csv` from your Python pipeline scripts directly, or invoke it on the command line.
+
+## Backup and recovery process
+
+Harmony does not include built-in backup or restore functionality. As such, it is the responsibility of implementers to design and configure appropriate backup strategies based on their deployment environment (cloud or on-premise), data retention policies, and operational needs.
+
+### What to Back Up
+
+### Cloud Environments (e.g. AWS)
+
+### On-Premise Environments
+
+### Implementation Considerations
 
 ## Contribution and Quality Assurance Process
 
