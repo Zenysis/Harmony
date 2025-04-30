@@ -29,10 +29,15 @@ Community engagement:
 
 14. [Community engagement policy](#community-engagement-policy)
 15. [Contribution and quality assurance process](#contribution-and-quality-assurance-process)
-17. [Governance structure](#governance-structure)
-18. [Feature requests](#feature-requests)
-19. [Future community plans](#future-community-plans)
-20. [Do no harm policy](#do-no-harm-policy)
+16. [Governance structure](#governance-structure)
+17. [Feature requests](#feature-requests)
+18. [Future community plans](#future-community-plans)
+19. [Do no harm policy](#do-no-harm-policy)
+
+Ownership considerations: 
+
+20. [Cost of ownership](#cost-of-ownership)
+
 
 ## Harmony overview
 
@@ -869,3 +874,60 @@ By engaging with, using, or contributing to Harmony, you agree to the following 
 - Contributions and Community Behavior: Contributions to Harmony (code, documentation, discussions) must align with these principles. We reserve the right to reject or remove contributions or users that do not respect this commitment.
 
 Zenysis reserves the right to update this policy as needed to reflect evolving best practices in responsible technology development and use.
+
+## Cost of ownership
+
+Harmony is a sophisticated, modular software platform that spans data integration, harmonization, and analytics. While the platform is open source, its successful implementation requires technical infrastructure, skilled personnel, and thoughtful planning to ensure long-term sustainability.
+
+### Technical scope and expertise required
+
+Harmony combines multiple subsystems — including a data pipeline, data warehouse (Apache Druid), storage systems, and analytics front-end — and is designed to support high-volume, high-frequency data use in government health systems.
+
+To operate the platform effectively, most deployments will require technical team members with skills across the following areas:
+- System Administration: OS configuration, service deployment, security management, monitoring
+- Database Administration: Management of Druid and PostgreSQL, backup, tuning
+- Network Administration: Setup of secure, performant infrastructure for intra-system communication
+- Data Engineering: Building and maintaining data pipelines, harmonizing across systems
+- (Optional) Software Development: Extending core functionality or integrating additional tools
+
+The exact staffing model depends on the scale of deployment. Staffing requirements are closely tied to the scale of data, number of users, hosting environment complexity etc. 
+- Small-scale deployments may require 1–2 part-time technical staff for basic maintenance and data integration workflows.
+- Larger or self-hosted deployments typically require at least 2 technical staff with complementary skillsets to ensure stability, security, and ongoing support.
+
+### Hosting and Infrastructure Requirements
+
+Harmony can be deployed on-premises or in the cloud. Infrastructure requirements vary by data volume and desired performance but should be sized to support:
+- Multi-step ETL workflows
+- Large-scale data querying and dashboarding
+- High uptime and data availability
+
+For a basic production deployment of Harmony, the following infrastructure specifications are recommended:
+
+| Component        | Cores | RAM (GB) | Storage (GB) | Notes                                |
+|------------------|-------|----------|--------------|--------------------------------------|
+| `staging`        | 2     | 4        | 20           | Testing and configuration environment |
+| `prod`           | 2     | 4        | 20           | Production frontend and API services  |
+| `nfs`            | 2     | 4        | 1000         | Shared file system for data storage   |
+| `druid-master`   | 4     | 16       | 120          | Coordinates Druid cluster nodes       |
+| `druid-data`     | 16    | 64       | 200          | Stores and processes historical data  |
+| `druid-query`    | 4     | 16       | 120          | Handles real-time data querying       |
+| `pipeline`       | 16    | 32       | 500          | Runs ETL and integration workflows    |
+| `postgres`       | 2     | 8        | 100          | Relational DB for metadata and configs|
+| `memcache`       | 4     | 16       | 20           | Caching layer for performance         |
+| `minio`          | 2     | 8        | 500          | Object storage layer (or AWS S3)      |
+
+We recommend running some services on the same machine to optimize hardware use:
+- A single machine can host `nfs`, `druid` (all components), `pipeline`, `postgres`, `memcache`, and `gate`.
+- When co-locating `druid` and `pipeline`, sum their core and RAM requirements.
+- For other co-located services, use the maximum requirement across services.
+
+In addition: Druid can run in either single-server or clustered mode.  In single-server deployments, the following components can run together on one machine:
+- `druid-master`
+- `druid-data`
+- `druid-query`
+
+### Additional notes
+
+- Cloud vs. On-Premises: Harmony supports both deployment models. Cloud deployments may offer easier scaling and lower setup overhead, while on-prem may be preferred to support local hosting and local infrastructure reuse.
+- Infrastructure Planning Support: Zenysis can provide tailored sizing and deployment guidance based on the specific needs and data volumes of each implementation.
+      
