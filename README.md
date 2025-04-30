@@ -611,11 +611,32 @@ Harmony does not include built-in backup or restore functionality. As such, it i
 
 ### What to Back Up
 
+To support basic recoverability and system continuity, we recommend implementers ensure the following components are backed up regularly:
+- PostgreSQL database: This contains metadata, configurations, and system state. It can be backed up using database dumps or automated snapshots (e.g. AWS RDS snapshots).
+- Object storage: If using S3, MinIO, or another object storage solution, data stored here (uploaded files, pipeline input/output) should be included in backup policies. S3 provides configurable versioning and lifecycle policies to support automated backups.
+- Pipeline output and logs: While not critical for system continuity, logs and output files may be useful for debugging or auditability. These can be backed up to persistent storage depending on local policy.
+- Druid data (optional): Druid can re-ingest data from pipeline outputs. However, if preserving historical data sources or real-time segments is necessary, consider backing up the Druid deep storage directory (e.g. NFS or S3).
+- Other components (e.g. frontend services, container configurations) can typically be restored via redeployment using existing configuration files and code, and do not generally require separate backup.
+
 ### Cloud Environments (e.g. AWS)
+Cloud providers typically offer robust, built-in tools for backup and recovery:
+- PostgreSQL: Use services like AWS RDS snapshots or scheduled database dumps.
+- Object Storage: Enable S3 versioning, replication, or lifecycle policies to support redundancy.
+- VMs: Use image snapshots (e.g. AWS AMIs or EBS Snapshots) for infrastructure components if needed.
+- Automation: Backup jobs can be scheduled using native cloud tools or workflows like AWS Backup.
 
 ### On-Premise Environments
+On-premise deployments require implementers to define and configure their own backup mechanisms:
+- PostgreSQL: Use pg_dump or scheduled cron jobs to create periodic backups.
+- Object Storage: MinIO and similar tools support replication and snapshotting; external scripts or tools may be needed.
+- VMs: Consider using hypervisor-based snapshotting (e.g. via VMware, Proxmox, or KVM).
+- File-based backup: Use scheduled rsync jobs or tar-based archiving for logs.
 
 ### Implementation Considerations
+- The appropriate backup frequency and retention policy should be defined based on operational risk tolerance, cost, and compliance requirements.
+- For production systems, we recommend a minimum of daily PostgreSQL backups, and weekly snapshot or system backups where feasible.
+- Regularly test restore procedures to ensure backup integrity.
+
 
 ## Contribution and Quality Assurance Process
 
