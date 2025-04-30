@@ -29,9 +29,10 @@ Community engagement:
 
 14. [Community engagement policy](#community-engagement-policy)
 15. [Contribution and quality assurance process](#contribution-and-quality-assurance-process)
-16. [Governance structure](#governance-structure)
-17. [Future community plans](#future-community-plans)
-18. [Do no harm policy](#do-no-harm-policy)
+17. [Governance structure](#governance-structure)
+18. [Feature requests](#feature-requests)
+19. [Future community plans](#future-community-plans)
+20. [Do no harm policy](#do-no-harm-policy)
 
 ## Harmony overview
 
@@ -835,6 +836,17 @@ Decision-Making
 - Zenysis maintains decision-making authority for the Harmony project, including decisions about feature inclusion, releases, and roadmap prioritization.
 - We strive to make decisions transparently, taking community feedback into account wherever possible.
 - As the community grows, we aim to evolve the governance model to support broader participation.
+
+## Feature Requests
+
+We welcome suggestions for new features and improvements to Harmony.
+If you have ideas that could help improve the platform for your use case or for the broader community, please let us know!
+
+You can:
+- Open a GitHub Issue to start a public discussion, or
+- Submit a request anonymously via our Feature Request Form: https://docs.google.com/forms/d/e/1FAIpQLSeX5wFi-O4XPtcmfw4bD9gtfEhnEgjX9htmVYtGayVjrFPr3w/viewform?usp=header 
+
+All submissions will be reviewed and considered as part of our product planning process.
 
 ## Future Community Plans
 
