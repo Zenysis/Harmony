@@ -777,13 +777,14 @@ The architecture diagram below describes Harmony’s robust data integration pla
 - Data Sources: Data enters the system from diverse sources—like electronic health records, disease surveillance platforms, facility registries, and logistic management systems. These datasets often differ significantly in format, complexity, and quality.
 
 - Data Integration Pipeline (Zeus ETL, Python): A sophisticated pipeline designed specifically to address these challenges by:
-Generation: Automatically extracting data from the original source systems. The way data is accessed and generated is flexible; it can happen via API or direct database replication; using prod or staging instances; configured at different times; with concurrency etc. 
+
+  - Generation: Automatically extracting data from the original source systems. The way data is accessed and generated is flexible; it can happen via API or direct database replication; using prod or staging instances; configured at different times; with concurrency etc. 
 
   - Processing: Cleaning, standardizing, and harmonizing data into a unified, consistent structure. This step ensures accuracy and comparability across datasets from different geographies, programmatic areas etc. 
 
   - Indexing: Efficiently organizing the harmonized data, allowing for faster retrieval and analysis.
 
-  - Validation: Automatically checking the integrated data for accuracy and completeness, ensuring high-quality outputs. For instance, this step auto-flags outliers. 
+  - Validation: Automatically checking the integrated data for accuracy and completeness, ensuring high-quality outputs. 
 
 - Object Storage (MinIO): Provides a scalable and temporary holding place during data integration, ensuring pipeline stability, facilitating parallel processing, and supporting handling of large volumes of data.
 
@@ -853,7 +854,7 @@ Our basic community engagement policies are:
     - Ensure your changes do not break existing functionality.
   - Be respectful and collaborative in reviews and discussions.
   - Contributions will be reviewed on a best-effort basis, prioritizing available capacity and alignment with the platform roadmap.
-- Transparency:We aim to be transparent about the development of Harmony. Major updates and changes to the platform will be documented through our public GitHub repository.
+- Transparency: We aim to be transparent about the development of Harmony. Major updates and changes to the platform will be documented through our public GitHub repository.
 - Support Boundaries: While we strive to be responsive, please note that support is provided on a best-effort basis. We prioritize responses based on available capacity and alignment with the core roadmap.
 
 ## Governance Structure
