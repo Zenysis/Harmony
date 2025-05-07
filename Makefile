@@ -4,6 +4,7 @@ ENV_FILE?=.env
 COMMIT?=master
 DOCKER_NAMESPACE?=zengineering
 DOCKER_TAG?=latest
+IMAGE_PREFIX?=harmony
 DOCKER_HOST?=ssh://$(WEB_REMOTE)
 SERVICE?=
 PROJECT_NAME?=harmony-web
@@ -125,8 +126,9 @@ web-server-push: # Push the web server docker image to the container registry.
 	docker push $(DOCKER_NAMESPACE)/harmony-web-server:$(DOCKER_TAG)
 
 web-build:
-	@docker build -t $(DOCKER_NAMESPACE)/harmony-web:$(DOCKER_TAG) \
+	docker build -t $(DOCKER_NAMESPACE)/harmony-web:$(DOCKER_TAG) \
 		-f docker/web/Dockerfile_web \
+		--build-arg IMAGE_PREFIX=$(IMAGE_PREFIX) \
 		--build-arg NAMESPACE=$(DOCKER_NAMESPACE) \
 		--build-arg TAG=$(DOCKER_TAG)  .
 
@@ -134,7 +136,8 @@ web-push: # Push the web docker image to the container registry.
 	docker push $(DOCKER_NAMESPACE)/harmony-web:$(DOCKER_TAG)
 
 etl-pipeline-build:
-	@docker build -t $(DOCKER_NAMESPACE)/harmony-etl-pipeline:$(DOCKER_TAG) \
+	@DOCKER_BUILDKIT=1 docker build -t \
+		$(DOCKER_NAMESPACE)/harmony-etl-pipeline:$(DOCKER_TAG) \
 		-f docker/pipeline/Dockerfile  .
 
 etl-pipeline-push: # Push the etl pipeline docker image to the container registry.

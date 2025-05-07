@@ -13,9 +13,9 @@ pipeline {
         // Build all docker web containers
         stage('Web Build') {
             steps {
-                sh 'make web_client_build'
-                sh 'make web_server_build'
-                sh 'make web_build'
+                sh 'make web-client-build'
+                sh 'make web-server-build'
+                sh 'make web-build'
             }
         }
         // Push all docker web containers to https://hub.docker.com/u/zengineering
@@ -23,9 +23,9 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-io-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
-                    sh 'make web_client_push'
-                    sh 'make web_server_push'
-                    sh 'make web_push'
+                    sh 'make web-client-push'
+                    sh 'make web-server-push'
+                    sh 'make web-push'
                     sh 'docker logout'
                 }
             }
@@ -33,7 +33,7 @@ pipeline {
         // Build all docker pipeline containers
         stage('Pipeline Build') {
             steps {
-                sh 'make etl_pipeline_build'
+                sh 'make etl-pipeline-build'
             }
         }
         // Push all docker pipeline containers to https://hub.docker.com/u/zengineering
@@ -41,7 +41,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-io-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
-                    sh 'make etl_pipeline_push'
+                    sh 'make etl-pipeline-push'
                     sh 'docker logout'
                 }
             }
