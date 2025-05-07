@@ -53,7 +53,7 @@ gspread>=5.4.0
 # first install `grpcio==1.26.0` and then install the google-cloud-logging.
 google-cloud-logging==1.11.0 ; platform_python_implementation != 'PyPy'
 
-# With PyPy shapely ends up pulling in numpy 1.21.0, for when we get to the pipeline step, so not sure why we 
+# With PyPy shapely ends up pulling in numpy 1.21.0, for when we get to the pipeline step, so not sure why we
 # don't use the same version for both.
 # On M1, with PyPy running native, 1.21.0 can't install.
 # I change to `numpy==1.21.0` (not exlusions) and ran:

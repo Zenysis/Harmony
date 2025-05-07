@@ -15,7 +15,7 @@
     white-space: normal;
   }
 
-  
+
   &__control-label {
     color: $slate-hover;
     font-size: 14px;
@@ -29,9 +29,9 @@
 }
 
 .pivot-modal-over-popover-hack {
-  // EXTREME NOTE: popovers are at 9999 and modals are at 9999. 
-  // Reducing the z index of the dropdown would put it behind the Settings 
-  // Modal. This is needed because this is a modal on top of a dropdown on 
+  // EXTREME NOTE: popovers are at 9999 and modals are at 9999.
+  // Reducing the z index of the dropdown would put it behind the Settings
+  // Modal. This is needed because this is a modal on top of a dropdown on
   // top of a modal. We need to use important to get the React-Modal
   // imported component to respect this z index.
   z-index: 100000 !important;

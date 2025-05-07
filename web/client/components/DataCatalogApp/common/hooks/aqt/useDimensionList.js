@@ -41,7 +41,7 @@ export default function useDimensionList(
       if (categories.length === 0) {
         return undefined;
       }
-      
+
       // NOTE: Right now we are only expecting dimensions to live
       // within a single parent category. That category cannot be nested
       // further beneath another category. This assumption is valid right now,
