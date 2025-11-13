@@ -14,11 +14,31 @@ Server/environment setup:
 7. [Production web server setup](#production-web-server-setup)
 8. [Production Druid server setup](#production-druid-server-setup)
 
-Codebase customization
+Codebase customization:
 
 9. [Writing integrations](#writing-integrations)
-10. [Contributions](#contributions)
-11. [Product overview](#harmony-products)
+10. [Backup and recovery process](#backup-and-recovery-process)
+11. [Contribution and quality assurance process](#contribution-and-quality-assurance-process)
+
+
+Product documentation:
+
+12. [Product overview](#harmony-products)
+13. [Architecture overview](#architecture-overview)
+14. [Roadmap overview](#roadmap-overview)
+
+Community engagement: 
+
+15. [Community engagement policy](#community-engagement-policy)
+16. [Governance structure](#governance-structure)
+17. [Feature requests](#feature-requests)
+18. [Future community plans](#future-community-plans)
+19. [Do no harm policy](#do-no-harm-policy)
+
+Ownership considerations: 
+
+20. [Cost of ownership](#cost-of-ownership)
+
 
 ## Harmony overview
 
@@ -95,10 +115,6 @@ When you run a script or the web server, select a configuration by setting the `
       ```bash
       export ZEN_ENV='usa'
       ```
-
-### A note on Makefiles
-
-See [Makefiles.md](Makefiles.md) for more information on the Makefiles in this repository.
 
 ## Local development setup
 
@@ -589,11 +605,55 @@ There is more to learn about the CSV processor - it supports a variety of format
 
 When calling process_csv, you must specify the `date` column, the `sourcename` (a label for your datasource), and the `prefix` for all indicators produced (usually the name of your datasource or some other informative tag). You will also have to specify some input and output files. You can call `process_csv` from your Python pipeline scripts directly, or invoke it on the command line.
 
-## Contributions
+## Backup and recovery process
 
-Contributions are welcome! Use Github's Issues and Pull Requests features to report bugs, plan features, or submit changes.
+Harmony does not include built-in backup or restore functionality. As such, it is the responsibility of implementers to design and configure appropriate backup strategies based on their deployment environment (cloud or on-premise), data retention policies, and operational needs.
 
-We have an open [Google Group mailing list zenysis-harmony@googlegroups.com](https://groups.google.com/forum/#!forum/zenysis-harmony), which you can join or email with questions and other discussion. For general open source matters at Zenysis you may contact open-source@zenysis.com.
+### What to Back Up
+
+To support basic recoverability and system continuity, we recommend implementers ensure the following components are backed up regularly:
+- PostgreSQL database: This contains metadata, configurations, and system state. It can be backed up using database dumps or automated snapshots (e.g. AWS RDS snapshots).
+- Object storage: If using S3, MinIO, or another object storage solution, data stored here (uploaded files, pipeline input/output) should be included in backup policies. S3 provides configurable versioning and lifecycle policies to support automated backups.
+- Pipeline output and logs: While not critical for system continuity, logs and output files may be useful for debugging or auditability. These can be backed up to persistent storage depending on local policy.
+- Druid data (optional): Druid can re-ingest data from pipeline outputs. However, if preserving historical data sources or real-time segments is necessary, consider backing up the Druid deep storage directory (e.g. NFS or S3).
+- Other components (e.g. frontend services, container configurations) can typically be restored via redeployment using existing configuration files and code, and do not generally require separate backup.
+
+### Cloud Environments (e.g. AWS)
+Cloud providers typically offer robust, built-in tools for backup and recovery:
+- PostgreSQL: Use services like AWS RDS snapshots or scheduled database dumps.
+- Object Storage: Enable S3 versioning, replication, or lifecycle policies to support redundancy.
+- VMs: Use image snapshots (e.g. AWS AMIs or EBS Snapshots) for infrastructure components if needed.
+- Automation: Backup jobs can be scheduled using native cloud tools or workflows like AWS Backup.
+
+### On-Premise Environments
+On-premise deployments require implementers to define and configure their own backup mechanisms:
+- PostgreSQL: Use pg_dump or scheduled cron jobs to create periodic backups.
+- Object Storage: MinIO and similar tools support replication and snapshotting; external scripts or tools may be needed.
+- VMs: Consider using hypervisor-based snapshotting (e.g. via VMware, Proxmox, or KVM).
+- File-based backup: Use scheduled rsync jobs or tar-based archiving for logs.
+
+### Implementation Considerations
+- The appropriate backup frequency and retention policy should be defined based on operational risk tolerance, cost, and compliance requirements.
+- For production systems, we recommend a minimum of daily PostgreSQL backups, and weekly snapshot or system backups where feasible.
+- Regularly test restore procedures to ensure backup integrity.
+
+
+## Contribution and Quality Assurance Process
+
+We welcome contributions to Harmony and strive to maintain a high standard of code quality, performance, and stability across the platform.
+
+Developers looking to adapt or extend the system should follow these core contribution and QA guidelines:
+- Issue First: Before beginning major work, open a GitHub Issue to describe the proposed change and align with maintainers.
+- Fork and Branch: Work should be done in a feature branch from a forked repository, following semantic naming conventions (e.g., feature/dimension-matching-improvement).
+- Code Standards: Contributions should follow the existing code structure and style. Aim for clean, modular, and well-documented code.
+- Testing Requirements: All contributions must
+    - Include test coverage for new features or logic changes (unit or integration tests as appropriate).
+    - Pass all existing automated tests.
+    - Avoid introducing regressions or breaking backward compatibility.
+- Review and Merge: Submit a Pull Request with a clear description of the changes and link to any related Issues. Maintainers will review for correctness, clarity, alignment with roadmap priorities, and QA compliance.
+- Latest Version: Contributions should be based on the latest version of the Harmony repository’s main branch. Documentation and code structure may vary across versions, but the most up-to-date QA and development practices are reflected in the current codebase.
+
+We are continuously working to improve our developer documentation. For technical questions or clarification, reach out via harmony@zenysis.com.
 
 ## Harmony Products
 
@@ -707,3 +767,195 @@ The Field Setup App allows users to set up fields that are in Druid and not yet 
 The app is populated with the id, data source, and default sum calculation for each field and users can edit the name, description, calculation, and category. Once the fields are ready, they can be published to Data Catalog.
 
 ![](https://slabstatic.com/prod/uploads/rzv7xv5j/posts/images/71BllLgN_UIJ0yWjjAaSxi2X.png)
+
+## Architecture Overview
+
+The architecture diagram below describes Harmony’s robust data integration platform, outlining how data moves seamlessly from initial ingestion to impactful use by analysts, decision-makers, and external systems.
+
+<img width="1148" alt="Screenshot 2025-04-25 at 5 34 05 PM" src="https://github.com/user-attachments/assets/9b86dd0d-9f57-4d8c-a5e7-acdb1cd36046" />
+
+- Data Sources: Data enters the system from diverse sources—like electronic health records, disease surveillance platforms, facility registries, and logistic management systems. These datasets often differ significantly in format, complexity, and quality.
+
+- Data Integration Pipeline (Zeus ETL, Python): A sophisticated pipeline designed specifically to address these challenges by:
+Generation: Automatically extracting data from the original source systems. The way data is accessed and generated is flexible; it can happen via API or direct database replication; using prod or staging instances; configured at different times; with concurrency etc. 
+
+  - Processing: Cleaning, standardizing, and harmonizing data into a unified, consistent structure. This step ensures accuracy and comparability across datasets from different geographies, programmatic areas etc. 
+
+  - Indexing: Efficiently organizing the harmonized data, allowing for faster retrieval and analysis.
+
+  - Validation: Automatically checking the integrated data for accuracy and completeness, ensuring high-quality outputs. For instance, this step auto-flags outliers. 
+
+- Object Storage (MinIO): Provides a scalable and temporary holding place during data integration, ensuring pipeline stability, facilitating parallel processing, and supporting handling of large volumes of data.
+
+- Data Warehouse (Apache Druid): At the heart of RHAP is a high-performance data warehouse optimized for large-scale analytics. Druid supports real-time queries across billions of records, making it ideal for rapid analyses, trend tracking, and real-time decision-making critical in public health scenarios. More on this in the next slide. 
+
+- Relational Database (PostgreSQL): Stores essential metadata, such as user permissions, dashboard specifications, indicator and dimension metadata in data catalog, and other platform settings, ensuring users see the data and analysis most relevant to their specific context and role.
+
+- Web Server (Python/Flask): Serves as the primary bridge between stored data and the user. It manages and translates user queries into efficient Druid queries, formats the resulting datasets, and securely delivers tailored information back to the web interface and external applications.
+
+- Web Interface & Visualizations (React.js): The user-facing portal, built to enable intuitive data exploration and decision-making. Users—from ministry staff to hospital data managers—can quickly visualize trends, uncover insights, and directly interact with harmonized data through dashboards and reports. 
+
+- API Gateway (Python): Allows external applications and third-party systems, such as national health portals or other data systems, to seamlessly and securely access harmonized data from RHAP. This multiplies the value derived from integrated datasets across the broader health system. This also means that other analytics systems can be leveraged if desired. 
+
+
+## Roadmap Overview 
+
+At Zenysis, we are committed to continuously improving Harmony to better serve governments and organizations around the world. While our roadmap may evolve based on new learnings and priorities, our current development focus over the next 12–24 months includes four major investment areas:
+
+### 1. Operational Efficiency
+
+We are continually enhancing the technical foundations of Harmony to make deployments even more efficient, reliable, and scalable.
+Example initiatives include:
+- Improving pipeline performance and maintainability
+- Updating core back-end and front-end dependencies to enhance security and speed
+- Enhancing platform logs and monitoring tools for faster troubleshooting
+
+### 2. Mobile and Collaboration
+
+We are expanding Harmony’s reach by strengthening mobile support and enabling more collaborative workflows.
+Example initiatives include:
+- Improving mobile user experience and use of dashboards on the go
+- Supporting offline access to dashboards for mobile users
+- Enabling collaboration and data sharing directly through the platform
+
+### 3. AI-Powered Data Insights
+
+We are integrating Large Language Models (LLMs) to help users more easily interpret and act on data within Harmony.
+Example initiatives include:
+- Deploying lightweight, open-source AI models optimized for cost and performance to support data use 
+- Fine-tuning models using programmatic and contextual content to enable data querying and interpretation
+
+### 4. Technical Ownership Tooling
+
+We are investing in tools that make it even easier for users and technical teams to manage Harmony deployments independently.
+Example initiatives include:
+- Building front-end tools to simplify management of data integrations
+- Enhancing user tooling to support dimension resolution workflows
+- Providing server monitoring recommendations using open-source technologies
+
+These initiatives are forward-looking and subject to change based on user feedback, evolving needs, and collaboration with our partners. We are excited to continue advancing Harmony as an open, powerful, and sustainable tool for integrated data management and decision-making.
+
+## Community Engagement Policy
+
+We are excited to see Harmony being shared and implemented across different geographies. While we do not yet have a formal open-source community program, we are committed to supporting and engaging with users and implementers in a responsible and respectful way.
+
+Our basic community engagement policies are:
+- Open Communication: We welcome feedback, questions, and ideas related to Harmony. You can reach us directly at harmony@zenysis.com.
+- Join Our Community Slack: We invite users, implementers, and contributors to join the Harmony Community Slack: https://join.slack.com/t/harmonycommunitygroup/shared_invite/zt-34wabc1kw-TM38_~8k9~6nf3f_Et0Rpw. The Slack workspace provides a space for discussion, technical support, feature ideas, collaboration, and announcements. Please review and respect the community guidelines posted in Slack to ensure a welcoming environment for all participants.
+- Respectful Interaction: We expect all communications to be respectful and constructive. We are committed to maintaining a professional and inclusive environment for all individuals engaging with the project.
+- Working with the Repository: Developers and implementers are encouraged to engage with the Harmony repository directly.
+  - If you encounter a bug, have a feature request, or a question, please open a GitHub Issue.
+  - If you would like to contribute a solution, feel free to open a Pull Request.
+  - Before submitting a pull request, please:
+    - Open an Issue to discuss the proposed change, unless it is a small fix.
+    - Ensure your code follows our general style and structure (consistency is appreciated).
+    - Write clear commit messages and include relevant context or references.
+    - Ensure your changes do not break existing functionality.
+  - Be respectful and collaborative in reviews and discussions.
+  - Contributions will be reviewed on a best-effort basis, prioritizing available capacity and alignment with the platform roadmap.
+- Transparency:We aim to be transparent about the development of Harmony. Major updates and changes to the platform will be documented through our public GitHub repository.
+- Support Boundaries: While we strive to be responsive, please note that support is provided on a best-effort basis. We prioritize responses based on available capacity and alignment with the core roadmap.
+
+## Governance Structure
+
+The Harmony project is currently maintained and stewarded by Zenysis Technologies.
+
+Roles and Responsibilities
+- Zenysis Maintainers: Zenysis leads the development, maintenance, and strategic direction of Harmony. Maintainers are responsible for reviewing issues and pull requests, setting priorities, approving changes, and ensuring the project evolves in line with its mission.
+- Community Contributors: We welcome external contributions from the community, including bug reports, feature suggestions, and pull requests. Contributors are encouraged to collaborate through open discussion, propose improvements, and engage respectfully with maintainers and other community members.
+- Community Participants: Implementers and users of Harmony are invited to share feedback, suggest ideas, and participate in discussions. While participants may not have direct decision-making authority, their input helps shape the project roadmap and priorities.
+
+Decision-Making
+- Zenysis maintains decision-making authority for the Harmony project, including decisions about feature inclusion, releases, and roadmap prioritization.
+- We strive to make decisions transparently, taking community feedback into account wherever possible.
+- As the community grows, we aim to evolve the governance model to support broader participation.
+
+## Feature Requests
+
+We welcome suggestions for new features and improvements to Harmony.
+If you have ideas that could help improve the platform for your use case or for the broader community, please let us know!
+
+You can:
+- Open a GitHub Issue to start a public discussion, or
+- Submit a request anonymously via our Feature Request Form: https://docs.google.com/forms/d/e/1FAIpQLSeX5wFi-O4XPtcmfw4bD9gtfEhnEgjX9htmVYtGayVjrFPr3w/viewform?usp=header 
+
+All submissions will be reviewed and considered as part of our product planning process.
+
+## Future Community Plans
+
+As Harmony adoption grows, we aim to strengthen and expand our support for the open-source community. Some initiatives we are considering include:
+- Periodic Community Calls: Hosting regular virtual calls to bring together implementers, share updates, highlight new features, and discuss lessons learned from deployments.
+- Expanded Documentation and Guides: Developing more detailed resources to help new users and implementers onboard more easily and contribute to the project.
+- Community-Driven Roadmap Input: Exploring mechanisms for community feedback to help shape priorities and future enhancements to Harmony.
+
+We look forward to growing alongside the community and will share updates as these initiatives take shape.
+
+
+## Do No Harm Policy
+
+Zenysis is committed to ensuring that Harmony is used in ways that support positive social impact and protect individuals and communities.
+
+By engaging with, using, or contributing to Harmony, you agree to the following principles:
+- Use for Good: Harmony is intended to be used to improve data management, analysis, and decision-making for the benefit of public health, social good, and community development. It should not be used to cause harm, violate human rights, or enable discrimination, exploitation, surveillance, or violence against individuals or groups.
+- Respect for Privacy and Data Security: Users and implementers of Harmony must respect the privacy, security, and rights of individuals whose data is managed through the platform, in compliance with applicable laws and ethical best practices.
+- Responsible Implementation: Implementers should ensure that deployments of Harmony consider the local context, minimize unintended consequences, and prioritize the well-being of the communities served.
+- Contributions and Community Behavior: Contributions to Harmony (code, documentation, discussions) must align with these principles. We reserve the right to reject or remove contributions or users that do not respect this commitment.
+
+Zenysis reserves the right to update this policy as needed to reflect evolving best practices in responsible technology development and use.
+
+## Cost of ownership
+
+Harmony is a sophisticated, modular software platform that spans data integration, harmonization, and analytics. While the platform is open source, its successful implementation requires technical infrastructure, skilled personnel, and thoughtful planning to ensure long-term sustainability.
+
+### Technical scope and expertise required
+
+Harmony combines multiple subsystems — including a data pipeline, data warehouse (Apache Druid), storage systems, and analytics front-end — and is designed to support high-volume, high-frequency data use in government health systems.
+
+To operate the platform effectively, most deployments will require technical team members with skills across the following areas:
+- System Administration: OS configuration, service deployment, security management, monitoring
+- Database Administration: Management of Druid and PostgreSQL, backup, tuning
+- Network Administration: Setup of secure, performant infrastructure for intra-system communication
+- Data Engineering: Building and maintaining data pipelines, harmonizing across systems
+- (Optional) Software Development: Extending core functionality or integrating additional tools
+
+The exact staffing model depends on the scale of deployment. Staffing requirements are closely tied to the scale of data, number of users, hosting environment complexity etc. 
+- Small-scale deployments may require 1–2 part-time technical staff for basic maintenance and data integration workflows.
+- Larger or self-hosted deployments typically require at least 2 technical staff with complementary skillsets to ensure stability, security, and ongoing support.
+
+### Hosting and Infrastructure Requirements
+
+Harmony can be deployed on-premises or in the cloud. Infrastructure requirements vary by data volume and desired performance but should be sized to support:
+- Multi-step ETL workflows
+- Large-scale data querying and dashboarding
+- High uptime and data availability
+
+For a basic production deployment of Harmony, the following infrastructure specifications are recommended:
+
+| Component        | Cores | RAM (GB) | Storage (GB) | Notes                                |
+|------------------|-------|----------|--------------|--------------------------------------|
+| `staging`        | 2     | 4        | 20           | Testing and configuration environment |
+| `prod`           | 2     | 4        | 20           | Production frontend and API services  |
+| `nfs`            | 2     | 4        | 1000         | Shared file system for data storage   |
+| `druid-master`   | 4     | 16       | 120          | Coordinates Druid cluster nodes       |
+| `druid-data`     | 16    | 64       | 200          | Stores and processes historical data  |
+| `druid-query`    | 4     | 16       | 120          | Handles real-time data querying       |
+| `pipeline`       | 16    | 32       | 500          | Runs ETL and integration workflows    |
+| `postgres`       | 2     | 8        | 100          | Relational DB for metadata and configs|
+| `memcache`       | 4     | 16       | 20           | Caching layer for performance         |
+| `minio`          | 2     | 8        | 500          | Object storage layer (or AWS S3)      |
+
+We recommend running some services on the same machine to optimize hardware use:
+- A single machine can host `nfs`, `druid` (all components), `pipeline`, `postgres`, `memcache`, and `gate`.
+- When co-locating `druid` and `pipeline`, sum their core and RAM requirements.
+- For other co-located services, use the maximum requirement across services.
+
+In addition: Druid can run in either single-server or clustered mode.  In single-server deployments, the following components can run together on one machine:
+- `druid-master`
+- `druid-data`
+- `druid-query`
+
+### Additional notes
+
+- Cloud vs. On-Premises: Harmony supports both deployment models. Cloud deployments may offer easier scaling and lower setup overhead, while on-prem may be preferred to support local hosting and local infrastructure reuse.
+- Infrastructure Planning Support: Zenysis can provide tailored sizing and deployment guidance based on the specific needs and data volumes of each implementation.
+      

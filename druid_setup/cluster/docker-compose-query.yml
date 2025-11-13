@@ -18,6 +18,12 @@
 #
 version: "2.2"
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "10"
+
 volumes:
   zen_extensions: {}
   broker_var: {}
@@ -31,6 +37,7 @@ services:
       - zen_extensions:/druid/extensions
     environment:
       - ZEN_DRUID_VERSION=${DRUID_VERSION}
+    logging: *default-logging
 
   broker:
     image: apache/druid:${DRUID_VERSION}
@@ -50,6 +57,7 @@ services:
       - environment/broker.env
     environment:
       - druid_zk_service_host=${DRUID_ZOOKEEPER_HOST}
+    logging: *default-logging
 
   router:
     image: apache/druid:${DRUID_VERSION}
@@ -68,3 +76,4 @@ services:
       - environment/common.env
     environment:
       - druid_zk_service_host=${DRUID_ZOOKEEPER_HOST}
+    logging: *default-logging

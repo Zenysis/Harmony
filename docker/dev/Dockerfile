@@ -122,30 +122,24 @@ COPY --chmod=755 --from=downloader /usr/local/bin/mc /usr/local/bin/mc
 WORKDIR /app
 
 # CPython
-# Update setup and create venv
-RUN /opt/python/3.9.16/bin/python3.9 -m pip install --upgrade pip setuptools \
-    && /opt/python/3.9.16/bin/python3.9 -m venv venv \
-    && . venv/bin/activate && python -m pip install --upgrade pip setuptools
+# Create venv
+RUN /opt/python/3.9.16/bin/python3.9 -m venv venv
 # Install dependencies
 COPY requirements.txt requirements-web.txt requirements-dev.txt requirements-pipeline.txt ./
 RUN . venv/bin/activate \
-    && python -m pip install -r requirements.txt \
-    && python -m pip install -r requirements-web.txt \
-    && python -m pip install -r requirements-dev.txt \
-    && python -m pip install -r requirements-pipeline.txt
+    && python -m pip install wheel==0.43.0 \
+    && python -m pip install --no-build-isolation -r requirements.txt -r requirements-web.txt -r requirements-dev.txt -r requirements-pipeline.txt
 
 # PyPy
 # Install pypy
 COPY --from=downloader /opt/pypy3.9-v7.3.11 /opt/pypy3.9-v7.3.11
 # Update setup and create venv
 RUN /opt/pypy3.9-v7.3.11/bin/pypy3 -m ensurepip \
-    && /opt/pypy3.9-v7.3.11/bin/pypy3 -m pip install --upgrade pip setuptools \
     && /opt/pypy3.9-v7.3.11/bin/pypy3 -m venv venv_pypy3
 # Install pypy dependencies
 RUN . venv_pypy3/bin/activate \
-    && pypy3 -m pip install --upgrade pip setuptools \
-    && pypy3 -m pip install -r requirements.txt \
-    && pypy3 -m pip install -r requirements-pipeline.txt
+    && pypy3 -m pip install wheel==0.43.0 \
+    && pypy3 -m pip install --no-build-isolation -r requirements.txt -r requirements-pipeline.txt
 
 # Install flow.
 COPY --from=downloader /usr/local/bin/flow /usr/local/bin/flow

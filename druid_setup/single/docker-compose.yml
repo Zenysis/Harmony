@@ -30,6 +30,12 @@ volumes:
   coordinator_var: {}
   router_var: {}
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "10"
+
 services:
   extension_loader:
     build:
@@ -38,6 +44,7 @@ services:
       - zen_extensions:/druid/extensions
     environment:
       - ZEN_DRUID_VERSION=${DRUID_VERSION}
+    logging: *default-logging
 
   postgres:
     image: postgres:latest
@@ -52,6 +59,7 @@ services:
       - POSTGRES_PASSWORD=FoolishPassword
       - POSTGRES_USER=druid
       - POSTGRES_DB=druid
+    logging: *default-logging
 
   memcache:
     container_name: memcache
@@ -59,6 +67,7 @@ services:
     restart: always
     ports:
       - "11211:11211"
+    logging: *default-logging
 
   # Need 3.5 or later for container nodes
   zookeeper:
@@ -73,6 +82,7 @@ services:
       - zookeeper_logs:/logs
     environment:
       - ZOO_MY_ID=1
+    logging: *default-logging
 
   coordinator:
     platform: linux/amd64
@@ -94,6 +104,7 @@ services:
     env_file:
       - environment/common.env
       - environment/coordinator.env
+    logging: *default-logging
 
   broker:
     platform: linux/amd64
@@ -116,6 +127,7 @@ services:
     env_file:
       - environment/common.env
       - environment/broker.env
+    logging: *default-logging
 
   historical:
     platform: linux/amd64
@@ -140,6 +152,7 @@ services:
     env_file:
       - environment/common.env
       - environment/historical.env
+    logging: *default-logging
 
   middlemanager:
     platform: linux/amd64
@@ -164,6 +177,7 @@ services:
     env_file:
       - environment/common.env
       - environment/middlemanager.env
+    logging: *default-logging
 
   router:
     platform: linux/amd64
@@ -185,3 +199,4 @@ services:
     env_file:
       - environment/common.env
       - environment/router.env
+    logging: *default-logging

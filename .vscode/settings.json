@@ -1,0 +1,47 @@
+{
+  "files.exclude": {
+    "venv": true,
+    "venv_pypy3": true,
+    ".pytest_cache": true,
+    "**/__pycache__": true,
+    "node_modules": true,
+    ".ipynb_checkpoints": true,
+    "**/.ruff_cache": true,
+    ".mypy_cache": true,
+    ".scannerwork": true
+  },
+  "pylint.path": ["venv/bin/pylint"],
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.rulers": [88],
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "black-formatter.args": ["--skip-string-normalization"],
+  "black-formatter.importStrategy": "fromEnvironment",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.rulers": [80],
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[yml]": {
+    "editor.rulers": [80]
+  },
+  "[yaml]": {
+    "editor.rulers": [80]
+  },
+  "python.testing.pytestArgs": ["--driver=Chrome"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "flow.pathToFlow": "${workspaceFolder}/node_modules/.bin/flow",
+  "stylelint.validate": ["css", "scss"],
+  "stylelint.snippet": ["css", "scss"],
+  "stylelint.packageManager": "yarn",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.stylelint": "explicit"
+  },
+  "search.exclude": {
+    "pipeline/out": true
+  }
+}

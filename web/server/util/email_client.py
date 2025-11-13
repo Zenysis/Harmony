@@ -133,7 +133,8 @@ class EmailClient:
         encoders.encode_base64(mime_base)
         mime_base.add_header(
             'Content-Disposition',
-            f'attachment; filename={name}',
+            'attachment',
+            filename=name,
         )
         mime_base.add_header('Content-ID', name)
         msg.attach(mime_base)

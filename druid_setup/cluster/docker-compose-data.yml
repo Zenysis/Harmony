@@ -18,6 +18,12 @@
 #
 version: "2.2"
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "10"
+
 volumes:
   zen_extensions: {}
   middle_var: {}
@@ -31,6 +37,7 @@ services:
       - zen_extensions:/druid/extensions
     environment:
       - ZEN_DRUID_VERSION=${DRUID_VERSION}
+    logging: *default-logging
 
   historical:
     image: apache/druid:${DRUID_VERSION}
@@ -53,6 +60,7 @@ services:
     environment:
       - druid_host=${DRUID_DATA_HOST}
       - druid_zk_service_host=${DRUID_ZOOKEEPER_HOST}
+    logging: *default-logging
 
   middlemanager:
     image: apache/druid:${DRUID_VERSION}
@@ -75,3 +83,4 @@ services:
       - environment/middlemanager.env
     environment:
       - druid_zk_service_host=${DRUID_ZOOKEEPER_HOST}
+    logging: *default-logging

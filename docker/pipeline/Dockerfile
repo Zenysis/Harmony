@@ -133,14 +133,14 @@ USER zenysis
 # NOTE: We can't easily create a venv in a seperate Docker stage, and then
 #       copy it here. Various links will be broken, and the venv will not
 #       work.
-RUN python3.9 -m pip install --upgrade pip setuptools \
-    && python3.9 -m venv venv \
-    && . venv/bin/activate && python -m pip install --upgrade pip setuptools
+RUN python3.9 -m venv venv
 # Install dependencies.
 COPY requirements.txt requirements-pipeline.txt ./
+# wheel 0.43.0 HAS to be installed prior to installing requirments. If changing version here, also
+# change in requirements.txt.
 RUN . venv/bin/activate \
-    && python -m pip install -r requirements.txt \
-    && python -m pip install -r requirements-pipeline.txt
+    && python -m pip install wheel==0.43.0 \
+    && python -m pip install --no-build-isolation --verbose -r requirements.txt -r requirements-pipeline.txt
 
 # PyPy
 # Update setup and create venv.
@@ -150,13 +150,13 @@ RUN . venv/bin/activate \
 # TODO: Investigate what it would take to have venv happen in a different
 #       build stage and copy it here. It would result in a leaner, cleaner
 #       image.
-RUN pypy3 -m pip install --upgrade pip setuptools \
-    && pypy3 -m venv venv_pypy3
+RUN pypy3 -m venv venv_pypy3
 # Install pypy dependencies.
+# wheel 0.43.0 HAS to be installed prior to installing requirments. If changing version here, also
+# change in requirements.txt.
 RUN . venv_pypy3/bin/activate \
-    && pypy3 -m pip install --upgrade pip setuptools \
-    && pypy3 -m pip install -r requirements.txt \
-    && pypy3 -m pip install -r requirements-pipeline.txt
+    && python -m pip install wheel==0.43.0 \
+    && pypy -m pip install --no-build-isolation --verbose -r requirements.txt -r requirements-pipeline.txt
 
 # Copy only what the pipeline needs.
 COPY pipeline ./pipeline
